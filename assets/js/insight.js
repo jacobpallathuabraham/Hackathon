@@ -96,6 +96,11 @@
         </div>
         <div class="ins-hero__stat"><b>${sum.dims.length}<small>/10</small></b><span>${T('domains stayed above your normal for two weeks · 3+ needed', 'مجالات بقيت فوق معدلك لأسبوعين · يلزم ٣ أو أكثر')}</span></div>
       </div>
+      <button class="rep-cta" data-report>
+        <span class="rep-cta__doc" aria-hidden="true"><i></i><i></i><i></i><i></i><b>PDF</b></span>
+        <span class="rep-cta__txt"><small class="mono">${T('Your screening report is ready', 'تقرير الفحص جاهز')}</small><b>${sum.crisis ? T('Acquired strain — talk to a counsellor first', 'ضغط مكتسب — تحدّث مع مرشد أولاً') : !sum.strong ? T('No persistent pattern', 'لا يوجد نمط مستمر') : T(...({ reading: ['Most likely: dyslexia-type reading difficulty', 'الأرجح: صعوبة قراءة من نوع عسر القراءة'], executive: ['Most likely: ADHD-type executive difficulty', 'الأرجح: صعوبة تنفيذية من نوع فرط الحركة'], language: ['Most likely: English language load, not a disability', 'الأرجح: عبء اللغة الإنجليزية، لا إعاقة'], strain: ['Acquired strain — talk to a counsellor first', 'ضغط مكتسب — تحدّث مع مرشد أولاً'] }[sum.flaggedAreas[0]] || ['Your month, explained', 'شهرك، مشروحاً']))}</b><span>${T('3 pages · likely explanation, evidence, next steps · download as PDF', '٣ صفحات · التفسير الأرجح، والأدلة، والخطوات التالية · نزّله PDF')}</span></span>
+        <span class="rep-cta__go">${ICON('arrow')}</span>
+      </button>
       ${sum.crisis ? `<div class="crisis"><span class="crisis__ic">${ICON('hand')}</span><div><h4>${T('Talk to a person first', 'تحدّث مع إنسان أولاً')}</h4><p>${T('When almost everything shifts at once, it is usually not a learning difference — it can be burnout, anxiety or something heavy happening in life. ERLY won’t suggest tools here. A counsellor can talk with you today, confidentially.', 'عندما يتغيّر كل شيء تقريباً دفعة واحدة، فغالباً ليس صعوبة تعلّم — قد يكون إرهاقاً أو قلقاً أو أمراً ثقيلاً في الحياة. لن يقترح إيرلي أدوات هنا. يمكن لمرشد التحدث معك اليوم، بسرية.')}</p><div class="row-btns"><a href="#handoff" class="btn btn--accent">${T('Book a counsellor today', 'احجز مرشداً اليوم')}</a><button class="btn btn--ghost" data-call>${T('Call the 24/7 line', 'اتصل بالخط المتاح دائماً')}</button></div></div></div>` : ''}
       ${areas.length ? `<div class="evcard">
         <div class="evcard__head"><span class="evcard__k mono">${T('Evidence card', 'بطاقة الأدلة')} · ${T('on this device', 'على هذا الجهاز')}</span><span class="honesty honesty--live">${T('you see it first', 'أنت تراها أولاً')}</span></div>
@@ -132,7 +137,7 @@
       </div>
       <div class="ins-next">
         <p>${sum.crisis ? T('A counsellor first. If you want, SAS can look at learning support later — there’s no rush.', 'المرشد أولاً. وإن أردت، يمكن لخدمات الطلبة النظر في دعم التعلّم لاحقاً — لا عجلة.') : sum.strong ? T('Your month points clearly in one direction. That\'s enough to talk to SAS — they can tell you <b>why</b>, and what support you\'re entitled to.', 'شهرك يشير بوضوح إلى اتجاه واحد. هذا كافٍ للحديث مع خدمات الطلبة — يمكنهم إخبارك <b>لماذا</b>، وما الدعم الذي يحق لك.') : T('You can take this picture to SAS whenever you like — or keep using your tools.', 'يمكنك أخذ هذه الصورة إلى خدمات الطلبة متى شئت — أو الاستمرار في استخدام أدواتك.')}</p>
-        <div class="row-btns"><a href="#handoff" class="btn btn--accent">${sum.crisis ? T('Talk to a counsellor', 'تحدّث مع مرشد') : T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><button class="btn btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
+        <div class="row-btns"><button class="btn btn--accent" data-report>${T('View my report (PDF)', 'اعرض تقريري (PDF)')}</button><a href="#handoff" class="btn btn--ghost">${sum.crisis ? T('Talk to a counsellor', 'تحدّث مع مرشد') : T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><button class="btn btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
       </div>`;
   }
   box && box.addEventListener('click', e => {

@@ -138,7 +138,8 @@
     C.font.size = 12;
     C.color = TH.muted;
     C.borderColor = TH.line;
-    C.animation = reduce ? false : { duration: 700, easing: 'easeOutQuart' };
+    C.animation = reduce ? false : { duration: 1100, easing: 'easeOutQuart', delay: ctx => ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 35 + ctx.datasetIndex * 140 : 0 };
+    C.transitions.active = { animation: { duration: 250 } };
     C.maintainAspectRatio = false;
     C.plugins.legend.labels.usePointStyle = true;
     C.plugins.legend.labels.pointStyle = 'rectRounded';
@@ -269,13 +270,37 @@
   $('#menuBtn').addEventListener('click', () => $('#side').classList.toggle('is-open'));
 
   /* ---------- views ---------- */
-  function go(v) {
-    $$('.side__a').forEach(a => a.classList.toggle('is-on', a.dataset.view === v));
-    $$('.view').forEach(x => x.classList.toggle('is-on', x.dataset.view === v));
-    $('#side').classList.remove('is-open');
-    render(v);
-    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  // a highlight pill that glides to the active sidebar item
+  const pill = document.createElement('span');
+  pill.className = 'side__pill'; pill.setAttribute('aria-hidden', 'true');
+  $('.side__nav').prepend(pill);
+  function movePill(instant) {
+    const a = $('.side__a.is-on'); if (!a) return;
+    pill.style.transition = instant ? 'none' : '';
+    pill.style.transform = `translateY(${a.offsetTop}px)`; pill.style.height = a.offsetHeight + 'px';
   }
+  let current = 'overview';
+  function go(v) {
+    if (v === current) { $('#side').classList.remove('is-open'); return; }
+    const from = $(`.view[data-view="${current}"]`), to = $(`.view[data-view="${v}"]`);
+    const order = ['overview', 'requests', 'students', 'cohort'], dir = order.indexOf(v) > order.indexOf(current) ? 1 : -1;
+    current = v;
+    $$('.side__a').forEach(a => a.classList.toggle('is-on', a.dataset.view === v));
+    movePill();
+    $('#side').classList.remove('is-open');
+    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    if (reduce || !from) { $$('.view').forEach(x => x.classList.toggle('is-on', x === to)); render(v); return; }
+    from.style.setProperty('--dir', dir);
+    from.classList.add('is-leaving');
+    setTimeout(() => {
+      from.classList.remove('is-leaving', 'is-on');
+      to.style.setProperty('--dir', dir);
+      to.classList.add('is-on');
+      render(v);
+    }, 220);
+  }
+  requestAnimationFrame(() => movePill(true));
+  addEventListener('resize', () => movePill(true));
   $$('.side__a').forEach(a => a.addEventListener('click', () => go(a.dataset.view)));
   document.addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) go(g.dataset.goto); });
 

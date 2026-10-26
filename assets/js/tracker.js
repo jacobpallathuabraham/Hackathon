@@ -310,14 +310,25 @@
   function fmtLive(i) { const v = ERLY.liveValue(i.id); if (!v) return '—'; return i.id === 'V05' ? v.toFixed(1) + '×' : ['V08', 'M09', 'H03', 'P07'].includes(i.id) ? Math.round(v) + 's' : i.id === 'H10' ? v : Math.round(v); }
   function renderLive() { $$('[data-lv]').forEach(el => { const i = LIST.find(x => x.id === el.dataset.lv); const t = String(fmtLive(i)); if (el.textContent !== t) { el.textContent = t; el.parentElement.classList.remove('bump'); void el.offsetWidth; el.parentElement.classList.add('bump'); } }); }
 
+  const openCats = new Set(['V']);
   function catalogueHTML(sum) {
     const per = sum ? Object.fromEntries(sum.per.map(p => [p.id, p])) : {};
+    const ART = window.ERLY_ART || { A: {}, RELATES: {} };
     return `<div class="catalogue">
       <div class="catalogue__head"><h3>${T('The 100-point telemetry matrix', 'مصفوفة القياس ذات المئة مؤشر')}</h3><span class="small muted">${T('10 domains × 10 indicators · metadata only · live = measured in this demo', '١٠ مجالات × ١٠ مؤشرات · بيانات وصفية فقط · مباشر = يُقاس في هذا العرض')}</span></div>
-      <div class="catalogue__grid">${CK.map(k => { const c = CATS[k]; return `<details class="catg" ${k === 'V' ? 'open' : ''} style="--c:${c.color}">
-        <summary><i class="cat-ic" style="--c:${c.color}">${ICON(c.icon)}</i><b>${catName(k)}</b>${sum && sum.catsN[k] != null ? `<span class="catg__score mono ${sum.dims.includes(k) ? 'is-on' : ''}" title="${T('indicators that persisted', 'مؤشرات استمرت')}">${sum.catsN[k]}/10</span>` : ''}<span class="mono muted">10</span>${!S.consent[k] && S.status === 'active' ? `<span class="catg__off">${T('off', 'متوقف')}</span>` : ''}</summary>
-        <ul>${LIST.filter(x => x.cat === k).map(x => { const p = per[x.id]; return `<li class="${p && p.frac >= .5 ? 'is-flag' : ''}"><span class="mono catg__id">${x.id}</span><span class="catg__t"><b>${T(x.en, x.ar)}</b><small>${x.how}</small></span><span class="catg__m">${x.dir === 0 ? `<em class="honesty honesty--road">${x.area === 'control' ? T('control', 'ضابط') : T('support', 'دعم')}</em>` : x.live ? `<em class="honesty honesty--live">${T('live', 'مباشر')}</em>` : `<em class="honesty honesty--sim">${T('LMS · sim', 'نظام · محاكى')}</em>`}${p ? `<b class="mono">${p.up}/${sum.judged}</b>` : ''}</span></li>`; }).join('')}</ul>
-      </details>`; }).join('')}</div>
+      <div class="catalogue__grid catalogue__grid--cols">${[0, 1].map(colI => `<div class="catalogue__col">${CK.map((k, ci) => ci % 2 !== colI ? '' : (() => { const c = CATS[k], open = openCats.has(k), rel = ART.RELATES[k] || ['', '', ''], n = sum && sum.catsN[k] != null ? sum.catsN[k] : null; return `<div class="catg ${open ? 'is-open' : ''} ${sum && sum.dims.includes(k) ? 'is-hot' : ''}" data-catg="${k}" style="--c:${c.color};--ci:${ci}">
+        <button class="catg__head" aria-expanded="${open}" aria-controls="catg-${k}">
+          <span class="catg__art">${ART.A[k] || ICON(c.icon)}</span>
+          <span class="catg__title"><b>${catName(k)}</b><small>${rel[0] === 'Support' ? T('Support · never flags', 'دعم · لا ينبّه أبداً') : T(rel[0], rel[0].replace('Profile', 'النمط').replace('A', 'أ').replace('B', 'ب').replace('C', 'ج'))}</small></span>
+          ${n != null ? `<span class="catg__score mono ${sum.dims.includes(k) ? 'is-on' : ''}" title="${T('indicators that persisted', 'مؤشرات استمرت')}">${n}/10</span>` : `<span class="catg__score mono">10</span>`}
+          ${!S.consent[k] && S.status === 'active' ? `<span class="catg__off">${T('off', 'متوقف')}</span>` : ''}
+          <span class="catg__chev"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
+        <div class="catg__panel" id="catg-${k}" role="region"><div class="catg__inner">
+          <div class="catg__banner"><span class="catg__big">${ART.A[k] || ''}</span><div><b>${T(rel[1], rel[2])}</b><small>${T('Friction, not a diagnosis — only SAS can confirm.', 'احتكاك لا تشخيص — خدمات الطلبة وحدها تؤكد.')}</small>${n != null ? `<span class="catg__meter">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'is-on' : ''}" style="--j:${i}"></i>`).join('')}<em class="mono">${n}/10 ${T('persisted', 'استمرت')}${n >= 3 ? ' · ' + T('domain persists', 'المجال مستمر') : ''}</em></span>` : ''}</div></div>
+          <ul>${LIST.filter(x => x.cat === k).map((x, i) => { const p = per[x.id]; return `<li class="${p && p.frac >= .5 ? 'is-flag' : ''}" style="--i:${i}"><span class="mono catg__id">${x.id}</span><span class="catg__t"><b>${T(x.en, x.ar)}</b><small>${x.how}</small></span><span class="catg__m">${x.dir === 0 ? `<em class="honesty honesty--road">${x.area === 'control' ? T('control', 'ضابط') : T('support', 'دعم')}</em>` : x.live ? `<em class="honesty honesty--live">${T('live', 'مباشر')}</em>` : `<em class="honesty honesty--sim">${T('LMS · sim', 'نظام · محاكى')}</em>`}${p ? `<span class="catg__days" title="${p.up} / ${sum.judged}"><i style="--w:${Math.round(p.frac * 100)}%"></i></span><b class="mono">${p.up}/${sum.judged}</b>` : ''}</span></li>`; }).join('')}</ul>
+        </div></div>
+      </div>`; })()).join('')}</div>`).join('')}</div>
     </div>`;
   }
 
@@ -328,6 +339,14 @@
     if (e.target.id === 'examMode') { S.exam = e.target.checked; save(); }
   });
   box && box.addEventListener('click', e => {
+    const head = e.target.closest('.catg__head');
+    if (head) {
+      const card = head.parentElement, k = card.dataset.catg, open = !card.classList.contains('is-open');
+      card.classList.toggle('is-open', open); head.setAttribute('aria-expanded', open);
+      open ? openCats.add(k) : openCats.delete(k);
+      if (open) setTimeout(() => { const r = card.getBoundingClientRect(); if (r.bottom > innerHeight) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 380);
+      return;
+    }
     if (e.target.id === 'startTrack') return start();
     const bp = e.target.closest('[data-bp]');
     if (bp) { S.blueprint[bp.dataset.bp] = bp.dataset.v; save(); $$(`[data-bp="${bp.dataset.bp}"]`, box).forEach(b => b.classList.toggle('is-on', b === bp)); const n = BLUE.filter(q => S.blueprint[q[0]]).length; const sm = bp.closest('.pstep').querySelector('small'); sm.textContent = sm.textContent.replace(/\d\/4$/, n + '/4'); ERLY.emit('blueprint', S.blueprint); return; }
