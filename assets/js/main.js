@@ -138,21 +138,19 @@
   function commands() {
     return [
       { label: T('The gap: 94% vs 17.6%', 'الفجوة: ٩٤٪ مقابل ١٧٫٦٪'), hint: '01', run: go('#gap') },
-      { label: T('Why university, why now', 'لماذا الجامعة، ولماذا الآن'), hint: '02', run: go('#problem') },
-      { label: T('How it works — the journey', 'آلية العمل — الرحلة'), hint: '03', run: go('#journey') },
-      { label: T('The signal cluster', 'مجموعة المؤشرات'), hint: '04', run: go('#signals') },
-      { label: T('Interactive prototype', 'النموذج الأولي التفاعلي'), hint: '05', run: go('#prototype') },
-      { label: T('Try the live reader', 'جرّب القارئ المباشر'), hint: '06', run: go('#try') },
-      { label: T('Features', 'المزايا'), hint: '07', run: go('#features') },
-      { label: T('The AI, honestly', 'الذكاء الاصطناعي، بصراحة'), hint: '08', run: go('#ai') },
-      { label: T('Privacy & ethics', 'الخصوصية والأخلاقيات'), hint: '09', run: go('#privacy') },
-      { label: T('Data & impact calculator', 'البيانات وحاسبة الأثر'), hint: '10', run: go('#data') },
-      { label: T('90-day plan', 'خطة الـ٩٠ يوماً'), hint: '11', run: go('#plan') },
-      { label: T('Hard questions (Q&A)', 'أسئلة صعبة'), hint: '12', run: go('#faq') },
-      { label: T('Run scenario: Visual Decoder', 'شغّل سيناريو: فاكّ الرموز البصري'), hint: T('demo', 'عرض'), run: () => ERLY.emit('runScenario', 'A') },
-      { label: T('Run scenario: Executive Struggler', 'شغّل سيناريو: المتعثّر تنفيذياً'), hint: T('demo', 'عرض'), run: () => ERLY.emit('runScenario', 'B') },
-      { label: T('Run scenario: Acquired Strain', 'شغّل سيناريو: ضغط مكتسب'), hint: T('demo', 'عرض'), run: () => ERLY.emit('runScenario', 'C') },
-      { label: T('Open SAS dashboard', 'افتح لوحة خدمات الطلبة'), hint: T('demo', 'عرض'), run: () => ERLY.emit('openScreen', 'sas') },
+      { label: T('How it works', 'آلية العمل'), hint: '02', run: go('#flow') },
+      { label: T('Play the 5-day challenge', 'العب تحدي الأيام الخمسة'), hint: '03', run: go('#challenge') },
+      { label: T('Your private result', 'نتيجتك الخاصة'), hint: '04', run: go('#result') },
+      { label: T('The 2-week watch', 'المتابعة لأسبوعين'), hint: '05', run: go('#watch') },
+      { label: T('Get support — book SAS', 'احصل على الدعم — احجز موعداً'), hint: '06', run: go('#handoff') },
+      { label: T('Tools everyone keeps', 'أدوات للجميع'), hint: '07', run: go('#try') },
+      { label: T('The science', 'العلم وراءه'), hint: '08', run: go('#science') },
+      { label: T('Privacy', 'الخصوصية'), hint: '09', run: go('#privacy') },
+      { label: T('For SAS', 'لخدمات الطلبة'), hint: '10', run: go('#sas') },
+      { label: T('Impact & 90-day plan', 'الأثر وخطة ٩٠ يوماً'), hint: '11', run: go('#data') },
+      { label: T('Hard questions', 'أسئلة صعبة'), hint: '12', run: go('#faq') },
+      { label: T('Load sample: “closer look” result', 'حمّل مثالاً: «تستحق نظرة أقرب»'), hint: T('demo', 'عرض'), run: () => ERLY.emit('sample', 'closer') },
+      { label: T('Load sample: “doing fine” result', 'حمّل مثالاً: «أنت بخير»'), hint: T('demo', 'عرض'), run: () => ERLY.emit('sample', 'fine') },
       { label: T('Toggle dark / light', 'بدّل الوضع الداكن / الفاتح'), hint: 'T', run: () => toggleTheme() },
       { label: T('Switch to Arabic / English', 'بدّل إلى العربية / الإنجليزية'), hint: 'L', run: toggleLang },
       { label: T('Start 5-minute pitch timer', 'ابدأ مؤقت العرض'), hint: 'P', run: startPitch }
@@ -195,6 +193,7 @@
     if (e.key === 'Escape') { if (!cmd.hidden) closeCmd(); return; }
     const tag = (e.target.tagName || '').toLowerCase();
     if (['input', 'textarea', 'select'].includes(tag) || e.target.isContentEditable || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (document.body.classList.contains('is-playing')) return;
     const k = e.key.toLowerCase();
     if (k === 't') toggleTheme();
     else if (k === 'l') toggleLang();
@@ -204,10 +203,10 @@
   /* ---------- pitch timer (5 minutes, segmented by the pitch arc) ---------- */
   const PITCH = [
     [30, 'Hook — the Gap', 'الافتتاح — الفجوة'],
-    [75, 'Problem — three realities', 'المشكلة — ثلاثة واقعات'],
-    [180, 'Live demo', 'العرض المباشر'],
-    [210, 'Ally Bridge moment', 'لحظة جسر الحليف'],
-    [255, 'AI + data honesty', 'الذكاء الاصطناعي والبيانات'],
+    [60, 'Test first, then stop', 'اختبر أولاً، ثم توقّف'],
+    [165, 'Live demo — play a game', 'عرض مباشر — العب لعبة'],
+    [210, 'Result + 2-week contract', 'النتيجة + عقد الأسبوعين'],
+    [255, 'Science + data honesty', 'العلم والبيانات بصراحة'],
     [285, 'Feasibility + 90 days', 'الجدوى + ٩٠ يوماً'],
     [300, 'Close', 'الختام']
   ];
