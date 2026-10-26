@@ -12,7 +12,7 @@
   <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <script>
     (function () {
@@ -39,9 +39,9 @@
         <a href="#flow" data-i18n="nav.flow">How it works</a>
         <a href="#challenge" data-i18n="nav.challenge">5-day challenge</a>
         <a href="#watch" data-i18n="nav.watch">2-week watch</a>
+        <a href="#insight" data-i18n="nav.insight">Insight</a>
         <a href="#handoff" data-i18n="nav.handoff">Get support</a>
-        <a href="#science" data-i18n="nav.science">The science</a>
-        <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="#try" data-i18n="nav.reader">Reader</a>
         <a href="#sas" data-i18n="nav.sas">For SAS</a>
       </nav>
       <div class="nav__tools">
@@ -250,12 +250,26 @@
     </div>
   </section>
 
+  <!-- ============ INSIGHT ============ -->
+  <section class="section section--insight" id="insight">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">06</span><span data-i18n="in.kicker">Your insight</span></p>
+          <h2 class="h2 reveal" data-i18n="in.title">A picture, not a label.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="in.lead">After day 14 the games and your two weeks come together in a page made for you. It uses drawings, weather and plain words to show what might be getting in the way and what helps.</p>
+      </header>
+      <div id="insightBox"></div>
+    </div>
+  </section>
+
   <!-- ============ HANDOFF ============ -->
   <section class="section" id="handoff">
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">06</span><span data-i18n="ho.kicker">The hand-off</span></p>
+          <p class="kicker"><span class="num">07</span><span data-i18n="ho.kicker">The hand-off</span></p>
           <h2 class="h2 reveal" data-i18n="ho.title">From “worth a closer look” to a real appointment — with someone beside you.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="ho.lead">The test and the two weeks build evidence strong enough to justify a referral. Only a professional assessment can confirm a learning disability. SAS does that part.</p>
@@ -296,45 +310,56 @@
     </div>
   </section>
 
-  <!-- ============ TOOLS / READER ============ -->
+  <!-- ============ READER ============ -->
   <section class="section section--tint" id="try">
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">07</span><span data-i18n="tr.kicker">Tools everyone keeps</span></p>
-          <h2 class="h2 reveal" data-i18n="tr.title">Whatever your result, the tools stay.</h2>
+          <p class="kicker"><span class="num">08</span><span data-i18n="tr.kicker">The reader everyone keeps</span></p>
+          <h2 class="h2 reveal" data-i18n="tr.title">Read it your way. We'll notice if a page is fighting back.</h2>
         </div>
-        <p class="section__lead reveal" data-i18n="tr.lead">Try them on a real Week 4 engineering reading. The counter on the right shows how often you scroll back to re-read. It is counted in your browser, and the network-request count stays at zero.</p>
+        <p class="section__lead reveal" data-i18n="tr.lead">A real page from a Week 4 reading. Change the font, size, spacing and page colour, or have it read aloud word by word. If one short paragraph keeps needing another pass, ERLY gently asks if you'd like a hand. That check runs only on this device.</p>
       </header>
-      <div class="reader reveal" id="reader">
-        <div class="reader__bar">
-          <button class="tool" data-tool="speak" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span data-i18n="tr.t1">Read aloud</span></button>
-          <button class="tool" data-tool="font" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 19 10 5h1l5 14M7 14h7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M17 12h3M18.5 10.5v7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span data-i18n="tr.t2">Readable font</span></button>
-          <button class="tool" data-tool="ruler" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 5h18M3 19h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".4"/></svg><span data-i18n="tr.t3">Line focus</span></button>
-          <button class="tool" data-tool="space" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span data-i18n="tr.t4">More space</span></button>
-          <button class="tool" data-tool="summary" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 5h14M5 10h10M5 15h14M5 20h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span data-i18n="tr.t5">60-second summary</span></button>
-          <div class="seg seg--sm" id="readerLang"><button class="is-on" data-l="en">EN</button><button data-l="ar">ع</button></div>
+
+      <div class="pdf reveal" id="pdf">
+        <div class="pdf__chrome">
+          <span class="pdf__file"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z" fill="var(--accent)"/><path d="M15 2v5h5" fill="#fff" opacity=".5"/><text x="7.5" y="18" font-size="5.5" font-weight="700" fill="#fff" font-family="sans-serif">PDF</text></svg>MECH210_Week4_Reading.pdf</span>
+          <span class="pdf__meta mono"><span data-i18n="tr.page">page</span> 1 / 1 · <span id="zoomLbl">100%</span></span>
+          <div class="seg seg--sm" id="pdfLang"><button class="is-on" data-l="en">EN</button><button data-l="ar">ع</button></div>
+          <button class="btn btn--xs btn--ghost" id="rSimulate" data-i18n="tr.sim">▶ Demo: simulate re-reading</button>
         </div>
-        <div class="reader__body">
-          <div class="passage" id="passage" tabindex="0" aria-label="Sample reading passage">
-            <div class="passage__ruler" id="ruler" aria-hidden="true"></div>
-            <div class="passage__text" id="passageText"></div>
-          </div>
-          <aside class="meter">
-            <p class="panel__h mono" data-i18n="tr.live">Live, on this device</p>
-            <div class="meter__big"><span class="mono" id="mRegress">0</span><small data-i18n="tr.m1">scroll regressions</small></div>
-            <div class="meter__row"><span data-i18n="tr.m2">Time in passage</span><b class="mono" id="mTime">0:00</b></div>
-            <div class="meter__row"><span data-i18n="tr.m3">Furthest point read</span><b class="mono" id="mDepth">0%</b></div>
-            <div class="meter__row"><span data-i18n="tr.m4">Tools used</span><b class="mono" id="mTools">0</b></div>
-            <div class="meter__row"><span data-i18n="tr.m5">Network requests</span><b class="mono meter__zero">0</b></div>
-            <div class="helped" id="helped" hidden>
-              <p data-i18n="tr.q">Did that help?</p>
-              <div class="helped__btns"><button data-h="1" data-i18n="tr.yes">Yes</button><button data-h="0.5" data-i18n="tr.bit">A bit</button><button data-h="0" data-i18n="tr.no">No</button></div>
+        <div class="pdf__body">
+          <div class="pdf__stage">
+            <div class="pdf__view" id="pdfView" tabindex="0" aria-label="Sample PDF page">
+              <article class="pdf__page" id="pdfPage"></article>
+              <div class="pdf__ruler" id="pdfRuler" aria-hidden="true"></div>
+              <span class="ghost" id="ghost" hidden aria-hidden="true"></span>
             </div>
-            <div class="prefs">
-              <p class="panel__h mono" data-i18n="tr.l4">Your tool preferences</p>
-              <div id="prefBars"></div>
-              <p class="small muted" data-i18n="tr.l4d">Updated by your one-tap answers (Thompson sampling). ERLY offers what actually works for you first.</p>
+            <div class="nudge-card" id="nudgeCard" hidden role="dialog" aria-live="polite"></div>
+          </div>
+          <aside class="pdf__panel">
+            <button class="speak-btn" id="rSpeak"><span class="speak-btn__ic"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lbl" data-i18n="tr.speak">Read it to me</span></button>
+            <label class="slider slider--sm"><span><span data-i18n="tr.rate">Voice speed</span><b class="mono" id="vRate">0.95×</b></span><input type="range" id="rRate" min="0.6" max="1.4" step="0.05" value="0.95"></label>
+
+            <p class="panel__h mono" data-i18n="tr.font">Font</p>
+            <div class="fchips" id="fontChips"></div>
+            <label class="slider slider--sm"><span><span data-i18n="tr.size">Text size</span><b class="mono" id="vSize">19px</b></span><input type="range" id="rSize" min="14" max="36" step="1" value="19"></label>
+            <label class="slider slider--sm"><span><span data-i18n="tr.lh">Line spacing</span><b class="mono" id="vLh">1.7</b></span><input type="range" id="rLh" min="1.3" max="2.6" step="0.1" value="1.7"></label>
+            <label class="slider slider--sm"><span><span data-i18n="tr.ls">Letter spacing</span><b class="mono" id="vLs">0.00</b></span><input type="range" id="rLs" min="0" max="0.16" step="0.01" value="0"></label>
+            <p class="panel__h mono" data-i18n="tr.tint">Page colour</p>
+            <div class="tchips" id="tintChips"></div>
+            <label class="switch-row"><span><b data-i18n="tr.focus">Line focus</b><small data-i18n="tr.focusd">dims everything but one line</small></span><input type="checkbox" id="tFocus"><i></i></label>
+            <label class="switch-row"><span><b data-i18n="tr.anchor">Word anchors</b><small data-i18n="tr.anchord">bold word beginnings (English)</small></span><input type="checkbox" id="tAnchor"><i></i></label>
+            <button class="btn btn--xs btn--quiet" id="rReset" data-i18n="tr.reset">Reset to default</button>
+
+            <div class="meter2">
+              <p class="panel__h mono" data-i18n="tr.live">Noticed on this device</p>
+              <div class="meter2__passes"><b class="mono" id="mPasses">1</b><span><span data-i18n="tr.passes">passes through this paragraph</span><span class="pass-dots" id="mPassDots"></span></span></div>
+              <div class="meter2__row"><span data-i18n="tr.time">Time on it</span><b class="mono"><span id="mTime">0:00</span> · <span class="muted" data-i18n="tr.usual">usual</span> <span id="mExp"></span></b></div>
+              <div class="meter2__bar"><i id="mTimeBar"></i></div>
+              <div class="meter2__row"><span data-i18n="tr.tools">Tools tried</span><b class="mono" id="mTools">0</b></div>
+              <div class="meter2__row"><span data-i18n="tr.net">Sent anywhere</span><b class="mono meter__zero" data-i18n="tr.nothing">nothing</b></div>
+              <button class="btn btn--xs btn--quiet" id="rTrackReset" data-i18n="tr.restart">Start counting again</button>
             </div>
           </aside>
         </div>
@@ -346,7 +371,7 @@
   <section class="section" id="science">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">08</span><span data-i18n="sc.kicker">The science, honestly</span></p>
+        <p class="kicker"><span class="num">09</span><span data-i18n="sc.kicker">The science, honestly</span></p>
         <h2 class="h2 reveal" data-i18n="sc.title">Each game measures one thing we can name and cite.</h2>
       </header>
       <div class="table-scroll reveal">
@@ -376,7 +401,7 @@
   <section class="section section--ink" id="privacy">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">09</span><span data-i18n="pv.kicker">Privacy by design</span></p>
+        <p class="kicker"><span class="num">10</span><span data-i18n="pv.kicker">Privacy by design</span></p>
         <h2 class="h2 reveal" data-i18n="pv.title">The best privacy feature is a finish line.</h2>
       </header>
       <div class="privacy-grid">
@@ -415,7 +440,7 @@
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">10</span><span data-i18n="sa.kicker">For SAS &amp; the university</span></p>
+          <p class="kicker"><span class="num">11</span><span data-i18n="sa.kicker">For SAS &amp; the university</span></p>
           <h2 class="h2 reveal" data-i18n="sa.title">Run it as an orientation-week event. If everyone plays, nobody is singled out.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="sa.lead">SAS sees participation and referral counts, never individual scores. Cohort cells with fewer than 10 students are hidden. All numbers below are synthetic.</p>
@@ -439,7 +464,7 @@
   <section class="section section--tint" id="data">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">11</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
+        <p class="kicker"><span class="num">12</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
         <h2 class="h2 reveal" data-i18n="dt.title">Move the assumptions. We'll replace each one with a measured number.</h2>
       </header>
       <div class="calc reveal">
@@ -478,7 +503,7 @@
   <section class="section" id="faq">
     <div class="wrap faq-wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">12</span><span data-i18n="fq.kicker">Hard questions</span></p>
+        <p class="kicker"><span class="num">13</span><span data-i18n="fq.kicker">Hard questions</span></p>
         <h2 class="h2 reveal" data-i18n="fq.title">Ask us anything. We already asked ourselves.</h2>
       </header>
       <div class="faq">
@@ -551,8 +576,11 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/fun.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/challenge.js"></script>
   <script src="assets/js/watch.js"></script>
+  <script src="assets/js/reader.js"></script>
+  <script src="assets/js/insight.js"></script>
 </body>
 </html>

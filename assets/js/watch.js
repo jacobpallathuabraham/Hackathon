@@ -43,6 +43,49 @@
     return day;
   }
 
+
+  /* ---------------- the 14-day plan ---------------- */
+  const PLAN = [
+    ['🌱', 'Set up', 'الإعداد', 'Pick your study sites, then study as usual.', 'اختر مواقعك الدراسية، ثم ادرس كالمعتاد.'],
+    ['📚', 'Study as usual', 'ادرس كالمعتاد', 'ERLY is learning your normal. Nothing to do.', 'إيرلي يتعلّم معدلك الطبيعي. لا شيء لتفعله.'],
+    ['🎧', 'Try one tool', 'جرّب أداة', 'Use read-aloud once on any reading.', 'استخدم القراءة الصوتية مرة على أي قراءة.'],
+    ['💬', '1-tap check-in', 'متابعة بنقرة', 'How did reading feel this week?', 'كيف كانت القراءة هذا الأسبوع؟', 'checkin'],
+    ['📄', 'A real reading', 'قراءة حقيقية', 'Open this week\'s PDF in the ERLY reader.', 'افتح ملف هذا الأسبوع في قارئ إيرلي.'],
+    ['☕', 'Rest day', 'يوم راحة', 'Weekend. Nothing to do at all.', 'عطلة. لا شيء لتفعله إطلاقاً.'],
+    ['🔍', 'Halfway peek', 'نظرة منتصف الطريق', 'See what\'s been noticed so far — only you.', 'شاهد ما لوحظ حتى الآن — لك وحدك.'],
+    ['⏱️', '2-min rhythm check', 'فحص الإيقاع في دقيقتين', 'Read one short passage, on-device.', 'اقرأ فقرة قصيرة، على الجهاز.'],
+    ['🚀', 'Start-Ramp', 'منحدر البداية', 'A 5-minute first step on your next assignment.', 'خطوة أولى من ٥ دقائق في واجبك القادم.'],
+    ['🤝', 'Ally (optional)', 'الحليف (اختياري)', 'Send your ally the Support Playbook — or don\'t.', 'أرسل لحليفك دليل الدعم — أو لا.'],
+    ['💬', 'Check-in #2', 'المتابعة ٢', 'One tap: easier, same or harder?', 'نقرة واحدة: أسهل، نفسه، أم أصعب؟', 'checkin'],
+    ['🗂️', 'Preview summary', 'معاينة الملخص', 'See your 2-week picture before anyone else.', 'شاهد صورة أسبوعيك قبل أي أحد.'],
+    ['📅', 'Your choice', 'قرارك', 'Book SAS, or decide “not now”.', 'احجز موعداً، أو قرّر «ليس الآن».'],
+    ['🔒', 'Switch-off day', 'يوم الإيقاف', 'Watch ends, raw data deleted, insight ready.', 'تنتهي المتابعة، تُحذف البيانات الخام، والرؤية جاهزة.']
+  ];
+  function schedule(preview) {
+    const start = W.start ? new Date(W.start) : new Date();
+    const cur = preview ? 0 : W.day;
+    const card = (p, i) => {
+      const n = i + 1;
+      const date = new Date(start.getTime() + i * 864e5);
+      const state = W.status === 'stopped' ? 'is-off' : n < cur || (n === cur && W.status === 'ended') ? 'is-done' : n === cur ? 'is-today' : '';
+      const ci = p[5] === 'checkin' && !preview && n <= cur && W.status !== 'stopped';
+      const val = (W.checkins || {})[n];
+      return `<li class="plan-day ${state} ${n <= 3 ? 'is-cal' : ''}">
+        <div class="plan-day__top"><span class="mono">${T('Day', 'اليوم')} ${n}</span><span class="mono muted">${date.toLocaleDateString(AR() ? 'ar-AE' : 'en-GB', { day: 'numeric', month: 'short' })}</span></div>
+        <span class="plan-day__ic">${p[0]}</span>
+        <b>${T(p[1], p[2])}</b>
+        <small>${T(p[3], p[4])}</small>
+        ${ci ? `<div class="plan-ci">${['😊', '😐', '😣'].map((f, k) => `<button data-ci="${n}" data-v="${k}" class="${val === k ? 'is-on' : ''}">${f}</button>`).join('')}</div>` : ''}
+        ${state === 'is-today' ? `<span class="plan-day__now">${T('today', 'اليوم')}</span>` : ''}
+      </li>`;
+    };
+    return `<div class="plan14">
+      <div class="plan14__head"><p class="panel__h mono">${preview ? T('What the 14 days look like · each task ≤ 5 minutes', 'كيف تبدو الأيام الأربعة عشر · كل مهمة ≤ ٥ دقائق') : T('Your 14-day plan', 'خطتك لأربعة عشر يوماً')}</p><span class="small muted">${T('Days 1–3 learn your normal · nothing is judged', 'الأيام ١–٣ لتعلّم معدلك · لا حكم على شيء')}</span></div>
+      <p class="plan14__wk mono">${T('Week 1', 'الأسبوع ١')}</p><ol class="plan14__row">${PLAN.slice(0, 7).map((p, i) => card(p, i)).join('')}</ol>
+      <p class="plan14__wk mono">${T('Week 2', 'الأسبوع ٢')}</p><ol class="plan14__row">${PLAN.slice(7).map((p, i) => card(p, i + 7)).join('')}</ol>
+    </div>`;
+  }
+
   /* ---------------- render ---------------- */
   function eligible() { return (result && result.outcome === 'closer') || W.selfRef; }
   function renderWatch() {
@@ -85,7 +128,7 @@
         <button class="btn btn--accent btn--block" id="startWatch" disabled>${T('Start my 2-week watch', 'ابدأ متابعتي لأسبوعين')}</button>
         <button class="btn btn--quiet btn--block" data-act="skip">${T('No thanks — go straight to SAS', 'لا شكراً — انتقل مباشرة إلى خدمات الطلبة')}</button>
       </div>
-    </div>`;
+    </div>${schedule(true)}`;
   }
 
   function renderActive(box) {
@@ -131,7 +174,7 @@
           <a href="#handoff" class="btn btn--sm ${sum.strong ? 'btn--accent' : 'btn--ghost'}">${sum.strong ? T('Take it to SAS →', 'خذه إلى خدمات الطلبة ←') : T('Self-refer anyway', 'أحِل نفسك على أي حال')}</a>
         </div>
       </div>` : ''}
-    </div>`;
+    </div>${stopped ? '' : schedule(false)}`;
   }
 
   function summary() {
@@ -144,6 +187,12 @@
     const strong = rows.filter(r => r.frac >= 0.5).length >= 2;
     return { rows, strong };
   }
+
+  ERLY.getWatch = () => ({ status: W.status, day: W.day, data: W.data, consent: W.consent, checkins: W.checkins || {}, summary: summary(), SIGS, DAYS, CALIBRATE });
+  ERLY.on('watchFF', () => {
+    if (W.status === 'none') { W.status = 'active'; W.start = new Date().toISOString(); W.day = 0; W.data = []; W.events = 0; }
+    if (W.status === 'active') advance(DAYS);
+  });
 
   function advance(n) {
     for (let k = 0; k < n && W.day < DAYS; k++) {
@@ -158,6 +207,7 @@
       ERLY.toast(T('Day 14 — the watch switched itself off. Raw data deleted.', 'اليوم ١٤ — توقفت المتابعة تلقائياً. حُذفت البيانات الخام.'));
     }
     save(); renderWatch(); renderPack();
+    ERLY.emit('watch', ERLY.getWatch());
   }
 
   $('#watchBox').addEventListener('change', e => {
@@ -171,13 +221,15 @@
       ERLY.toast(T('Started. You\'ll see the countdown every time you open ERLY.', 'بدأت. سترى العد التنازلي كلما فتحت إيرلي.'));
       return;
     }
+    const ci = e.target.closest('[data-ci]');
+    if (ci) { W.checkins = W.checkins || {}; W.checkins[ci.dataset.ci] = +ci.dataset.v; save(); renderWatch(); ERLY.toast(T('Thanks — noted privately.', 'شكراً — سُجّل بشكل خاص.')); return; }
     const a = e.target.closest('[data-act]');
     if (!a) return;
     const act = a.dataset.act;
     if (act === 'next') advance(1);
     else if (act === 'ff') advance(DAYS);
-    else if (act === 'stop') { W.status = 'stopped'; W.data = []; W.events = 0; save(); renderWatch(); renderPack(); ERLY.toast(T('Stopped. Everything collected was deleted.', 'توقفت. حُذف كل ما جُمع.')); }
-    else if (act === 'restart') { const self = W.selfRef; W = fresh(); W.selfRef = self; save(); renderWatch(); renderPack(); }
+    else if (act === 'stop') { W.status = 'stopped'; W.data = []; W.events = 0; save(); renderWatch(); renderPack(); ERLY.emit('watch', ERLY.getWatch()); ERLY.toast(T('Stopped. Everything collected was deleted.', 'توقفت. حُذف كل ما جُمع.')); }
+    else if (act === 'restart') { const self = W.selfRef; W = fresh(); W.selfRef = self; save(); renderWatch(); renderPack(); ERLY.emit('watch', ERLY.getWatch()); }
     else if (act === 'sample') ERLY.emit('sample', 'closer');
     else if (act === 'selfref') selfRefer(false);
     else if (act === 'skip') $('#handoff').scrollIntoView({ behavior: 'smooth' });
