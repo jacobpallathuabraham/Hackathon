@@ -4,9 +4,9 @@
 
 This is the website and interactive prototype for Team Rising Stars' entry in the UAE Hackathon (Student Accessibility Services early-identification challenge). ERLY is a browser companion that asks for consent first and does its work on the student's own device. It notices study-strain patterns in university students. It shows each insight to the student first, and it lets the student decide who else is told.
 
-## Acubins portal (start here)
+## SAS portal (start here)
 
-`index.html` is the **Acubins University Portal** sign-in page. You choose Student or Counselor, then sign in:
+`index.html` is the **SAS — Student Accessibility Services** sign-in page. You choose Student or Counselor, then sign in:
 
 | Role | Username | Password | Goes to |
 |---|---|---|---|
@@ -21,7 +21,7 @@ The counselor dashboard has four views:
 - **Students:** performance cards for each student.
 - **Cohort:** the funnel, the Arabic/English comparison, and the Curriculum Mirror.
 
-Clicking any student opens a profile with animated illustrations of the flagged areas, the assessment outcome, a grade and on-time-submission chart, the game profile, Arabic vs. English reading, the 14-day weather strip, and their notes. If the student games were played in the same browser, an **"Acubins (you) · live"** request appears at the top.
+Clicking any student opens a profile with animated illustrations of the flagged areas, an **indicator panel** (every game, questionnaire and 2-week signal in one compact table with flags), the assessment outcome, a grade and on-time-submission chart, the game profile, Arabic vs. English reading, the 14-day weather strip, and their notes. If the student games were played in the same browser, an **"Acubins (you) · live"** request appears at the top.
 
 > This is a front-end demo. The credentials are checked in the browser and the "session" is a `sessionStorage` flag, so it is not real security. A real deployment would use the university's SSO. All counselor caseload data is synthetic.
 

@@ -59,17 +59,17 @@
     bilingual: { h: ['One language feels heavier', 'لغة تبدو أثقل'], p: ['English pages cost you noticeably more than Arabic ones. That can be second-language load — English support may help most.', 'تكلّفك الصفحات الإنجليزية أكثر بوضوح من العربية. قد يكون ذلك عبء لغة ثانية — وقد يفيد دعم اللغة الإنجليزية أكثر.'] }
   };
   const STRENGTH = {
-    'Sound skills': ['You hear the shape of words really well — audio tools will feel natural.', 'تسمع شكل الكلمات جيداً جداً — ستبدو لك الأدوات الصوتية طبيعية.', '👂'],
-    'Focus': ['Once you start, your focus is steady.', 'حين تبدأ، يكون تركيزك ثابتاً.', '🎯'],
-    'Working memory': ['You can hold a lot in your head at once.', 'تستطيع الاحتفاظ بالكثير في ذهنك دفعة واحدة.', '🧠'],
-    'Number sense': ['Numbers make sense to you.', 'الأرقام منطقية بالنسبة لك.', '🔢'],
-    'Naming speed': ['You recognise things quickly.', 'تتعرّف على الأشياء بسرعة.', '⚡'],
-    'Reading speed · Arabic': ['Arabic reading flows for you.', 'القراءة بالعربية سلسة لديك.', '📖']
+    'Sound skills': ['You hear the shape of words really well — audio tools will feel natural.', 'تسمع شكل الكلمات جيداً جداً — ستبدو لك الأدوات الصوتية طبيعية.', 'ear'],
+    'Focus': ['Once you start, your focus is steady.', 'حين تبدأ، يكون تركيزك ثابتاً.', 'target'],
+    'Working memory': ['You can hold a lot in your head at once.', 'تستطيع الاحتفاظ بالكثير في ذهنك دفعة واحدة.', 'brain'],
+    'Number sense': ['Numbers make sense to you.', 'الأرقام منطقية بالنسبة لك.', 'hash'],
+    'Naming speed': ['You recognise things quickly.', 'تتعرّف على الأشياء بسرعة.', 'bolt'],
+    'Reading speed · Arabic': ['Arabic reading flows for you.', 'القراءة بالعربية سلسة لديك.', 'book']
   };
   const HELPS = {
-    reading: [['🔊', 'Read-aloud on every PDF', 'القراءة الصوتية لكل PDF'], ['🔠', 'Bigger, airier text', 'نص أكبر وأوسع'], ['📏', 'Line focus', 'تركيز السطر'], ['⏳', 'Extra time — ask SAS', 'وقت إضافي — اسأل الخدمات']],
-    attention: [['🚀', '5-minute first steps', 'خطوات أولى من ٥ دقائق'], ['⏱️', 'Focus sprints', 'جولات تركيز'], ['🔔', 'Deadline nudges', 'تذكيرات المواعيد'], ['👥', 'Study with a buddy', 'ادرس مع رفيق']],
-    number: [['📐', 'Worked examples first', 'أمثلة محلولة أولاً'], ['📊', 'Diagrams & number lines', 'رسوم وخطوط أعداد'], ['🧮', 'Calculator-friendly practice', 'تمارين مع الآلة الحاسبة'], ['🏫', 'Maths support centre', 'مركز دعم الرياضيات']]
+    reading: [['volume', 'Read-aloud on every PDF', 'القراءة الصوتية لكل PDF'], ['text', 'Bigger, airier text', 'نص أكبر وأوسع'], ['ruler', 'Line focus', 'تركيز السطر'], ['hourglass', 'Extra time — ask SAS', 'وقت إضافي — اسأل الخدمات']],
+    attention: [['rocket', '5-minute first steps', 'خطوات أولى من ٥ دقائق'], ['timer', 'Focus sprints', 'جولات تركيز'], ['clock', 'Deadline nudges', 'تذكيرات المواعيد'], ['users', 'Study with a buddy', 'ادرس مع رفيق']],
+    number: [['triangle', 'Worked examples first', 'أمثلة محلولة أولاً'], ['chart', 'Diagrams & number lines', 'رسوم وخطوط أعداد'], ['calc', 'Calculator-friendly practice', 'تمارين مع الآلة الحاسبة'], ['building', 'Maths support centre', 'مركز دعم الرياضيات']]
   };
 
   function weatherOf(d, calibrating) {
@@ -111,7 +111,7 @@
         <div class="ins-card__head"><h4>${T('Your two weeks, as weather', 'أسبوعاك، كطقس')}</h4><span class="small muted">${T('More clouds = more friction than your own normal that day', 'غيوم أكثر = احتكاك أكثر من معدلك ذلك اليوم')}</span></div>
         <ol class="wx">${days.map((d, i) => { const w = weatherOf(d, i < watch.CALIBRATE); return `<li class="wx__d" style="--i:${i}" title="${T(...W_LABEL[w])}"><span class="mono">${i + 1}</span>${W_ICON[w]}</li>`; }).join('')}</ol>
         <div class="wx__legend">${['sprout', 'sun', 'part', 'cloud', 'rain'].map(k => `<span>${W_ICON[k]}${T(...W_LABEL[k])}</span>`).join('')}</div>
-      </div>` : `<div class="ins-card ins-pending"><span>⏳</span><p>${T('The full picture — with your two weeks drawn as weather — appears on day 14 of the watch, if you choose to do it.', 'تظهر الصورة الكاملة — مع أسبوعيك مرسومين كطقس — في اليوم ١٤ من المتابعة، إن اخترتها.')}</p><a href="#watch" class="btn btn--sm btn--ghost">${T('About the watch', 'عن المتابعة')}</a></div>`}
+      </div>` : `<div class="ins-card ins-pending"><span>${ICON('hourglass')}</span><p>${T('The full picture — with your two weeks drawn as weather — appears on day 14 of the watch, if you choose to do it.', 'تظهر الصورة الكاملة — مع أسبوعيك مرسومين كطقس — في اليوم ١٤ من المتابعة، إن اخترتها.')}</p><a href="#watch" class="btn btn--sm btn--ghost">${T('About the watch', 'عن المتابعة')}</a></div>`}
 
       <div class="ins-feel">
         ${areas.map(a => FEEL[a] ? `<article class="ins-card ins-feel__c ${areas.filter(x => FEEL[x]).length === 1 ? 'is-wide' : ''}">
@@ -126,17 +126,17 @@
         ${sum ? `<div class="ins-card">
           <h4>${T('Where it showed up', 'أين ظهر')}</h4>
           <div class="ins-where">${sum.rows.map(r => { const sig = watch.SIGS.find(s => s.id === r.id); return `<div class="ins-where__r" style="--c:var(--${r.id})"><span>${T(sig.en, sig.ar)}</span><span class="ins-where__b">${Array.from({ length: 11 }, (_, k) => `<i class="${k < r.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${r.up}/11</b></div>`; }).join('')}</div>
-          <div class="ins-chips"><span>🌙 ${T('late at night', 'في وقت متأخر ليلاً')}</span><span>📄 ${T('dense PDFs', 'ملفات PDF كثيفة')}</span><span>🇬🇧 ${T('English pages', 'صفحات إنجليزية')}</span><span>⏰ ${T('close to deadlines', 'قرب المواعيد')}</span></div>
+          <div class="ins-chips"><span>${ICON('moon')} ${T('late at night', 'في وقت متأخر ليلاً')}</span><span>${ICON('file')} ${T('dense PDFs', 'ملفات PDF كثيفة')}</span><span>${ICON('globe')} ${T('English pages', 'صفحات إنجليزية')}</span><span>${ICON('clock')} ${T('close to deadlines', 'قرب المواعيد')}</span></div>
           <p class="small muted">${T('Pattern shown in the demo is synthetic.', 'النمط المعروض في العرض اصطناعي.')}</p>
         </div>` : ''}
         <div class="ins-card ins-strong">
           <h4>${T('What you\'re good at', 'ما تجيده')}</h4>
-          <ul>${(strengths.length ? strengths.map(d => `<li><span>${STRENGTH[d[0]][2]}</span>${T(STRENGTH[d[0]][0], STRENGTH[d[0]][1])}</li>`) : [`<li><span>🔥</span>${T('You showed up five days in a row. That counts.', 'حضرت خمسة أيام متتالية. وهذا مهم.')}</li>`]).join('')}
-            <li><span>🧭</span>${T('You noticed something and looked into it. That takes courage.', 'لاحظت شيئاً وبحثت فيه. هذا يتطلب شجاعة.')}</li></ul>
+          <ul>${(strengths.length ? strengths.map(d => `<li><span>${ICON(STRENGTH[d[0]][2])}</span>${T(STRENGTH[d[0]][0], STRENGTH[d[0]][1])}</li>`) : [`<li><span>${ICON('flame')}</span>${T('You showed up five days in a row. That counts.', 'حضرت خمسة أيام متتالية. وهذا مهم.')}</li>`]).join('')}
+            <li><span>${ICON('compass')}</span>${T('You noticed something and looked into it. That takes courage.', 'لاحظت شيئاً وبحثت فيه. هذا يتطلب شجاعة.')}</li></ul>
         </div>
         <div class="ins-card">
           <h4>${T('What tends to help', 'ما يساعد عادةً')}</h4>
-          <div class="ins-helps">${HELPS[helps].map(h => `<div><span>${h[0]}</span>${T(h[1], h[2])}</div>`).join('')}</div>
+          <div class="ins-helps">${HELPS[helps].map(h => `<div><span>${ICON(h[0])}</span>${T(h[1], h[2])}</div>`).join('')}</div>
         </div>
       </div>
 

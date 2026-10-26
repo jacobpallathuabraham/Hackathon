@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acubins · SAS Counselor</title>
+  <title>SAS — Counselor workspace · Student Accessibility Services</title>
   <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
@@ -25,9 +25,9 @@
 </head>
 <body class="dash-body">
   <aside class="side" id="side">
-    <a class="brand" href="#overview">
-      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg>
-      <span class="brand__word">acubins</span><span class="brand__sub mono">sas</span>
+    <a class="brand brand--sas" href="#overview">
+      <span class="sas-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 22h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 22a6.5 6.5 0 0 1 13 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg></span>
+      <span class="brand__stack"><b>SAS</b><small>Counselor workspace</small></span>
     </a>
     <nav class="side__nav">
       <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
@@ -116,6 +116,7 @@
   <aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="Student detail"></aside>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/icons.js"></script>
   <script src="assets/js/counselor.js"></script>
 </body>
 </html>

@@ -46,20 +46,20 @@
 
   /* ---------------- the 14-day plan ---------------- */
   const PLAN = [
-    ['🌱', 'Set up', 'الإعداد', 'Pick your study sites, then study as usual.', 'اختر مواقعك الدراسية، ثم ادرس كالمعتاد.'],
-    ['📚', 'Study as usual', 'ادرس كالمعتاد', 'ERLY is learning your normal. Nothing to do.', 'إيرلي يتعلّم معدلك الطبيعي. لا شيء لتفعله.'],
-    ['🎧', 'Try one tool', 'جرّب أداة', 'Use read-aloud once on any reading.', 'استخدم القراءة الصوتية مرة على أي قراءة.'],
-    ['💬', '1-tap check-in', 'متابعة بنقرة', 'How did reading feel this week?', 'كيف كانت القراءة هذا الأسبوع؟', 'checkin'],
-    ['📄', 'A real reading', 'قراءة حقيقية', 'Open this week\'s PDF in the ERLY reader.', 'افتح ملف هذا الأسبوع في قارئ إيرلي.'],
-    ['☕', 'Rest day', 'يوم راحة', 'Weekend. Nothing to do at all.', 'عطلة. لا شيء لتفعله إطلاقاً.'],
-    ['🔍', 'Halfway peek', 'نظرة منتصف الطريق', 'See what\'s been noticed so far — only you.', 'شاهد ما لوحظ حتى الآن — لك وحدك.'],
-    ['⏱️', '2-min rhythm check', 'فحص الإيقاع في دقيقتين', 'Read one short passage, on-device.', 'اقرأ فقرة قصيرة، على الجهاز.'],
-    ['🚀', 'Start-Ramp', 'منحدر البداية', 'A 5-minute first step on your next assignment.', 'خطوة أولى من ٥ دقائق في واجبك القادم.'],
-    ['🤝', 'Ally (optional)', 'الحليف (اختياري)', 'Send your ally the Support Playbook — or don\'t.', 'أرسل لحليفك دليل الدعم — أو لا.'],
-    ['💬', 'Check-in #2', 'المتابعة ٢', 'One tap: easier, same or harder?', 'نقرة واحدة: أسهل، نفسه، أم أصعب؟', 'checkin'],
-    ['🗂️', 'Preview summary', 'معاينة الملخص', 'See your 2-week picture before anyone else.', 'شاهد صورة أسبوعيك قبل أي أحد.'],
-    ['📅', 'Your choice', 'قرارك', 'Book SAS, or decide “not now”.', 'احجز موعداً، أو قرّر «ليس الآن».'],
-    ['🔒', 'Switch-off day', 'يوم الإيقاف', 'Watch ends, raw data deleted, insight ready.', 'تنتهي المتابعة، تُحذف البيانات الخام، والرؤية جاهزة.']
+    ['sprout', 'Set up', 'الإعداد', 'Pick your study sites, then study as usual.', 'اختر مواقعك الدراسية، ثم ادرس كالمعتاد.'],
+    ['book', 'Study as usual', 'ادرس كالمعتاد', 'ERLY is learning your normal. Nothing to do.', 'إيرلي يتعلّم معدلك الطبيعي. لا شيء لتفعله.'],
+    ['headphones', 'Try one tool', 'جرّب أداة', 'Use read-aloud once on any reading.', 'استخدم القراءة الصوتية مرة على أي قراءة.'],
+    ['chat', '1-tap check-in', 'متابعة بنقرة', 'How did reading feel this week?', 'كيف كانت القراءة هذا الأسبوع؟', 'checkin'],
+    ['file', 'A real reading', 'قراءة حقيقية', 'Open this week\'s PDF in the ERLY reader.', 'افتح ملف هذا الأسبوع في قارئ إيرلي.'],
+    ['cup', 'Rest day', 'يوم راحة', 'Weekend. Nothing to do at all.', 'عطلة. لا شيء لتفعله إطلاقاً.'],
+    ['search', 'Halfway peek', 'نظرة منتصف الطريق', 'See what\'s been noticed so far — only you.', 'شاهد ما لوحظ حتى الآن — لك وحدك.'],
+    ['timer', '2-min rhythm check', 'فحص الإيقاع في دقيقتين', 'Read one short passage, on-device.', 'اقرأ فقرة قصيرة، على الجهاز.'],
+    ['rocket', 'Start-Ramp', 'منحدر البداية', 'A 5-minute first step on your next assignment.', 'خطوة أولى من ٥ دقائق في واجبك القادم.'],
+    ['users', 'Ally (optional)', 'الحليف (اختياري)', 'Send your ally the Support Playbook — or don\'t.', 'أرسل لحليفك دليل الدعم — أو لا.'],
+    ['chat', 'Check-in #2', 'المتابعة ٢', 'One tap: easier, same or harder?', 'نقرة واحدة: أسهل، نفسه، أم أصعب؟', 'checkin'],
+    ['folder', 'Preview summary', 'معاينة الملخص', 'See your 2-week picture before anyone else.', 'شاهد صورة أسبوعيك قبل أي أحد.'],
+    ['calendar', 'Your choice', 'قرارك', 'Book SAS, or decide “not now”.', 'احجز موعداً، أو قرّر «ليس الآن».'],
+    ['lock', 'Switch-off day', 'يوم الإيقاف', 'Watch ends, raw data deleted, insight ready.', 'تنتهي المتابعة، تُحذف البيانات الخام، والرؤية جاهزة.']
   ];
   function schedule(preview) {
     const start = W.start ? new Date(W.start) : new Date();
@@ -72,10 +72,10 @@
       const val = (W.checkins || {})[n];
       return `<li class="plan-day ${state} ${n <= 3 ? 'is-cal' : ''}">
         <div class="plan-day__top"><span class="mono">${T('Day', 'اليوم')} ${n}</span><span class="mono muted">${date.toLocaleDateString(AR() ? 'ar-AE' : 'en-GB', { day: 'numeric', month: 'short' })}</span></div>
-        <span class="plan-day__ic">${p[0]}</span>
+        <span class="plan-day__ic">${ICON(p[0])}</span>
         <b>${T(p[1], p[2])}</b>
         <small>${T(p[3], p[4])}</small>
-        ${ci ? `<div class="plan-ci">${['😊', '😐', '😣'].map((f, k) => `<button data-ci="${n}" data-v="${k}" class="${val === k ? 'is-on' : ''}">${f}</button>`).join('')}</div>` : ''}
+        ${ci ? `<div class="plan-ci">${['smile', 'meh', 'frown'].map(f => ICON(f)).map((f, k) => `<button data-ci="${n}" data-v="${k}" class="${val === k ? 'is-on' : ''}">${f}</button>`).join('')}</div>` : ''}
         ${state === 'is-today' ? `<span class="plan-day__now">${T('today', 'اليوم')}</span>` : ''}
       </li>`;
     };
@@ -92,7 +92,7 @@
     const box = $('#watchBox');
     if (W.status === 'none' && !eligible()) {
       box.innerHTML = `<div class="watch-locked">
-        <div class="watch-locked__icon">🔒</div>
+        <div class="watch-locked__icon">${ICON('lock')}</div>
         <h3>${T('Locked — and that\'s the point.', 'مقفل — وهذا هو المقصود.')}</h3>
         <p>${result && result.outcome === 'fine'
           ? T('Your result was “doing fine”, so there is no monitoring at all. Your tools stay.', 'كانت نتيجتك «أنت بخير»، لذلك لا توجد أي متابعة. تبقى أدواتك.')
@@ -145,7 +145,7 @@
       <div class="live__meta">
         <p class="contract__k mono">${stopped ? T('Watch stopped by you · data deleted', 'أوقفت المتابعة · حُذفت البيانات') : ended ? T('Watch ended automatically on day 14', 'انتهت المتابعة تلقائياً في اليوم ١٤') : T('Watch active · day', 'المتابعة فعّالة · اليوم') + ' ' + W.day + ' / 14'}</p>
         <h3>${stopped ? T('Stopped. Nothing was kept.', 'توقفت. لم يُحتفظ بشيء.') : ended ? T('Done. It switched itself off.', 'انتهت. توقفت من تلقاء نفسها.') : T('Ends on', 'تنتهي في') + ' ' + fmtDate(end)}</h3>
-        ${ended ? `<p class="deleted">🗑 ${W.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : ''}
+        ${ended ? `<p class="deleted">${ICON('trash')} ${W.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : ''}
         <div class="row-btns">
           ${!ended && !stopped ? `<button class="btn btn--sm btn--ghost" data-act="next">${T('Simulate next day', 'حاكِ اليوم التالي')} ▸</button><button class="btn btn--sm btn--ghost" data-act="ff">${T('Fast-forward to day 14', 'تقدّم إلى اليوم ١٤')} ⏩</button><button class="btn btn--sm btn--stop" data-act="stop">■ ${T('Stop & delete now', 'أوقف واحذف الآن')}</button>` : `<button class="btn btn--sm btn--ghost" data-act="restart">${T('Reset demo', 'أعد العرض')}</button>`}
         </div>

@@ -62,7 +62,7 @@
       let action;
       if (d) action = `<span class="day__done">✓ ${T('done', 'تم')}</span>${d.attempts < 2 ? `<button class="btn btn--xs btn--ghost" data-play="${g.n}">${T('Retry once', 'أعد مرة واحدة')}</button>` : ''}${!qDone ? `<button class="btn btn--xs btn--ink" data-quiz="${g.after}">${T('2-min questions', 'أسئلة دقيقتين')}</button>` : ''}`;
       else if (open) action = `<button class="btn btn--sm btn--accent" data-play="${g.n}">${T('Play', 'العب')} · ${g.mins} ${T('min', 'د')}</button>`;
-      else action = `<span class="muted small">🔒 ${T('unlocks tomorrow', 'يُفتح غداً')}</span>`;
+      else action = `<span class="muted small day__lock">${ICON('lock')} ${T('unlocks tomorrow', 'يُفتح غداً')}</span>`;
       return `<article class="day ${status}">
         <div class="day__top"><span class="day__n mono">${T('Day', 'اليوم')} ${g.n}</span><span class="mono muted">${L(g.wd)}</span></div>
         <div class="day__icon">${ICONS[g.n]}</div>
@@ -122,16 +122,16 @@
       h.className = 'g-hud';
       $('.stage__head', stage).insertBefore(h, $('#stageClose'));
     }
-    h.innerHTML = `<span class="g-hud__stars" id="gStars">⭐ ${stars}</span><span class="g-hud__combo" id="gCombo"></span>
-      <button class="icon-btn icon-btn--sm" id="gMute" aria-label="Sound">${F.sfx.muted ? '🔇' : '🔊'}</button>`;
-    $('#gMute').onclick = () => { $('#gMute').textContent = F.sfx.toggle() ? '🔇' : '🔊'; };
+    h.innerHTML = `<span class="g-hud__stars">${ICON('star')}<b id="gStars">${stars}</b></span><span class="g-hud__combo" id="gCombo"></span>
+      <button class="icon-btn icon-btn--sm" id="gMute" aria-label="Sound">${ICON(F.sfx.muted ? 'mute' : 'volume')}</button>`;
+    $('#gMute').onclick = () => { $('#gMute').innerHTML = ICON(F.sfx.toggle() ? 'mute' : 'volume'); };
   }
   function react(ok, el) {
     const m = $('.g-host .mascot', body);
     if (ok) {
       combo++; stars++;
       F.sfx.good();
-      F.floatText(el, combo >= 3 ? `+1 · ${combo}×` : '+1 ⭐');
+      F.floatText(el, combo >= 3 ? `+1 · ${combo}×` : '+1');
       if (combo > 0 && combo % 5 === 0) F.confetti(el, 18);
       if (m) F.setMood(m, combo >= 3 ? 'wow' : 'happy');
     } else {
@@ -139,8 +139,8 @@
       F.sfx.soft();
       if (m) F.setMood(m, 'oops');
     }
-    const s = $('#gStars'); if (s) { s.textContent = `⭐ ${stars}`; s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump'); }
-    const c = $('#gCombo'); if (c) c.textContent = combo >= 3 ? `🔥 ${combo}× ${T('combo', 'متتالية')}` : '';
+    const s = $('#gStars'); if (s) { s.textContent = stars; s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump'); }
+    const c = $('#gCombo'); if (c) c.textContent = combo >= 3 ? `${combo}× ${T('combo', 'متتالية')}` : '';
   }
   function host(mood, say) {
     return `<div class="g-host">${F.mascot(mood, 'm-idle')}${say ? `<p class="g-host__say">${say}</p>` : ''}</div>`;
@@ -178,9 +178,9 @@
     const doneN = GAMES.filter(x => S.days[x.n]).length;
     body.innerHTML = `<div class="g-end">
       ${F.mascot('wow', 'm-idle m-big m-party')}
-      <div class="g-end__stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      <div class="g-end__stars"><span>${ICON('star')}</span><span>${ICON('star')}</span><span>${ICON('star')}</span></div>
       <h4>${T('Day', 'اليوم')} ${n} ${T('complete!', 'اكتمل!')}</h4>
-      <div class="g-end__badge">🔥 ${T('streak', 'السلسلة')} ${doneN} / 5</div>
+      <div class="g-end__badge">${ICON('flame')} ${T('streak', 'السلسلة')} ${doneN} / 5</div>
       <div class="week-dots">${GAMES.map(x => `<i class="${S.days[x.n] ? 'is-on' : ''}">${x.n}</i>`).join('')}</div>
       <details class="g-sum-wrap"><summary>${T('See my numbers (only you)', 'أرني أرقامي (لك وحدك)')}</summary><div class="g-sum">${summaryHTML}</div>
       <p class="small muted">${T('Compared with demo placeholder ranges, never with other students.', 'تُقارن بنطاقات تجريبية مؤقتة، لا بطلبة آخرين أبداً.')}</p></details>
@@ -254,7 +254,7 @@
       body.innerHTML = `<div class="g-word-wrap">
         <div class="g-prog"><span id="gProg"></span></div>
         <div class="g-play-row">${host('happy')}<div class="wcard-deck"><div class="wcard" id="wcard"><span class="wcard__w" lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}"></span></div></div></div>
-        <div class="g-choices"><button class="g-btn g-btn--fake" data-r="fake"><span class="g-btn__e">🙃</span>${T('Made up', 'مختلقة')}<kbd>F</kbd></button><button class="g-btn g-btn--real" data-r="real"><span class="g-btn__e">👍</span>${T('Real', 'حقيقية')}<kbd>J</kbd></button></div></div>`;
+        <div class="g-choices"><button class="g-btn g-btn--fake" data-r="fake"><span class="g-btn__e">${ICON('x')}</span>${T('Made up', 'مختلقة')}<kbd>F</kbd></button><button class="g-btn g-btn--real" data-r="real"><span class="g-btn__e">${ICON('check')}</span>${T('Real', 'حقيقية')}<kbd>J</kbd></button></div></div>`;
       for (let i = 0; i < trials.length; i++) {
         if (gone(gen)) return;
         const [w, truth] = trials[i];
@@ -311,7 +311,7 @@
     const gen = run;
     const tts = 'speechSynthesis' in window;
     await intro([
-      T('I\'ll <b>say</b> two words, like “car park”. 🎧', 'سأقول كلمتين، مثل “car park”. 🎧'),
+      T('I\'ll <b>say</b> two words, like “car park”.', 'سأقول كلمتين، مثل “car park”.'),
       T('Swap their first sounds in your head — “<b>p</b>ar <b>c</b>ark” — and pop the right bubble.', 'بدّل أصواتهما الأولى في ذهنك — “<b>p</b>ar <b>c</b>ark” — وافقع الفقاعة الصحيحة.'),
       tts ? T('Tap my face to hear it again. Sound on!', 'انقر وجهي لتسمعها مجدداً. شغّل الصوت!') : T('<b>No speech on this browser</b> — I\'ll show the words instead.', '<b>لا يوجد نطق في هذا المتصفح</b> — سأعرض الكلمات بدلاً من ذلك.')
     ]);
@@ -359,7 +359,7 @@
   async function gameNaming() {
     const gen = run;
     await intro([
-      T('Balloon time! 🎈 One balloon wiggles at a time.', 'وقت البالونات! 🎈 يهتز بالون واحد في كل مرة.'),
+      T('Balloon time! One balloon wiggles at a time.', 'وقت البالونات! يهتز بالون واحد في كل مرة.'),
       T('<b>Say its colour out loud</b>, then press <kbd>Space</kbd> (or tap) to pop it — as fast as feels comfortable.', '<b>قل لونه بصوت عالٍ</b>، ثم اضغط <kbd>Space</kbd> (أو انقر) لفقعه — بأسرع ما يريحك.'),
       T('Then the same with number tiles. Any language is fine. Nothing is recorded.', 'ثم الشيء نفسه مع بلاطات الأرقام. أي لغة مقبولة. لا يُسجَّل شيء.')
     ]);
@@ -368,7 +368,7 @@
       if (gone(gen)) return;
       const cells = ranGrid(kind);
       body.innerHTML = `<div class="g-block">
-        <p class="g-round">${kind === 'color' ? T('Pop the balloons 🎈', 'افقع البالونات 🎈') : T('Flip the number tiles 🔢', 'اقلب بلاطات الأرقام 🔢')}</p>
+        <p class="g-round">${kind === 'color' ? T('Pop the balloons', 'افقع البالونات') : T('Flip the number tiles', 'اقلب بلاطات الأرقام')}</p>
         ${kind === 'color' ? `<p class="small muted">${COLORS.map(c => `<span class="ran__key" style="--c:${c[1]}"></span>${AR() ? c[2] : c[0]}`).join(' · ')}</p>` : ''}
         <div class="ran ran--${kind}" id="ran" data-r="next">${cells.map((c, i) => `<span class="ran__i" data-i="${i}">${c}</span>`).join('')}</div>
         <p class="g-hint mono">${T('Space / tap = next', 'Space / نقرة = التالي')}</p></div>`;
@@ -403,14 +403,14 @@
   async function gameTarget() {
     const gen = run;
     await intro([
-      T('Catch the <b>stars</b> ⭐ — press <kbd>Space</kbd> or tap, fast!', 'التقط <b>النجوم</b> ⭐ — اضغط <kbd>Space</kbd> أو انقر بسرعة!'),
-      T('But shhh… <b>don\'t wake the cat</b> 🐱. When the cat appears, do nothing.', 'لكن صه… <b>لا توقظ القطة</b> 🐱. عندما تظهر القطة، لا تفعل شيئاً.'),
+      T('Catch the <b>stars</b> — press <kbd>Space</kbd> or tap, fast!', 'التقط <b>النجوم</b> — اضغط <kbd>Space</kbd> أو انقر بسرعة!'),
+      T('But shhh… <b>don\'t wake the cat</b>. When the cat appears, do nothing.', 'لكن صه… <b>لا توقظ القطة</b>. عندما تظهر القطة، لا تفعل شيئاً.'),
       T('40 rounds, about a minute. Waking the cat happens to everyone!', '٤٠ جولة، حوالي دقيقة. إيقاظ القطة يحدث للجميع!')
     ]);
     const trials = shuffle([...Array(30).fill('go'), ...Array(10).fill('nogo')]);
     body.innerHTML = `<div class="g-word-wrap"><div class="g-prog"><span id="tProg"></span></div>
       <div class="night" data-r="hit" id="pad"><i class="night__moon"></i><span class="night__twinkle" style="--x:12%;--y:18%"></span><span class="night__twinkle" style="--x:82%;--y:12%;--d:.8s"></span><span class="night__twinkle" style="--x:70%;--y:70%;--d:1.4s"></span><div class="night__slot" id="slot"></div><div class="night__grass"></div></div>
-      <p class="g-hint mono">${T('⭐ = catch · 🐱 = let it sleep', '⭐ = التقط · 🐱 = دعها تنام')}</p></div>`;
+      <p class="g-hint mono">${T('star = catch · cat = let it sleep', 'نجمة = التقط · قطة = دعها تنام')}</p></div>`;
     const slot = $('#slot'), prog = $('#tProg'), pad = $('#pad');
     const rts = []; let omit = 0, comm = 0;
     await wait(1000);
@@ -445,8 +445,8 @@
     const gen = run;
     await intro([
       T('Three mini-games! <b>1 · Bubble memory</b> — watch the number bubbles, then type them <b>backwards</b>.', 'ثلاث ألعاب صغيرة! <b>١ · ذاكرة الفقاعات</b> — شاهد فقاعات الأرقام، ثم اكتبها <b>بالعكس</b>.'),
-      T('<b>2 · Rocket landing</b> 🚀 — tap where the number lives on the 0–100 line.', '<b>٢ · هبوط الصاروخ</b> 🚀 — انقر حيث يقع الرقم على خط ٠–١٠٠.'),
-      T('<b>3 · Firefly jars</b> ✨ — which jar had more fireflies?', '<b>٣ · برطمانات اليراعات</b> ✨ — أي برطمان فيه يراعات أكثر؟')
+      T('<b>2 · Rocket landing</b> — tap where the number lives on the 0–100 line.', '<b>٢ · هبوط الصاروخ</b> — انقر حيث يقع الرقم على خط ٠–١٠٠.'),
+      T('<b>3 · Firefly jars</b> — which jar had more fireflies?', '<b>٣ · برطمانات اليراعات</b> — أي برطمان فيه يراعات أكثر؟')
     ]);
     // Part 1: backward digit span
     let span = 2;
@@ -481,8 +481,8 @@
     const errs = [];
     for (let i = 0; i < targets.length; i++) {
       if (gone(gen)) return;
-      body.innerHTML = `<div class="g-word-wrap"><p class="g-round">🚀 ${T('Land the rocket on', 'أهبط الصاروخ على')} <b class="g-target">${targets[i]}</b> <span class="muted mono">(${i + 1}/5)</span></p>
-        <div class="nline nline--sky" id="nline" dir="ltr"><span class="nline__bar"></span>${[0, 25, 50, 75, 100].map(t => `<span class="nline__t" style="left:${t}%"></span>`).join('')}<span class="nline__l">0</span><span class="nline__r">100</span><span class="nline__rocket" id="rocket">🚀</span><span class="nline__flag" id="flag">🚩</span></div>
+      body.innerHTML = `<div class="g-word-wrap"><p class="g-round">${T('Land the rocket on', 'أهبط الصاروخ على')} <b class="g-target">${targets[i]}</b> <span class="muted mono">(${i + 1}/5)</span></p>
+        <div class="nline nline--sky" id="nline" dir="ltr"><span class="nline__bar"></span>${[0, 25, 50, 75, 100].map(t => `<span class="nline__t" style="left:${t}%"></span>`).join('')}<span class="nline__l">0</span><span class="nline__r">100</span><span class="nline__rocket" id="rocket"><svg viewBox="0 0 40 52" width="34" height="44"><path d="M20 2c9 6 12 16 11 28H9C8 18 11 8 20 2z" fill="#F4F1EA" stroke="#2A2622" stroke-width="2.5"/><circle cx="20" cy="18" r="5" fill="#4DB3A8" stroke="#2A2622" stroke-width="2.5"/><path d="M9 26 3 38l8-3M31 26l6 12-8-3" fill="#E0533D" stroke="#2A2622" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 31h10l-2 9h-6z" fill="#F2C230" stroke="#2A2622" stroke-width="2.5" stroke-linejoin="round" class="flame"/></svg></span><span class="nline__flag" id="flag"><svg viewBox="0 0 24 30" width="22" height="28"><path d="M5 28V3" stroke="#2A2622" stroke-width="2.5" stroke-linecap="round"/><path d="M5 4h14l-4 5 4 5H5z" fill="#E0533D" stroke="#2A2622" stroke-width="2" stroke-linejoin="round"/></svg></span></div>
         <p class="g-hint mono">${T('tap the line', 'انقر على الخط')}</p></div>`;
       const v = await new Promise(res => {
         const nl = $('#nline');
@@ -508,7 +508,7 @@
       if (gone(gen)) return;
       const [a, b] = pairs[i];
       const dots = n => Array.from({ length: n }, () => `<i style="left:${10 + Math.random() * 78}%;top:${22 + Math.random() * 66}%;--s:${6 + Math.random() * 5}px;--d:${Math.random() * 1.2}s"></i>`).join('');
-      body.innerHTML = `<div class="g-word-wrap"><p class="g-round">✨ ${T('Which jar has more fireflies?', 'أي برطمان فيه يراعات أكثر؟')} <span class="muted mono">(${i + 1}/8)</span></p>
+      body.innerHTML = `<div class="g-word-wrap"><p class="g-round">${T('Which jar has more fireflies?', 'أي برطمان فيه يراعات أكثر؟')} <span class="muted mono">(${i + 1}/8)</span></p>
         <div class="jars" dir="ltr"><button class="jar" data-r="a"><span class="jar__lid"></span><span class="jar__glass">${dots(a)}</span><kbd>←</kbd></button><button class="jar" data-r="b"><span class="jar__lid"></span><span class="jar__glass">${dots(b)}</span><kbd>→</kbd></button></div></div>`;
       setTimeout(() => !gone(gen) && $$('.jar', body).forEach(x => x.classList.add('is-dark')), 900);
       const r = await respond({ arrowleft: 'a', arrowright: 'b' }, 8000);

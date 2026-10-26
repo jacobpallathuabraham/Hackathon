@@ -235,12 +235,12 @@
       <p class="nudge-card__h">${T('Hey — this paragraph is taking a few passes.', 'مرحباً — هذه الفقرة تأخذ أكثر من قراءة.')}</p>
       <p class="nudge-card__p">${T('That\'s completely normal with dense reading. Want a hand?', 'هذا طبيعي تماماً مع القراءة الكثيفة. هل تريد مساعدة؟')}</p>
       <div class="nudge-card__opts">
-        <button data-help="read">🔊 ${T('Read it to me', 'اقرأها لي')}</button>
-        <button data-help="big">🔠 ${T('Bigger & airier', 'أكبر وأوسع')}</button>
-        <button data-help="focus">📏 ${T('One line at a time', 'سطر واحد في كل مرة')}</button>
+        <button data-help="read">${ICON('volume')} ${T('Read it to me', 'اقرأها لي')}</button>
+        <button data-help="big">${ICON('text')} ${T('Bigger & airier', 'أكبر وأوسع')}</button>
+        <button data-help="focus">${ICON('ruler')} ${T('One line at a time', 'سطر واحد في كل مرة')}</button>
         <button data-help="fine" class="is-quiet">${T('I\'m fine, just thinking', 'أنا بخير، أفكر فقط')}</button>
       </div>
-      <p class="nudge-card__priv">🔒 ${T('Noticed on this device only. Nobody else is told.', 'لوحظ على هذا الجهاز فقط. لا يُبلَّغ أحد.')}</p>`;
+      <p class="nudge-card__priv">${ICON('lock')} ${T('Noticed on this device only. Nobody else is told.', 'لوحظ على هذا الجهاز فقط. لا يُبلَّغ أحد.')}</p>`;
     requestAnimationFrame(() => nudge.classList.add('is-in'));
   }
   function hideNudge() { nudge.classList.remove('is-in'); setTimeout(() => { nudge.hidden = true; }, 350); }
@@ -270,7 +270,7 @@
     nudge.hidden = false;
     nudge.innerHTML = `<div class="nudge-card__top">${F.mascot('think', 'm-idle')}</div>
       <p class="nudge-card__h">${T('Did that make it easier?', 'هل جعل ذلك الأمر أسهل؟')}</p>
-      <div class="nudge-card__faces"><button data-felt="better">😊<small>${T('easier', 'أسهل')}</small></button><button data-felt="same">😐<small>${T('same', 'نفسه')}</small></button><button data-felt="worse">🙁<small>${T('not really', 'ليس فعلاً')}</small></button></div>`;
+      <div class="nudge-card__faces"><button data-felt="better">${ICON('smile')}<small>${T('easier', 'أسهل')}</small></button><button data-felt="same">${ICON('meh')}<small>${T('same', 'نفسه')}</small></button><button data-felt="worse">${ICON('frown')}<small>${T('not really', 'ليس فعلاً')}</small></button></div>`;
     requestAnimationFrame(() => nudge.classList.add('is-in'));
   }
 

@@ -104,7 +104,7 @@
   const STATUS = { new: 'New', scheduled: 'Scheduled', assessed: 'Assessed', plan: 'Support plan' };
   const ORDER = ['new', 'scheduled', 'assessed', 'plan'];
   const avatar = (s, cls = '') => `<span class="avatar avatar--hue ${cls}" style="--h:${s.hue}">${s.init}</span>`;
-  const areaTags = s => s.areas.length ? s.areas.map(a => `<span class="atag" style="--c:${AREA[a].color}">${AREA[a].icon}${AREA[a].label}</span>`).join('') : '<span class="atag atag--self">🙋 self-referral</span>';
+  const areaTags = s => s.areas.length ? s.areas.map(a => `<span class="atag" style="--c:${AREA[a].color}">${AREA[a].icon}${AREA[a].label}</span>`).join('') : `<span class="atag atag--self">${ICON('hand')} self-referral</span>`;
   const ago = n => n === 0 ? 'today' : n === -1 ? 'yesterday' : `${-n} days ago`;
 
   function filtered() {
@@ -116,12 +116,12 @@
   /* ---------- overview ---------- */
   function renderOverview() {
     const K = [
-      ['New requests', S.filter(s => s.status === 'new').length, '📥', 'var(--accent)'],
-      ['Scheduled this week', S.filter(s => s.status === 'scheduled').length, '📅', 'var(--teal)'],
-      ['Assessed, awaiting plan', S.filter(s => s.status === 'assessed').length, '🩺', 'var(--s4)'],
-      ['Active support plans', S.filter(s => s.status === 'plan').length, '🌱', 'var(--good)']
+      ['New requests', S.filter(s => s.status === 'new').length, 'inbox', 'var(--accent)'],
+      ['Scheduled this week', S.filter(s => s.status === 'scheduled').length, 'calendar', 'var(--teal)'],
+      ['Assessed, awaiting plan', S.filter(s => s.status === 'assessed').length, 'stetho', 'var(--s4)'],
+      ['Active support plans', S.filter(s => s.status === 'plan').length, 'sprout', 'var(--good)']
     ];
-    $('#kpis').innerHTML = K.map(([l, n, ic, c], i) => `<div class="kpi kpi--dash" style="--c:${c};--i:${i}"><span class="kpi__ic">${ic}</span><small>${l}</small><b data-n="${n}">0</b></div>`).join('');
+    $('#kpis').innerHTML = K.map(([l, n, ic, c], i) => `<div class="kpi kpi--dash" style="--c:${c};--i:${i}"><span class="kpi__ic">${ICON(ic)}</span><small>${l}</small><b data-n="${n}">0</b></div>`).join('');
     $$('#kpis b').forEach(b => countUp(b, +b.dataset.n));
     $('#newBadge').textContent = K[0][1];
     const reqs = filtered().filter(s => s.status === 'new' || s.status === 'scheduled');
@@ -164,7 +164,7 @@
           <div class="tcard__top">${avatar(s)}<div><b>${s.name}${s.live ? ' <em class="live-dot">live</em>' : ''}</b><small class="muted">${s.prog} · Y${s.year}</small></div></div>
           <div class="tcard__tags">${areaTags(s)}</div>
           ${s.confirmed ? `<p class="tcard__conf">✓ ${s.confirmed}</p>` : ''}
-          ${s.status === 'scheduled' ? `<p class="tcard__meta">📅 ${fmtD(day(s.slot))} · ${s.slotT}${s.ally ? ' · 🤝 ' + s.ally.split(' ')[0] : ''}</p>` : `<p class="tcard__meta muted">${s.via} · ${ago(s.req)}</p>`}
+          ${s.status === 'scheduled' ? `<p class="tcard__meta">${ICON('calendar')} ${fmtD(day(s.slot))} · ${s.slotT}${s.ally ? ' · with ' + s.ally.split(' ')[0] : ''}</p>` : `<p class="tcard__meta muted">${s.via} · ${ago(s.req)}</p>`}
           ${st !== 'plan' ? `<button class="tcard__next" data-next="${s.id}">${st === 'new' ? 'Schedule →' : st === 'scheduled' ? 'Mark assessed →' : 'Create plan →'}</button>` : ''}
         </article>`).join('') || '<p class="col__empty muted small">Nothing here</p>'}</div>`;
     }).join('');
@@ -204,7 +204,7 @@
   /* ---------- students ---------- */
   function spark(vals, plan) {
     const pts = vals.map((v, i) => v == null ? null : [10 + i * 60, 64 - (v - 2) / 2 * 56]).filter(Boolean);
-    if (pts.length < 2) return `<svg viewBox="0 0 200 70" class="spark"><text x="100" y="40" text-anchor="middle" class="spark__t">first semester</text></svg>`;
+    if (pts.length < 2) return `<svg viewBox="0 0 200 70" class="spark"><text x="100" y="40" text-anchor="middle" class="spark__t">new this term</text></svg>`;
     const d = pts.map((p, i) => (i ? 'L' : 'M') + p.join(' ')).join(' ');
     return `<svg viewBox="0 0 200 70" class="spark">${plan ? `<rect x="${10 + (plan - .5) * 60}" y="0" width="${200 - (10 + (plan - .5) * 60)}" height="70" class="spark__plan"/><text x="${14 + (plan - .5) * 60}" y="11" class="spark__t">support plan</text>` : ''}<path d="${d}" class="spark__l"/>${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" class="spark__d"/>`).join('')}</svg>`;
   }
@@ -242,9 +242,59 @@
     const v = +b.dataset.v, pct = Math.round(v * 100), n = $('#nudge');
     n.hidden = false;
     n.innerHTML = v < .25 ? `<div><h4>${b.dataset.c} · week ${+b.dataset.w + 1}: ${pct}%</h4><p>Within the normal range. No nudge needed.</p></div>`
-      : `<div><h4>Curriculum Mirror → ${b.dataset.c} professor</h4><p>“About ${pct}% of consenting students showed unusually high reading friction on the week ${+b.dataset.w + 1} reading. It may be text-dense — here's a one-page visual summary and an audio version to share.”</p><div class="chips"><span class="chip">📄 visual summary</span><span class="chip">🔊 audio · 11 min</span><span class="chip">no names</span></div></div><div class="row-btns" style="align-self:end"><button class="btn btn--sm btn--accent" id="sendNudge">Send anonymised nudge</button></div>`;
+      : `<div><h4>Curriculum Mirror → ${b.dataset.c} professor</h4><p>“About ${pct}% of consenting students showed unusually high reading friction on the week ${+b.dataset.w + 1} reading. It may be text-dense — here's a one-page visual summary and an audio version to share.”</p><div class="chips"><span class="chip">visual summary</span><span class="chip">audio · 11 min</span><span class="chip">no names</span></div></div><div class="row-btns" style="align-self:end"><button class="btn btn--sm btn--accent" id="sendNudge">Send anonymised nudge</button></div>`;
     const sn = $('#sendNudge'); if (sn) sn.onclick = () => { sn.disabled = true; sn.textContent = 'Sent ✓'; toast('Nudge sent — the problem might be the PDF, not the students.'); };
   });
+
+
+  /* ---------- indicator matrix (compressed view of every ERLY indicator) ---------- */
+  function hash(str) { let h = 7; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 9973; return h; }
+  function indicators(s) {
+    if (!s.d) return null;
+    const r = (k, lo, hi) => lo + (hash(s.id + k) % 1000) / 1000 * (hi - lo);
+    const has = a => s.areas.includes(a);
+    const d = s.d;
+    const accEN = Math.min(.98, .55 + d[0] / 230), accAR = Math.min(.98, .55 + d[1] / 230);
+    const rows = [
+      ['Games · reading', [
+        ['Word decoding · English', `${Math.round(accEN * 100)}% · ${s.en} ms`, s.en > 1100 || accEN < .8],
+        ['Word decoding · Arabic', `${Math.round(accAR * 100)}% · ${s.ar} ms`, s.ar > 1100 || accAR < .8],
+        ['Phonological awareness', `${Math.max(1, Math.round(d[2] / 100 * 6))} / 6 swaps`, d[2] < 67],
+        ['Rapid naming (RAN)', `${Math.round(1400 - d[3] * 10)} ms / item`, d[3] < 60]
+      ]],
+      ['Games · attention & memory', [
+        ['Inhibition (cats woken)', `${Math.round((100 - d[4]) * .45)}%`, d[4] < 50],
+        ['Sustained attention (stars missed)', `${Math.round((100 - d[4]) * .2)}%`, d[4] < 45],
+        ['Reaction-time variability', `CV ${(0.15 + (100 - d[4]) / 280).toFixed(2)}`, d[4] < 50],
+        ['Working memory (backward span)', `${Math.max(2, Math.round(d[5] / 100 * 7))}`, d[5] < 57]
+      ]],
+      ['Games · number', [
+        ['Number-line placement', `avg miss ${Math.round((100 - d[6]) / 4)}`, d[6] < 50],
+        ['Approximate number sense', `${Math.round(55 + d[6] * .4)}% correct`, d[6] < 50]
+      ]],
+      ['Questionnaires', [
+        ['Reading history (ARHQ-adapted)', (has('reading') ? r('arhq', .48, .68) : r('arhq', .12, .38)).toFixed(2), has('reading')],
+        ['ASRS v1.1 Part A', `${has('attention') ? Math.round(r('asrs', 4, 6)) : Math.round(r('asrs', 0, 3))} / 6`, has('attention')]
+      ]]
+    ];
+    if (s.wx) rows.push(['2-week watch · days elevated of 11', [
+      ['S1 Re-reading loops', `${has('reading') ? Math.round(r('s1', 6, 9)) : Math.round(r('s1', 0, 3))}`, has('reading')],
+      ['S2 Abandoned drafts & posts', `${has('attention') ? Math.round(r('s2', 6, 9)) : Math.round(r('s2', 0, 3))}`, has('attention')],
+      ['S3 Switching to audio', `${has('reading') ? Math.round(r('s3', 5, 8)) : Math.round(r('s3', 0, 3))}`, has('reading')],
+      ['S4 11th-hour spikes', `${has('attention') ? Math.round(r('s4', 6, 9)) : Math.round(r('s4', 1, 4))}`, has('attention')]
+    ]]);
+    return rows;
+  }
+  function indicatorHTML(s) {
+    const rows = indicators(s);
+    if (!rows) return '';
+    const n = rows.reduce((a, [, rs]) => a + rs.filter(x => x[2]).length, 0), t = rows.reduce((a, [, rs]) => a + rs.length, 0);
+    return `<section class="dr__sec">
+      <h4>Indicator panel <span class="mono muted small">${n} of ${t} above demo range</span></h4>
+      <div class="ind">${rows.map(([g, rs]) => `<p class="ind__g mono">${g}</p>${rs.map(([k, v, f], i) => `<div class="ind__r ${f ? 'is-flag' : ''}" style="--i:${i}"><span class="ind__dot"></span><span>${k}</span><b class="mono">${v}</b><span class="ind__pill">${f ? 'flag' : 'typical'}</span></div>`).join('')}`).join('')}</div>
+      <p class="small muted">Screening indicators only. Demo thresholds; real cut-offs come from same-language peer norms and professional assessment.</p>
+    </section>`;
+  }
 
   /* ---------- drawer ---------- */
   const drawer = $('#drawer'), scrim = $('#scrim');
@@ -279,9 +329,9 @@
 
       <section class="dr__sec">
         <h4>${s.confirmed ? 'Assessment outcome' : 'What ERLY flagged'} ${s.confirmed ? '' : '<span class="honesty honesty--sim">screening only</span>'}</h4>
-        ${s.confirmed ? `<div class="conf-card"><span class="conf-card__ic">🩺</span><div><b>${s.confirmed}</b><small class="muted">Confirmed by professional assessment at SAS</small></div></div>` : ''}
+        ${s.confirmed ? `<div class="conf-card"><span class="conf-card__ic">${ICON('stetho')}</span><div><b>${s.confirmed}</b><small class="muted">Confirmed by professional assessment at SAS</small></div></div>` : ''}
         ${s.areas.length ? `<div class="dr__areas">${s.areas.map(a => `<div class="dr__area" style="--c:${AREA[a].color}"><div class="dr__illo">${ILLO[a]}</div><div><span class="atag" style="--c:${AREA[a].color}">${AREA[a].icon}${AREA[a].label}</span><p>${FEEL[a]}</p></div></div>`).join('')}</div>`
-          : `<div class="conf-card"><span class="conf-card__ic">🙋</span><div><b>Self-referral — no test taken</b><small class="muted">The student chose to come straight to SAS. Their words are below.</small></div></div>`}
+          : `<div class="conf-card"><span class="conf-card__ic">${ICON('hand')}</span><div><b>Self-referral — no test taken</b><small class="muted">The student chose to come straight to SAS. Their words are below.</small></div></div>`}
       </section>
 
       ${askOutcome ? `<section class="dr__sec dr__outcome"><h4>Record assessment outcome</h4><div class="outcomes">${OUTCOMES.map(o => `<button class="chip" data-out="${o}">${o}</button>`).join('')}</div></section>` : ''}
@@ -294,6 +344,8 @@
         ${s.wx ? `<div class="dr__sub"><p class="panel__h mono">Two-week watch · friction weather</p><ol class="wx wx--sm">${s.wx.map((n, i) => `<li class="wx__d" style="--i:${i}"><span class="mono">${i + 1}</span>${i < 3 ? '<svg viewBox="0 0 48 48"><path d="M24 40V22" stroke="#4DB3A8" stroke-width="3" stroke-linecap="round"/><path d="M24 26c-8 0-12-5-12-11 7 0 12 4 12 11zM24 22c0-7 5-11 12-11 0 6-4 11-12 11z" fill="#4DB3A8"/></svg>' : weather(n)}</li>`).join('')}</ol></div>` : ''}
       </section>
 
+      ${indicatorHTML(s)}
+
       <section class="dr__sec">
         <h4>Evidence Pack · student notes</h4>
         <blockquote class="dr__note">${s.note}</blockquote>
@@ -305,7 +357,7 @@
         <button class="btn btn--ghost" id="drMsg">Message student</button>
         <button class="btn btn--quiet" id="drPack">Download Evidence Pack</button>
       </div>
-      <p class="small muted dr__priv">🔒 Shared by the student. ERLY raw data was deleted on day 14 — this is the summary they approved.</p>`;
+      <p class="small muted dr__priv">${ICON('lock')} Shared by the student. ERLY raw data was deleted on day 14 — this is the summary they approved.</p>`;
     drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false');
     scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add('is-on'));
     drawer.scrollTop = 0;

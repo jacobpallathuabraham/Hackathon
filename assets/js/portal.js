@@ -7,13 +7,19 @@
   const $$ = s => Array.from(document.querySelectorAll(s));
 
   const ACCOUNTS = {
-    student: { user: 'acubins', pass: '1234', go: 'student.html', hi: 'Welcome, Acubins' },
-    counselor: { user: 'counselor', pass: '4321', go: 'counselor.html', hi: 'Welcome, Counselor' }
+    student: { user: 'acubins', pass: '1234', go: 'student.html', hi: 'Welcome to ERLY', k: 'Signed in as Acubins' },
+    counselor: { user: 'counselor', pass: '4321', go: 'counselor.html', hi: 'Welcome, Counselor', k: 'Opening the SAS workspace' }
   };
   const ROLE_UI = {
-    student: { title: 'Student sign-in', sub: 'Use your Acubins student username.', badge: '🎓 Student' },
-    counselor: { title: 'Counselor sign-in', sub: 'Student Accessibility Services staff only.', badge: '🧑‍⚕️ Counselor' }
+    student: { title: 'Student sign-in', sub: 'Use your university username and password.', badge: 'Student account' },
+    counselor: { title: 'Counselor sign-in', sub: 'Student Accessibility Services staff only.', badge: 'Counselor account' }
   };
+
+  // icons
+  const fill = (id, n) => { const el = document.getElementById(id); if (el) el.innerHTML = ICON(n); };
+  fill('icA', 'volume'); fill('icB', 'calendar'); fill('f1', 'sparkle'); fill('f2', 'shield'); fill('f3', 'users');
+  fill('icStudent', 'cap'); fill('icCounsel', 'counsel'); fill('go1', 'arrow'); fill('go2', 'arrow');
+  fill('icLock', 'lock'); fill('icUser', 'users'); fill('icPass', 'lock'); fill('eyeBtn', 'eye');
 
   let role = null, fails = 0, busy = false;
   const card = $('#lcard');
@@ -55,7 +61,7 @@
   $('#eyeBtn').addEventListener('click', () => {
     const p = $('#pass'); const showIt = p.type === 'password';
     p.type = showIt ? 'text' : 'password';
-    $('#eyeBtn').textContent = showIt ? '🙈' : '👁';
+    $('#eyeBtn').innerHTML = ICON(showIt ? 'eyeOff' : 'eye');
     $('#eyeBtn').setAttribute('aria-label', showIt ? 'Hide password' : 'Show password');
   });
   ['#user', '#pass'].forEach(id => $(id).addEventListener('input', clearErr));
@@ -92,6 +98,7 @@
         try { sessionStorage.setItem('acubins-role', role); } catch (err) {}
         setTimeout(() => {
           $('#wipeTxt').textContent = acc.hi;
+          $('#wipeK').textContent = acc.k;
           $('#wipe').classList.add('is-on', role === 'counselor' ? 'is-teal' : 'is-accent');
           setTimeout(() => { location.href = acc.go; }, 900);
         }, 520);
