@@ -4,6 +4,27 @@
 
 This is the website and interactive prototype for Team Rising Stars' entry in the UAE Hackathon (Student Accessibility Services early-identification challenge). ERLY is a browser companion that asks for consent first and does its work on the student's own device. It notices study-strain patterns in university students. It shows each insight to the student first, and it lets the student decide who else is told.
 
+## Acubins portal (start here)
+
+`index.html` is the **Acubins University Portal** sign-in page. You choose Student or Counselor, then sign in:
+
+| Role | Username | Password | Goes to |
+|---|---|---|---|
+| Student | `Acubins` | `1234` | `student.html` (the ERLY site) |
+| Counselor | `Counselor` | `4321` | `counselor.html` (SAS dashboard) |
+
+A wrong password shakes the card and shows an error. Using student credentials on the counselor form (or the other way round) is refused with a hint. The student and counselor pages send you back to the login if you open them without signing in.
+
+The counselor dashboard has four views:
+- **Overview:** KPIs, new requests, an areas-flagged donut chart, this week's appointments, and grades before vs. after support.
+- **Requests:** a board with columns New → Scheduled → Assessed → Support plan.
+- **Students:** performance cards for each student.
+- **Cohort:** the funnel, the Arabic/English comparison, and the Curriculum Mirror.
+
+Clicking any student opens a profile with animated illustrations of the flagged areas, the assessment outcome, a grade and on-time-submission chart, the game profile, Arabic vs. English reading, the 14-day weather strip, and their notes. If the student games were played in the same browser, an **"Acubins (you) · live"** request appears at the top.
+
+> This is a front-end demo. The credentials are checked in the browser and the "session" is a `sessionStorage` flag, so it is not real security. A real deployment would use the university's SSO. All counselor caseload data is synthetic.
+
 ## Run it
 
 You don't need a build step or any dependencies. It is plain HTML, CSS and JS.

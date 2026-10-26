@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acubins · ERLY — Test first. Watch only with permission.</title>
+  <meta name="description" content="ERLY is a 5-day learning challenge for UAE university students. Five short games and two established screeners give a private result. A 2-week watch runs only with permission, and SAS confirms.">
+  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="ERLY — How do you learn best? The 5-day challenge">
+  <meta property="og:description" content="Five short games. A private result. Two weeks of monitoring only if you say yes. Then it stops.">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <script>
+    // Demo portal guard — must have signed in as a student
+    try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('index.html?next=student'); } catch (e) {}
+  </script>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+  <div class="progress" aria-hidden="true"><span></span></div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner wrap">
+      <a href="#top" class="brand" aria-label="ERLY home">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg>
+        <span class="brand__word">acubins</span><span class="brand__sub mono">erly</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#flow" data-i18n="nav.flow">How it works</a>
+        <a href="#challenge" data-i18n="nav.challenge">5-day challenge</a>
+        <a href="#watch" data-i18n="nav.watch">2-week watch</a>
+        <a href="#insight" data-i18n="nav.insight">Insight</a>
+        <a href="#handoff" data-i18n="nav.handoff">Get support</a>
+        <a href="#try" data-i18n="nav.reader">Reader</a>
+        <a href="#sas" data-i18n="nav.sas">For SAS</a>
+      </nav>
+      <div class="nav__tools">
+        <button class="kbd-btn" id="cmdOpen" aria-label="Open quick jump (Ctrl K)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><kbd>⌘K</kbd></button>
+        <button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="user-chip" id="userChip">
+          <button class="user-chip__btn" id="userBtn" aria-haspopup="true" aria-expanded="false"><span class="avatar avatar--sm">A</span><span class="user-chip__name">Acubins</span><svg viewBox="0 0 12 12" width="10"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+          <div class="user-menu" id="userMenu" hidden>
+            <p class="user-menu__who"><b>Acubins</b><small class="muted">Student · ID 2026-0417</small></p>
+            <a href="#challenge" data-i18n="nav.cta">Start day 1</a>
+            <a href="#handoff" data-i18n="nav.handoff">Get support</a>
+            <button id="logoutBtn" data-i18n="nav.logout">Sign out</button>
+          </div>
+        </div>
+        <button class="icon-btn nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="wrap hero__grid">
+      <div class="hero__copy">
+        <p class="eyebrow reveal"><span class="dot"></span><span data-i18n="hero.eyebrow">Acubins University · Welcome back, Acubins 👋</span></p>
+        <h1 class="display reveal" data-i18n="hero.title">How do you<br><em>learn best?</em></h1>
+        <p class="lead reveal" data-i18n="hero.lead">ERLY is a 5-day challenge for university students: one five-minute game a day, Monday to Friday. Everyone gets a private profile and tools that suit them. If something is worth a closer look, you decide what happens next.</p>
+        <div class="hero__cta reveal">
+          <a href="#challenge" class="btn btn--accent" data-i18n="hero.cta1">Play day 1 — 5 minutes</a>
+          <a href="#handoff" class="btn btn--ghost" data-i18n="hero.cta2">Already suspect something? Skip the test →</a>
+        </div>
+        <p class="pitchline reveal" data-i18n="hero.pitch">Test first. Watch only with permission, for two weeks. <em>Then stop.</em></p>
+      </div>
+
+      <div class="hero__stage reveal" aria-hidden="true">
+        <div class="stage-card stage-card--week">
+          <div class="stage-card__head"><span class="mono" data-i18n="hero.c1">Your week</span><span class="tag tag--soft mono">🔥 4</span></div>
+          <ol class="mini-week">
+            <li class="is-done"><b>Mon</b><span data-i18n="g1.short">Real or Fake?</span></li>
+            <li class="is-done"><b>Tue</b><span data-i18n="g2.short">Sound Swap</span></li>
+            <li class="is-done"><b>Wed</b><span data-i18n="g3.short">Speed Naming</span></li>
+            <li class="is-done"><b>Thu</b><span data-i18n="g4.short">Catch the Target</span></li>
+            <li class="is-today"><b>Fri</b><span data-i18n="g5.short">Memory &amp; Numbers</span></li>
+          </ol>
+        </div>
+        <div class="stage-card stage-card--result">
+          <span class="pill-private"><svg viewBox="0 0 16 16"><path d="M4.5 7V5.5a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="7" width="10" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span data-i18n="hero.c2">Only you can see this</span></span>
+          <h3 class="stage-card__title" data-i18n="hero.c3">You're an audio-first learner.</h3>
+          <p class="muted small" data-i18n="hero.c4">Reading in English took you noticeably longer than in Arabic. Worth a closer look — if you want.</p>
+          <div class="lang-gap"><span>EN</span><i style="--w:78%"></i><span>AR</span><i style="--w:46%"></i></div>
+        </div>
+        <div class="stage-card stage-card--count">
+          <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="22" cy="22" r="18" fill="none" stroke="var(--teal)" stroke-width="4" stroke-dasharray="113" stroke-dashoffset="40" stroke-linecap="round" transform="rotate(-90 22 22)"/></svg>
+          <div><b data-i18n="hero.c5">9 days left</b><span class="muted" data-i18n="hero.c6">2-week watch · switches off by itself</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticker" aria-label="Principles">
+      <div class="ticker__track">
+        <span data-i18n="tick.1">Test first</span><span data-i18n="tick.2">Private results</span><span data-i18n="tick.3">No labels</span><span data-i18n="tick.4">Two weeks, then off</span><span data-i18n="tick.5">Raw data deleted</span><span data-i18n="tick.6">Arabic &amp; English</span><span data-i18n="tick.7">Streaks, never leaderboards</span><span data-i18n="tick.8">SAS confirms, ERLY never diagnoses</span>
+        <span aria-hidden="true">Test first</span><span aria-hidden="true">Private results</span><span aria-hidden="true">No labels</span><span aria-hidden="true">Two weeks, then off</span><span aria-hidden="true">Raw data deleted</span><span aria-hidden="true">Arabic &amp; English</span><span aria-hidden="true">Streaks, never leaderboards</span><span aria-hidden="true">SAS confirms, ERLY never diagnoses</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAP ============ -->
+  <section class="section" id="gap">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">01</span><span data-i18n="gap.kicker">The gap</span></p>
+        <h2 class="h2 reveal" data-i18n="gap.title">Two official numbers that can't both be the whole story.</h2>
+      </header>
+      <div class="gap">
+        <article class="gap__stat reveal">
+          <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">0</span><small>%</small></p>
+          <p class="gap__label" data-i18n="gap.a">of UAE Grade 12 students pass national literacy benchmarks.</p>
+          <p class="gap__src mono" data-i18n="gap.asrc">Bayanat open data · Grade 12 pass rates, 2012–2021</p>
+          <div class="bar"><span style="--w:94%"></span></div>
+        </article>
+        <div class="gap__vs reveal" aria-hidden="true"><span>vs</span></div>
+        <article class="gap__stat gap__stat--hot reveal">
+          <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">0</span><small>%</small></p>
+          <p class="gap__label" data-i18n="gap.b">of Emirati female students screened at UAE University showed dyslexic features — in Arabic <em>and</em> English.</p>
+          <p class="gap__src mono">Aboudan et al., 2011 · IJEL 1(2):64</p>
+          <div class="bar bar--hot"><span style="--w:17.6%"></span></div>
+        </article>
+      </div>
+      <div class="gap__foot">
+        <p class="gap__claim reveal" data-i18n="gap.claim">School exams measure whether you <em>can</em> read. University measures whether you can keep reading 40 dense pages a week, in your second language, at 1am. That is where masked difficulties surface — and where nobody is currently looking.</p>
+        <aside class="fineprint reveal">
+          <p class="mono fineprint__h" data-i18n="gap.fp.h">Our own critique of our own evidence</p>
+          <ul>
+            <li data-i18n="gap.fp.1">2007/08 data — almost two decades old</li>
+            <li data-i18n="gap.fp.2">One university, female students only</li>
+            <li data-i18n="gap.fp.3">Screening features, not clinical diagnoses</li>
+          </ul>
+          <p data-i18n="gap.fp.p">That isn't a hole in the argument. It <em>is</em> the argument: the most-cited UAE university figure is 17 years old because no one has measured since. Our pilot produces the first current, consented dataset.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW ============ -->
+  <section class="section section--tint" id="flow">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">02</span><span data-i18n="fl.kicker">How it works</span></p>
+          <h2 class="h2 reveal" data-i18n="fl.title">A clear start, a clear end, and nothing in between you didn't agree to.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="fl.lead">The first version of ERLY watched all semester. We cut that. Now ERLY tests first, watches for two weeks only if you say yes, and then switches itself off.</p>
+      </header>
+
+      <ol class="flow4">
+        <li class="flow4__step reveal">
+          <span class="flow4__n mono">01</span>
+          <h3 data-i18n="fl.1h">The 5-day challenge</h3>
+          <p data-i18n="fl.1p">One five-minute game a day, Monday to Friday, like a daily puzzle. Spreading it over five days evens out one bad day.</p>
+          <span class="flow4__meta mono" data-i18n="fl.1m">5 × 5 min · everyone</span>
+        </li>
+        <li class="flow4__step reveal">
+          <span class="flow4__n mono">02</span>
+          <h3 data-i18n="fl.2h">A private result</h3>
+          <p data-i18n="fl.2p">One of two answers: <b>“you're doing fine — here are tools that suit you”</b> or <b>“worth a closer look.”</b> Never “you have dyslexia.”</p>
+          <span class="flow4__meta mono" data-i18n="fl.2m">only you see it</span>
+        </li>
+        <li class="flow4__step reveal">
+          <span class="flow4__n mono">03</span>
+          <h3 data-i18n="fl.3h">An opt-in 2-week watch</h3>
+          <p data-i18n="fl.3p">Only after a “closer look”, and only with consent. A visible countdown. Switches off on day 14. Raw data deleted after the summary.</p>
+          <span class="flow4__meta mono" data-i18n="fl.3m">14 days · then off</span>
+        </li>
+        <li class="flow4__step reveal">
+          <span class="flow4__n mono">04</span>
+          <h3 data-i18n="fl.4h">The hand-off</h3>
+          <p data-i18n="fl.4p">An Evidence Pack, an ally if you want one, and a booking with SAS for a real assessment. SAS confirms — ERLY never does.</p>
+          <span class="flow4__meta mono" data-i18n="fl.4m">SAS decides</span>
+        </li>
+      </ol>
+
+      <div class="flow-notes">
+        <div class="flow-note reveal"><b data-i18n="fl.n1h">Doing fine?</b><span data-i18n="fl.n1p">No monitoring at all. You keep the tools.</span></div>
+        <div class="flow-note reveal"><b data-i18n="fl.n2h">Already suspect something?</b><span data-i18n="fl.n2p">Skip the test. Go straight to SAS, or opt into the two weeks.</span></div>
+        <div class="flow-note reveal"><b data-i18n="fl.n3h">Passed but still struggling?</b><span data-i18n="fl.n3p">Bright students can mask. The self-referral door never closes.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CHALLENGE ============ -->
+  <section class="section" id="challenge">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">03</span><span data-i18n="ch.kicker">The 5-day challenge · playable</span></p>
+          <h2 class="h2 reveal" data-i18n="ch.title">Five games. One a day. Every player gets something useful.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="ch.lead">Each game is built on a recognised marker from reading and attention research. Everything is scored in your browser and stored only on this device.</p>
+      </header>
+
+      <div class="ch-bar reveal">
+        <div class="streak">
+          <span class="streak__flame" aria-hidden="true">🔥</span>
+          <div><b id="streakN">0 / 5</b><small class="muted" data-i18n="ch.streak">days complete · streaks, never leaderboards</small></div>
+        </div>
+        <div class="ch-bar__tools">
+          <label class="switch-row switch-row--inline"><span><b data-i18n="ch.judge">Judge mode</b><small data-i18n="ch.judged">unlock all 5 days now</small></span><input type="checkbox" id="judgeMode" checked><i></i></label>
+          <div class="seg seg--sm" id="sampleSeg"><span class="muted mono" data-i18n="ch.sample">sample</span><button data-sample="closer" data-i18n="ch.s1">“closer look”</button><button data-sample="fine" data-i18n="ch.s2">“doing fine”</button><button data-sample="reset" data-i18n="ch.s3">reset</button></div>
+        </div>
+      </div>
+
+      <div class="days" id="days"></div>
+
+      <div class="stage" id="stage" hidden>
+        <div class="stage__head">
+          <div><span class="mono muted" id="stageDay"></span><h3 id="stageTitle"></h3></div>
+          <button class="icon-btn" id="stageClose" aria-label="Close game">×</button>
+        </div>
+        <div class="stage__body" id="stageBody"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section class="section section--tint" id="result">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">04</span><span data-i18n="rs.kicker">Your private result</span></p>
+          <h2 class="h2 reveal" data-i18n="rs.title">Two possible answers. Neither of them is a label.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="rs.lead">Finish all five days (or load a sample above) and your result appears here. The thresholds in this demo are placeholders; the pilot sets real cut-offs by comparing scores with professional assessments.</p>
+      </header>
+      <div id="resultBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ WATCH ============ -->
+  <section class="section section--ink" id="watch">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">05</span><span data-i18n="wt.kicker">The 2-week watch · opt-in</span></p>
+          <h2 class="h2 reveal" data-i18n="wt.title">A contract with a start date, an end date and a stop button.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="wt.lead">Games show how you do on a good five minutes. Real coursework shows how you do on week 9. The watch checks whether game results show up in real study — and then it ends.</p>
+      </header>
+      <div class="watch" id="watchBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ INSIGHT ============ -->
+  <section class="section section--insight" id="insight">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">06</span><span data-i18n="in.kicker">Your insight</span></p>
+          <h2 class="h2 reveal" data-i18n="in.title">A picture, not a label.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="in.lead">After day 14 the games and your two weeks come together in a page made for you. It uses drawings, weather and plain words to show what might be getting in the way and what helps.</p>
+      </header>
+      <div id="insightBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ HANDOFF ============ -->
+  <section class="section" id="handoff">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">07</span><span data-i18n="ho.kicker">The hand-off</span></p>
+          <h2 class="h2 reveal" data-i18n="ho.title">From “worth a closer look” to a real appointment — with someone beside you.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="ho.lead">The test and the two weeks build evidence strong enough to justify a referral. Only a professional assessment can confirm a learning disability. SAS does that part.</p>
+      </header>
+      <div class="handoff3">
+        <article class="ho-card reveal">
+          <span class="ho-card__n mono">A</span>
+          <h3 data-i18n="ho.1h">Your Evidence Pack</h3>
+          <p data-i18n="ho.1p">Game scores, the Arabic–English comparison, questionnaire totals and the 2-week summary. You download it; you decide who sees it.</p>
+          <div class="pack-mini" id="packMini"></div>
+          <div class="row-btns"><button class="btn btn--sm btn--ink" id="dlPack" data-i18n="ho.dl">Download (.json)</button><button class="btn btn--sm btn--ghost" id="printPack" data-i18n="ho.print">Print / PDF</button></div>
+        </article>
+        <article class="ho-card reveal">
+          <span class="ho-card__n mono">B</span>
+          <h3 data-i18n="ho.2h">Bring an ally</h3>
+          <p data-i18n="ho.2p">Invite someone you trust. They get a short Support Playbook — what to say, what to avoid — never your scores.</p>
+          <div class="allies allies--3" id="allyPick">
+            <button class="ally is-on" data-ally="Sara"><span class="avatar">S</span><span><b>Sara</b><small data-i18n="ho.sis">sister</small></span></button>
+            <button class="ally" data-ally="Mariam"><span class="avatar">M</span><span><b>Mariam</b><small data-i18n="ho.fr">friend</small></span></button>
+            <button class="ally" data-ally="Dr. Hessa"><span class="avatar">H</span><span><b>Dr. Hessa</b><small data-i18n="ho.adv">advisor</small></span></button>
+          </div>
+          <div class="playbook playbook--mini">
+            <div><h5 class="ok" data-i18n="ho.say">Try saying</h5><p data-i18n="ho.say1">“Thanks for telling me. Want me to come with you?”</p></div>
+            <div><h5 class="no" data-i18n="ho.avoid">Please avoid</h5><p data-i18n="ho.avoid1">“You just need to try harder.”</p></div>
+          </div>
+          <button class="btn btn--sm btn--ghost" id="sendAlly" data-i18n="ho.send">Send invite + playbook</button>
+        </article>
+        <article class="ho-card reveal">
+          <span class="ho-card__n mono">C</span>
+          <h3 data-i18n="ho.3h">Book SAS</h3>
+          <p data-i18n="ho.3p">One tap. Your intake is pre-filled from the Evidence Pack, your ally can attend, and you get a check-in 48 hours later.</p>
+          <div class="slots" id="slots"></div>
+          <label class="check-row"><input type="checkbox" id="shareBook" checked><span data-i18n="ho.share">Attach my Evidence Pack</span></label>
+          <button class="btn btn--sm btn--accent" id="bookBtn" disabled data-i18n="ho.book">Book in one tap</button>
+        </article>
+      </div>
+      <p class="selfref reveal"><span data-i18n="ho.self">Don't want to play the games? You don't have to.</span> <button class="link" id="selfRef" data-i18n="ho.selfb">Self-refer to SAS directly →</button></p>
+    </div>
+  </section>
+
+  <!-- ============ READER ============ -->
+  <section class="section section--tint" id="try">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">08</span><span data-i18n="tr.kicker">The reader everyone keeps</span></p>
+          <h2 class="h2 reveal" data-i18n="tr.title">Read it your way. We'll notice if a page is fighting back.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="tr.lead">A real page from a Week 4 reading. Change the font, size, spacing and page colour, or have it read aloud word by word. If one short paragraph keeps needing another pass, ERLY gently asks if you'd like a hand. That check runs only on this device.</p>
+      </header>
+
+      <div class="pdf reveal" id="pdf">
+        <div class="pdf__chrome">
+          <span class="pdf__file"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z" fill="var(--accent)"/><path d="M15 2v5h5" fill="#fff" opacity=".5"/><text x="7.5" y="18" font-size="5.5" font-weight="700" fill="#fff" font-family="sans-serif">PDF</text></svg>MECH210_Week4_Reading.pdf</span>
+          <span class="pdf__meta mono"><span data-i18n="tr.page">page</span> 1 / 1 · <span id="zoomLbl">100%</span></span>
+          <div class="seg seg--sm" id="pdfLang"><button class="is-on" data-l="en">EN</button><button data-l="ar">ع</button></div>
+          <button class="btn btn--xs btn--ghost" id="rSimulate" data-i18n="tr.sim">▶ Demo: simulate re-reading</button>
+        </div>
+        <div class="pdf__body">
+          <div class="pdf__stage">
+            <div class="pdf__view" id="pdfView" tabindex="0" aria-label="Sample PDF page">
+              <article class="pdf__page" id="pdfPage"></article>
+              <div class="pdf__ruler" id="pdfRuler" aria-hidden="true"></div>
+              <span class="ghost" id="ghost" hidden aria-hidden="true"></span>
+            </div>
+            <div class="nudge-card" id="nudgeCard" hidden role="dialog" aria-live="polite"></div>
+          </div>
+          <aside class="pdf__panel">
+            <button class="speak-btn" id="rSpeak"><span class="speak-btn__ic"><svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="lbl" data-i18n="tr.speak">Read it to me</span></button>
+            <label class="slider slider--sm"><span><span data-i18n="tr.rate">Voice speed</span><b class="mono" id="vRate">0.95×</b></span><input type="range" id="rRate" min="0.6" max="1.4" step="0.05" value="0.95"></label>
+
+            <p class="panel__h mono" data-i18n="tr.font">Font</p>
+            <div class="fchips" id="fontChips"></div>
+            <label class="slider slider--sm"><span><span data-i18n="tr.size">Text size</span><b class="mono" id="vSize">19px</b></span><input type="range" id="rSize" min="14" max="36" step="1" value="19"></label>
+            <label class="slider slider--sm"><span><span data-i18n="tr.lh">Line spacing</span><b class="mono" id="vLh">1.7</b></span><input type="range" id="rLh" min="1.3" max="2.6" step="0.1" value="1.7"></label>
+            <label class="slider slider--sm"><span><span data-i18n="tr.ls">Letter spacing</span><b class="mono" id="vLs">0.00</b></span><input type="range" id="rLs" min="0" max="0.16" step="0.01" value="0"></label>
+            <p class="panel__h mono" data-i18n="tr.tint">Page colour</p>
+            <div class="tchips" id="tintChips"></div>
+            <label class="switch-row"><span><b data-i18n="tr.focus">Line focus</b><small data-i18n="tr.focusd">dims everything but one line</small></span><input type="checkbox" id="tFocus"><i></i></label>
+            <label class="switch-row"><span><b data-i18n="tr.anchor">Word anchors</b><small data-i18n="tr.anchord">bold word beginnings (English)</small></span><input type="checkbox" id="tAnchor"><i></i></label>
+            <button class="btn btn--xs btn--quiet" id="rReset" data-i18n="tr.reset">Reset to default</button>
+
+            <div class="meter2">
+              <p class="panel__h mono" data-i18n="tr.live">Noticed on this device</p>
+              <div class="meter2__passes"><b class="mono" id="mPasses">1</b><span><span data-i18n="tr.passes">passes through this paragraph</span><span class="pass-dots" id="mPassDots"></span></span></div>
+              <div class="meter2__row"><span data-i18n="tr.time">Time on it</span><b class="mono"><span id="mTime">0:00</span> · <span class="muted" data-i18n="tr.usual">usual</span> <span id="mExp"></span></b></div>
+              <div class="meter2__bar"><i id="mTimeBar"></i></div>
+              <div class="meter2__row"><span data-i18n="tr.tools">Tools tried</span><b class="mono" id="mTools">0</b></div>
+              <div class="meter2__row"><span data-i18n="tr.net">Sent anywhere</span><b class="mono meter__zero" data-i18n="tr.nothing">nothing</b></div>
+              <button class="btn btn--xs btn--quiet" id="rTrackReset" data-i18n="tr.restart">Start counting again</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCIENCE ============ -->
+  <section class="section" id="science">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">09</span><span data-i18n="sc.kicker">The science, honestly</span></p>
+        <h2 class="h2 reveal" data-i18n="sc.title">Each game measures one thing we can name and cite.</h2>
+      </header>
+      <div class="table-scroll reveal">
+        <table class="xtable">
+          <thead><tr><th data-i18n="sc.t1">Day · game</th><th data-i18n="sc.t2">What it measures</th><th data-i18n="sc.t3">Why it matters</th><th data-i18n="sc.t4">Weight</th></tr></thead>
+          <tbody>
+            <tr><td><b data-i18n="sc.r1a">1 · Real or Fake?</b></td><td data-i18n="sc.r1b">Word decoding speed &amp; accuracy, Arabic and English</td><td data-i18n="sc.r1c">Slow, effortful decoding is a core dyslexia marker. Testing both languages separates a language barrier from a reading difficulty.</td><td><span class="honesty honesty--live" data-i18n="sc.core">core</span></td></tr>
+            <tr><td><b data-i18n="sc.r2a">2 · Sound Swap</b></td><td data-i18n="sc.r2b">Phonological awareness (spoonerisms)</td><td data-i18n="sc.r2c">Difficulty manipulating speech sounds is one of the most consistent dyslexia indicators.</td><td><span class="honesty honesty--live" data-i18n="sc.core">core</span></td></tr>
+            <tr><td><b data-i18n="sc.r3a">3 · Speed Naming</b></td><td data-i18n="sc.r3b">Rapid automatised naming (colours, digits)</td><td data-i18n="sc.r3c">A recognised predictor of reading fluency. The optional microphone version runs on-device in the pilot.</td><td><span class="honesty honesty--live" data-i18n="sc.core">core</span></td></tr>
+            <tr><td><b data-i18n="sc.r4a">4 · Catch the Target</b></td><td data-i18n="sc.r4b">Go/no-go: attention lapses, impulsive taps, reaction-time variability</td><td data-i18n="sc.r4c">Relevant to ADHD — but noisy, so it is only supporting evidence alongside the ASRS.</td><td><span class="honesty honesty--sim" data-i18n="sc.support">supporting</span></td></tr>
+            <tr><td><b data-i18n="sc.r5a">5 · Memory &amp; Numbers</b></td><td data-i18n="sc.r5b">Backward digit span, number-line placement, dot comparison</td><td data-i18n="sc.r5c">Working memory, plus a first dyscalculia check that earlier ERLY didn't cover.</td><td><span class="honesty honesty--live" data-i18n="sc.core">core</span></td></tr>
+            <tr><td><b data-i18n="sc.r6a">+ Reading history</b></td><td data-i18n="sc.r6b">Adapted from the Adult Reading History Questionnaire (ARHQ)</td><td data-i18n="sc.r6c">An established adult dyslexia self-report. The pilot uses the full validated version; Arabic validation to be checked.</td><td><span class="honesty honesty--live" data-i18n="sc.est">established</span></td></tr>
+            <tr><td><b data-i18n="sc.r7a">+ Attention check</b></td><td data-i18n="sc.r7b">Based on the WHO Adult ADHD Self-Report Scale (ASRS v1.1) Part A, 6 items</td><td data-i18n="sc.r7c">The standard adult ADHD screener. Official wording and scoring in the pilot.</td><td><span class="honesty honesty--live" data-i18n="sc.est">established</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="risks">
+        <article class="risk reveal"><h3 data-i18n="sc.k1h">“Where do your cut-offs come from?”</h3><p data-i18n="sc.k1p">We don't invent them. Games compare you with peers, so the pilot first collects same-language, same-year scores and sets cut-offs against professional assessments. Demo thresholds are labelled as placeholders.</p></article>
+        <article class="risk reveal"><h3 data-i18n="sc.k2h">Practice effects &amp; anxiety</h3><p data-i18n="sc.k2p">One retry per day is allowed, and the better score counts. Timers are visible but never flash red, and no one else ever sees your scores.</p></article>
+        <article class="risk reveal"><h3 data-i18n="sc.k3h">Masking</h3><p data-i18n="sc.k3p">Bright students can pass five-minute games and still struggle under real workload. That's what the 2-week watch is for — and why self-referral is always open.</p></article>
+        <article class="risk reveal"><h3 data-i18n="sc.k4h">Triage, not diagnosis</h3><p data-i18n="sc.k4p">The test and two weeks justify a referral. SAS confirms with validated instruments. Sensitivity is ours; specificity belongs to clinicians.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section class="section section--ink" id="privacy">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">10</span><span data-i18n="pv.kicker">Privacy by design</span></p>
+        <h2 class="h2 reveal" data-i18n="pv.title">The best privacy feature is a finish line.</h2>
+      </header>
+      <div class="privacy-grid">
+        <div class="dont reveal">
+          <h3 class="h3" data-i18n="pv.nh">We never collect</h3>
+          <ul class="dont__list">
+            <li data-i18n="pv.n1">Anything you type</li>
+            <li data-i18n="pv.n2">Camera or webcam — ever</li>
+            <li data-i18n="pv.n3">Voice recordings (naming is processed on-device)</li>
+            <li data-i18n="pv.n4">Emotion or facial analysis</li>
+            <li data-i18n="pv.n5">Location</li>
+            <li data-i18n="pv.n6">Anything after day 14</li>
+          </ul>
+        </div>
+        <div class="rejected reveal">
+          <span class="tile__tag mono" data-i18n="pv.rt">What changed, and why</span>
+          <h3 class="h3" data-i18n="pv.rh">From always-on to two weeks</h3>
+          <p data-i18n="pv.rp">Semester-long passive monitoring was our biggest weakness. Now monitoring only exists after a test result, only with consent, and only for 14 days. Raw events are deleted once the summary is written.</p>
+          <blockquote class="asym" data-i18n="pv.asym">“A false positive costs a workshop invite, not a label. A false negative still has an always-open self-referral door.”</blockquote>
+        </div>
+        <div class="laws reveal">
+          <h3 class="h3" data-i18n="pv.lh">Aligned with</h3>
+          <ul class="laws__list">
+            <li><b data-i18n="pv.l1">PDPL — Federal Decree-Law 45/2021</b><span data-i18n="pv.l1d">Consent: specific, time-limited, revocable.</span></li>
+            <li><b data-i18n="pv.l2">UAE Charter for the Development &amp; Use of AI (2024)</b><span data-i18n="pv.l2d">A human confirms every outcome.</span></li>
+            <li><b data-i18n="pv.l3">National Policy for Empowering People of Determination (2017)</b><span data-i18n="pv.l3d">Early identification and inclusion.</span></li>
+            <li><b data-i18n="pv.l5">UAE AI Strategy 2031</b><span data-i18n="pv.l5d">AI for education and wellbeing.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SAS ============ -->
+  <section class="section" id="sas">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">11</span><span data-i18n="sa.kicker">For SAS &amp; the university</span></p>
+          <h2 class="h2 reveal" data-i18n="sa.title">Run it as an orientation-week event. If everyone plays, nobody is singled out.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="sa.lead">SAS sees participation and referral counts, never individual scores. Cohort cells with fewer than 10 students are hidden. All numbers below are synthetic.</p>
+      </header>
+      <div class="kpis reveal" id="kpis"></div>
+      <div class="grid-2 grid-2--wide reveal">
+        <div class="panel">
+          <p class="panel__h mono" data-i18n="sa.fun">From challenge to support · Fall, synthetic</p>
+          <div class="funnel" id="funnel"></div>
+        </div>
+        <div class="panel">
+          <p class="panel__h mono" data-i18n="sa.lang">The bilingual blind spot, made visible</p>
+          <div class="langbars" id="langbars"></div>
+          <p class="small muted" data-i18n="sa.langd">Share of “closer look” results where reading was slower in English only, Arabic only, or both. “English only” may be a language barrier. “Both” is the group to refer first.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DATA + PLAN ============ -->
+  <section class="section section--tint" id="data">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">12</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
+        <h2 class="h2 reveal" data-i18n="dt.title">Move the assumptions. We'll replace each one with a measured number.</h2>
+      </header>
+      <div class="calc reveal">
+        <div class="calc__in">
+          <label class="slider"><span><span data-i18n="dt.c1">First-year students (orientation week)</span><b class="mono" id="vEnroll"></b></span><input type="range" id="cEnroll" min="1000" max="15000" step="250" value="4000"><small class="muted" data-i18n="dt.c1d">Replace with the Bayanat higher-ed enrolment figure for the pilot university.</small></label>
+          <label class="slider"><span><span data-i18n="dt.c2">Assumed share with an unmet learning barrier</span><b class="mono" id="vPrev"></b></span><input type="range" id="cPrev" min="3" max="20" step="0.5" value="10"><small class="muted" data-i18n="dt.c2d">Range markers: 5.1% persistent ADHD at 18–24 (Vos &amp; Hartman 2022) · 17.6% dyslexic features (Aboudan 2011).</small></label>
+          <label class="slider"><span><span data-i18n="dt.c3">Complete all 5 days</span><b class="mono" id="vOpt"></b></span><input type="range" id="cOpt" min="10" max="90" step="1" value="55"></label>
+          <label class="slider"><span><span data-i18n="dt.c4">“Closer look” students who book SAS</span><b class="mono" id="vAct"></b></span><input type="range" id="cAct" min="10" max="80" step="1" value="40"></label>
+        </div>
+        <div class="calc__out">
+          <div class="calc__big"><span class="mono" id="oReach">0</span><small data-i18n="dt.o1">students with a barrier who'd be noticed in their first semester</small></div>
+          <div class="calc__row"><span data-i18n="dt.o2">Likely to reach SAS</span><b class="mono" id="oSAS">0</b></div>
+          <div class="calc__row"><span data-i18n="dt.o3">Clinician hours saved by Evidence Packs</span><b class="mono" id="oHours">0</b></div>
+          <div class="calc__row"><span data-i18n="dt.o4">Still unreached — kept honest</span><b class="mono" id="oMiss">0</b></div>
+          <p class="small muted" data-i18n="dt.on">Assumes ~2 fewer intake hours per referral with an Evidence Pack. Assumptions, not findings.</p>
+        </div>
+      </div>
+
+      <div class="datasets">
+        <article class="ds reveal"><span class="ds__src mono">Bayanat</span><h3 data-i18n="dt.d1">Grade 12 pass rates</h3><p data-i18n="dt.d1p">Used for one thing only: the gap evidence.</p><a href="https://bayanat.ae/en/Datasets/Dataset-info?id=mdozfIMTh5W4bcRf0g73X8m-c2QA0QfhY-zVp5znLNc" target="_blank" rel="noopener" class="link mono" data-i18n="dt.open">Open dataset ↗</a></article>
+        <article class="ds reveal"><span class="ds__src mono">Bayanat</span><h3 data-i18n="dt.d2">Higher-education enrolment</h3><p data-i18n="dt.d2p">Denominators for impact sizing and SAS capacity.</p><a href="https://bayanat.ae/en/Datasets/Dataset-info?id=75OQ9yv9cXhUjtqAMRo0AD8zQ2AgcKV1rrg0PwyY-f0" target="_blank" rel="noopener" class="link mono" data-i18n="dt.open">Open dataset ↗</a></article>
+        <article class="ds reveal"><span class="ds__src mono">J Glob Health</span><h3 data-i18n="dt.d3">Adult ADHD prevalence</h3><p data-i18n="dt.d3p">Song 2021 (2.58% persistent) and Vos &amp; Hartman 2022 (5.1% at 18–24).</p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9197091/" target="_blank" rel="noopener" class="link mono" data-i18n="dt.paper">Read paper ↗</a></article>
+        <article class="ds ds--never reveal"><span class="ds__src mono" data-i18n="dt.nv">Missing</span><h3 data-i18n="dt.d4">Current UAE university prevalence</h3><p data-i18n="dt.d4p">Not public. The pilot creates the first current, consented dataset — and the peer norms the games need.</p></article>
+      </div>
+
+      <div class="plan plan--mt">
+        <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.1w">Weeks 1–4</span><h3 data-i18n="pl.1h">Build &amp; friend-test</h3><ul><li data-i18n="pl.1a">Five games + two screeners, Arabic and English</li><li data-i18n="pl.1b">30-student friend test</li><li data-i18n="pl.1c">Check validated Arabic versions of ARHQ / ASRS</li></ul></article>
+        <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.2w">Weeks 5–8</span><h3 data-i18n="pl.2h">Orientation-week pilot</h3><ul><li data-i18n="pl.2a">One university, whole first-year cohort</li><li data-i18n="pl.2b">Collect peer norms by language &amp; year</li><li data-i18n="pl.2c">Consent-flow &amp; PDPL review</li></ul></article>
+        <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.3w">Weeks 9–13</span><h3 data-i18n="pl.3h">Calibrate &amp; hand off</h3><ul><li data-i18n="pl.3a">Compare scores with SAS assessments</li><li data-i18n="pl.3b">Set real cut-offs</li><li data-i18n="pl.3c">Test the Evidence Pack with clinicians</li></ul></article>
+        <article class="phase phase--gate reveal"><span class="phase__wk mono" data-i18n="pl.gw">Day 90</span><h3 data-i18n="pl.gh">Scale / no-scale gate</h3><ul><li data-i18n="pl.ga">Cut-offs beat chance against assessments</li><li data-i18n="pl.gb">Zero data kept past day 14</li><li data-i18n="pl.gc">Students call it useful, not scary</li></ul></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq">
+    <div class="wrap faq-wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">13</span><span data-i18n="fq.kicker">Hard questions</span></p>
+        <h2 class="h2 reveal" data-i18n="fq.title">Ask us anything. We already asked ourselves.</h2>
+      </header>
+      <div class="faq">
+        <details class="reveal"><summary data-i18n="fq.1q">Can five games diagnose dyslexia?</summary><p data-i18n="fq.1a">No, and we never say they do. The challenge and the two weeks build evidence strong enough to justify a referral. A professional assessment at SAS confirms.</p></details>
+        <details class="reveal"><summary data-i18n="fq.2q">Where do your cut-offs come from?</summary><p data-i18n="fq.2a">Demo thresholds are placeholders and labelled as such. The pilot collects same-language, same-year peer scores and sets cut-offs against professional assessments.</p></details>
+        <details class="reveal"><summary data-i18n="fq.3q">Nobody takes screening quizzes. Why would they play this?</summary><p data-i18n="fq.3a">It's not a screening quiz — it's “How do you learn best?”, run for the whole cohort in orientation week, with a useful profile for every player and a streak for finishing.</p></details>
+        <details class="reveal"><summary data-i18n="fq.4q">Isn't monitoring creepy?</summary><p data-i18n="fq.4a">That's why we cut it to two weeks, only after a result, only with consent, with a visible countdown and a stop button. Raw data is deleted after the summary.</p></details>
+        <details class="reveal"><summary data-i18n="fq.5q">What about bright students who pass but still struggle?</summary><p data-i18n="fq.5a">Masking is real. The self-referral door is always open, with or without a test.</p></details>
+        <details class="reveal"><summary data-i18n="fq.6q">Won't people get better the second time?</summary><p data-i18n="fq.6a">Yes — practice effects. One retry is allowed, the better score counts, and the pilot builds its norms the same way.</p></details>
+        <details class="reveal"><summary data-i18n="fq.7q">Why both Arabic and English?</summary><p data-i18n="fq.7a">If reading is slow only in English, it may be a language barrier. If it's slow in both, it's more likely a reading difficulty. The comparison makes the bilingual blind spot visible.</p></details>
+        <details class="reveal"><summary data-i18n="fq.8q">Why not leaderboards?</summary><p data-i18n="fq.8a">Ranking people on these tasks would be harmful. Streaks reward finishing; scores are never shown to anyone else.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="close">
+    <div class="wrap close__inner">
+      <svg class="close__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="11" r="1.6" fill="var(--accent)"/></svg>
+      <h2 class="display display--close reveal" data-i18n="cl.title">Test first.<br><em>Watch only with permission. Then stop.</em></h2>
+      <p class="lead reveal" data-i18n="cl.p">ERLY — Early Recognition of Learning barriers, on Your terms.</p>
+      <div class="hero__cta reveal" style="justify-content:center">
+        <a href="#challenge" class="btn btn--accent" data-i18n="cl.b1">Play the challenge</a>
+        <button class="btn btn--ghost" id="pitchStart" data-i18n="cl.b2">Start 5-minute pitch timer</button>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__grid">
+      <div>
+        <a href="#top" class="brand"><svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg><span class="brand__word">erly</span></a>
+        <p class="muted small" data-i18n="ft.team">Team Rising Stars · UAE Hackathon 2026 · SAS early-identification challenge.</p>
+        <p class="muted small" data-i18n="ft.syn">A screening prototype, not a diagnostic tool. Thresholds are demo placeholders; cohort data is synthetic.</p>
+      </div>
+      <div>
+        <p class="mono small foot__h" data-i18n="ft.refs">References</p>
+        <ol class="refs small">
+          <li>Aboudan, R. et al. (2011). <i>Int. J. English Linguistics</i> 1(2):64. <a class="link" href="https://doi.org/10.5539/ijel.v1n2p64" target="_blank" rel="noopener">doi:10.5539/ijel.v1n2p64</a></li>
+          <li>Lefly, D. &amp; Pennington, B. (2000). Reliability and validity of the Adult Reading History Questionnaire. <i>J Learn Disabil</i> 33(3).</li>
+          <li>Kessler, R. et al. (2005). The World Health Organization Adult ADHD Self-Report Scale (ASRS). <i>Psychol Med</i> 35(2).</li>
+          <li>Song, P. et al. (2021) <i>J Glob Health</i> 11:04009 · Vos, M. &amp; Hartman, C. (2022) <i>J Glob Health</i> 12:03024.</li>
+          <li>UAE Federal Decree-Law No. 45 of 2021 (PDPL) · Bayanat open data.</li>
+        </ol>
+      </div>
+      <div>
+        <p class="mono small foot__h" data-i18n="ft.keys">Shortcuts</p>
+        <ul class="keys small">
+          <li><kbd>⌘K</kbd><span data-i18n="ft.k1">Jump anywhere</span></li>
+          <li><kbd>T</kbd><span data-i18n="ft.k2">Toggle theme</span></li>
+          <li><kbd>L</kbd><span data-i18n="ft.k3">English / العربية</span></li>
+          <li><kbd>P</kbd><span data-i18n="ft.k4">Pitch timer</span></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cmd" id="cmd" hidden>
+    <div class="cmd__panel" role="dialog" aria-modal="true" aria-label="Quick jump">
+      <input type="text" id="cmdInput" placeholder="Jump to a section or action…" autocomplete="off">
+      <ul id="cmdList" role="listbox"></ul>
+      <p class="cmd__foot mono small"><span>↑↓</span> navigate · <span>↵</span> open · <span>esc</span> close</p>
+    </div>
+  </div>
+  <div class="pitch" id="pitch" hidden>
+    <span class="mono" id="pitchTime">5:00</span>
+    <span class="pitch__seg" id="pitchSeg">Hook</span>
+    <button class="icon-btn" id="pitchClose" aria-label="Close timer">×</button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/fun.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/challenge.js"></script>
+  <script src="assets/js/watch.js"></script>
+  <script src="assets/js/reader.js"></script>
+  <script src="assets/js/insight.js"></script>
+  <script src="assets/js/session.js"></script>
+</body>
+</html>

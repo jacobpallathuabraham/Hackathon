@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acubins · SAS Counselor</title>
+  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <script>
+    try { if (sessionStorage.getItem('acubins-role') !== 'counselor') location.replace('index.html?next=counselor'); } catch (e) {}
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="dash-body">
+  <aside class="side" id="side">
+    <a class="brand" href="#overview">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg>
+      <span class="brand__word">acubins</span><span class="brand__sub mono">sas</span>
+    </a>
+    <nav class="side__nav">
+      <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
+      <button class="side__a" data-view="requests"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Requests<span class="side__badge" id="newBadge">0</span></button>
+      <button class="side__a" data-view="students"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .8 3.5 2.8 3.5 6"/></svg>Students</button>
+      <button class="side__a" data-view="cohort"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Cohort</button>
+    </nav>
+    <div class="side__card">
+      <p class="mono small">Privacy</p>
+      <p class="small">You only see what students chose to share. Raw ERLY data is deleted on day 14.</p>
+    </div>
+    <div class="side__me">
+      <span class="avatar">C</span>
+      <div><b>Counselor</b><small class="muted">Student Accessibility Services</small></div>
+      <button class="icon-btn icon-btn--sm" id="logoutBtn" aria-label="Sign out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </aside>
+
+  <div class="dash">
+    <header class="dash__top">
+      <button class="icon-btn dash__menu" id="menuBtn" aria-label="Menu">☰</button>
+      <div>
+        <p class="mono muted small" id="today"></p>
+        <h1 class="dash__hi" id="hi">Good morning, Counselor</h1>
+      </div>
+      <div class="dash__tools">
+        <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="search" placeholder="Search students…" autocomplete="off"></label>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="dash__main">
+      <!-- OVERVIEW -->
+      <section class="view is-on" data-view="overview">
+        <div class="kpis kpis--dash" id="kpis"></div>
+        <div class="dgrid2">
+          <div class="dcard dcard--wide">
+            <div class="dcard__head"><h2>New requests</h2><button class="link small" data-goto="requests">See the board →</button></div>
+            <div class="req-list" id="reqList"></div>
+          </div>
+          <div class="dcard">
+            <div class="dcard__head"><h2>Areas flagged</h2><span class="mono muted small">this term</span></div>
+            <div class="donut-wrap"><svg viewBox="0 0 120 120" class="donut" id="donut"></svg><div class="donut__c"><b id="donutN">0</b><small>students</small></div></div>
+            <ul class="legend" id="donutLegend"></ul>
+          </div>
+          <div class="dcard">
+            <div class="dcard__head"><h2>This week</h2><span class="mono muted small">appointments</span></div>
+            <ol class="agenda" id="agenda"></ol>
+          </div>
+          <div class="dcard dcard--wide">
+            <div class="dcard__head"><h2>Does support work?</h2><span class="mono muted small">avg grade before → after accommodations</span></div>
+            <div class="impact" id="impact"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REQUESTS BOARD -->
+      <section class="view" data-view="requests">
+        <div class="view__head"><h2 class="view__title">Requests</h2><div class="chips" id="areaFilter"></div></div>
+        <div class="board" id="board"></div>
+      </section>
+
+      <!-- STUDENTS -->
+      <section class="view" data-view="students">
+        <div class="view__head"><h2 class="view__title">Students &amp; performance</h2><span class="muted small">Grades and on-time submission, before and after support.</span></div>
+        <div class="stu-grid" id="stuGrid"></div>
+      </section>
+
+      <!-- COHORT -->
+      <section class="view" data-view="cohort">
+        <div class="view__head"><h2 class="view__title">Cohort insights</h2><span class="muted small">Anonymised · cells under 10 students hidden · synthetic</span></div>
+        <div class="dgrid2">
+          <div class="dcard"><div class="dcard__head"><h2>ERLY funnel</h2></div><div class="funnel" id="funnel"></div></div>
+          <div class="dcard"><div class="dcard__head"><h2>Bilingual blind spot</h2></div><div id="langbars"></div><p class="small muted">“English only” may be language load. “Both” is the group to assess first.</p></div>
+          <div class="dcard dcard--wide"><div class="dcard__head"><h2>Curriculum Mirror</h2><span class="mono muted small">reading friction by course · week</span></div><div class="heat" id="heat"></div><div class="nudge" id="nudge" hidden></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- detail drawer -->
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="Student detail"></aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/counselor.js"></script>
+</body>
+</html>
