@@ -2,15 +2,15 @@
    book SAS and share their ERLY Evidence Pack. Every number on the page is
    derived from one caseload model, so the KPIs, charts, tables and drawers
    always agree. Records are synthetic, except an optional "Acubins (you)" row
-   built from the 14-day tracking run in this same browser. */
+   built from the 28-day Support Pact run in this same browser. */
 (function () {
   'use strict';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const { CATS, LIST } = window.ERLY_IND;
-  const CK = Object.keys(CATS);
-  const DAYS = 14, CAL = 3, JUDGED = DAYS - CAL;
+  const { CATS, LIST, SIGNALS } = window.ERLY_IND;
+  const CK = Object.keys(CATS), DK = CK.filter(c => CATS[c].area !== 'support');
+  const DAYS = 28, CAL = 14, JUDGED = DAYS - CAL, EXAM = [22, 23, 24];
 
   /* ---------- small helpers ---------- */
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('is-on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('is-on'), 2800); }
@@ -27,84 +27,99 @@
 
   /* ---------- areas (the four things ERLY can flag) ---------- */
   const AREA = {
-    reading: { label: 'Reading', cat: 'R', icon: '<svg viewBox="0 0 40 40" class="ai"><path d="M4 10c5-2 11-2 16 2v20c-5-4-11-4-16-2z" fill="var(--c-R)" opacity=".85"/><path d="M36 10c-5-2-11-2-16 2v20c5-4 11-4 16-2z" fill="var(--c-R)" opacity=".5"/><text x="9" y="9" class="ai-l ai-l1" font-size="9" font-weight="700" fill="var(--ink)">b</text><text x="25" y="8" class="ai-l ai-l2" font-size="9" font-weight="700" fill="var(--ink)">d</text></svg>' },
-    language: { label: 'Language load', cat: 'L', icon: '<svg viewBox="0 0 40 40" class="ai"><path d="M4 8h18v12H12l-5 4v-4H4z" fill="var(--c-L)" class="ai-b1"/><path d="M36 16H18v12h10l5 4v-4h3z" fill="var(--c-R)" class="ai-b2"/><text x="8" y="18" font-size="8" font-weight="700" fill="#fff">Aa</text><text x="23" y="26" font-size="8" font-weight="700" fill="#fff">ع</text></svg>' },
-    attention: { label: 'Starting & deadlines', cat: 'W', icon: '<svg viewBox="0 0 40 40" class="ai"><circle cx="20" cy="20" r="12" fill="none" stroke="var(--c-W)" stroke-width="3" stroke-dasharray="6 5" class="ai-spin"/><path d="M22 8 14 22h7l-3 10 9-15h-7z" fill="var(--c-T)" class="ai-zap"/></svg>' },
-    strain: { label: 'Strain & routine', cat: 'T', icon: '<svg viewBox="0 0 40 40" class="ai"><rect x="5" y="13" width="26" height="14" rx="3" fill="none" stroke="var(--c-T)" stroke-width="3"/><rect x="31" y="17" width="4" height="6" rx="1" fill="var(--c-T)"/><rect x="9" y="17" width="8" height="6" rx="1.5" fill="var(--c-T)" class="ai-zap"/></svg>' }
+    reading: { label: 'Visual decoding', profile: 'A', cat: 'R', icon: '<svg viewBox="0 0 40 40" class="ai"><path d="M4 10c5-2 11-2 16 2v20c-5-4-11-4-16-2z" fill="var(--c-R)" opacity=".85"/><path d="M36 10c-5-2-11-2-16 2v20c5-4 11-4 16-2z" fill="var(--c-R)" opacity=".5"/><text x="9" y="9" class="ai-l ai-l1" font-size="9" font-weight="700" fill="var(--ink)">b</text><text x="25" y="8" class="ai-l ai-l2" font-size="9" font-weight="700" fill="var(--ink)">d</text></svg>' },
+    language: { label: 'Language load', profile: 'EN only', cat: 'T', icon: '<svg viewBox="0 0 40 40" class="ai"><path d="M4 8h18v12H12l-5 4v-4H4z" fill="var(--c-T)" class="ai-b1"/><path d="M36 16H18v12h10l5 4v-4h3z" fill="var(--c-R)" class="ai-b2"/><text x="8" y="18" font-size="8" font-weight="700" fill="#fff">Aa</text><text x="23" y="26" font-size="8" font-weight="700" fill="#fff">ع</text></svg>' },
+    executive: { label: 'Executive function', profile: 'B', cat: 'L', icon: '<svg viewBox="0 0 40 40" class="ai"><circle cx="20" cy="20" r="12" fill="none" stroke="var(--c-L)" stroke-width="3" stroke-dasharray="6 5" class="ai-spin"/><path d="M22 8 14 22h7l-3 10 9-15h-7z" fill="var(--c-T)" class="ai-zap"/></svg>' },
+    strain: { label: 'Acquired strain', profile: 'C', cat: 'W', icon: '<svg viewBox="0 0 40 40" class="ai"><rect x="5" y="13" width="26" height="14" rx="3" fill="none" stroke="var(--c-W)" stroke-width="3"/><rect x="31" y="17" width="4" height="6" rx="1" fill="var(--c-W)"/><rect x="9" y="17" width="8" height="6" rx="1.5" fill="var(--c-W)" class="ai-zap"/></svg>' }
   };
-  const AREA_KEYS = ['reading', 'language', 'attention', 'strain'];
+  const AREA_KEYS = ['reading', 'executive', 'strain', 'language'];
   const ILLO = {
     reading: `<svg viewBox="0 0 300 150" class="illo"><rect x="20" y="12" width="150" height="126" rx="10" fill="var(--surface)" stroke="var(--line-2)"/>${[0, 1, 2, 3, 4, 5].map(i => [0, 1, 2].map(j => `<rect x="${34 + j * 44}" y="${30 + i * 17}" width="${32 + ((i + j) % 3) * 5}" height="7" rx="3.5" fill="var(--line-2)" class="${(i * 3 + j) % 4 === 1 ? 'il-drift' : ''}"/>`).join('')).join('')}<g class="il-loupe"><circle cx="210" cy="72" r="38" fill="var(--bg)" stroke="var(--ink)" stroke-width="5"/><line x1="238" y1="100" x2="264" y2="128" stroke="var(--ink)" stroke-width="8" stroke-linecap="round"/><text x="190" y="84" font-size="30" font-family="Fraunces,serif" fill="var(--accent)" class="il-b">b</text><text x="214" y="84" font-size="30" font-family="Fraunces,serif" fill="var(--teal)" class="il-d">d</text></g></svg>`,
-    attention: `<svg viewBox="0 0 300 150" class="illo"><line x1="20" y1="130" x2="280" y2="130" stroke="var(--line-2)" stroke-width="2"/><path class="il-curve" d="M20 122 C 80 120, 140 122, 190 116 S 232 50, 248 26 L 262 122" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><g transform="translate(252 14)"><line x1="0" y1="0" x2="0" y2="116" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4"/><path d="M0 0h20l-6 6 6 6H0z" fill="var(--accent)"/></g><g class="il-door"><rect x="56" y="52" width="46" height="72" rx="4" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="94" cy="90" r="3" fill="var(--ink)"/></g><g class="il-push"><circle cx="36" cy="80" r="8" fill="var(--s3)"/><path d="M36 88v22M36 94l16-5M36 110l-7 16M36 110l9 16" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></g></svg>`,
+    executive: `<svg viewBox="0 0 300 150" class="illo"><line x1="20" y1="130" x2="280" y2="130" stroke="var(--line-2)" stroke-width="2"/><path class="il-curve" d="M20 122 C 80 120, 140 122, 190 116 S 232 50, 248 26 L 262 122" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><g transform="translate(252 14)"><line x1="0" y1="0" x2="0" y2="116" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4"/><path d="M0 0h20l-6 6 6 6H0z" fill="var(--accent)"/></g><g class="il-door"><rect x="56" y="52" width="46" height="72" rx="4" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="94" cy="90" r="3" fill="var(--ink)"/></g><g class="il-push"><circle cx="36" cy="80" r="8" fill="var(--s3)"/><path d="M36 88v22M36 94l16-5M36 110l-7 16M36 110l9 16" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></g></svg>`,
     language: `<svg viewBox="0 0 300 150" class="illo"><g transform="translate(40 16)"><rect width="90" height="118" rx="8" fill="var(--teal)" opacity=".85"/><rect x="9" y="11" width="72" height="96" rx="4" fill="var(--surface)"/><text x="45" y="68" font-size="32" text-anchor="middle" fill="var(--teal)">ع</text></g><g transform="translate(170 16)" class="il-heavy"><rect width="90" height="118" rx="8" fill="var(--accent)" opacity=".85"/><rect x="9" y="11" width="72" height="96" rx="4" fill="var(--surface)"/><text x="45" y="70" font-size="32" text-anchor="middle" font-family="Fraunces" fill="var(--accent)">Aa</text></g></svg>`,
     strain: `<svg viewBox="0 0 300 150" class="illo"><rect x="50" y="44" width="170" height="70" rx="16" fill="none" stroke="var(--ink)" stroke-width="5"/><rect x="222" y="66" width="16" height="26" rx="4" fill="var(--ink)"/><rect x="62" y="56" width="50" height="46" rx="8" fill="var(--accent)" class="il-batt"/><path d="M140 26c8 10 8 18 0 26M164 18c12 14 12 28 0 42" fill="none" stroke="var(--s3)" stroke-width="4" stroke-linecap="round" class="il-zz"/></svg>`
   };
   const FEEL = {
-    reading: 'More re-reading, longer dwell and slower pace than their own normal, on most judged days.',
-    attention: 'Work bunched up near deadlines; drafts abandoned; starting late on most judged days.',
-    language: 'Friction mostly on English pages — may be second-language load rather than a learning difficulty.',
-    strain: 'Several unrelated routines shifted at once — later nights, shorter sessions, fewer study days.'
+    reading: 'Profile A — re-reading, longer dwell and slower pace than their own normal, in both Arabic and English, through the watched fortnight.',
+    executive: 'Profile B — 11th-hour spikes, abandoned submissions and late starts against their own baseline.',
+    language: 'Reading friction on English pages only — the per-language baselines point to language load rather than a learning difference.',
+    strain: 'Profile C — a sudden drop across almost every baseline at once. Route to a counsellor first; never tools.',
   };
 
   /* ---------- synthetic caseload ---------- */
   const SEM = ['Spr 25', 'Fall 25', 'Spr 26', 'Fall 26*'];
   const S = [
     { id: '2026-0311', name: 'Mariam Al Hammadi', prog: 'Mechanical Eng.', year: 2, status: 'new', track: ['reading'], dw: [2.4, 1.9], gpa: [3.6, 3.4, 3.1, 2.9], on: [92, 88, 80, 71], req: -1, ally: 'Sara (sister)', note: 'Re-reading spikes in English PDFs after 11pm. Read-aloud helped (“easier”). Asked Noor for plain-words summaries 9 times.' },
-    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['attention'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: '11th-hour submissions on most judged days; three abandoned drafts. Says starting is the hard part.' },
+    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['executive'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: '11th-hour submissions on most judged days; three abandoned drafts. Says starting is the hard part.' },
     { id: '2026-0129', name: 'Aisha Rahman', prog: 'Law', year: 1, status: 'new', track: null, gpa: [null, null, 3.4, 3.2], on: [null, null, 88, 84], req: 0, ally: null, note: 'Self-referred without tracking: “I suspect I might have dyslexia; reading cases takes me hours.”' },
-    { id: '2026-0442', name: 'Noura Al Ketbi', prog: 'Mechanical Eng.', year: 2, status: 'scheduled', slot: 1, slotT: '10:30', track: ['reading', 'language'], dw: [2.6, 1.3], gpa: [3.8, 3.6, 3.4, 3.0], on: [95, 90, 86, 72], req: -4, ally: 'Sara (sister)', note: 'Much slower on English pages than Arabic — check language load vs. decoding.' },
+    { id: '2026-0442', name: 'Noura Al Ketbi', prog: 'Mechanical Eng.', year: 2, status: 'scheduled', slot: 1, slotT: '10:30', track: ['reading'], dw: [2.6, 1.3], gpa: [3.8, 3.6, 3.4, 3.0], on: [95, 90, 86, 72], req: -4, ally: 'Sara (sister)', note: 'Much slower on English pages than Arabic — check language load vs. decoding.' },
     { id: '2026-0618', name: 'Rahul Menon', prog: 'Business', year: 3, status: 'scheduled', slot: 3, slotT: '13:30', track: ['strain'], dw: [1.3, null], gpa: [3.3, 3.1, 3.0, 2.6], on: [90, 88, 84, 76], req: -5, ally: null, note: 'Late-night study and shorter sessions since a family move. Took the breathing break with Noor often.' },
-    { id: '2026-0233', name: 'Fatima Al Suwaidi', prog: 'Medicine', year: 1, status: 'assessed', confirmed: 'ADHD (combined)', track: ['attention', 'reading'], dw: [1.9, 1.7], gpa: [null, null, 3.5, 3.0], on: [null, null, 80, 62], req: -12, ally: 'Dr. Hessa (advisor)', note: 'Assessed 14 Oct. Recommend distraction-reduced exams and extensions by arrangement.' },
+    { id: '2026-0233', name: 'Fatima Al Suwaidi', prog: 'Medicine', year: 1, status: 'assessed', confirmed: 'ADHD (combined)', track: ['executive', 'reading'], dw: [1.9, 1.7], gpa: [null, null, 3.5, 3.0], on: [null, null, 80, 62], req: -12, ally: 'Dr. Hessa (advisor)', note: 'Assessed 14 Oct. Recommend distraction-reduced exams and extensions by arrangement.' },
     { id: '2026-0175', name: 'Yousef Darwish', prog: 'Architecture', year: 2, status: 'plan', confirmed: 'Dyslexia', track: ['reading'], dw: [2.7, 2.3], gpa: [3.0, 2.6, 2.4, 3.1], on: [84, 70, 66, 90], plan: 3, accom: ['25% extra time', 'Text-to-speech in exams', 'Readings in advance'], req: -60, ally: null, note: 'Support plan since this semester. Mid-term grades recovering.' },
     { id: '2026-0388', name: 'Hamdan Al Mazrouei', prog: 'Civil Eng.', year: 3, status: 'plan', confirmed: 'No learning disability — English language support', track: ['language'], dw: [2.2, 1.0], gpa: [2.9, 2.8, 2.7, 3.2], on: [82, 80, 78, 88], plan: 3, accom: ['English writing centre', 'Glossaries for course terms'], req: -58, ally: null, note: 'Assessment found no learning disability. The gap was second-language load — ERLY routed correctly.' },
-    { id: '2026-0254', name: 'Leila Haddad', prog: 'Psychology', year: 2, status: 'plan', confirmed: 'No learning disability — counselling and workload plan', track: ['strain', 'attention'], dw: [1.2, 1.1], gpa: [3.4, 3.3, 2.8, 3.3], on: [91, 89, 72, 90], plan: 3, accom: ['Counselling sessions', 'Reduced course load', 'Planned rest days'], req: -64, ally: 'Mariam (friend)', note: 'Strain, not a learning difficulty. Counselling and a lighter load restored her routine.' },
-    { id: '2026-0461', name: 'Saeed Al Nuaimi', prog: 'Electrical Eng.', year: 1, status: 'plan', confirmed: 'ADHD (inattentive)', track: ['attention'], dw: [1.3, 1.2], gpa: [null, 3.2, 2.5, 3.0], on: [null, 76, 55, 84], plan: 3, accom: ['Distraction-reduced exam room', '48h extensions by arrangement', 'Focus-sprint coaching'], req: -70, ally: null, note: 'On-time submissions up 29 points since the plan started.' }
+    { id: '2026-0254', name: 'Leila Haddad', prog: 'Psychology', year: 2, status: 'plan', confirmed: 'No learning disability — counselling and workload plan', track: ['strain', 'executive'], dw: [1.2, 1.1], gpa: [3.4, 3.3, 2.8, 3.3], on: [91, 89, 72, 90], plan: 3, accom: ['Counselling sessions', 'Reduced course load', 'Planned rest days'], req: -64, ally: 'Mariam (friend)', note: 'Strain, not a learning difficulty. Counselling and a lighter load restored her routine.' },
+    { id: '2026-0461', name: 'Saeed Al Nuaimi', prog: 'Electrical Eng.', year: 1, status: 'plan', confirmed: 'ADHD (inattentive)', track: ['executive'], dw: [1.3, 1.2], gpa: [null, 3.2, 2.5, 3.0], on: [null, 76, 55, 84], plan: 3, accom: ['Distraction-reduced exam room', '48h extensions by arrangement', 'Focus-sprint coaching'], req: -70, ally: null, note: 'On-time submissions up 29 points since the plan started.' }
   ];
 
-  // Per-indicator "days above normal" for one fortnight — computed exactly as tracker.js does.
-  function fortnight(seed, areas) {
+  // Per-indicator "days above normal" over the 28-day pact — computed exactly as tracker.js does:
+  // days 1–14 are the blind fortnight, 15–28 are judged, and Exam Mode days never count.
+  function month(seed, areas, dw) {
+    const hotAreas = areas.map(a => a === 'language' ? 'reading' : a);
+    const boost = hotAreas.includes('reading') ? ['M03', 'M07', 'M09', 'Q05', 'P01'] : [];
     const days = Array.from({ length: DAYS }, (_, i) => ({ n: i + 1, set: new Set() }));
-    const per = LIST.map(ind => {
-      const hot = areas.includes(ind.area);
-      const p = hot ? 0.58 + hash(seed + ind.id + 'p') * 0.22 : 0.04 + hash(seed + ind.id + 'q') * 0.1;
+    const per = LIST.filter(i => i.dir > 0).map(ind => {
+      const hot = hotAreas.includes(ind.area) || boost.includes(ind.id);
+      const p = hot ? 0.6 + hash(seed + ind.id + 'p') * 0.22 : 0.04 + hash(seed + ind.id + 'q') * 0.1;
       let up = 0;
-      for (let d = CAL; d < DAYS; d++) if (hash(seed + ind.id + d) < p) { days[d].set.add(ind.id); up++; }
-      return { ...ind, up, frac: up / JUDGED };
+      for (let d = CAL; d < DAYS; d++) {
+        if (EXAM.includes(d + 1) && ind.area !== 'reading') continue;
+        if (hash(seed + ind.id + d) < p) { days[d].set.add(ind.id); up++; }
+      }
+      return { id: ind.id, cat: ind.cat, area: ind.area, en: ind.en, live: ind.live, up, frac: up / JUDGED };
     });
-    return summarise(per, days.map(d => ({ n: d.n, byCat: Object.fromEntries(CK.map(c => [c, d.n <= CAL ? 0 : LIST.filter(i => i.cat === c && d.set.has(i.id)).length])) })));
+    const daily = days.map(d => ({ n: d.n, exam: EXAM.includes(d.n), byArea: Object.fromEntries(['reading', 'executive', 'strain'].map(a => [a, d.n <= CAL ? 0 : per.filter(p => p.area === a && d.set.has(p.id)).length])) }));
+    const lang = dw && dw[1] != null ? { en: 1, ar: dw[1] / dw[0] } : null;
+    return summarise(per, daily, lang);
   }
-  function summarise(per, daily) {
+  function summarise(per, daily, lang) {
     const areas = {};
-    AREA_KEYS.forEach(a => {
+    ['reading', 'executive', 'strain'].forEach(a => {
       const inA = per.filter(p => p.area === a);
       areas[a] = { n: inA.length, persistent: inA.filter(p => p.frac >= 0.5).length, score: inA.length ? inA.reduce((x, p) => x + p.frac, 0) / inA.length : 0 };
     });
-    const flagged = AREA_KEYS.filter(a => areas[a].persistent >= 3 && areas[a].score >= 0.35);
-    const cats = Object.fromEntries(CK.map(c => { const inC = per.filter(p => p.cat === c); return [c, inC.length ? inC.reduce((x, p) => x + p.frac, 0) / inC.length : 0]; }));
-    return { per, daily, areas, flagged, cats, judged: JUDGED };
+    const cats = Object.fromEntries(DK.map(c => { const inC = per.filter(p => p.cat === c); return [c, inC.length ? inC.reduce((x, p) => x + p.frac, 0) / inC.length : 0]; }));
+    const catsN = Object.fromEntries(DK.map(c => [c, per.filter(p => p.cat === c && p.frac >= .5).length]));
+    const dims = DK.filter(c => catsN[c] >= 3);
+    let flagged = ['reading', 'executive', 'strain'].filter(a => areas[a].persistent >= 3 && areas[a].score >= 0.35);
+    const englishOnly = !!(lang && flagged.includes('reading') && lang.ar < lang.en / 1.6);
+    if (englishOnly) flagged = flagged.map(a => a === 'reading' ? 'language' : a);
+    const strong = dims.length >= 3 && flagged.length > 0;
+    const crisis = strong && flagged.includes('strain') && dims.length >= 7;
+    const signals = SIGNALS.map(g => { const ps = per.filter(p => g.ind.includes(p.id)); return { id: g.id, en: g.en, on: ps.filter(p => p.frac >= .5).length >= 2 }; });
+    const top3 = per.slice().sort((a, b) => b.frac - a.frac || a.id.localeCompare(b.id)).slice(0, 3);
+    return { per, daily, areas, flagged, cats, catsN, dims, strong, crisis, signals, top3, englishOnly, judged: JUDGED };
   }
   S.forEach((s, i) => {
     s.init = s.name.split(' ').map(w => w[0]).slice(0, 2).join('');
     s.hue = (i * 47) % 360;
-    s.via = s.track ? '14-day tracking' : 'Self-referral';
-    s.fx = s.track ? fortnight(s.id, s.track) : null;
+    s.via = s.track ? 'Support Pact · 28 days' : 'Self-referral';
+    s.fx = s.track ? month(s.id, s.track, s.dw) : null;
     s.areas = s.fx ? s.fx.flagged : [];
   });
 
   // "Acubins (you)" — from the student's own tracking in this browser
   (function addYou() {
     try {
-      const t = JSON.parse(localStorage.getItem('erly-track-v1') || 'null');
+      const t = JSON.parse(localStorage.getItem('erly-track-v2') || 'null');
       if (!t) return;
       const ended = t.status === 'ended' && t.summary;
       if (!ended && !t.selfRef) return;
       let fx = null;
       if (ended) {
         const sm = t.summary;
-        fx = summarise(sm.per.map(p => ({ ...LIST.find(x => x.id === p.id), up: p.up, frac: p.frac })), sm.daily.map(d => ({ n: d.n, byCat: Object.fromEntries(CK.map(c => [c, d.n <= CAL ? 0 : (d.byCat[c] || 0)])) })));
-        fx.judged = sm.judged;
+        fx = { per: sm.per, daily: sm.daily.map(d => ({ n: d.n, exam: d.exam, byArea: d.byArea })), areas: sm.areas, flagged: sm.flaggedAreas, cats: sm.cats, catsN: sm.catsN, dims: sm.dims, strong: sm.strong, crisis: sm.crisis, signals: sm.signals, top3: sm.top3, englishOnly: sm.englishOnly, judged: sm.judged };
       }
-      S.unshift({ id: '2026-0417', name: 'Acubins (you)', init: 'A', hue: 18, prog: 'Demo student', year: 1, status: 'new', via: fx ? '14-day tracking' : 'Self-referral', fx, areas: fx ? fx.flagged : [], track: fx ? fx.flagged : null, dw: null, gpa: [null, null, 3.5, 3.3], on: [null, null, 86, 80], req: 0, ally: null, live: true, note: fx ? 'Built from the 14-day tracking you just ran on the student page — live.' : 'Self-referral from the student page — live.' });
+      S.unshift({ id: '2026-0417', name: 'Acubins (you)', init: 'A', hue: 18, prog: 'Demo student', year: 1, status: 'new', via: fx ? 'Support Pact · 28 days' : 'Self-referral', fx, areas: fx ? fx.flagged : [], track: fx ? fx.flagged : null, dw: null, gpa: [null, null, 3.5, 3.3], on: [null, null, 86, 80], req: 0, ally: t.pact && t.pact.confirmed && t.pact.ally ? t.pact.ally : null, live: true, note: fx ? 'Built from the 28-day Support Pact you just ran on the student page — live.' : 'Self-referral from the student page — live.' });
     } catch (e) {}
   })();
 
@@ -116,7 +131,8 @@
   let TH = {};
   function readTheme() {
     TH = { ink: css('--ink'), ink2: css('--ink-2'), muted: css('--muted'), line: css('--line'), line2: css('--line-2'), surface: css('--surface'), surface2: css('--surface-2'), bg: css('--bg'), accent: css('--accent'), good: css('--good') };
-    CK.forEach(c => { TH[c] = css('--c-' + c); });
+    ['R', 'L', 'W', 'T'].forEach(c => { TH[c] = css('--c-' + c); });
+    TH.area = { reading: TH.R, executive: TH.L, strain: TH.W, language: TH.T, support: TH.muted, control: TH.muted };
     const C = Chart.defaults;
     C.font.family = '"Instrument Sans", system-ui, sans-serif';
     C.font.size = 12;
@@ -132,11 +148,13 @@
     C.plugins.legend.align = 'start';
     Object.assign(C.plugins.tooltip, { backgroundColor: TH.ink, titleColor: TH.bg, bodyColor: TH.bg, footerColor: TH.bg, padding: 10, cornerRadius: 10, boxPadding: 4, usePointStyle: true, titleFont: { weight: '600' } });
   }
-  const areaColor = a => TH[AREA[a].cat];
+  const areaColor = a => TH.area[a];
+  const domColor = c => TH.area[CATS[c].area];
   const narrow = () => innerWidth < 700;
-  const SHORT = { R: 'Reading', L: 'Language', W: 'Writing & submission', T: 'Time & routine', A: 'Audio', S: 'Help-seeking', X: 'Strain & change' };
+  const SHORT = { V: 'Visual', U: 'Auditory', M: 'Working memory', E: 'Starting', P: 'Pacing', O: 'Drafting', N: 'Navigation', Q: 'Assessment', H: 'Help-seeking', C: 'Collaboration' };
   const catLabel = c => narrow() ? SHORT[c] : CATS[c].en;
   const gridX = (extra = {}) => ({ grid: { display: false }, border: { color: TH.line2 }, ...extra, ticks: { color: TH.muted, maxRotation: 0, autoSkipPadding: 8, ...(extra.ticks || {}) } });
+  const catAxis = () => gridX({ ticks: { color: TH.ink2, autoSkip: false } });
   const gridY = (extra = {}) => ({ grid: { color: TH.line, drawTicks: false }, border: { display: false }, ...extra, ticks: { color: TH.muted, padding: 8, maxRotation: 0, ...(extra.ticks || {}) } });
 
   // Small drawing plugins: reference line, shaded band, value labels, end labels.
@@ -242,6 +260,7 @@
     refresh();
     if (open) openDrawer(open.s, open.ask, true);
   });
+  addEventListener('accentchange', () => setTimeout(() => { readTheme(); refresh(); if (open) openDrawer(open.s, open.ask, true); }, 60));
   $('#logoutBtn').addEventListener('click', () => {
     try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
     document.body.classList.add('is-leaving');
@@ -302,26 +321,26 @@
 
     // requests per week
     mk('trend', $('#cTrend'), { type: 'line', data: { labels: WEEKS, datasets: [
-      { label: 'After 14-day tracking', data: TREND.track, borderColor: TH.R, backgroundColor: TH.R, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: TH.surface, pointBorderWidth: 2, cubicInterpolationMode: 'monotone' },
+      { label: 'After an insight', data: TREND.track, borderColor: TH.R, backgroundColor: TH.R, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: TH.surface, pointBorderWidth: 2, cubicInterpolationMode: 'monotone' },
       { label: 'Self-referral', data: TREND.self, borderColor: TH.L, backgroundColor: TH.L, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: TH.surface, pointBorderWidth: 2, cubicInterpolationMode: 'monotone' }
     ] }, options: { interaction: { mode: 'index', intersect: false }, layout: { padding: { right: narrow() ? 4 : 130 } },
       plugins: { legend: { position: 'top' }, erlyMarks: { endLabels: !narrow(), band: { from: 6, to: 6, label: 'Midterms' } }, tooltip: { callbacks: { footer: it => 'Total: ' + it.reduce((a, b) => a + b.raw, 0) } } },
       scales: { x: gridX(), y: gridY({ beginAtZero: true, ticks: { color: TH.muted, padding: 8, precision: 0 }, title: { display: true, text: 'requests', color: TH.muted } }) } } });
     setTable('trend', ['Week', 'After tracking', 'Self-referral', 'Total'], WEEKS.map((w, i) => [w, TREND.track[i], TREND.self[i], TREND.track[i] + TREND.self[i]]));
 
-    // indicator categories — students whose category averaged ≥ 35% of judged days above normal
+    // domains — students whose domain persisted (indicators averaged ≥ 35% of judged days above normal)
     const tracked = S.filter(s => s.fx);
-    const catN = CK.map(c => tracked.filter(s => s.fx.cats[c] >= 0.35).length);
-    mk('cats', $('#cCats'), { type: 'bar', data: { labels: CK.map(catLabel), datasets: [{ label: 'Students', data: catN, backgroundColor: CK.map(c => TH[c]), borderRadius: 4, borderSkipped: 'start', barPercentage: .72, categoryPercentage: .9 }] },
+    const catN = DK.map(c => tracked.filter(s => s.fx.dims.includes(c)).length);
+    mk('cats', $('#cCats'), { type: 'bar', data: { labels: DK.map(catLabel), datasets: [{ label: 'Students', data: catN, backgroundColor: DK.map(domColor), borderRadius: 4, borderSkipped: 'start', barPercentage: .72, categoryPercentage: .9 }] },
       options: { indexAxis: 'y', layout: { padding: { right: 28 } }, plugins: { legend: { display: false }, erlyMarks: { values: v => String(v) }, tooltip: { callbacks: { label: c => ` ${c.raw} of ${tracked.length} tracked students` } } },
-        scales: { x: gridY({ beginAtZero: true, suggestedMax: tracked.length, ticks: { color: TH.muted, precision: 0 } }), y: gridX({ ticks: { color: TH.ink2 } }) } } });
-    setTable('cats', ['Category', 'Students', `of ${tracked.length} tracked`], CK.map((c, i) => [CATS[c].en, catN[i], pct(catN[i] / tracked.length)]));
+        scales: { x: gridY({ beginAtZero: true, suggestedMax: tracked.length, ticks: { color: TH.muted, precision: 0 } }), y: catAxis() } } });
+    setTable('cats', ['Domain', 'Feeds profile', 'Students', `of ${tracked.length} tracked`], DK.map((c, i) => [CATS[c].en, AREA[CATS[c].area] ? AREA[CATS[c].area].label : '—', catN[i], pct(catN[i] / tracked.length)]));
 
     // areas
     const areaN = AREA_KEYS.map(a => S.filter(s => s.areas.includes(a)).length);
-    mk('areas', $('#cAreas'), { type: 'bar', data: { labels: AREA_KEYS.map(a => AREA[a].label), datasets: [{ label: 'Students', data: areaN, backgroundColor: AREA_KEYS.map(areaColor), borderRadius: 4, borderSkipped: 'start', barPercentage: .7 }] },
+    mk('areas', $('#cAreas'), { type: 'bar', data: { labels: AREA_KEYS.map(a => (narrow() ? '' : (AREA[a].profile.length === 1 ? 'Profile ' + AREA[a].profile + ' · ' : '')) + AREA[a].label), datasets: [{ label: 'Students', data: areaN, backgroundColor: AREA_KEYS.map(areaColor), borderRadius: 4, borderSkipped: 'start', barPercentage: .7 }] },
       options: { indexAxis: 'y', layout: { padding: { right: 28 } }, plugins: { legend: { display: false }, erlyMarks: { values: v => String(v) }, tooltip: { callbacks: { label: c => ` ${c.raw} student${c.raw === 1 ? '' : 's'}` } } },
-        scales: { x: gridY({ beginAtZero: true, suggestedMax: Math.max(4, ...areaN) + 1, ticks: { color: TH.muted, precision: 0 } }), y: gridX({ ticks: { color: TH.ink2 } }) } } });
+        scales: { x: gridY({ beginAtZero: true, suggestedMax: Math.max(4, ...areaN) + 1, ticks: { color: TH.muted, precision: 0 } }), y: catAxis() } } });
     setTable('areas', ['Area', 'Students'], AREA_KEYS.map((a, i) => [AREA[a].label, areaN[i]]));
 
     // agenda
@@ -415,14 +434,14 @@
   document.addEventListener('click', e => { const r = e.target.closest('.req, .agenda__w'); if (r) openDrawer(S.find(x => x.id === r.dataset.id)); });
 
   /* ---------- cohort ---------- */
-  const FUNNEL = [['Consented to tracking', 1840], ['Completed 14 days', 1612], ['Flagged an area', 236], ['Booked SAS', 118], ['Assessed', 87], ['Support plan', 63]];
+  const FUNNEL = [['Signed a Support Pact', 1840], ['Completed 28 days', 1612], ['Insight (3+ domains)', 236], ['Booked SAS', 118], ['Assessed', 87], ['Support plan', 63]];
   const LANG = [['Both languages', 37], ['English only', 41], ['Arabic only', 6], ['Not reading-related', 16]];
-  const WEEKLY = { reading: [0, 0, 0, 6, 7, 8, 5, 9, 10, 9], language: [0, 0, 0, 5, 6, 6, 4, 7, 7, 8], attention: [0, 0, 0, 4, 5, 7, 4, 8, 9, 11], strain: [0, 0, 0, 3, 3, 4, 3, 5, 6, 7] };
+  const WEEKLY = { reading: [0, 0, 0, 6, 7, 8, 5, 9, 10, 9], language: [0, 0, 0, 5, 6, 6, 4, 7, 7, 8], executive: [0, 0, 0, 4, 5, 7, 4, 8, 9, 11], strain: [0, 0, 0, 3, 3, 4, 3, 5, 6, 7] };
   function renderCohort() {
     const fc = TH.R;
     mk('funnel', $('#cFunnel'), { type: 'bar', data: { labels: FUNNEL.map(f => f[0]), datasets: [{ label: 'Students', data: FUNNEL.map(f => f[1]), backgroundColor: FUNNEL.map((_, i) => i < 2 ? alpha(fc, .45) : fc), borderRadius: 4, borderSkipped: 'start', barPercentage: .75 }] },
       options: { indexAxis: 'y', layout: { padding: { right: 92 } }, plugins: { legend: { display: false }, erlyMarks: { values: (v, i) => v.toLocaleString('en-US') + (i ? `  ·  ${Math.round(v / FUNNEL[i - 1][1] * 100)}%` : '') }, tooltip: { callbacks: { label: c => ` ${c.raw.toLocaleString('en-US')} students`, afterLabel: c => c.dataIndex ? ` ${Math.round(c.raw / FUNNEL[c.dataIndex - 1][1] * 100)}% of “${FUNNEL[c.dataIndex - 1][0]}”` : '' } } },
-        scales: { x: gridY({ beginAtZero: true, max: 2000, ticks: { color: TH.muted, stepSize: 500, maxRotation: 0, callback: v => v.toLocaleString('en-US') }, title: { display: true, text: 'students', color: TH.muted } }), y: gridX({ ticks: { color: TH.ink2 } }) } } });
+        scales: { x: gridY({ beginAtZero: true, max: 2000, ticks: { color: TH.muted, stepSize: 500, maxRotation: 0, callback: v => v.toLocaleString('en-US') }, title: { display: true, text: 'students', color: TH.muted } }), y: catAxis() } } });
     setTable('funnel', ['Step', 'Students', '% of step before'], FUNNEL.map((f, i) => [f[0], f[1].toLocaleString('en-US'), i ? Math.round(f[1] / FUNNEL[i - 1][1] * 100) + '%' : '—']));
 
     const lc = ['R', 'L', 'W', 'T'].map(k => TH[k]);
@@ -449,6 +468,20 @@
     const sn = $('#sendNudge'); if (sn) sn.onclick = () => { sn.disabled = true; sn.textContent = 'Sent'; toast('Nudge sent — the problem might be the PDF, not the students.'); };
   });
 
+  /* ---------- SAS Bridge Letter (accommodation drafter) ---------- */
+  function bridgeLetter(s) {
+    const c = s.confirmed || '';
+    const prof = s.fx ? s.fx.flagged.map(a => ({ reading: 'persistent visual-decoding friction', executive: 'deadline-proximity paralysis and abandoned submissions', strain: 'a sudden broad drop in study endurance', language: 'reading friction on English-language material only' }[a])).join(' and ') : 'the difficulties I described at intake';
+    const asks = defaultAccom(c).concat(/dyslexia/i.test(c) ? ['Course readings released one week in advance'] : /adhd/i.test(c) ? ['Assignment briefs broken into dated milestones'] : []);
+    return `Dear Student Accessibility Services,
+
+Based on my clinically confirmed outcome (${c}) and ERLY's record of ${prof}, measured only against my own baseline, I am formally requesting:
+${asks.map(a => '  • ' + a).join('\n')}
+
+Kind regards,
+${s.name.replace(' (you)', '')} · ${s.id}`;
+  }
+
   /* ---------- drawer ---------- */
   const drawer = $('#drawer'), scrim = $('#scrim');
   let open = null;
@@ -463,32 +496,39 @@
       <div class="dr__head">${avatar(s, 'avatar--xl')}<div><h3>${esc(s.name)}${live(s)}</h3><p class="muted">${s.prog} · Year ${s.year} · ID ${s.id}</p><p class="small muted">Shared via ${s.via} · requested ${ago(s.req)}${s.ally ? ' · ally: ' + s.ally : ''}</p></div><button class="icon-btn" id="drClose" aria-label="Close">${ICON('x')}</button></div>
       <ol class="dr__steps">${ORDER.map((o, i) => `<li class="${i < step ? 'is-done' : i === step ? 'is-on' : ''}" style="--i:${i}"><i></i><span>${STATUS[o]}</span></li>`).join('')}</ol>
 
+      ${fx && fx.crisis ? `<div class="dr__crisis">${ICON('hand')}<div><b>Profile C · crisis fork</b><span>A sudden drop across ${fx.dims.length} of ${DK.length} domains. Route to a counsellor first — ERLY offered this student no tools.</span></div></div>` : ''}
       <section class="dr__sec">
         <h4>${s.confirmed ? 'Assessment outcome' : 'What ERLY flagged'} ${s.confirmed ? '' : '<span class="honesty honesty--sim">screening only</span>'}</h4>
         ${s.confirmed ? `<div class="conf-card"><span class="conf-card__ic">${ICON('stetho')}</span><div><b>${esc(s.confirmed)}</b><small class="muted">Confirmed by professional assessment at SAS</small></div></div>` : ''}
-        ${s.areas.length ? `<div class="dr__areas">${s.areas.map(a => `<div class="dr__area" style="--c:var(--c-${AREA[a].cat})"><div class="dr__illo">${ILLO[a]}</div><div><span class="atag" style="--c:var(--c-${AREA[a].cat})">${AREA[a].icon}${AREA[a].label}</span><p>${FEEL[a]}</p><p class="small muted">${fx.areas[a].persistent} of ${fx.areas[a].n} indicators above normal on ≥ half of judged days · average ${pct(fx.areas[a].score)}</p></div></div>`).join('')}</div>`
-          : fx ? `<div class="conf-card"><span class="conf-card__ic">${ICON('check')}</span><div><b>No area persisted</b><small class="muted">The student shared a steady fortnight and asked to talk anyway.</small></div></div>`
+        ${s.areas.length ? `<div class="dr__areas">${s.areas.map(a => `<div class="dr__area" style="--c:var(--c-${AREA[a].cat})"><div class="dr__illo">${ILLO[a]}</div><div><span class="atag" style="--c:var(--c-${AREA[a].cat})">${AREA[a].icon}${AREA[a].label}</span><p>${FEEL[a]}</p><p class="small muted">${fx.areas[a].persistent} of ${fx.areas[a].n} indicators above normal on ≥ half of watched days · average ${pct(fx.areas[a].score)}</p></div></div>`).join('')}</div>`
+          : fx ? `<div class="conf-card"><span class="conf-card__ic">${ICON('check')}</span><div><b>No area persisted</b><small class="muted">The student shared a steady month and asked to talk anyway.</small></div></div>`
           : `<div class="conf-card"><span class="conf-card__ic">${ICON('hand')}</span><div><b>Self-referral — no tracking</b><small class="muted">The student chose to come straight to SAS. Their words are below.</small></div></div>`}
       </section>
 
       ${ask ? `<section class="dr__sec dr__outcome"><h4>Record assessment outcome</h4><div class="outcomes">${OUTCOMES.map(o => `<button class="chip" data-out="${o}">${o}</button>`).join('')}</div></section>` : ''}
 
       ${fx ? `<section class="dr__sec">
-        <div class="dr__h"><h4>Indicator categories</h4><button class="tbl-btn" data-table="dr-cats">Table</button></div>
-        <p class="dcard__sub">Average share of judged days (4–14) each category's indicators were above this student's own normal</p>
+        <h4>Evidence card <span class="mono muted small">convergence: ${fx.dims.length}/${DK.length} domains · ${fx.dims.length >= 3 ? 'rule met' : 'rule not met'}</span></h4>
+        <div class="sig4 sig4--dr">${fx.signals.map(g => `<div class="sig4__c ${g.on ? 'is-on' : ''}"><small class="mono">${g.id}</small><b>${esc(g.en)}</b><span>${g.on ? 'persisted' : 'steady'}</span></div>`).join('')}</div>
+        <p class="panel__h mono">Three contributing signals the student saw first</p>
+        <ol class="ev3">${fx.top3.map(p => `<li><span class="mono">${p.id}</span><b>${esc(p.en)}</b><em class="mono">${p.up}/${fx.judged} days</em></li>`).join('')}</ol>
+      </section>
+      <section class="dr__sec">
+        <div class="dr__h"><h4>Domains</h4><button class="tbl-btn" data-table="dr-cats">Table</button></div>
+        <p class="dcard__sub">Indicators per domain that stayed above this student's own normal on ≥ half of watched days (15–28) · a domain persists at 3+ · coloured by the profile it feeds</p>
         <div class="chart-box chart-box--md"><canvas id="drCats" role="img" aria-label="Category scores"></canvas></div>
         <div class="chart-table" hidden></div>
       </section>
       <section class="dr__sec">
-        <div class="dr__h"><h4>The fortnight, day by day</h4><button class="tbl-btn" data-table="dr-days">Table</button></div>
-        <p class="dcard__sub">Indicators above normal each day, by category · days 1–3 learn the student's normal</p>
+        <div class="dr__h"><h4>The month, day by day</h4><button class="tbl-btn" data-table="dr-days">Table</button></div>
+        <p class="dcard__sub">Indicators above normal each day, by profile · days 1–14 are the blind fortnight · exam days never count</p>
         <div class="chart-box chart-box--md"><canvas id="drDays" role="img" aria-label="Stacked bars of indicators above normal per day"></canvas></div>
         <div class="chart-table" hidden></div>
       </section>
       <section class="dr__sec">
-        <h4>Indicators that stood out <span class="mono muted small">${fx.per.filter(p => p.frac >= .5).length} of ${fx.per.length} above normal on ≥ half of judged days</span></h4>
-        <div class="itable">${topInd.map(p => `<div class="itable__r ${p.frac >= .5 ? 'is-flag' : ''}" style="--c:var(--c-${p.cat})"><span class="mono itable__id">${p.id}</span><span class="itable__n"><b>${esc(p.en)}</b><small>${esc(CATS[p.cat].en)} · ${p.live ? 'Reading Studio' : 'LMS'}</small></span><span class="itable__bar" title="${p.up} of ${fx.judged} judged days">${Array.from({ length: fx.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${p.up}/${fx.judged}</b></div>`).join('')}</div>
-        ${s.dw && s.dw[1] != null ? `<p class="panel__h mono" style="margin-top:16px">Dwell vs. expected time · by language</p><div class="lgap">${[['English pages', s.dw[0]], ['Arabic pages', s.dw[1]]].map(([l, v]) => `<div class="lgap__row"><span>${l}</span><span class="lgap__bar"><i style="--w:${Math.min(100, v / 3 * 100)}%"></i></span><b class="mono">${v.toFixed(1)}×</b></div>`).join('')}</div><p class="small muted">${s.dw[0] / s.dw[1] > 1.5 ? 'Much heavier in English only — consider second-language load before decoding.' : 'Similar in both languages — friction is not only about English.'}</p>` : ''}
+        <h4>Indicators that stood out <span class="mono muted small">${fx.per.filter(p => p.frac >= .5).length} of ${fx.per.length} above normal on ≥ half of watched days</span></h4>
+        <div class="itable">${topInd.map(p => `<div class="itable__r ${p.frac >= .5 ? 'is-flag' : ''}" style="--c:${{ reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)' }[p.area] || 'var(--muted)'}"><span class="mono itable__id">${p.id}</span><span class="itable__n"><b>${esc(p.en)}</b><small>${p.id[0]} · ${esc(CATS[p.cat].en)} · ${p.live ? 'Reading Studio' : 'LMS'}</small></span><span class="itable__bar" title="${p.up} of ${fx.judged} judged days">${Array.from({ length: fx.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${p.up}/${fx.judged}</b></div>`).join('')}</div>
+        ${s.dw && s.dw[1] != null ? `<p class="panel__h mono" style="margin-top:16px">Per-language baselines · dwell vs. expected</p><div class="lgap">${[['English pages', s.dw[0]], ['Arabic pages', s.dw[1]]].map(([l, v]) => `<div class="lgap__row"><span>${l}</span><span class="lgap__bar"><i style="--w:${Math.min(100, v / 3 * 100)}%"></i></span><b class="mono">${v.toFixed(1)}×</b></div>`).join('')}</div><p class="small muted">${s.dw[0] / s.dw[1] > 1.5 ? 'Much heavier in English only — consider second-language load before decoding.' : 'Similar in both languages — friction is not only about English.'}</p>` : ''}
         <p class="small muted">Screening indicators only. LMS-side values are synthetic in this demo.</p>
       </section>` : ''}
 
@@ -504,13 +544,18 @@
         <blockquote class="dr__note">${esc(s.note)}</blockquote>
         ${s.accom ? `<p class="panel__h mono">Accommodations ${s.plan === 4 ? 'from next semester' : 'in place'}</p><div class="chips">${s.accom.map(a => `<span class="chip is-on">${esc(a)}</span>`).join('')}</div>` : ''}
       </section>
+      ${s.confirmed ? `<section class="dr__sec">
+        <div class="dr__h"><h4>SAS Bridge Letter</h4><button class="tbl-btn" id="drCopyL">Copy</button></div>
+        <p class="dcard__sub">Accommodation request drafted on the student’s device from their confirmed outcome and friction profile. The student edits and sends it.</p>
+        <textarea class="ho-letter dr__letter" id="drLetter" spellcheck="true">${esc(bridgeLetter(s))}</textarea>
+      </section>` : ''}
 
       <div class="dr__actions">
         ${s.status !== 'plan' ? `<button class="btn btn--accent" id="drNext">${s.status === 'new' ? 'Schedule appointment' : s.status === 'scheduled' ? 'Record outcome' : 'Create support plan'}</button>` : ''}
         <button class="btn btn--ghost" id="drMsg">Message student</button>
         <button class="btn btn--quiet" id="drPack">Download Evidence Pack</button>
       </div>
-      <p class="small muted dr__priv">${ICON('lock')} Shared by the student. Raw tracking data was deleted on day 14 — this is the summary they approved.</p>`;
+      <p class="small muted dr__priv">${ICON('lock')} Shared by the student. Raw tracking data was deleted on day 28 — this is the summary they approved.</p>`;
     if (!drawer.classList.contains('is-open')) {
       drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false');
       scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add('is-on'));
@@ -521,17 +566,18 @@
     // charts — built after the drawer is laid out
     const build = () => {
       if (fx) {
-        const sc = CK.map(c => Math.round(fx.cats[c] * 100));
-        mk('dr-cats', $('#drCats'), { type: 'bar', data: { labels: CK.map(catLabel), datasets: [{ label: 'Days above normal', data: sc, backgroundColor: CK.map(c => TH[c]), borderRadius: 4, borderSkipped: 'start', barPercentage: .72 }] },
-          options: { indexAxis: 'y', layout: { padding: { right: 36, top: 24 } }, plugins: { legend: { display: false }, erlyMarks: { values: v => v + '%', ref: { value: 35, label: 'flag level 35%' } }, tooltip: { callbacks: { label: c => ` ${c.raw}% of judged days on average` } } },
-            scales: { x: gridY({ min: 0, max: 100, ticks: { color: TH.muted, stepSize: 25, callback: v => v + '%' } }), y: gridX({ ticks: { color: TH.ink2 } }) } } });
-        setTable('dr-cats', ['Category', 'Average days above normal', 'At flag level (≥ 35%)'], CK.map((c, i) => [CATS[c].en, sc[i] + '%', sc[i] >= 35 ? 'yes' : 'no']));
+        const sc = DK.map(c => fx.catsN[c] || 0);
+        mk('dr-cats', $('#drCats'), { type: 'bar', data: { labels: DK.map(catLabel), datasets: [{ label: 'Days above normal', data: sc, backgroundColor: DK.map(domColor), borderRadius: 4, borderSkipped: 'start', barPercentage: .72 }] },
+          options: { indexAxis: 'y', layout: { padding: { right: 36, top: 24 } }, plugins: { legend: { display: false }, erlyMarks: { values: v => v + '/10', ref: { value: 3, label: 'persists at 3+' } }, tooltip: { callbacks: { label: c => ` ${c.raw} of 10 indicators above normal on ≥ half of watched days` } } },
+            scales: { x: gridY({ min: 0, max: 10, ticks: { color: TH.muted, stepSize: 2 } }), y: catAxis() } } });
+        setTable('dr-cats', ['Domain', 'Indicators that persisted', 'Domain persisted (3+)'], DK.map((c, i) => [CATS[c].en, sc[i] + ' / 10', sc[i] >= 3 ? 'yes' : 'no']));
 
         const labels = fx.daily.map(d => 'Day ' + d.n);
-        mk('dr-days', $('#drDays'), { type: 'bar', data: { labels, datasets: CK.map(c => ({ label: CATS[c].en, data: fx.daily.map(d => d.byCat[c] || 0), backgroundColor: TH[c], borderColor: TH.surface, borderWidth: { top: 2, left: 0, right: 0, bottom: 0 }, borderSkipped: 'start', barPercentage: .78 })) },
-          options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, erlyMarks: { band: { from: 0, to: 2, label: 'learning normal' } }, tooltip: { filter: it => it.raw > 0, callbacks: { title: it => it[0].label + (it[0].dataIndex < CAL ? ' · baseline' : ''), footer: it => 'Total: ' + it.reduce((a, b) => a + b.raw, 0) + ' indicators' } } },
-            scales: { x: gridX({ stacked: true, ticks: { color: TH.muted, callback: (v, i) => i + 1 } }), y: gridY({ stacked: true, beginAtZero: true, ticks: { color: TH.muted, precision: 0 }, title: { display: true, text: 'indicators above normal', color: TH.muted } }) } } });
-        setTable('dr-days', ['Day', ...CK.map(c => CATS[c].en), 'Total'], fx.daily.map(d => [d.n <= CAL ? `${d.n} (baseline)` : d.n, ...CK.map(c => d.byCat[c] || 0), CK.reduce((a, c) => a + (d.byCat[c] || 0), 0)]));
+        const PA = ['reading', 'executive', 'strain'];
+        mk('dr-days', $('#drDays'), { type: 'bar', data: { labels, datasets: PA.map(a => ({ label: 'Profile ' + AREA[a].profile + ' · ' + AREA[a].label, data: fx.daily.map(d => (d.byArea || {})[a] || 0), backgroundColor: areaColor(a), borderColor: TH.surface, borderWidth: { top: 2, left: 0, right: 0, bottom: 0 }, borderSkipped: 'start', barPercentage: .78 })) },
+          options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, erlyMarks: { bands: [{ from: 0, to: CAL - 1, label: 'blind fortnight · learning normal' }, { from: EXAM[0] - 1, to: EXAM[EXAM.length - 1] - 1, label: 'exam' }] }, tooltip: { filter: it => it.raw > 0, callbacks: { title: it => it[0].label + (it[0].dataIndex < CAL ? ' · blind fortnight' : EXAM.includes(it[0].dataIndex + 1) ? ' · Exam Mode' : ''), footer: it => 'Total: ' + it.reduce((a, b) => a + b.raw, 0) + ' indicators' } } },
+            scales: { x: gridX({ stacked: true, ticks: { color: TH.muted, autoSkip: false, callback: (v, i) => (i + 1) % 7 === 1 || i === DAYS - 1 ? i + 1 : '' } }), y: gridY({ stacked: true, beginAtZero: true, ticks: { color: TH.muted, precision: 0 }, title: { display: true, text: 'indicators above normal', color: TH.muted } }) } } });
+        setTable('dr-days', ['Day', ...PA.map(a => AREA[a].label), 'Total'], fx.daily.map(d => [d.n <= CAL ? `${d.n} (blind)` : d.exam ? `${d.n} (exam)` : d.n, ...PA.map(a => (d.byArea || {})[a] || 0), PA.reduce((x, a) => x + ((d.byArea || {})[a] || 0), 0)]));
       }
       gpaLine('dr-gpa', $('#drGpa'), s, false);
       mk('dr-on', $('#drOn'), { type: 'bar', data: { labels: SEM, datasets: [{ label: 'On time', data: s.on, backgroundColor: SEM.map((_, i) => s.plan && i >= s.plan ? TH.good : TH.line2), borderRadius: 4, borderSkipped: 'start', barPercentage: .6 }] },
@@ -549,6 +595,7 @@
       advance(s); refresh(); openDrawer(s);
     };
     $$('[data-out]', drawer).forEach(b => b.onclick = () => { advance(s, b.dataset.out); refresh(); openDrawer(s); });
+    const cl = $('#drCopyL'); if (cl) cl.onclick = () => { const t = $('#drLetter'); (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(() => toast('Letter copied.')).catch(() => { t.select(); document.execCommand('copy'); toast('Letter copied.'); }); };
     $('#drMsg').onclick = () => toast(`Message sent to ${s.name.split(' ')[0]} through the portal.`);
     $('#drPack').onclick = () => toast('Evidence Pack downloaded (synthetic).');
   }

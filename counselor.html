@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
   <script>
     try { if (sessionStorage.getItem('acubins-role') !== 'counselor') location.replace('index.html?next=counselor'); } catch (e) {}
     (function () {
@@ -19,6 +20,7 @@
         var t = localStorage.getItem('erly-theme');
         if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
       } catch (e) {}
     })();
   </script>
@@ -37,7 +39,7 @@
     </nav>
     <div class="side__card">
       <p class="mono small">Privacy</p>
-      <p class="small">You only see what students chose to share. Raw ERLY tracking data is deleted on day 14.</p>
+      <p class="small">You only see what students chose to share. Raw ERLY tracking data is deleted on day 28.</p>
     </div>
     <div class="side__me">
       <span class="avatar">C</span>
@@ -55,6 +57,7 @@
       </div>
       <div class="dash__tools">
         <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="search" placeholder="Search students…" autocomplete="off"></label>
+        <div data-accent-picker></div>
         <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
           <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -77,13 +80,13 @@
             <div class="chart-table" id="tTrend" hidden></div>
           </div>
           <div class="dcard" data-chart-card="cats">
-            <div class="dcard__head"><div><h2>Indicator categories</h2><p class="dcard__sub">Students whose indicators in that category averaged ≥ 35% of judged days above their own normal</p></div><button class="tbl-btn" data-table="cats">Table</button></div>
-            <div class="chart-box chart-box--md"><canvas id="cCats" role="img" aria-label="Bar chart of students per indicator category"></canvas></div>
+            <div class="dcard__head"><div><h2>Domains that persisted</h2><p class="dcard__sub">Of the 100-point matrix · students with 3+ indicators in the domain above their own normal for two weeks · coloured by profile</p></div><button class="tbl-btn" data-table="cats">Table</button></div>
+            <div class="chart-box chart-box--lg"><canvas id="cCats" role="img" aria-label="Bar chart of students per indicator category"></canvas></div>
             <div class="chart-table" id="tCats" hidden></div>
           </div>
           <div class="dcard" data-chart-card="areas">
-            <div class="dcard__head"><div><h2>Areas flagged</h2><p class="dcard__sub">Students per area · one student can have several</p></div><button class="tbl-btn" data-table="areas">Table</button></div>
-            <div class="chart-box chart-box--md"><canvas id="cAreas" role="img" aria-label="Bar chart of students per flagged area"></canvas></div>
+            <div class="dcard__head"><div><h2>Friction profiles</h2><p class="dcard__sub">Students per profile · one student can have several · language = English-only reading friction</p></div><button class="tbl-btn" data-table="areas">Table</button></div>
+            <div class="chart-box chart-box--lg"><canvas id="cAreas" role="img" aria-label="Bar chart of students per flagged area"></canvas></div>
             <div class="chart-table" id="tAreas" hidden></div>
           </div>
           <div class="dcard">
@@ -112,7 +115,13 @@
 
       <!-- COHORT -->
       <section class="view" data-view="cohort">
-        <div class="view__head"><h2 class="view__title">Cohort insights</h2><span class="muted small">Anonymised · cells under 10 students hidden · synthetic</span></div>
+        <div class="view__head"><h2 class="view__title">Cohort insights</h2><span class="muted small">Anonymised · k ≥ 10: cells under 10 students hidden · synthetic pilot targets</span></div>
+        <div class="kpis4c">
+          <div class="kpic"><small>Referral completion</small><b>68%</b><span>insights that reached a SAS appointment</span></div>
+          <div class="kpic"><small>Nudge → first appointment</small><b>4.2<em> days</em></b><span>median, warm handoff</span></div>
+          <div class="kpic"><small>Nudge dismissal rate</small><b>11%</b><span>our false-positive proxy</span></div>
+          <div class="kpic"><small>Pact retention · week 8</small><b>81%</b><span>students who kept their pact</span></div>
+        </div>
         <div class="dgrid2">
           <div class="dcard" data-chart-card="funnel">
             <div class="dcard__head"><div><h2>ERLY funnel</h2><p class="dcard__sub">Students at each step this term · % of the step before</p></div><button class="tbl-btn" data-table="funnel">Table</button></div>
@@ -143,6 +152,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="assets/js/icons.js"></script>
+  <script src="assets/js/accent.js"></script>
   <script src="assets/vendor/chart.umd.min.js"></script>
   <script src="assets/js/indicators.js"></script>
   <script src="assets/js/counselor.js"></script>

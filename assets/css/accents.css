@@ -1,0 +1,28 @@
+/* Accent colours the user can pick from the login page onward.
+   Each sets the brand accent for light and dark; surfaces stay neutral. */
+:root[data-accent="orange"] { --accent: #D2600A; --accent-soft: #FBE2CC; --accent-ink: #FFF8F1; }
+:root[data-accent="blue"] { --accent: #2463C9; --accent-soft: #DCE7F8; --accent-ink: #F5F9FF; }
+:root[data-accent="teal"] { --accent: #0D7A6E; --accent-soft: #D2EEE9; --accent-ink: #F2FFFC; }
+:root[data-accent="violet"] { --accent: #6A49CF; --accent-soft: #E7E0FA; --accent-ink: #FAF8FF; }
+:root[data-accent="rose"] { --accent: #C3346C; --accent-soft: #F8DCE7; --accent-ink: #FFF6F9; }
+:root[data-accent="green"] { --accent: #2E7A3A; --accent-soft: #DCEFDE; --accent-ink: #F5FFF6; }
+:root[data-theme="dark"][data-accent="orange"] { --accent: #FF9640; --accent-soft: #3A2410; --accent-ink: #1C1006; }
+:root[data-theme="dark"][data-accent="blue"] { --accent: #6AA6F5; --accent-soft: #172741; --accent-ink: #08121F; }
+:root[data-theme="dark"][data-accent="teal"] { --accent: #45C4B3; --accent-soft: #10302B; --accent-ink: #061714; }
+:root[data-theme="dark"][data-accent="violet"] { --accent: #A890F6; --accent-soft: #261F42; --accent-ink: #110C22; }
+:root[data-theme="dark"][data-accent="rose"] { --accent: #F2759F; --accent-soft: #3B1828; --accent-ink: #1F0A12; }
+:root[data-theme="dark"][data-accent="green"] { --accent: #67C67A; --accent-soft: #183420; --accent-ink: #08170C; }
+
+/* picker */
+.accent-pick { position: relative; }
+.accent-pop { position: absolute; top: calc(100% + 10px); inset-inline-end: 0; z-index: 120; display: grid; grid-template-columns: repeat(7, 28px); gap: 8px; padding: 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(-6px) scale(.97); transform-origin: top right; pointer-events: none; transition: opacity .25s var(--ease), transform .3s var(--ease); }
+.accent-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }
+.accent-pop p { grid-column: 1 / -1; margin: 0 0 2px; font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.swatch { position: relative; width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--sw); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); transition: transform .25s cubic-bezier(.2,1.4,.4,1); }
+.swatch:hover { transform: scale(1.15); }
+.swatch.is-on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--sw); }
+.swatch:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.accent-btn .accent-dot { width: 18px; height: 18px; border-radius: 50%; background: conic-gradient(#C1502B, #D2600A, #C3346C, #6A49CF, #2463C9, #0D7A6E, #2E7A3A, #C1502B); box-shadow: inset 0 0 0 3px var(--surface); outline: 2px solid var(--accent); transition: outline-color .3s; }
+.swatch-row { display: flex; gap: 8px; align-items: center; }
+.swatch-row .swatch { width: 22px; height: 22px; }
+html.accent-anim, html.accent-anim * { transition: background-color .5s ease, color .5s ease, border-color .5s ease, fill .5s ease, stroke .5s ease, box-shadow .5s ease !important; }
