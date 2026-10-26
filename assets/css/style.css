@@ -26,6 +26,8 @@
   --s2: #146A63;
   --s3: #C99A1E;
   --s4: #5B4B8A;
+  /* chart categories (validated: adjacent CVD ΔE ≥ 8, normal ΔE ≥ 15) */
+  --c-R: #2a78d6; --c-L: #eb6834; --c-W: #1baf7a; --c-T: #eda100; --c-A: #e87ba4; --c-S: #008300; --c-X: #6250d6;
   --pa: var(--s1);
   --pb: var(--s4);
   --pc: var(--s2);
@@ -70,6 +72,7 @@
   --good: #5CBF85;
   --warn: #E2B04F;
 
+  --c-R: #3987e5; --c-L: #d95926; --c-W: #199e70; --c-T: #c98500; --c-A: #d55181; --c-S: #008300; --c-X: #9085e9;
   --s1: #E8774D;
   --s2: #4DB3A8;
   --s3: #E2BA4A;

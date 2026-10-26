@@ -1,21 +1,15 @@
-/* ERLY — the insight. A gentle, pictorial picture of what the games and the
-   two weeks showed: "friction weather" for each day, illustrations of what it
-   may feel like, where it shows up, strengths, and what helps. Not a diagnosis. */
+/* ERLY — the insight. After day 14, the tracker's summary becomes a gentle,
+   pictorial page: the fortnight as weather, illustrations of what each area
+   may feel like, where it showed up, what went well, and what helps.
+   It describes friction; it never names a condition. */
 (function () {
   'use strict';
-
   const $ = (s, r = document) => r.querySelector(s);
   const T = (en, ar) => I18N.t(en, ar);
-  const AR = () => I18N.lang === 'ar';
-  const F = window.FUN;
   const box = $('#insightBox');
+  let tr = ERLY.getTrack ? ERLY.getTrack() : null;
+  ERLY.on('track', t => { tr = t; render(); });
 
-  let result = ERLY.state.result || null;
-  let watch = ERLY.getWatch ? ERLY.getWatch() : null;
-  ERLY.on('result', r => { result = r; render(); });
-  ERLY.on('watch', w => { watch = w; render(); });
-
-  /* ---------- weather icons ---------- */
   const W_ICON = {
     sun: '<svg viewBox="0 0 48 48"><g class="wx-sun"><circle cx="24" cy="24" r="9" fill="#F5C443"/><g stroke="#F5C443" stroke-width="3" stroke-linecap="round">' + Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return `<line x1="${24 + Math.cos(a) * 14}" y1="${24 + Math.sin(a) * 14}" x2="${24 + Math.cos(a) * 19}" y2="${24 + Math.sin(a) * 19}"/>`; }).join('') + '</g></g></svg>',
     part: '<svg viewBox="0 0 48 48"><circle cx="18" cy="18" r="8" fill="#F5C443"/><path class="wx-cloud" d="M14 36h22a7 7 0 0 0 0-14 10 10 0 0 0-19 2 6 6 0 0 0-3 12z" fill="#E4E2EE" stroke="#B9B5CC" stroke-width="1.5"/></svg>',
@@ -23,131 +17,81 @@
     rain: '<svg viewBox="0 0 48 48"><path d="M11 28h26a8 8 0 0 0 0-16 11 11 0 0 0-21 2 7 7 0 0 0-5 14z" fill="#B9B4D0" stroke="#8F89AD" stroke-width="1.5"/><g class="wx-rain" stroke="#6E9BD6" stroke-width="2.4" stroke-linecap="round"><line x1="17" y1="33" x2="15" y2="39"/><line x1="25" y1="33" x2="23" y2="39"/><line x1="33" y1="33" x2="31" y2="39"/></g></svg>',
     sprout: '<svg viewBox="0 0 48 48"><path d="M24 40V22" stroke="#4DB3A8" stroke-width="3" stroke-linecap="round"/><path d="M24 26c-8 0-12-5-12-11 7 0 12 4 12 11zM24 22c0-7 5-11 12-11 0 6-4 11-12 11z" fill="#4DB3A8"/><path d="M14 40h20" stroke="#A3875E" stroke-width="3" stroke-linecap="round"/></svg>'
   };
-  const W_LABEL = { sun: ['clear', 'صافٍ'], part: ['a little friction', 'احتكاك خفيف'], cloud: ['harder day', 'يوم أصعب'], rain: ['heavy day', 'يوم ثقيل'], sprout: ['learning your normal', 'تعلّم معدلك'] };
+  const W_LABEL = { sprout: ['learning your normal', 'تعلّم معدلك'], sun: ['clear', 'صافٍ'], part: ['a little friction', 'احتكاك خفيف'], cloud: ['harder day', 'يوم أصعب'], rain: ['heavy day', 'يوم ثقيل'] };
 
-  /* ---------- gentle illustrations ---------- */
   const ILLO = {
-    reading: `<svg viewBox="0 0 320 200" class="illo illo--read" aria-hidden="true">
-      <rect x="40" y="18" width="170" height="168" rx="10" fill="var(--surface)" stroke="var(--line-2)"/>
-      ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<g class="il-line" style="--d:${i * 0.25}s">${[0, 1, 2].map(j => `<rect x="${58 + j * 48 + (i % 2) * 6}" y="${40 + i * 18}" width="${36 + ((i + j) % 3) * 6}" height="7" rx="3.5" fill="var(--line-2)" class="${(i * 3 + j) % 5 === 2 ? 'il-drift' : ''}"/>`).join('')}</g>`).join('')}
-      <g class="il-loupe"><circle cx="236" cy="104" r="44" fill="var(--bg)" stroke="var(--ink)" stroke-width="5"/><line x1="268" y1="136" x2="296" y2="166" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/>
-        <text x="212" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--accent)" class="il-b">b</text><text x="242" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--teal)" class="il-d">d</text></g>
-    </svg>`,
-    attention: `<svg viewBox="0 0 320 200" class="illo illo--att" aria-hidden="true">
-      <line x1="30" y1="170" x2="300" y2="170" stroke="var(--line-2)" stroke-width="2"/>
-      <path class="il-curve" d="M30 160 C 90 158, 150 160, 200 154 S 250 70, 268 40 L 282 160" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
-      <g transform="translate(272 22)"><line x1="0" y1="0" x2="0" y2="150" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4"/><path d="M0 0h22l-6 7 6 7H0z" fill="var(--accent)"/></g>
-      <g class="il-door"><rect x="60" y="74" width="54" height="84" rx="4" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="104" cy="118" r="3" fill="var(--ink)"/></g>
-      <g class="il-push"><circle cx="40" cy="104" r="9" fill="var(--s3)"/><path d="M40 113v26M40 120l18-6M40 139l-8 18M40 139l10 18" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></g>
-      <text x="200" y="190" font-size="11" fill="var(--muted)" font-family="JetBrains Mono, monospace">deadline</text>
-    </svg>`,
-    number: `<svg viewBox="0 0 320 200" class="illo illo--num" aria-hidden="true">
-      <line x1="30" y1="150" x2="290" y2="150" stroke="var(--ink)" stroke-width="3"/>
-      ${[0, 25, 50, 75, 100].map((t, i) => `<line x1="${30 + i * 65}" y1="142" x2="${30 + i * 65}" y2="158" stroke="var(--ink)" stroke-width="2"/>`).join('')}
-      ${[['7', 70, 60, 0], ['31', 140, 40, 0.6], ['4', 200, 80, 1.2], ['58', 250, 50, 1.8], ['12', 110, 100, 2.4]].map(([n, x, y, d]) => `<text x="${x}" y="${y}" font-size="30" font-weight="600" font-family="Instrument Sans, sans-serif" fill="var(--s4)" class="il-float" style="--d:${d}s">${n}</text>`).join('')}
-    </svg>`,
-    bilingual: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true">
-      <g transform="translate(46 30)"><rect width="100" height="130" rx="8" fill="var(--teal)" opacity=".85"/><rect x="10" y="12" width="80" height="106" rx="4" fill="var(--surface)"/><text x="50" y="72" font-size="34" text-anchor="middle" font-family="IBM Plex Sans Arabic" fill="var(--teal)">ع</text></g>
-      <g transform="translate(174 30)" class="il-heavy"><rect width="100" height="130" rx="8" fill="var(--accent)" opacity=".85"/><rect x="10" y="12" width="80" height="106" rx="4" fill="var(--surface)"/><text x="50" y="74" font-size="34" text-anchor="middle" font-family="Fraunces" fill="var(--accent)">Aa</text></g>
-      <path d="M96 176h0" /><text x="96" y="186" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="JetBrains Mono">light</text><text x="224" y="186" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="JetBrains Mono">heavier</text>
-    </svg>`
+    reading: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true"><rect x="40" y="18" width="170" height="168" rx="10" fill="var(--surface)" stroke="var(--line-2)"/>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<g>${[0, 1, 2].map(j => `<rect x="${58 + j * 48 + (i % 2) * 6}" y="${40 + i * 18}" width="${36 + ((i + j) % 3) * 6}" height="7" rx="3.5" fill="var(--line-2)" class="${(i * 3 + j) % 5 === 2 ? 'il-drift' : ''}"/>`).join('')}</g>`).join('')}<g class="il-loupe"><circle cx="236" cy="104" r="44" fill="var(--bg)" stroke="var(--ink)" stroke-width="5"/><line x1="268" y1="136" x2="296" y2="166" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><text x="212" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--accent)" class="il-b">b</text><text x="242" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--teal)" class="il-d">d</text></g></svg>`,
+    attention: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true"><line x1="30" y1="170" x2="300" y2="170" stroke="var(--line-2)" stroke-width="2"/><path class="il-curve" d="M30 160 C 90 158, 150 160, 200 154 S 250 70, 268 40 L 282 160" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><g transform="translate(272 22)"><line x1="0" y1="0" x2="0" y2="150" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4"/><path d="M0 0h22l-6 7 6 7H0z" fill="var(--accent)"/></g><g class="il-door"><rect x="60" y="74" width="54" height="84" rx="4" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="104" cy="118" r="3" fill="var(--ink)"/></g><g class="il-push"><circle cx="40" cy="104" r="9" fill="var(--s3)"/><path d="M40 113v26M40 120l18-6M40 139l-8 18M40 139l10 18" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/></g></svg>`,
+    language: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true"><g transform="translate(46 30)"><rect width="100" height="130" rx="8" fill="var(--teal)" opacity=".85"/><rect x="10" y="12" width="80" height="106" rx="4" fill="var(--surface)"/><text x="50" y="72" font-size="34" text-anchor="middle" font-family="IBM Plex Sans Arabic" fill="var(--teal)">ع</text></g><g transform="translate(174 30)" class="il-heavy"><rect width="100" height="130" rx="8" fill="var(--accent)" opacity=".85"/><rect x="10" y="12" width="80" height="106" rx="4" fill="var(--surface)"/><text x="50" y="74" font-size="34" text-anchor="middle" font-family="Fraunces" fill="var(--accent)">Aa</text></g></svg>`,
+    strain: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true"><rect x="60" y="64" width="170" height="80" rx="16" fill="none" stroke="var(--ink)" stroke-width="5"/><rect x="232" y="88" width="16" height="32" rx="4" fill="var(--ink)"/><rect x="72" y="76" width="50" height="56" rx="8" fill="var(--accent)" class="il-batt"/><path d="M150 44c8 10 8 18 0 26M176 34c12 16 12 30 0 46" fill="none" stroke="var(--s3)" stroke-width="4" stroke-linecap="round" class="il-zz"/><text x="64" y="176" font-size="12" fill="var(--muted)" font-family="JetBrains Mono">recharge, then restart</text></svg>`
   };
   const FEEL = {
-    reading: { h: ['Words that won\'t sit still', 'كلمات لا تهدأ في مكانها'], p: ['Reading can take more energy than it should — lines need a second or third pass, and similar letters can trade places when you\'re tired. It isn\'t about effort or intelligence.', 'قد تتطلب القراءة طاقة أكثر مما ينبغي — تحتاج الأسطر قراءة ثانية أو ثالثة، وقد تتبادل الحروف المتشابهة أماكنها حين تتعب. الأمر لا علاقة له بالجهد أو الذكاء.'] },
-    attention: { h: ['The heavy door', 'الباب الثقيل'], p: ['Starting can feel like pushing a heavy door — then everything happens at once near the deadline. That\'s friction, not laziness.', 'قد يبدو البدء كدفع باب ثقيل — ثم يحدث كل شيء دفعة واحدة قرب الموعد. هذا احتكاك، لا كسل.'] },
-    number: { h: ['Numbers that drift', 'أرقام تنجرف'], p: ['Placing and comparing quantities can take extra steps, like the number line is a little blurry. Visual tools and worked examples help a lot.', 'قد يتطلب وضع الكميات ومقارنتها خطوات إضافية، كأن خط الأعداد ضبابي قليلاً. الأدوات البصرية والأمثلة المحلولة تساعد كثيراً.'] },
-    bilingual: { h: ['One language feels heavier', 'لغة تبدو أثقل'], p: ['English pages cost you noticeably more than Arabic ones. That can be second-language load — English support may help most.', 'تكلّفك الصفحات الإنجليزية أكثر بوضوح من العربية. قد يكون ذلك عبء لغة ثانية — وقد يفيد دعم اللغة الإنجليزية أكثر.'] }
-  };
-  const STRENGTH = {
-    'Sound skills': ['You hear the shape of words really well — audio tools will feel natural.', 'تسمع شكل الكلمات جيداً جداً — ستبدو لك الأدوات الصوتية طبيعية.', 'ear'],
-    'Focus': ['Once you start, your focus is steady.', 'حين تبدأ، يكون تركيزك ثابتاً.', 'target'],
-    'Working memory': ['You can hold a lot in your head at once.', 'تستطيع الاحتفاظ بالكثير في ذهنك دفعة واحدة.', 'brain'],
-    'Number sense': ['Numbers make sense to you.', 'الأرقام منطقية بالنسبة لك.', 'hash'],
-    'Naming speed': ['You recognise things quickly.', 'تتعرّف على الأشياء بسرعة.', 'bolt'],
-    'Reading speed · Arabic': ['Arabic reading flows for you.', 'القراءة بالعربية سلسة لديك.', 'book']
+    reading: { h: ['Words that won\'t sit still', 'كلمات لا تهدأ في مكانها'], p: ['Reading took more passes and more time than your own normal, especially on dense English pages. It isn\'t about effort or intelligence.', 'تطلّبت القراءة قراءات أكثر ووقتاً أطول من معدلك، خاصة في الصفحات الإنجليزية الكثيفة. الأمر لا علاقة له بالجهد أو الذكاء.'] },
+    attention: { h: ['The heavy door', 'الباب الثقيل'], p: ['Starting felt like pushing a heavy door — then work bunched up near deadlines and some drafts were left behind. That\'s friction, not laziness.', 'بدا البدء كدفع باب ثقيل — ثم تكدّس العمل قرب المواعيد وتُركت بعض المسودات. هذا احتكاك، لا كسل.'] },
+    language: { h: ['One language feels heavier', 'لغة تبدو أثقل'], p: ['English pages cost noticeably more than Arabic ones. That can be second-language load — English support may help most.', 'كلّفتك الصفحات الإنجليزية أكثر بوضوح من العربية. قد يكون ذلك عبء لغة ثانية — وقد يفيد دعم الإنجليزية أكثر.'] },
+    strain: { h: ['Running low', 'طاقة منخفضة'], p: ['Several unrelated things shifted at once — later nights, shorter sessions, fewer study days. Sometimes that\'s workload; sometimes it\'s life.', 'تغيّرت أشياء غير مترابطة دفعة واحدة — ليالٍ أطول، وجلسات أقصر، وأيام دراسة أقل. أحياناً يكون العبء، وأحياناً الحياة.'] }
   };
   const HELPS = {
-    reading: [['volume', 'Read-aloud on every PDF', 'القراءة الصوتية لكل PDF'], ['text', 'Bigger, airier text', 'نص أكبر وأوسع'], ['ruler', 'Line focus', 'تركيز السطر'], ['hourglass', 'Extra time — ask SAS', 'وقت إضافي — اسأل الخدمات']],
-    attention: [['rocket', '5-minute first steps', 'خطوات أولى من ٥ دقائق'], ['timer', 'Focus sprints', 'جولات تركيز'], ['clock', 'Deadline nudges', 'تذكيرات المواعيد'], ['users', 'Study with a buddy', 'ادرس مع رفيق']],
-    number: [['triangle', 'Worked examples first', 'أمثلة محلولة أولاً'], ['chart', 'Diagrams & number lines', 'رسوم وخطوط أعداد'], ['calc', 'Calculator-friendly practice', 'تمارين مع الآلة الحاسبة'], ['building', 'Maths support centre', 'مركز دعم الرياضيات']]
+    reading: [['volume', 'Read-aloud with your favourite voice', 'القراءة الصوتية بصوتك المفضل'], ['text', 'Bigger, airier text', 'نص أكبر وأوسع'], ['ruler', 'Line focus', 'تركيز السطر'], ['hourglass', 'Extra time — ask SAS', 'وقت إضافي — اسأل الخدمات']],
+    attention: [['rocket', '5-minute first steps', 'خطوات أولى من ٥ دقائق'], ['timer', 'Focus sprints', 'جولات تركيز'], ['clock', 'Deadline nudges at 72h and 24h', 'تذكيرات قبل ٧٢ و٢٤ ساعة'], ['users', 'Study with a buddy', 'ادرس مع رفيق']],
+    language: [['globe', 'Glossary with Arabic meanings', 'مسرد بالمعاني العربية'], ['file', 'Plain-words summaries', 'ملخصات بكلمات بسيطة'], ['pen', 'English writing centre', 'مركز الكتابة الإنجليزية'], ['chat', 'Ask Noor about any word', 'اسأل نور عن أي كلمة']],
+    strain: [['chat', 'Talk to a counsellor', 'تحدّث مع مرشد'], ['cup', 'Planned rest days', 'أيام راحة مخططة'], ['calendar', 'Course-load conversation', 'نقاش العبء الدراسي'], ['users', 'Bring someone you trust', 'أحضر شخصاً تثق به']]
   };
-
-  function weatherOf(d, calibrating) {
-    if (calibrating) return 'sprout';
-    const n = ['s1', 's2', 's3', 's4'].filter(k => d && d[k]).length;
-    return n === 0 ? 'sun' : n === 1 ? 'part' : n === 2 ? 'cloud' : 'rain';
-  }
+  const weatherOf = (flags, cal) => cal ? 'sprout' : flags === 0 ? 'sun' : flags <= 3 ? 'part' : flags <= 7 ? 'cloud' : 'rain';
 
   function render() {
-    const closer = result && result.outcome === 'closer';
-    const ended = watch && watch.status === 'ended';
-    if (!closer) {
+    if (!box) return;
+    const ended = tr && tr.status === 'ended' && tr.summary;
+    if (!ended) {
       box.innerHTML = `<div class="ins-empty">
-        ${F.mascot('happy', 'm-idle m-big')}
-        <h3>${result ? T('Your result was “doing fine” — so there\'s nothing to picture here.', 'كانت نتيجتك «أنت بخير» — لذلك لا شيء لتصويره هنا.') : T('Your picture appears after a “closer look” result.', 'تظهر صورتك بعد نتيجة «تستحق نظرة أقرب».')}</h3>
-        <p>${T('It brings together your games and, if you chose it, your two weeks — drawn gently, never as a label.', 'تجمع ألعابك و — إن اخترت — أسبوعيك، مرسومة بلطف، ولا تصنيف أبداً.')}</p>
-        <button class="btn btn--accent" id="insDemo">${T('Preview a sample insight', 'عاين رؤية نموذجية')}</button></div>`;
-      $('#insDemo').onclick = () => { ERLY.emit('sample', 'closer'); setTimeout(() => ERLY.emit('watchFF'), 50); setTimeout(() => $('#insight').scrollIntoView({ behavior: 'smooth' }), 150); };
+        <div class="ins-empty__ic">${ICON('sparkle')}</div>
+        <h3>${tr && tr.status === 'active' ? T(`Your picture appears on day 14 — you're on day ${tr.day}.`, `تظهر صورتك في اليوم ١٤ — أنت في اليوم ${tr.day}.`) : T('Your picture appears after 14 days of tracking.', 'تظهر صورتك بعد ١٤ يوماً من التتبّع.')}</h3>
+        <p>${T('It brings together every indicator ERLY noticed — drawn gently, never as a label.', 'تجمع كل مؤشر لاحظه إيرلي — مرسومة بلطف، ولا تصنيف أبداً.')}</p>
+        <div class="row-btns" style="justify-content:center"><button class="btn btn--accent" data-demo="reading">${T('Preview a sample insight', 'عاين رؤية نموذجية')}</button><a href="#tracking" class="btn btn--ghost">${T('About tracking', 'عن التتبّع')}</a></div></div>`;
+      $('[data-demo]', box).onclick = () => { ERLY.emit('trackDemo', 'reading'); setTimeout(() => $('#insight').scrollIntoView({ behavior: 'smooth' }), 120); };
       return;
     }
-    const areas = result.areas.slice();
-    if (result.lang === 'en' && !areas.includes('bilingual')) areas.push('bilingual');
-    const sum = ended ? watch.summary : null;
-    const strengths = result.domains.filter(d => d[2] >= 60 && STRENGTH[d[0]]).slice(0, 3);
-    const days = ended ? watch.data : [];
-    const helps = (areas.filter(a => HELPS[a])[0]) || 'reading';
-
+    const sum = tr.summary;
+    const areas = sum.flaggedAreas.length ? sum.flaggedAreas : [];
+    const top = sum.per.filter(p => p.frac >= .5).sort((a, b) => b.frac - a.frac).slice(0, 6);
+    const calm = Object.entries(sum.cats).filter(([, v]) => v < .2).map(([k]) => k).slice(0, 3);
+    const helps = areas[0] || 'reading';
     box.innerHTML = `
       <div class="ins-hero">
-        <div class="ins-hero__copy">
-          <p class="contract__k mono">${ended ? T('Your picture · games + 2 weeks', 'صورتك · الألعاب + أسبوعان') : T('Early picture · games only', 'صورة أولية · الألعاب فقط')}</p>
-          <h3>${T('Here\'s what we noticed — and what it might feel like.', 'إليك ما لاحظناه — وكيف قد يبدو الشعور.')}</h3>
+        <div>
+          <p class="contract__k mono">${T('Your picture · 14 days · only you can see this', 'صورتك · ١٤ يوماً · أنت فقط من يراها')}</p>
+          <h3>${areas.length ? T('Here\'s what we noticed — and what it might feel like.', 'إليك ما لاحظناه — وكيف قد يبدو الشعور.') : T('A steady fortnight. Nothing stood out against your normal.', 'أسبوعان مستقران. لم يبرز شيء مقارنةً بمعدلك.')}</h3>
           <p>${T('This isn\'t a diagnosis. It\'s a picture you can take to someone who can help — or keep to yourself.', 'هذا ليس تشخيصاً. إنها صورة يمكنك أخذها لمن يستطيع المساعدة — أو الاحتفاظ بها لنفسك.')}</p>
         </div>
-        ${F.mascot('happy', 'm-idle m-big')}
+        <div class="ins-hero__stat"><b>${sum.per.filter(p => p.frac >= .5).length}</b><span>${T('of', 'من')} ${sum.per.length} ${T('indicators stayed above your normal', 'مؤشراً بقيت فوق معدلك')}</span></div>
       </div>
-
-      ${ended ? `<div class="ins-card ins-weather">
-        <div class="ins-card__head"><h4>${T('Your two weeks, as weather', 'أسبوعاك، كطقس')}</h4><span class="small muted">${T('More clouds = more friction than your own normal that day', 'غيوم أكثر = احتكاك أكثر من معدلك ذلك اليوم')}</span></div>
-        <ol class="wx">${days.map((d, i) => { const w = weatherOf(d, i < watch.CALIBRATE); return `<li class="wx__d" style="--i:${i}" title="${T(...W_LABEL[w])}"><span class="mono">${i + 1}</span>${W_ICON[w]}</li>`; }).join('')}</ol>
-        <div class="wx__legend">${['sprout', 'sun', 'part', 'cloud', 'rain'].map(k => `<span>${W_ICON[k]}${T(...W_LABEL[k])}</span>`).join('')}</div>
-      </div>` : `<div class="ins-card ins-pending"><span>${ICON('hourglass')}</span><p>${T('The full picture — with your two weeks drawn as weather — appears on day 14 of the watch, if you choose to do it.', 'تظهر الصورة الكاملة — مع أسبوعيك مرسومين كطقس — في اليوم ١٤ من المتابعة، إن اخترتها.')}</p><a href="#watch" class="btn btn--sm btn--ghost">${T('About the watch', 'عن المتابعة')}</a></div>`}
-
-      <div class="ins-feel">
-        ${areas.map(a => FEEL[a] ? `<article class="ins-card ins-feel__c ${areas.filter(x => FEEL[x]).length === 1 ? 'is-wide' : ''}">
-          <div class="ins-illo">${ILLO[a]}</div>
-          <h4>${T(...FEEL[a].h)}</h4>
-          <p>${T(...FEEL[a].p)}</p>
-          ${a === 'reading' ? `<button class="btn btn--sm btn--ghost ins-try" data-feel>${T('Feel it for a moment', 'جرّب الإحساس للحظة')}</button><p class="ins-sample" id="feelSample" hidden>${'The control volume keeps mass and energy in balance as the fluid moves through it.'.split('').map((c, i) => c === ' ' ? ' ' : `<span style="--r:${(i * 37) % 7 - 3}deg;--y:${(i * 13) % 5 - 2}px;--d:${(i % 9) * 0.13}s">${c}</span>`).join('')}<small>${T('One impression — not everyone experiences it this way.', 'انطباع واحد — ليس الجميع يمرّ به بهذه الطريقة.')}</small></p>` : ''}
-        </article>` : '').join('')}
+      <div class="ins-card ins-weather">
+        <div class="ins-card__head"><h4>${T('Your fortnight, as weather', 'أسبوعاك، كطقس')}</h4><span class="small muted">${T('More cloud = more indicators above your own normal that day', 'غيوم أكثر = مؤشرات أكثر فوق معدلك ذلك اليوم')}</span></div>
+        <ol class="wx">${sum.daily.map((d, i) => { const w = weatherOf(d.flags, d.n <= tr.CAL); return `<li class="wx__d" style="--i:${i}" title="${T(...W_LABEL[w])}"><span class="mono">${d.n}</span>${W_ICON[w]}</li>`; }).join('')}</ol>
+        <div class="wx__legend">${Object.keys(W_LABEL).map(k => `<span>${W_ICON[k]}${T(...W_LABEL[k])}</span>`).join('')}</div>
       </div>
-
+      ${areas.length ? `<div class="ins-feel">${areas.map(a => `<article class="ins-card ins-feel__c ${areas.length === 1 ? 'is-wide' : ''}"><div class="ins-illo">${ILLO[a]}</div><h4>${T(...FEEL[a].h)}</h4><p>${T(...FEEL[a].p)}</p></article>`).join('')}</div>` : ''}
       <div class="ins-grid">
-        ${sum ? `<div class="ins-card">
+        <div class="ins-card">
           <h4>${T('Where it showed up', 'أين ظهر')}</h4>
-          <div class="ins-where">${sum.rows.map(r => { const sig = watch.SIGS.find(s => s.id === r.id); return `<div class="ins-where__r" style="--c:var(--${r.id})"><span>${T(sig.en, sig.ar)}</span><span class="ins-where__b">${Array.from({ length: 11 }, (_, k) => `<i class="${k < r.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${r.up}/11</b></div>`; }).join('')}</div>
-          <div class="ins-chips"><span>${ICON('moon')} ${T('late at night', 'في وقت متأخر ليلاً')}</span><span>${ICON('file')} ${T('dense PDFs', 'ملفات PDF كثيفة')}</span><span>${ICON('globe')} ${T('English pages', 'صفحات إنجليزية')}</span><span>${ICON('clock')} ${T('close to deadlines', 'قرب المواعيد')}</span></div>
-          <p class="small muted">${T('Pattern shown in the demo is synthetic.', 'النمط المعروض في العرض اصطناعي.')}</p>
-        </div>` : ''}
+          ${top.length ? `<div class="ins-where">${top.map(p => `<div class="ins-where__r" style="--c:${tr.CATS[p.cat].color}"><span>${T(p.en, p.ar)}</span><span class="ins-where__b">${Array.from({ length: sum.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${p.up}/${sum.judged}</b></div>`).join('')}</div>` : `<p class="muted">${T('No indicator stayed above your normal on most days.', 'لم يبقَ أي مؤشر فوق معدلك في معظم الأيام.')}</p>`}
+          <p class="small muted">${T('LMS-side indicators are synthetic in this demo; Reading Studio indicators are your own.', 'مؤشرات نظام التعلّم اصطناعية في هذا العرض؛ أما مؤشرات استوديو القراءة فهي لك.')}</p>
+        </div>
         <div class="ins-card ins-strong">
-          <h4>${T('What you\'re good at', 'ما تجيده')}</h4>
-          <ul>${(strengths.length ? strengths.map(d => `<li><span>${ICON(STRENGTH[d[0]][2])}</span>${T(STRENGTH[d[0]][0], STRENGTH[d[0]][1])}</li>`) : [`<li><span>${ICON('flame')}</span>${T('You showed up five days in a row. That counts.', 'حضرت خمسة أيام متتالية. وهذا مهم.')}</li>`]).join('')}
-            <li><span>${ICON('compass')}</span>${T('You noticed something and looked into it. That takes courage.', 'لاحظت شيئاً وبحثت فيه. هذا يتطلب شجاعة.')}</li></ul>
+          <h4>${T('What stayed steady', 'ما بقي ثابتاً')}</h4>
+          <ul>${(calm.length ? calm : ['S']).map(c => `<li><span>${ICON(tr.CATS[c].icon)}</span>${T(tr.CATS[c].en, tr.CATS[c].ar)} — ${T('close to your normal all fortnight.', 'قريب من معدلك طوال الأسبوعين.')}</li>`).join('')}
+          <li><span>${ICON('compass')}</span>${T('You noticed something and looked into it. That takes courage.', 'لاحظت شيئاً وبحثت فيه. هذا يتطلب شجاعة.')}</li></ul>
         </div>
         <div class="ins-card">
           <h4>${T('What tends to help', 'ما يساعد عادةً')}</h4>
           <div class="ins-helps">${HELPS[helps].map(h => `<div><span>${ICON(h[0])}</span>${T(h[1], h[2])}</div>`).join('')}</div>
         </div>
       </div>
-
       <div class="ins-next">
-        <p>${sum && sum.strong ? T('Your games and your two weeks point the same way. That\'s enough to talk to SAS — they can tell you <b>why</b>, and what support you\'re entitled to.', 'ألعابك وأسبوعاك يشيران إلى الاتجاه نفسه. هذا كافٍ للحديث مع خدمات الطلبة — يمكنهم إخبارك <b>لماذا</b>، وما الدعم الذي يحق لك.') : T('You can take this picture to SAS whenever you like — or keep using the tools.', 'يمكنك أخذ هذه الصورة إلى خدمات الطلبة متى شئت — أو الاستمرار في استخدام الأدوات.')}</p>
-        <div class="row-btns"><a href="#handoff" class="btn btn--accent">${T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><a href="#try" class="btn btn--ghost">${T('Open my tools', 'افتح أدواتي')}</a></div>
+        <p>${sum.strong ? T('Your two weeks point clearly in one direction. That\'s enough to talk to SAS — they can tell you <b>why</b>, and what support you\'re entitled to.', 'أسبوعاك يشيران بوضوح إلى اتجاه واحد. هذا كافٍ للحديث مع خدمات الطلبة — يمكنهم إخبارك <b>لماذا</b>، وما الدعم الذي يحق لك.') : T('You can take this picture to SAS whenever you like — or keep using the Reading Studio.', 'يمكنك أخذ هذه الصورة إلى خدمات الطلبة متى شئت — أو الاستمرار في استخدام استوديو القراءة.')}</p>
+        <div class="row-btns"><a href="#handoff" class="btn btn--accent">${T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><button class="btn btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
       </div>`;
-    const ft = $('[data-feel]', box);
-    if (ft) ft.onclick = () => { const s = $('#feelSample'); s.hidden = !s.hidden; ft.textContent = s.hidden ? T('Feel it for a moment', 'جرّب الإحساس للحظة') : T('Make it stop', 'أوقفه'); };
   }
-
   I18N.onChange(render);
   render();
 })();

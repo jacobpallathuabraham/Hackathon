@@ -37,7 +37,7 @@
     </nav>
     <div class="side__card">
       <p class="mono small">Privacy</p>
-      <p class="small">You only see what students chose to share. Raw ERLY data is deleted on day 14.</p>
+      <p class="small">You only see what students chose to share. Raw ERLY tracking data is deleted on day 14.</p>
     </div>
     <div class="side__me">
       <span class="avatar">C</span>
@@ -71,18 +71,29 @@
             <div class="dcard__head"><h2>New requests</h2><button class="link small" data-goto="requests">See the board →</button></div>
             <div class="req-list" id="reqList"></div>
           </div>
-          <div class="dcard">
-            <div class="dcard__head"><h2>Areas flagged</h2><span class="mono muted small">this term</span></div>
-            <div class="donut-wrap"><svg viewBox="0 0 120 120" class="donut" id="donut"></svg><div class="donut__c"><b id="donutN">0</b><small>students</small></div></div>
-            <ul class="legend" id="donutLegend"></ul>
+          <div class="dcard dcard--wide" data-chart-card="trend">
+            <div class="dcard__head"><div><h2>Requests per week</h2><p class="dcard__sub">By how the student reached SAS · weeks 1–10 of this term</p></div><button class="tbl-btn" data-table="trend">Table</button></div>
+            <div class="chart-box chart-box--md"><canvas id="cTrend" role="img" aria-label="Line chart of requests per week by route"></canvas></div>
+            <div class="chart-table" id="tTrend" hidden></div>
+          </div>
+          <div class="dcard" data-chart-card="cats">
+            <div class="dcard__head"><div><h2>Indicator categories</h2><p class="dcard__sub">Students whose indicators in that category averaged ≥ 35% of judged days above their own normal</p></div><button class="tbl-btn" data-table="cats">Table</button></div>
+            <div class="chart-box chart-box--md"><canvas id="cCats" role="img" aria-label="Bar chart of students per indicator category"></canvas></div>
+            <div class="chart-table" id="tCats" hidden></div>
+          </div>
+          <div class="dcard" data-chart-card="areas">
+            <div class="dcard__head"><div><h2>Areas flagged</h2><p class="dcard__sub">Students per area · one student can have several</p></div><button class="tbl-btn" data-table="areas">Table</button></div>
+            <div class="chart-box chart-box--md"><canvas id="cAreas" role="img" aria-label="Bar chart of students per flagged area"></canvas></div>
+            <div class="chart-table" id="tAreas" hidden></div>
           </div>
           <div class="dcard">
             <div class="dcard__head"><h2>This week</h2><span class="mono muted small">appointments</span></div>
             <ol class="agenda" id="agenda"></ol>
           </div>
-          <div class="dcard dcard--wide">
-            <div class="dcard__head"><h2>Does support work?</h2><span class="mono muted small">avg grade before → after accommodations</span></div>
-            <div class="impact" id="impact"></div>
+          <div class="dcard" data-chart-card="impact">
+            <div class="dcard__head"><div><h2>Does support work?</h2><p class="dcard__sub">GPA in the semester before the support plan vs. the semester after</p></div><button class="tbl-btn" data-table="impact">Table</button></div>
+            <div class="chart-box chart-box--md"><canvas id="cImpact" role="img" aria-label="Grouped bar chart of GPA before and after support"></canvas></div>
+            <div class="chart-table" id="tImpact" hidden></div>
           </div>
         </div>
       </section>
@@ -95,7 +106,7 @@
 
       <!-- STUDENTS -->
       <section class="view" data-view="students">
-        <div class="view__head"><h2 class="view__title">Students &amp; performance</h2><span class="muted small">Grades and on-time submission, before and after support.</span></div>
+        <div class="view__head"><h2 class="view__title">Students &amp; performance</h2><span class="muted small">GPA by semester · dashed line = support plan started · * Fall 26 is mid-term</span></div>
         <div class="stu-grid" id="stuGrid"></div>
       </section>
 
@@ -103,9 +114,24 @@
       <section class="view" data-view="cohort">
         <div class="view__head"><h2 class="view__title">Cohort insights</h2><span class="muted small">Anonymised · cells under 10 students hidden · synthetic</span></div>
         <div class="dgrid2">
-          <div class="dcard"><div class="dcard__head"><h2>ERLY funnel</h2></div><div class="funnel" id="funnel"></div></div>
-          <div class="dcard"><div class="dcard__head"><h2>Bilingual blind spot</h2></div><div id="langbars"></div><p class="small muted">“English only” may be language load. “Both” is the group to assess first.</p></div>
-          <div class="dcard dcard--wide"><div class="dcard__head"><h2>Curriculum Mirror</h2><span class="mono muted small">reading friction by course · week</span></div><div class="heat" id="heat"></div><div class="nudge" id="nudge" hidden></div></div>
+          <div class="dcard" data-chart-card="funnel">
+            <div class="dcard__head"><div><h2>ERLY funnel</h2><p class="dcard__sub">Students at each step this term · % of the step before</p></div><button class="tbl-btn" data-table="funnel">Table</button></div>
+            <div class="chart-box chart-box--lg"><canvas id="cFunnel" role="img" aria-label="Bar chart of the ERLY funnel"></canvas></div>
+            <div class="chart-table" id="tFunnel" hidden></div>
+          </div>
+          <div class="dcard" data-chart-card="lang">
+            <div class="dcard__head"><div><h2>Bilingual blind spot</h2><p class="dcard__sub">Flagged students · where reading friction appeared</p></div><button class="tbl-btn" data-table="lang">Table</button></div>
+            <div class="chart-box chart-box--sm"><canvas id="cLang" role="img" aria-label="Stacked bar of where reading friction appeared"></canvas></div>
+            <ul class="vlegend" id="lLang"></ul>
+            <div class="chart-table" id="tLang" hidden></div>
+            <p class="small muted">“English only” may be second-language load. “Both languages” is the group to assess first.</p>
+          </div>
+          <div class="dcard dcard--wide" data-chart-card="weekly">
+            <div class="dcard__head"><div><h2>Above their own normal, by week</h2><p class="dcard__sub">Share of consenting students with an area above their own normal that week · by area</p></div><button class="tbl-btn" data-table="weekly">Table</button></div>
+            <div class="chart-box chart-box--md"><canvas id="cWeekly" role="img" aria-label="Line chart of share of students above normal by week and category"></canvas></div>
+            <div class="chart-table" id="tWeekly" hidden></div>
+          </div>
+          <div class="dcard dcard--wide"><div class="dcard__head"><div><h2>Curriculum Mirror</h2><p class="dcard__sub">Share of consenting students with reading friction, by course and week · click a cell</p></div></div><div class="heat" id="heat"></div><div class="heat__scale"><span>0%</span><i></i><span>50%</span></div><div class="nudge" id="nudge" hidden></div></div>
         </div>
       </section>
     </main>
@@ -117,6 +143,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="assets/js/icons.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/js/indicators.js"></script>
   <script src="assets/js/counselor.js"></script>
 </body>
 </html>
