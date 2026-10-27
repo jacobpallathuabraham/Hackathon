@@ -36,7 +36,7 @@
   let cfg = S.config(store.thresholds());
   const llm = window.ERLY_LLM.create({ endpoint: (window.ERLY_AI_CONFIG || {}).endpoint || '', getConsent: () => store.consent('llm') });
   // Noor's brain: built-in by default; on-device or cloud AI only when the student turns it on (ai.js)
-  const ai = window.ERLY_AI ? window.ERLY_AI.create({ cloud: {
+  const ai = window.ERLY_AI ? window.ERLY_AI.create({ online: () => (window.ERLY_AI_CONFIG || {}).online, cloud: {
     configured: () => llm.configured, consent: () => store.consent('llm'),
     chat: async (messages, o) => {
       const sys = messages[0].content, last = messages[messages.length - 1].content;
@@ -205,6 +205,16 @@
     b.innerHTML = `
       <header class="cbrain__h"><span class="cbrain__ic">${ICON('chip')}</span><div><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Choose how Noor thinks. Whatever you choose, she never diagnoses and never gives percentages.', 'اختر كيف تفكر نور. أياً كان اختيارك، لا تشخّص أبداً ولا تعطي نسباً مئوية.')}</small></div><button type="button" class="icon-btn icon-btn--sm" data-b="close" aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button></header>
       <div class="cbrain__list">
+        <div class="cbopt cbopt--star cbopt--online ${on('online') ? 'is-on' : ''}">
+          <div class="cbopt__h"><b>${T('Noor Online', 'نور أونلاين')}</b><span class="cbopt__tag cbopt__tag--hot">${T('ChatGPT-style · works on iPad', 'بأسلوب ChatGPT · يعمل على الآيباد')}</span>${gpu === false || ai.isIOS() ? `<span class="cbopt__tag">${T('Best for this device', 'الأنسب لهذا الجهاز')}</span>` : ''}</div>
+          <p>${T('A free AI model on the internet that can answer almost anything — any subject, essays, maths, code, plans, Arabic. Nothing to download, so it works on iPads and phones.', 'نموذج ذكاء اصطناعي مجاني على الإنترنت يجيب عن كل شيء تقريباً — أي مادة، والمقالات، والرياضيات، والبرمجة، والخطط، والعربية. لا تنزيل، لذا يعمل على الآيباد والهواتف.')}</p>
+          <ul class="cbopt__what">
+            <li>${T(`Sent to ${esc(ai.online().name)} (${esc(ai.online().site || '')}): your message, the recent chat, and — only if you attach it — the page you are reading.`, `يُرسل إلى ${esc(ai.online().name)}: رسالتك، والمحادثة الأخيرة، والصفحة التي تقرؤها فقط إن أرفقتها.`)}</li>
+            <li>${T('Emails and phone or ID numbers are removed first. Your name, profile, tracking and check-in results are never sent.', 'تُحذف عناوين البريد وأرقام الهاتف والهوية أولاً. لا يُرسل اسمك أو ملفك أو بيانات التتبع أو نتائج الفحوصات أبداً.')}</li>
+            <li>${T('It is a free public service: please don’t type anything private. Free tier: about one message every 30 seconds.', 'إنها خدمة عامة مجانية: لا تكتب شيئاً خاصاً. الخطة المجانية: رسالة تقريباً كل ٣٠ ثانية.')}</li>
+          </ul>
+          ${on('online') ? `<span class="cbopt__on">${ICON('check')} ${T('In use', 'قيد الاستخدام')}</span> <button type="button" class="btn btn--xs btn--quiet" data-b="local">${T('Stop using it', 'أوقف استخدامه')}</button>` : `<button type="button" class="btn btn--sm btn--accent" data-b="online">${ICON('globe')} ${T('I agree — turn on Noor Online', 'أوافق — شغّل نور أونلاين')}</button>`}
+        </div>
         <div class="cbopt ${on('local') ? 'is-on' : ''}">
           <div class="cbopt__h"><b>${T('Built-in', 'مدمج')}</b><span class="cbopt__tag">${T('Always on', 'متاح دائماً')}</span></div>
           <p>${T('ERLY’s guide to learning differences, studying and exams, plus built-in study tools (summaries, quizzes, plans, maths). Instant and offline — nothing leaves your device.', 'دليل إيرلي لاختلافات التعلّم والمذاكرة والاختبارات، مع أدوات مذاكرة مدمجة (ملخصات واختبارات وخطط وحساب). فوري ودون اتصال — لا يغادر شيء جهازك.')}</p>
@@ -214,7 +224,7 @@
           <div class="cbopt__h"><b>${T('On-device AI', 'ذكاء اصطناعي على الجهاز')}</b><span class="cbopt__tag cbopt__tag--hot">${T('ChatGPT-style · private', 'بأسلوب ChatGPT · خاص')}</span></div>
           <p>${T('A real language model that answers anything — explanations, essays feedback, code, plans, Arabic. It downloads once into your browser and runs on this device’s graphics chip. Your messages never leave the device.', 'نموذج لغوي حقيقي يجيب عن أي شيء — شروح وملاحظات على المقالات وبرمجة وخطط وعربية. يُنزَّل مرة واحدة في متصفحك ويعمل على معالج الرسوميات في جهازك. لا تغادر رسائلك الجهاز.')}</p>
           ${gpu === false ? `<p class="cbopt__warn">${ICON('info')} ${T('This browser has no WebGPU, so on-device AI can’t run here. Try the latest Chrome or Edge on a laptop, or Safari on iPadOS / macOS 26.', 'لا يدعم هذا المتصفح WebGPU، لذا لا يعمل الذكاء على الجهاز هنا. جرّب أحدث كروم أو إيدج على حاسوب، أو سفاري على iPadOS / macOS 26.')}</p>` : ''}
-          <div class="cbopt__models">${ai.MODELS.map(m => `<button type="button" class="cbmodel ${s.tier === 'webllm' && s.model === m.key ? 'is-on' : ''}${m.rec ? ' is-rec' : ''}" data-b="web:${m.key}" ${gpu === false || s.status === 'loading' ? 'disabled' : ''}><b>${m.name}${m.rec ? ` <i>${T('Recommended', 'موصى به')}</i>` : ''}</b><small>${pick(m.en, m.ar)}</small><span class="mono">${m.size}${caps && caps.cached && caps.cached[m.key] ? ' · ' + T('downloaded', 'منزّل') : ''}</span></button>`).join('')}</div>
+          <div class="cbopt__models">${ai.MODELS.map(m => `<button type="button" class="cbmodel ${s.tier === 'webllm' && s.model === m.key ? 'is-on' : ''}${m.rec ? ' is-rec' : ''}" data-b="web:${m.key}" ${gpu === false || s.status === 'loading' || (ai.isIOS() && m.key !== 'lite') ? 'disabled' : ''}><b>${m.name}${m.rec ? ` <i>${T('Recommended', 'موصى به')}</i>` : ''}</b><small>${pick(m.en, m.ar)}</small><span class="mono">${m.size}${caps && caps.cached && caps.cached[m.key] ? ' · ' + T('downloaded', 'منزّل') : ''}</span></button>`).join('')}</div>
           ${prog('webllm')}
           ${s.tier === 'webllm' && ready ? `<span class="cbopt__on">${ICON('check')} ${T('In use — running on this device', 'قيد الاستخدام — يعمل على هذا الجهاز')}</span>` : ''}
           <small class="muted">${T('Open-source Qwen 3.5 models via WebLLM. First download needs Wi-Fi; later visits load from your browser’s cache.', 'نماذج Qwen 3.5 مفتوحة المصدر عبر WebLLM. يحتاج التنزيل الأول إلى Wi-Fi؛ وتُحمَّل الزيارات اللاحقة من ذاكرة المتصفح.')}</small>
@@ -231,7 +241,7 @@
           : `<p>${T('Not set up here. A university can connect a model through ERLY’s small server (server/llm-proxy.mjs), which keeps the API key secret — keys are never put in a website.', 'غير مُعدّ هنا. يمكن للجامعة ربط نموذج عبر خادم إيرلي الصغير (server/llm-proxy.mjs) الذي يحفظ مفتاح الواجهة سراً — لا توضع المفاتيح في موقع ويب أبداً.')}</p>`}
         </div>
       </div>
-      ${s.status === 'error' && s.error ? `<p class="cbrain__err">${ICON('info')} ${T('That didn’t work on this device, so Noor is using her built-in brain.', 'لم ينجح ذلك على هذا الجهاز، لذا تستخدم نور عقلها المدمج.')} <small>${esc(s.error)}</small></p>` : ''}`;
+      ${s.status === 'error' && s.error ? `<p class="cbrain__err">${ICON('info')} ${T('The on-device model couldn’t start here (often not enough memory on a tablet), so Noor is using her built-in brain. Noor Online works on every device.', 'لم يعمل النموذج على هذا الجهاز (غالباً لقلة الذاكرة في الأجهزة اللوحية)، لذا تستخدم نور عقلها المدمج. نور أونلاين يعمل على كل الأجهزة.')} <button type="button" class="btn btn--xs btn--accent" data-b="online">${T('Use Noor Online', 'استخدم نور أونلاين')}</button><small>${esc(s.error)}</small></p>` : ''}`;
   }
   panel.addEventListener('click', async e => {
     const x = e.target.closest('#cmpBrain [data-b]'); if (!x || !ai) return;
@@ -241,6 +251,7 @@
     if (k.startsWith('web:')) { const ok = await ai.useWebLLM(k.slice(4)); if (ok) { caps = null; brainReady(); } }
     if (k === 'chrome') { const ok = await ai.useChrome(); if (ok) brainReady(); }
     if (k === 'cloud') { store.setConsent('llm', true); ai.useCloud(); brainReady(); }
+    if (k === 'online') { ai.useOnline(); brainReady(); }
     if (k === 'cloud-off') { store.setConsent('llm', false); ai.useLocal(); }
     refreshMode();
   });
@@ -484,7 +495,7 @@
   function brainCard() {
     const card = document.createElement('div');
     card.className = 'cbcard';
-    card.innerHTML = `<span class="cbcard__orb" aria-hidden="true"><i></i><i></i><i></i></span><div><b>${T('Want ChatGPT-style answers to anything?', 'تريد إجابات بأسلوب ChatGPT عن أي شيء؟')}</b><small>${T('Turn on my AI brain. It can run privately on this device.', 'فعّل عقلي الذكي. يمكنه العمل بخصوصية على هذا الجهاز.')}</small></div><button type="button" class="btn btn--xs btn--accent" data-brain-open>${T('Turn on', 'فعّل')}</button>`;
+    card.innerHTML = `<span class="cbcard__orb" aria-hidden="true"><i></i><i></i><i></i></span><div><b>${T('Want ChatGPT-style answers to anything?', 'تريد إجابات بأسلوب ChatGPT عن أي شيء؟')}</b><small>${T('Turn on Noor Online — works on iPad, phone and laptop.', 'شغّل نور أونلاين — يعمل على الآيباد والهاتف والحاسوب.')}</small></div><button type="button" class="btn btn--xs btn--accent" data-brain-open>${T('Turn on', 'فعّل')}</button>`;
     card.querySelector('[data-brain-open]').onclick = openBrain;
     $('#cmpLog').appendChild(card); scrollLog();
   }
@@ -554,8 +565,8 @@
     if (ev.type === 'open') { startSession(); launch.classList.add('is-ready'); if (!store.asked('monitoring')) setTimeout(() => launch.classList.add('is-hint'), 1400); return; }
     if (ev.type === 'close') { endSession(); voice.stop(); voice.abortListening(); hideInvite(); return; }
     if (ev.type === 'tts' && ev.action === 'start') voice.stop(); // the reader's voice wins
+    nudgeRecord(ev); // in-the-moment only: counted in memory for a minute, never stored
     if (!session || paused || !store.consent('monitoring')) return;  // nothing is collected without consent
-    nudgeRecord(ev);
     S.record(session, ev, cfg);
     if (ev.type === 'section' || ev.type === 'zoom' || ev.type === 'pan' || ev.type === 'format') { clearTimeout(checkT); checkT = setTimeout(check, 1700); }
   });
@@ -564,7 +575,6 @@
     if (!session || paused || document.hidden || !R.isOpen()) return;
     S.record(session, { type: 'tick', t: Date.now() }, cfg);
     check();
-    nudgeCheck();
     if (tab === 'signals' && !panel.hidden && !$('#cmpP-signals').contains(document.activeElement)) renderSignals();
   }, 5000);
   const signals = () => (session ? S.evaluate(session, store.baseline(), cfg, Date.now(), avail()) : null);
@@ -629,82 +639,130 @@
   }
   function hideInvite() {
     if (invite.hidden) return;
-    inviteOpen = false; launch.classList.remove('has-invite'); clearTimeout(nudgeT);
-    setTimeout(() => invite.classList.remove('cmp-invite--nudge'), reduce ? 0 : 260);
+    inviteOpen = false; launch.classList.remove('has-invite');
     invite.classList.remove('is-in');
     setTimeout(() => { if (!invite.classList.contains('is-in')) invite.hidden = true; }, reduce ? 0 : 240);
   }
 
-  /* ---------------- in-the-moment nudges ----------------
-     Quick, friendly check-ins while reading — only with the "notice friction"
-     consent, never more than one every 90 s, each kind at most every 5 min,
-     and "I'm fine" silences that kind for the session. They count interaction
-     events only (zoom, pinch-zoom, scroll direction changes, time on one
-     section); never text, keystrokes, camera or audio. */
-  const nud = { zoom: [], pinch: [], scroll: [], lastAny: 0, last: {}, muted: new Set(), stillKey: null, stillSince: Date.now() };
+  /* ---------------- in-the-moment nudges (side pop-ups) ----------------
+     After two or three zooms, pinch-zooms or up-and-down scrolls, a friendly
+     card slides in at the side asking whether something is getting in the way,
+     with one-tap fixes. Events are counted in memory for about a minute and
+     never stored or sent. They stop if the student turns noticing or
+     invitations off; "I'm fine" silences that kind for the session. At most
+     one every 45 s, each kind at most every 3 minutes. Never text, keystrokes,
+     camera or audio. */
+  const side = document.createElement('div');
+  side.className = 'cside';
+  side.setAttribute('role', 'status');
+  side.setAttribute('aria-live', 'polite');
+  side.hidden = true;
+  host.appendChild(side);
+  const nud = { zoom: [], pinch: [], scroll: [], pscroll: [], lastAny: 0, last: {}, muted: new Set(), stillKey: null, stillSince: Date.now() };
   const NUDGE = {
-    zoom: { icon: 'search', t: ['Zooming in and out a lot?', 'تكبّر وتصغّر كثيراً؟'], b: ['Is the text hard to see? I can make it bigger and easier on the eyes, so you don’t have to keep zooming.', 'هل النص صعب الرؤية؟ يمكنني تكبيره وجعله أريح للعين حتى لا تضطر للتكبير باستمرار.'], acts: [['bigger', 'Make text bigger & clearer', 'كبّري النص ووضّحيه'], ['tint', 'Softer page colour', 'لون صفحة أهدأ'], ['tts', 'Read it to me', 'اقرئيه لي']] },
-    pinch: { icon: 'eyeScan', t: ['Pinching to zoom?', 'تكبّر بإصبعين؟'], b: ['Looks like the text might be small on this screen. Want me to make it bigger so you can read without pinching?', 'يبدو أن النص صغير على هذه الشاشة. هل أكبّره لتقرأ دون التكبير بإصبعين؟'], acts: [['bigger', 'Yes, bigger text', 'نعم، نص أكبر'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
-    scroll: { icon: 'scroll', t: ['Scrolling up and down a lot?', 'تمرّر للأعلى والأسفل كثيراً؟'], b: ['Looking for something, or is this part hard to follow? I can help you find it or break it down.', 'تبحث عن شيء، أم أن هذا الجزء صعب المتابعة؟ يمكنني مساعدتك في إيجاده أو تبسيطه.'], acts: [['sum', 'Summarise this page', 'لخّصي هذه الصفحة'], ['find', 'Search the reading', 'ابحثي في القراءة'], ['focus', 'Line focus', 'تركيز السطر']] },
-    stall: { icon: 'clock', t: ['Still on this part?', 'ما زلت عند هذا الجزء؟'], b: ['You’ve been on this section for a while — totally fine. Want me to explain it, or read it aloud?', 'أنت عند هذا القسم منذ مدة — وهذا طبيعي تماماً. هل أشرحه لك أو أقرؤه بصوت عالٍ؟'], acts: [['explain', 'Explain it', 'اشرحيه'], ['tts', 'Read it aloud', 'اقرئيه بصوت'], ['break', '5-minute break', 'استراحة ٥ دقائق']] }
+    zoom: { icon: 'search', t: ['Zooming in and out a lot?', 'تكبّر وتصغّر كثيراً؟'], b: ['Is the text hard to see, or is something not clear? I can make it bigger and easier on the eyes so you don’t have to keep zooming.', 'هل النص صعب الرؤية، أم أن شيئاً غير واضح؟ يمكنني تكبيره وجعله أريح للعين حتى لا تضطر للتكبير باستمرار.'], acts: [['bigger', 'Make text bigger & clearer', 'كبّري النص ووضّحيه'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
+    pinch: { icon: 'eyeScan', t: ['Is the text too small?', 'هل النص صغير جداً؟'], b: ['I noticed some pinch-zooming. Are you having trouble reading? I can make the text bigger so you don’t have to pinch.', 'لاحظت بعض التكبير بإصبعين. هل تجد صعوبة في القراءة؟ يمكنني تكبير النص حتى لا تضطر لذلك.'], acts: [['bigger', 'Yes, bigger text', 'نعم، نص أكبر'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
+    scroll: { icon: 'scroll', t: ['Scrolling up and down a lot?', 'تمرّر للأعلى والأسفل كثيراً؟'], b: ['Are you looking for something, or is this part hard to follow? I can help you find it or break it down.', 'هل تبحث عن شيء، أم أن هذا الجزء صعب المتابعة؟ يمكنني مساعدتك في إيجاده أو تبسيطه.'], acts: [['sum', 'Summarise this page', 'لخّصي هذه الصفحة'], ['find', 'Search the reading', 'ابحثي في القراءة'], ['focus', 'Line focus', 'تركيز السطر']] },
+    pscroll: { icon: 'scroll', t: ['Looking for something?', 'تبحث عن شيء؟'], b: ['You’ve been scrolling up and down — is anything confusing, or can I help you find something?', 'كنت تمرّر للأعلى والأسفل — هل هناك شيء محيّر، أو يمكنني مساعدتك في إيجاد شيء؟'], acts: [['where', 'Help me find it', 'ساعديني في إيجاده'], ['studio', 'Open the Reading Studio', 'افتحي استوديو القراءة'], ['ptext', 'Bigger text on this site', 'نص أكبر في الموقع']] },
+    ppinch: { icon: 'eyeScan', t: ['Is the text too small?', 'هل النص صغير جداً؟'], b: ['I noticed some pinch-zooming. Shall I make everything on this site a bit bigger?', 'لاحظت بعض التكبير بإصبعين. هل أكبّر كل شيء في الموقع قليلاً؟'], acts: [['ptext', 'Yes, bigger text', 'نعم، نص أكبر'], ['studio', 'Read in the Studio instead', 'اقرأ في الاستوديو بدلاً من ذلك']] },
+    stall: { icon: 'clock', t: ['Still on this part?', 'ما زلت عند هذا الجزء؟'], b: ['You’ve been on this section for a while — totally fine. Is something tricky? I can explain it or read it aloud.', 'أنت عند هذا القسم منذ مدة — وهذا طبيعي تماماً. هل هناك شيء صعب؟ يمكنني شرحه أو قراءته بصوت عالٍ.'], acts: [['explain', 'Explain it', 'اشرحيه'], ['tts', 'Read it aloud', 'اقرئيه بصوت'], ['break', '5-minute break', 'استراحة ٥ دقائق']] }
   };
+  const nudgeOff = () => store.prefs().invitations === 'off' || (store.asked('monitoring') && !store.consent('monitoring'));
   function nudgeRecord(ev) {
     const t = ev.t || Date.now();
     if (ev.type === 'zoom' && !ev.figure) nud.zoom.push(t);
-    if (ev.type === 'pinch' && ev.scale > 1.15) nud.pinch.push(t);
+    if (ev.type === 'pinch' && ev.scale > 1.1) nud.pinch.push(t);
     if (ev.type === 'scrolldir') nud.scroll.push(t);
     if (ev.type === 'section' && ev.key !== nud.stillKey) { nud.stillKey = ev.key; nud.stillSince = t; }
     if (ev.type === 'tts' || ev.type === 'open') nud.stillSince = t;
-    ['zoom', 'pinch', 'scroll'].forEach(k => { while (nud[k].length && t - nud[k][0] > 120e3) nud[k].shift(); });
-    if (ev.type === 'zoom' || ev.type === 'pinch' || ev.type === 'scrolldir') { clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 900); }
+    trimNud(t);
+    if (ev.type === 'zoom' || ev.type === 'pinch' || ev.type === 'scrolldir') { clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 700); }
   }
+  const trimNud = t => ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { while (nud[k].length && t - nud[k][0] > 60e3) nud[k].shift(); });
+  // outside the Reading Studio: the student site itself (scrolling back and forth, pinch-zoom)
+  let pY = scrollY, pDir = 0, pinchS = window.visualViewport ? visualViewport.scale : 1;
+  addEventListener('scroll', () => {
+    if (R.isOpen()) return;
+    const d = scrollY - pY; if (Math.abs(d) < 120) return;
+    const dir = Math.sign(d); pY = scrollY;
+    if (pDir && dir !== pDir) { nud.pscroll.push(Date.now()); trimNud(Date.now()); clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 700); }
+    pDir = dir;
+  }, { passive: true });
+  if (window.visualViewport) visualViewport.addEventListener('resize', () => {
+    if (R.isOpen()) return; // the studio reports its own pinch events
+    const sc = visualViewport.scale;
+    if (Math.abs(sc - pinchS) >= 0.08) { pinchS = sc; if (sc > 1.1) { nud.pinch.push(Date.now()); clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 700); } }
+  });
+  setInterval(() => nudgeCheck(), 5000);
   function nudgeCheck() {
-    if (!session || paused || !store.consent('monitoring') || store.prefs().invitations === 'off' || !R.isOpen()) return;
-    if (inviteOpen || busy || generating || (conv && !conv.done) || Date.now() < snoozeUntil || (ERLY.companion && ERLY.companion.inCall)) return;
+    if (nudgeOff() || paused || busy || generating || (conv && !conv.done) || Date.now() < snoozeUntil || (ERLY.companion && ERLY.companion.inCall) || !side.hidden && side.children.length) return;
     const now = Date.now();
-    if (now - nud.lastAny < 90e3) return;
+    if (now - nud.lastAny < 45e3) return;
     const n = (arr, ms) => arr.filter(x => now - x < ms).length;
+    const inStudio = R.isOpen();
     let kind = null;
-    if (n(nud.zoom, 60e3) >= 4) kind = 'zoom';
-    else if (n(nud.pinch, 90e3) >= 2) kind = 'pinch';
-    else if (n(nud.scroll, 45e3) >= 8) kind = 'scroll';
-    else if (nud.stillKey && now - nud.stillSince > 150e3 && !R.isReading() && !document.hidden) kind = 'stall';
-    if (!kind || nud.muted.has(kind) || now - (nud.last[kind] || 0) < 5 * 60e3) return;
+    if (inStudio && n(nud.zoom, 45e3) >= 3) kind = 'zoom';
+    else if (n(nud.pinch, 60e3) >= 2) kind = inStudio ? 'pinch' : 'ppinch';
+    else if (inStudio && n(nud.scroll, 30e3) >= 4) kind = 'scroll';
+    else if (!inStudio && n(nud.pscroll, 25e3) >= 4) kind = 'pscroll';
+    else if (inStudio && nud.stillKey && now - nud.stillSince > 120e3 && !R.isReading() && !document.hidden) kind = 'stall';
+    if (!kind || nud.muted.has(kind) || now - (nud.last[kind] || 0) < 3 * 60e3) return;
     nud.lastAny = now; nud.last[kind] = now;
     if (kind === 'stall') nud.stillSince = now;
-    nud[kind] && Array.isArray(nud[kind]) && (nud[kind].length = 0);
+    const arr = { zoom: 'zoom', pinch: 'pinch', ppinch: 'pinch', scroll: 'scroll', pscroll: 'pscroll' }[kind];
+    if (arr) nud[arr].length = 0;
     showNudge(kind);
   }
   let nudgeT = null;
+  function hideNudge() {
+    const c = side.firstElementChild; clearTimeout(nudgeT);
+    if (!c) return;
+    c.classList.remove('is-in'); c.classList.add('is-out');
+    setTimeout(() => { c.remove(); if (!side.children.length) side.hidden = true; }, reduce ? 0 : 380);
+  }
   function showNudge(kind) {
-    const N = NUDGE[kind]; if (!N || inviteOpen) return false;
-    inviteOpen = true;
-    invite.classList.add('cmp-invite--nudge');
-    invite.innerHTML = `<span class="cnudge__ic" aria-hidden="true">${ICON(N.icon)}</span><div class="cmp-invite__b">
-      <p class="cnudge__k">${orb('cmp-orb--xs')} Noor <small>${T('just checking in', 'مجرد اطمئنان')}</small></p>
-      <b class="cnudge__t">${esc(pick(...N.t))}</b><p>${esc(pick(...N.b))}</p>
-      <div class="cmp-invite__btns">${N.acts.map((a, i) => `<button type="button" class="btn btn--xs ${i === 0 ? 'btn--accent' : 'btn--ghost'}" data-nu="${a[0]}">${esc(pick(a[1], a[2]))}</button>`).join('')}<button type="button" class="btn btn--xs btn--quiet" data-nu="fine">${T('I’m fine', 'أنا بخير')}</button><button type="button" class="btn btn--xs btn--quiet" data-nu="talk">${T('Talk to Noor', 'تحدث مع نور')}</button></div>
-      <small>${T('Private — only you see this. Nothing is shared.', 'خاص — أنت فقط ترى هذا. لا يُشارك شيء.')}</small></div>
+    const N = NUDGE[kind]; if (!N) return false;
+    side.innerHTML = '';
+    const card = document.createElement('div');
+    card.className = 'cnudge';
+    card.dataset.kind = kind;
+    card.innerHTML = `<button type="button" class="cnudge__x" data-nu="close" aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button>
+      <div class="cnudge__top"><span class="cnudge__ic" aria-hidden="true">${ICON(N.icon)}</span><p class="cnudge__k">${orb('cmp-orb--xs')} Noor <small>${T('just checking in', 'مجرد اطمئنان')}</small></p></div>
+      <b class="cnudge__t">${esc(pick(...N.t))}</b><p class="cnudge__b">${esc(pick(...N.b))}</p>
+      <div class="cnudge__btns">${N.acts.map((a, i) => `<button type="button" class="btn btn--xs ${i === 0 ? 'btn--accent' : 'btn--ghost'}" data-nu="${a[0]}">${esc(pick(a[1], a[2]))}</button>`).join('')}</div>
+      <div class="cnudge__more"><button type="button" data-nu="talk">${ICON('chat')} ${T('Yes, something’s hard — talk to Noor', 'نعم، شيء صعب — تحدث مع نور')}</button><button type="button" data-nu="fine">${T('I’m fine', 'أنا بخير')}</button></div>
+      <small class="cnudge__p">${T('Private — only you see this. Nothing is saved or shared.', 'خاص — أنت فقط ترى هذا. لا يُحفظ ولا يُشارك شيء.')} <button type="button" data-nu="off">${T('Turn these off', 'إيقاف هذه')}</button></small>
       <span class="cnudge__timer" aria-hidden="true"></span>`;
-    invite.hidden = false;
-    requestAnimationFrame(() => invite.classList.add('is-in'));
-    launch.classList.add('has-invite');
+    side.appendChild(card);
+    side.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('is-in')));
     window.FUN && FUN.sfx && FUN.sfx.tick();
-    clearTimeout(nudgeT); nudgeT = setTimeout(() => { if (invite.classList.contains('cmp-invite--nudge')) hideInvite(); }, 30000);
-    invite.onclick = async e => {
+    clearTimeout(nudgeT); nudgeT = setTimeout(hideNudge, 25000);
+    card.addEventListener('pointerenter', () => clearTimeout(nudgeT));
+    card.addEventListener('pointerleave', () => { clearTimeout(nudgeT); nudgeT = setTimeout(hideNudge, 12000); });
+    card.onclick = async e => {
       const b = e.target.closest('[data-nu]'); if (!b) return;
-      const k = b.dataset.nu, para = R.currentPara();
-      hideInvite();
+      const k = b.dataset.nu, para = R.isOpen() ? R.currentPara() : null;
+      hideNudge();
+      if (k === 'close') return;
       if (k === 'fine') { nud.muted.add(kind); ERLY.toast && ERLY.toast(T('Okay! I won’t ask about that again this session.', 'حسناً! لن أسأل عن ذلك مجدداً في هذه الجلسة.')); return; }
+      if (k === 'off') { store.setPref('invitations', 'off'); ERLY.toast && ERLY.toast(T('Check-ins are off. Turn them back on in Noor → Signals.', 'الاطمئنان متوقف. أعد تشغيله من نور ← الإشارات.')); return; }
       if (k === 'bigger') { R.act('calm'); ERLY.toast && ERLY.toast(T('Bigger, calmer text — change it any time under Text & voice.', 'نص أكبر وأهدأ — غيّره متى شئت من النص والصوت.')); }
       if (k === 'tint') { R.act('tint'); ERLY.toast && ERLY.toast(T('Softer page colour on.', 'تم تفعيل لون صفحة أهدأ.')); }
       if (k === 'tts') R.act('tts', para);
       if (k === 'find') R.act('search');
       if (k === 'focus') { R.act('focus', para); ERLY.toast && ERLY.toast(T('Line focus on — move with your mouse or ↑ ↓.', 'تركيز السطر مفعّل — تحرّك بالفأرة أو ↑ ↓.')); }
+      if (k === 'ptext') { const big = !document.documentElement.classList.contains('erly-big'); document.documentElement.classList.toggle('erly-big', big); ERLY.toast && ERLY.toast(big ? T('Bigger text on — tap again in a check-in to undo.', 'تم تكبير النص.') : T('Text back to normal.', 'عاد النص لحجمه الطبيعي.')); }
+      if (k === 'studio') R.openLibrary();
       if (k === 'sum') { openPanel('chat'); await greeting; await runTool('summary', para); }
       if (k === 'explain') { openPanel('chat'); await greeting; helpMenu({ para }); }
       if (k === 'break') { openPanel('chat'); await greeting; await runTool('break', para); }
-      if (k === 'talk') { openPanel('chat'); await greeting; startConversation({ type: 'invite', signal: kind === 'stall' ? 'regression' : kind === 'scroll' ? 'regression' : 'zoom', section: para }, [], false); }
+      if (k === 'where') { openPanel('chat'); await greeting; await aiSays('Sure! What are you looking for? Type it here, or pick one below.', 'بالتأكيد! عمّ تبحث؟ اكتبه هنا أو اختر أدناه.'); chipRow([{ id: 'r', en: 'A course reading', ar: 'قراءة مادة' }, { id: 'q', en: 'Today’s check-ins', ar: 'فحوصات اليوم' }, { id: 's', en: 'Getting support (SAS)', ar: 'الحصول على الدعم' }, { id: 'g', en: 'My Growth Plan', ar: 'خطة النمو' }], c => { bubble('you', pick(c.en, c.ar), { text: true }); if (c.id === 'r') { closePanel(); R.openLibrary(); } if (c.id === 'q') location.href = 'checkins.html'; if (c.id === 's') { closePanel(); const el = document.querySelector('#handoff, #support, #get-support'); el ? el.scrollIntoView({ behavior: 'smooth' }) : location.hash = '#handoff'; } if (c.id === 'g') location.href = 'support.html'; }); }
+      if (k === 'talk') {
+        openPanel('chat'); await greeting;
+        if (R.isOpen()) startConversation({ type: 'invite', signal: kind === 'zoom' || kind === 'pinch' ? 'zoom' : 'regression', section: para }, [], false);
+        else if (brain()) { bubble('you', T('Something feels hard', 'شيء ما يبدو صعباً'), { text: true }); brain().freeText('I feel like something is hard for me', { silentUser: true }); }
+      }
       ERLY.emit && ERLY.emit('noor:nudge', { kind, action: k });
     };
     return true;
@@ -1194,6 +1252,7 @@
     },
     attached: () => attached, attach,
     _nudge: kind => showNudge(kind),
+    _nudgeReset: () => { nud.lastAny = 0; nud.last = {}; nud.muted.clear(); ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { nud[k].length = 0; }); hideNudge(); },
     // internals shared with noor-brain.js and call.js (same feature, split for size)
     _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done), ai, setGenerating, isGenerating: () => !!generating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };

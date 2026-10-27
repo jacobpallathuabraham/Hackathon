@@ -27,6 +27,13 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.goto(BASE + 'student.html');
   await page.waitForTimeout(600);
 
+  /* ---------- side check-in after scrolling up and down on the site ---------- */
+  for (let i = 0; i < 6; i++) { await page.evaluate(i => window.scrollTo(0, i % 2 ? 300 : 900), i); await page.waitForTimeout(120); }
+  await page.waitForSelector('.cside .cnudge.is-in', { timeout: 8000 });
+  assert.match(await page.textContent('.cside'), /Looking for something\?/);
+  await page.click('.cside [data-nu="close"]'); await page.waitForTimeout(500);
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   /* ---------- the library ---------- */
   await page.click('.studio-cta [data-studio].btn');
   await page.waitForSelector('.slib.is-in');
@@ -105,6 +112,17 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.fill('#cmpText', 'make me a 5 day exam study plan'); await page.press('#cmpText', 'Enter'); await page.waitForTimeout(1200);
   assert.equal(await page.locator('#cmpLog .md-table tbody tr').count(), 5, 'a 5-day plan table');
 
+  /* ---------- Noor Online (the free service is mocked: no internet in CI) ---------- */
+  let posted = null;
+  await page.route('https://text.pollinations.ai/**', r => { posted = r.request().postData(); r.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: 'data: {"choices":[{"delta":{"content":"Spain won the "}}]}\n\ndata: {"choices":[{"delta":{"content":"**2010 World Cup**."}}]}\n\ndata: [DONE]\n\n' }); });
+  await page.fill('#cmpText', 'who won the 2010 football world cup? my email is sam@uni.ae'); await page.press('#cmpText', 'Enter'); await page.waitForTimeout(1200);
+  assert.equal(await page.isVisible('.conline'), true, 'offers Noor Online for unknown questions');
+  await page.click('.conline [data-o="on"]'); await page.waitForTimeout(1800);
+  assert.match(await page.textContent('#cmpLog'), /Spain won the 2010 World Cup/);
+  assert.match(await page.textContent('#cmpMode'), /Noor Online/);
+  assert.ok(posted && !/sam@uni\.ae/.test(posted) && /\[email\]/.test(posted), 'emails are removed before sending');
+  await page.unroute('https://text.pollinations.ai/**');
+
   /* ---------- Noor: the AI brain (model mocked) ---------- */
   await page.click('#cmpMode'); await page.waitForTimeout(800);
   assert.match(await page.textContent('#cmpBrain'), /On-device AI/);
@@ -142,11 +160,12 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 
   /* ---------- nudges while reading ---------- */
   await page.click('#cmpClose'); await page.waitForTimeout(300);
+  await page.evaluate(() => ERLY.companion._nudgeReset());
   for (let i = 0; i < 3; i++) { await page.click('#stZoomIn'); await page.waitForTimeout(150); await page.click('#stZoomOut'); await page.waitForTimeout(150); }
-  await page.waitForSelector('.cmp-invite--nudge.is-in', { timeout: 6000 });
-  assert.match(await page.textContent('.cmp-invite'), /Zooming in and out a lot\?/);
+  await page.waitForSelector('.cside .cnudge.is-in', { timeout: 6000 });
+  assert.match(await page.textContent('.cside'), /Zooming in and out a lot\?/);
   const before = await page.evaluate(() => ERLY.reader.format().size);
-  await page.click('.cmp-invite [data-nu="bigger"]'); await page.waitForTimeout(300);
+  await page.click('.cside [data-nu="bigger"]'); await page.waitForTimeout(300);
   assert.ok(await page.evaluate(() => ERLY.reader.format().size) > before, 'text made bigger');
 
   /* ---------- voice mode: sentences are spoken as they are written ---------- */

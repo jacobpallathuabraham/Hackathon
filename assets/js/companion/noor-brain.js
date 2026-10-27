@@ -87,13 +87,46 @@
     remember(a);
     if (a.kind === 'answer') await sayKB(a);
     else if (a.kind === 'unknown' && U.ai) {
-      await mdSay('That’s outside what my **built-in brain** knows — it covers learning differences, studying, exams, wellbeing and the readings here.\n\nTurn on my **AI brain** and I can help with almost anything: any subject, essays, code, plans and more. It can run privately on this device.', 'هذا خارج ما يعرفه **عقلي المدمج** — فهو يغطي اختلافات التعلّم والمذاكرة والاختبارات والرفاه والقراءات هنا.\n\nفعّل **عقلي الذكي** وسأساعدك في كل شيء تقريباً: أي مادة، والمقالات، والبرمجة، والخطط وغيرها. ويمكنه العمل بخصوصية على هذا الجهاز.');
+      await mdSay('My **built-in brain** only covers learning differences, studying, exams, wellbeing and the readings here — so I can’t answer that one yet.\n\nWant me to find out? **Noor Online** is a free AI that can answer almost anything, and it works on iPads too.', 'يغطي **عقلي المدمج** اختلافات التعلّم والمذاكرة والاختبارات والرفاه والقراءات هنا فقط — لذا لا أستطيع الإجابة عن هذا بعد.\n\nهل تريد أن أعرف لك؟ **نور أونلاين** ذكاء اصطناعي مجاني يجيب عن كل شيء تقريباً، ويعمل على الآيباد أيضاً.');
       history.push({ role: 'assistant', text: 'built-in: unknown' });
-      return offerChips([{ id: 'brain', en: 'Turn on Noor’s AI brain', ar: 'فعّل عقل نور الذكي' }, { id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
+      onlineCard(text);
+      return;
     } else await say(a.en, a.ar);
     history.push({ role: 'assistant', text: pick(a.en, a.ar) });
     if (history.length > 16) history.splice(0, history.length - 16);
     offerChips(a.chips && a.chips.length ? a.chips : [{ id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }, { id: 'kb:assessment:what', en: 'How do assessments work?', ar: 'كيف تعمل التقييمات؟' }]);
+  }
+  // a one-tap, informed choice to answer with Noor Online (or just a Wikipedia lookup)
+  function onlineCard(q) {
+    const svc = U.ai.online();
+    const card = document.createElement('div');
+    card.className = 'ccard conline';
+    card.innerHTML = `<b>${ICON('globe')} ${T('Answer this with Noor Online?', 'أجيب عن هذا بنور أونلاين؟')}</b>
+      <p>${T(`Your question and the recent chat go to ${esc(svc.name)}, a free AI service. Emails and numbers are removed first; your name, profile and tracking are never sent. Please don’t share anything private.`, `يُرسل سؤالك والمحادثة الأخيرة إلى ${esc(svc.name)}، وهي خدمة ذكاء اصطناعي مجانية. تُحذف عناوين البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو بيانات التتبع أبداً. لا تشارك أي شيء خاص.`)}</p>
+      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Turn on & answer', 'شغّل وأجب')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search Wikipedia', 'ابحث في ويكيبيديا فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
+    card.addEventListener('click', async e => {
+      const b = e.target.closest('[data-o]'); if (!b) return;
+      card.remove();
+      if (b.dataset.o === 'on') { U.ai.useOnline(); ERLY.toast && ERLY.toast(T('Noor Online is on — ask me anything.', 'نور أونلاين مفعّل — اسألني أي شيء.')); history.pop(); history.pop(); return freeText(q, { silentUser: true }); }
+      if (b.dataset.o === 'wiki') return wikiAnswer(q);
+      offerChips([{ id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
+    });
+    U.$('#cmpLog').appendChild(card); U.scrollLog();
+  }
+  async function wikiAnswer(q, note) {
+    U.setStatus('thinking');
+    let hit = null;
+    try { hit = await U.ai.lookup(q, lang()); } catch (e) { hit = null; }
+    U.setStatus('idle');
+    if (!hit) {
+      await say('I couldn’t reach the internet from here, so I can’t look that up right now. Try again in a moment, or ask me about studying, exams or the readings.', 'لم أستطع الوصول إلى الإنترنت من هنا، لذا لا أستطيع البحث الآن. حاول بعد قليل، أو اسألني عن المذاكرة أو الاختبارات أو القراءات.');
+      return false;
+    }
+    const md = `${note ? note + '\n\n' : ''}### ${hit.title}\n${hit.text}\n\n_Source: [Wikipedia](${hit.url})_`;
+    await mdSay(md, md, { tag: T('Looked up on Wikipedia', 'من ويكيبيديا') });
+    history.push({ role: 'assistant', text: hit.text });
+    offerChips([{ id: 'fu:simpler', en: 'Explain it more simply', ar: 'اشرحيها بشكل أبسط' }, { id: 'fu:example', en: 'Give me an example', ar: 'أعطيني مثالاً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
+    return true;
   }
   const mdSay = (en, ar, o = {}) => aiSays(en, ar, Object.assign({ html: `<div class="md">${MD.render(pick(en, ar))}</div>`, sayText: MD.toText(pick(en, ar)), stream: true }, o));
 
@@ -112,7 +145,7 @@
     U.$('#cmpLog').appendChild(m); U.scrollLog();
     const body = m.querySelector('.cmsg__b');
     U.setStatus('thinking'); U.setBusy(true);
-    let stopped = false, spoken = 0, raf = 0, latest = '';
+    let stopped = false, spoken = 0, raf = 0, latest = '', busyT = null;
     U.setGenerating({ stop: () => { stopped = true; ai.stop(); } });
     const paint = () => { raf = 0; body.innerHTML = MD.render(latest) + '<span class="ccaret" aria-hidden="true"></span>'; U.scrollLog(); };
     const speakPart = t => {
@@ -123,9 +156,15 @@
     };
     let out = '';
     try {
-      out = await ai.generate(msgs, { voice: voiceMode, onToken: t => { latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
+      out = await ai.generate(msgs, { voice: voiceMode, onStatus: st => {
+        if (!st.busy) return;
+        let left = st.busy; clearInterval(busyT);
+        const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T(`Noor Online is busy (free service, one message at a time) — trying again in ${left}s…`, `نور أونلاين مشغول (خدمة مجانية، رسالة واحدة في كل مرة) — سأحاول مجدداً بعد ${left} ث…`)}</p>`; };
+        show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>'; } else show(); }, 1000);
+      }, onToken: t => { clearInterval(busyT); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
+      clearInterval(busyT);
     } catch (e) {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf); clearInterval(busyT);
       U.setGenerating(null); U.setBusy(false); U.setStatus('idle');
       if (stopped && latest) { finishReply(m, latest, text, true); history.push({ role: 'assistant', text: latest }); return true; }
       m.remove(); history.pop();
@@ -138,6 +177,11 @@
         return true;
       }
       if (stopped) { ERLY.emit('noor:turn-end'); return true; }
+      if (ai.state().tier === 'online') {
+        history.push({ role: 'user', text });
+        if (await wikiAnswer(text, T('_Noor Online didn’t answer just now, so I looked it up instead._', '_لم يُجب نور أونلاين الآن، لذا بحثت عن الإجابة._'))) { ERLY.emit('noor:turn-end'); return true; }
+        history.pop();
+      }
       bubble('ai', T('My AI brain didn’t answer this time, so here’s my built-in answer.', 'لم يُجب عقلي الذكي هذه المرة، لذا إليك إجابتي المدمجة.'), { text: true, cls: 'cmsg--note' });
       return false;
     }

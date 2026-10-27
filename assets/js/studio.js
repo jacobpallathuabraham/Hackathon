@@ -52,7 +52,8 @@
 
   // event bus for the companion: interaction metadata only
   const listeners = [];
-  const emit = ev => { ev.t = Date.now(); listeners.slice().forEach(fn => { try { fn(ev); } catch (e) { console.error(e); } }); };
+  let lastIntentAt = 0;
+  const emit = ev => { ev.t = Date.now(); if (ev.type === 'intent') lastIntentAt = ev.t; listeners.slice().forEach(fn => { try { fn(ev); } catch (e) { console.error(e); } }); };
 
   /* ================= build the overlay ================= */
   const root = document.createElement('div');
@@ -1280,8 +1281,8 @@
   doc.addEventListener('scroll', () => {
     const top = doc.scrollTop;
     if (firstScroll === null && openedAt) { firstScroll = (Date.now() - openedAt) / 1000; track('M09', +firstScroll.toFixed(0), 'set'); track('P07', +firstScroll.toFixed(0), 'set'); }
-    if (sMode === 'down') { if (top > sExt) sExt = top; else if (top < sExt - 70) { sMode = 'up'; sExt = top; track('V01'); emit({ type: 'scrolldir', dir: 'up' }); const k = focusedPara(); if (k) { pstate(k).regress++; check(k); } } }
-    else { if (top < sExt) sExt = top; else if (top > sExt + 70) { sMode = 'down'; sExt = top; emit({ type: 'scrolldir', dir: 'down' }); } }
+    if (sMode === 'down') { if (top > sExt) sExt = top; else if (top < sExt - 70) { sMode = 'up'; sExt = top; track('V01'); if (Date.now() - lastIntentAt > 1500 && !reading) emit({ type: 'scrolldir', dir: 'up' }); const k = focusedPara(); if (k) { pstate(k).regress++; check(k); } } }
+    else { if (top < sExt) sExt = top; else if (top > sExt + 70) { sMode = 'down'; sExt = top; if (Date.now() - lastIntentAt > 1500 && !reading && !auto.on) emit({ type: 'scrolldir', dir: 'down' }); } }
     seenPages.add(currentPage());
     if (st.focus) placeRuler();
     if (Date.now() - progT > 120) { progT = Date.now(); progress(); }

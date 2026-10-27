@@ -11,6 +11,13 @@
              device's GPU (WebGPU). Messages never leave the device.
      chrome  Chrome's built-in AI (Gemini Nano, the Prompt API) where the
              browser offers it. Also on-device.
+     online  Noor Online: a free, key-less hosted model (Pollinations' classic
+             OpenAI-compatible text API by default; a university can point it
+             at its own endpoint in config.js). Works on every device,
+             including iPads without WebGPU. Used only after the student agrees
+             to a consent card that names the service and what is sent; emails
+             and long numbers are removed first. If it is busy or blocked,
+             Noor falls back to a Wikipedia lookup and then to her built-in brain.
      cloud   A server the university runs (server/llm-proxy.mjs) that holds
              the API key. Used only after the separate "external AI" consent.
              No API key is ever in this website.
@@ -31,10 +38,15 @@
   const WEBLLM_URL = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.84/+esm';
   const PREF = 'erly-ai-v1';
   const MODELS = [
-    { key: 'lite', id: 'Qwen3.5-0.8B-q4f16_1-MLC', id32: 'Qwen3.5-0.8B-q4f32_1-MLC', name: 'Noor Lite', size: '≈ 0.6 GB', en: 'Fastest — good for phones and iPads.', ar: 'الأسرع — مناسب للهواتف والآيباد.' },
+    // Lite is small enough (≈ 0.9 GB of graphics memory) for a recent iPad; Plus and Pro are for laptops
+    { key: 'lite', id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', id32: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', name: 'Noor Lite', size: '≈ 0.7 GB', en: 'Smallest — the one to try on an iPad.', ar: 'الأصغر — جرّبه على الآيباد.', ctx: 2048 },
     { key: 'plus', id: 'Qwen3.5-2B-q4f16_1-MLC', id32: 'Qwen3.5-2B-q4f32_1-MLC', name: 'Noor Plus', size: '≈ 1.4 GB', en: 'Balanced — recommended for laptops.', ar: 'متوازن — موصى به للحواسيب المحمولة.', rec: true },
     { key: 'pro', id: 'Qwen3.5-4B-q4f16_1-MLC', id32: 'Qwen3.5-4B-q4f32_1-MLC', name: 'Noor Pro', size: '≈ 2.6 GB', en: 'Smartest — needs a strong computer.', ar: 'الأذكى — يحتاج حاسوباً قوياً.' }
   ];
+  const ONLINE_DEFAULT = { name: 'Pollinations', url: 'https://text.pollinations.ai/openai', get: 'https://text.pollinations.ai/', model: 'openai', site: 'pollinations.ai' };
+  const isIOS = () => typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+  // nothing that could identify the student leaves the device
+  const redact = t => String(t || '').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]').replace(/\+?\d[\d\s-]{7,}\d/g, '[number]').replace(/\b\d{6,}\b/g, '[number]');
   // telling THIS student they have a condition, or giving odds, is never allowed
   const VERDICT = /\byou (definitely |probably |likely |clearly |may |might |could )?(have|are|suffer from) (a |an )?(dyslexi|adhd|autis|dyscalcul|dysgraph|dyspraxi|depress|bipolar|ocd|anxiety disorder|learning disab)|\b\d{1,3}\s?%\s*(chance|likel|probab|risk)|\bprobability (that|of) you|likelihood (that|of) you|أنت مصاب|لديك (عسر|اضطراب|توحد)/i;
 
@@ -95,6 +107,9 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
     const st = { tier: 'local', status: 'idle', progress: 0, text: '', model: null, error: null };
     const subs = [];
     let engine = null, webllm = null, chromeAvail = null, abort = null;
+    const fetchFn = (...a) => (opts.fetch || g.fetch).apply(g, a);
+    const online = () => Object.assign({}, ONLINE_DEFAULT, (opts.online && opts.online()) || {});
+    const wait = ms => new Promise(r => setTimeout(r, ms));
     const set = p => { Object.assign(st, p); subs.forEach(f => { try { f(Object.assign({}, st)); } catch (e) { /* ignore */ } }); };
     const pref = () => { try { return JSON.parse(localStorage.getItem(PREF) || '{}'); } catch (e) { return {}; } };
     const savePref = p => { try { localStorage.setItem(PREF, JSON.stringify(p)); } catch (e) { /* private mode */ } };
@@ -128,7 +143,8 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         const f16 = ad && ad.features && ad.features.has('shader-f16');
         const w = await loadLib();
         if (engine && engine.unload) { try { await engine.unload(); } catch (e) { /* ignore */ } }
-        engine = await w.CreateMLCEngine(f16 ? m.id : m.id32, { initProgressCallback: r => set({ progress: Math.max(st.progress, r.progress || 0), text: r.text || '' }) });
+        // a smaller context window keeps memory low enough for tablets
+        engine = await w.CreateMLCEngine(f16 ? m.id : m.id32, { initProgressCallback: r => set({ progress: Math.max(st.progress, r.progress || 0), text: r.text || '' }) }, { context_window_size: m.ctx || (isIOS() ? 2048 : 4096) });
         set({ status: 'ready', progress: 1 });
         savePref({ tier: 'webllm', model: m.key });
         return true;
@@ -152,6 +168,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         return false;
       }
     }
+    function useOnline() { set({ tier: 'online', status: 'ready', model: 'online', error: null, progress: 1 }); savePref({ tier: 'online', consented: Date.now() }); return true; }
     function useCloud() { set({ tier: 'cloud', status: 'ready', model: 'cloud', error: null }); savePref({ tier: 'cloud' }); }
     function useLocal() { set({ tier: 'local', status: 'idle', model: null, error: null, progress: 0 }); savePref({ tier: 'local' }); }
     // bring back last visit's choice: cached on-device models reload without a new download
@@ -159,6 +176,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       const p = pref();
       if (p.tier === 'webllm' && g.navigator && navigator.gpu) return useWebLLM(p.model);
       if (p.tier === 'chrome' && g.LanguageModel) { try { if ((await LanguageModel.availability()) === 'available') return useChrome(); } catch (e) { /* ignore */ } }
+      if (p.tier === 'online' && p.consented) return useOnline();
       if (p.tier === 'cloud' && opts.cloud && opts.cloud.configured() && opts.cloud.consent()) { useCloud(); return true; }
       return false;
     }
@@ -186,6 +204,10 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
             if (acc && c.startsWith(acc)) { push(c.slice(acc.length)); acc = c; } else { push(c); acc += c; } // older builds stream the whole text so far
           }
         } finally { session.destroy && session.destroy(); }
+      } else if (st.tier === 'online') {
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        abort = () => ctrl && ctrl.abort();
+        await onlineGenerate(messages, o, ctrl, push);
       } else if (st.tier === 'cloud') {
         let cancelled = false; abort = () => { cancelled = true; };
         const r = await opts.cloud.chat(messages, o);
@@ -199,16 +221,92 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       if (unsafe(out)) throw new Error('unsafe');
       return out;
     }
+    /* Noor Online: OpenAI-style POST (streamed when the service streams), then
+       a plain GET as a fallback for browsers or networks that block the POST.
+       The free tier allows one request at a time per network, so a "busy"
+       answer is retried once after the wait the service asks for. */
+    async function onlineGenerate(messages, o, ctrl, push) {
+      const svc = online();
+      const clean = messages.map(m => ({ role: m.role, content: m.role === 'user' ? redact(m.content) : m.content }));
+      const body = JSON.stringify({ model: svc.model, messages: clean, stream: true, temperature: o.voice ? 0.6 : 0.5, private: true, referrer: 'erly' });
+      const signal = ctrl ? ctrl.signal : undefined;
+      let tries = 0, lastErr = null;
+      while (tries++ < 2) {
+        let r;
+        try {
+          r = await fetchFn(svc.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body, signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+          lastErr = e; break; // blocked POST → try the GET form below
+        }
+        if (r.status === 402 || r.status === 429 || r.status === 503) {
+          const secs = Math.min(35, Math.max(3, +(r.headers.get('retry-after') || 0) || 20));
+          o.onStatus && o.onStatus({ busy: secs });
+          await wait(secs * 1000);
+          continue;
+        }
+        if (!r.ok) { lastErr = new Error('online-' + r.status); break; }
+        const type = (r.headers.get('content-type') || '').toLowerCase();
+        if (type.includes('event-stream') && r.body && r.body.getReader) {
+          const rd = r.body.getReader(), dec = new TextDecoder();
+          let buf = '';
+          for (;;) {
+            const { value, done } = await rd.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            let i;
+            while ((i = buf.indexOf('\n')) >= 0) {
+              const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+              if (!line.startsWith('data:')) continue;
+              const data = line.slice(5).trim();
+              if (data === '[DONE]') return;
+              try { const j = JSON.parse(data); const d = j.choices && j.choices[0] && ((j.choices[0].delta && j.choices[0].delta.content) || (j.choices[0].message && j.choices[0].message.content)); if (d) push(d); } catch (e) { /* keep-alive or partial line */ }
+            }
+          }
+          return;
+        }
+        const text = await r.text();
+        let out = text;
+        try { const j = JSON.parse(text); out = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || j.content || j.text || ''; } catch (e) { /* plain text */ }
+        if (!out) { lastErr = new Error('online-empty'); break; }
+        for (const w of out.split(/(\s+)/)) { push(w); if (w.trim()) await wait(10); }
+        return;
+      }
+      // fallback: a simple GET, which most networks allow
+      const sys = clean[0].content.slice(0, 1500);
+      const convo = clean.slice(1).map(m => (m.role === 'user' ? 'Student: ' : 'Noor: ') + m.content).join('\n').slice(-2500);
+      const url = svc.get + encodeURIComponent(convo + '\nNoor:') + '?model=' + encodeURIComponent(svc.model) + '&private=true&system=' + encodeURIComponent(sys);
+      let r;
+      try { r = await fetchFn(url, { signal, credentials: 'omit', referrerPolicy: 'no-referrer' }); } catch (e) { if (e && e.name === 'AbortError') return; throw lastErr || e; }
+      if (!r.ok) throw new Error('online-' + r.status);
+      const out = (await r.text()).trim();
+      if (!out) throw new Error('online-empty');
+      for (const w of out.split(/(\s+)/)) { push(w); if (w.trim()) await wait(10); }
+    }
+    // a short, sourced Wikipedia summary — the fallback when Noor Online is busy
+    async function lookup(q, lang) {
+      const host = lang === 'ar' ? 'ar.wikipedia.org' : 'en.wikipedia.org';
+      const term = String(q).replace(/^(what|who|where|when|why|how)\s+(is|are|was|were|does|do|did)\s+(an?\s+|the\s+)?|^(tell me about|explain|define|meaning of)\s+/i, '').replace(/[?؟.!]+$/, '').trim().slice(0, 120);
+      if (!term) return null;
+      const s = await fetchFn(`https://${host}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=1&format=json&origin=*`, { credentials: 'omit' });
+      const hit = s.ok && (await s.json()).query.search[0];
+      if (!hit) return null;
+      const r = await fetchFn(`https://${host}/api/rest_v1/page/summary/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`, { credentials: 'omit' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      return j && j.extract ? { title: j.title, text: j.extract, url: (j.content_urls && j.content_urls.desktop && j.content_urls.desktop.page) || `https://${host}/wiki/${encodeURIComponent(hit.title)}` } : null;
+    }
     function stop() { if (abort) { try { abort(); } catch (e) { /* ignore */ } abort = null; } }
     const label = () => {
       if (st.status === 'loading') return { en: 'Waking up the AI brain…', ar: 'جارٍ تشغيل عقل الذكاء الاصطناعي…' };
       if (st.tier === 'webllm' && st.status === 'ready') { const m = MODELS.find(x => x.key === st.model); return { en: `On-device AI · ${m ? m.name : 'Noor'}`, ar: `ذكاء اصطناعي على الجهاز · ${m ? m.name : 'نور'}` }; }
       if (st.tier === 'chrome' && st.status === 'ready') return { en: 'On-device AI · Gemini Nano', ar: 'ذكاء اصطناعي على الجهاز · Gemini Nano' };
+      if (st.tier === 'online' && ready()) return { en: 'Noor Online · AI', ar: 'نور أونلاين · ذكاء اصطناعي' };
       if (st.tier === 'cloud' && ready()) return { en: 'Cloud AI · university server', ar: 'ذكاء اصطناعي سحابي · خادم الجامعة' };
       return { en: 'Built-in brain · offline', ar: 'العقل المدمج · دون اتصال' };
     };
-    return { MODELS, state: () => Object.assign({}, st), on: f => subs.push(f), detect, useWebLLM, useChrome, useCloud, useLocal, resume, ready, generate, stop, label, chromeAvail: () => chromeAvail, pref };
+    return { MODELS, state: () => Object.assign({}, st), on: f => subs.push(f), detect, useWebLLM, useChrome, useOnline, useCloud, useLocal, lookup, online, isIOS, resume, ready, generate, stop, label, chromeAvail: () => chromeAvail, pref };
   }
 
-  return { create, systemPrompt, buildMessages, visible, unsafe, takeSentences, MODELS, VERDICT, WEBLLM_URL };
+  return { create, redact, ONLINE_DEFAULT, systemPrompt, buildMessages, visible, unsafe, takeSentences, MODELS, VERDICT, WEBLLM_URL };
 });

@@ -7,5 +7,10 @@
 
    NEVER put an API key in this file: everything in assets/ is public. */
 window.ERLY_AI_CONFIG = {
-  endpoint: ''
+  endpoint: '',
+  // "Noor Online" (works on every device, used only after the student agrees).
+  // Leave null for the free, key-less Pollinations text API, or point it at
+  // your own OpenAI-compatible endpoint that needs no browser-side key, e.g.
+  // { name: 'Acubins AI', site: 'ai.acubins.example', url: 'https://…/v1/chat/completions', get: '', model: 'gpt-4o-mini' }
+  online: null
 };
