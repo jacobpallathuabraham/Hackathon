@@ -283,7 +283,7 @@
   function go(v) {
     if (v === current) { $('#side').classList.remove('is-open'); return; }
     const from = $(`.view[data-view="${current}"]`), to = $(`.view[data-view="${v}"]`);
-    const order = ['overview', 'requests', 'students', 'cohort'], dir = order.indexOf(v) > order.indexOf(current) ? 1 : -1;
+    const order = ['overview', 'requests', 'students', 'faculty', 'cohort'], dir = order.indexOf(v) > order.indexOf(current) ? 1 : -1;
     current = v;
     $$('.side__a').forEach(a => a.classList.toggle('is-on', a.dataset.view === v));
     movePill();
@@ -640,7 +640,33 @@ ${s.name.replace(' (you)', '')} · ${s.id}`;
     else if (v === 'requests') { renderBoard(); $('#newBadge').textContent = S.filter(s => s.status === 'new').length; }
     else if (v === 'students') renderStudents();
     else if (v === 'cohort') renderCohort();
+    else if (v === 'faculty') renderFaculty();
   }
+  /* ---------- faculty referrals (shared from the Faculty portal) ---------- */
+  function renderFaculty() {
+    const C = window.CAMPUS; if (!C) return;
+    const D = C.load();
+    const refs = D.refs.slice().sort((a, b) => b.at - a.at);
+    $('#facRefs').innerHTML = refs.length ? `<div class="fac-list fac-list--big">${refs.map((r, i) => {
+      const s = C.STUDENTS.find(x => x.id === r.stu), obs = D.obs.filter(o => r.obs.includes(o.id));
+      const areas = C.obsAreas(D, s.id), att = C.COURSES.filter(c => c.students.includes(s.id)).map(c => C.attendance(D, c.id, s.id).rate);
+      const avgAtt = att.length ? Math.round(att.reduce((a, b) => a + b, 0) / att.length * 100) : null;
+      return `<div class="fac-ref fac-ref--sas" style="--i:${i}"><span class="avatar avatar--hue" style="--h:${s.hue}">${esc(s.init)}</span>
+        <div><b>${esc(s.name)}</b><small>${s.id} · ${esc(s.stream)} · referred by ${esc(r.by)} · ${fmtD(new Date(r.at))}${avgAtt != null ? ' · attendance ' + avgAtt + '%' : ''}</small>
+          <div class="fac-signs" style="margin-top:8px">${Object.keys(areas).map(a => `<span class="fac-sign fac-sign--${a}">${esc(C.AREA_NAME[a])} · ${areas[a]}</span>`).join('')}</div>
+          ${obs.map(o => `<p><b>${esc(C.COURSES.find(c => c.id === o.course).code)}</b> — ${o.signs.map(id => esc(C.SIGNS.find(x => x.id === id).en)).join(' · ')}${o.note ? `<br><span class="muted">“${esc(o.note)}”</span>` : ''}</p>`).join('')}
+        </div>
+        <div class="fac-ref__act"><span class="st st--${r.status === 'acknowledged' ? 'scheduled' : 'new'}">${r.status === 'acknowledged' ? 'Acknowledged' : 'New'}</span>${r.status !== 'acknowledged' ? `<button class="btn btn--xs btn--accent" data-ack="${r.id}">Acknowledge &amp; invite student</button>` : ''}</div></div>`;
+    }).join('')}</div><p class="muted small">Faculty observations describe what teachers saw in class. They are a reason to reach out — not evidence of a disability on their own. Combine them with the student’s own account and ERLY data the student chooses to share.</p>` : '<p class="muted">No faculty referrals yet.</p>';
+    $('#facRefs').onclick = e => {
+      const b = e.target.closest('[data-ack]'); if (!b) return;
+      const r = D.refs.find(x => x.id === b.dataset.ack); r.status = 'acknowledged'; C.save(D);
+      toast('Acknowledged — an invitation to talk was sent to the student.'); renderFaculty(); facBadge();
+    };
+  }
+  function facBadge() { const C = window.CAMPUS; if (!C) return; const n = C.load().refs.filter(r => r.status !== 'acknowledged').length; $('#facBadge').textContent = n; $('#facBadge').hidden = !n; }
+  facBadge();
+  try { if (sessionStorage.getItem('acubins-role') === 'university') $('#toUni').hidden = false; } catch (e) {}
   readTheme();
   render('overview');
   if (S[0].live) setTimeout(() => toast('A new request just came in from Acubins (you), built from your tracking on the student page.'), 900);

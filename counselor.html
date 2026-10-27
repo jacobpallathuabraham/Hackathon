@@ -13,14 +13,16 @@
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/portal.css">
   <link rel="stylesheet" href="assets/css/accents.css">
+  <link rel="stylesheet" href="assets/css/campus.css">
   <script>
-    try { if (sessionStorage.getItem('acubins-role') !== 'counselor') location.replace('index.html?next=counselor'); } catch (e) {}
+    try { var r = sessionStorage.getItem('acubins-role'); if (r !== 'counselor' && r !== 'university') location.replace('index.html?next=counselor'); } catch (e) {}
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
         if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
       } catch (e) {}
     })();
   </script>
@@ -35,6 +37,7 @@
       <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
       <button class="side__a" data-view="requests"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Requests<span class="side__badge" id="newBadge">0</span></button>
       <button class="side__a" data-view="students"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .8 3.5 2.8 3.5 6"/></svg>Students</button>
+      <button class="side__a" data-view="faculty"><svg viewBox="0 0 24 24"><path d="M4 12 12 7l8 5-8 5z"/><path d="M8 14v4c2 2 6 2 8 0v-4"/></svg>Faculty referrals<span class="side__badge" id="facBadge">0</span></button>
       <button class="side__a" data-view="cohort"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Cohort</button>
     </nav>
     <div class="side__card">
@@ -57,6 +60,7 @@
       </div>
       <div class="dash__tools">
         <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="search" placeholder="Search students…" autocomplete="off"></label>
+        <a class="btn btn--sm btn--ghost" id="toUni" href="university.html" hidden>← University</a>
         <div data-accent-picker></div>
         <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
           <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -113,6 +117,12 @@
         <div class="stu-grid" id="stuGrid"></div>
       </section>
 
+      <!-- FACULTY REFERRALS -->
+      <section class="view" data-view="faculty">
+        <div class="view__head"><h2 class="view__title">Faculty referrals</h2><span class="muted small">Classroom observations shared by teaching staff · the student has been told · live from the Faculty portal</span></div>
+        <div id="facRefs"></div>
+      </section>
+
       <!-- COHORT -->
       <section class="view" data-view="cohort">
         <div class="view__head"><h2 class="view__title">Cohort insights</h2><span class="muted small">Anonymised · k ≥ 10: cells under 10 students hidden · synthetic pilot targets</span></div>
@@ -155,6 +165,7 @@
   <script src="assets/js/accent.js"></script>
   <script src="assets/vendor/chart.umd.min.js"></script>
   <script src="assets/js/indicators.js"></script>
+  <script src="assets/js/campus-data.js"></script>
   <script src="assets/js/counselor.js"></script>
 </body>
 </html>

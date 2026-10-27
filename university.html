@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acubins University · Command Center</title>
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
+  <link rel="stylesheet" href="assets/css/campus.css">
+  <script>
+    try { if (sessionStorage.getItem('acubins-role') !== 'university') location.replace('index.html?next=university'); } catch (e) {}
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="uni-body">
+  <canvas class="uni-fx" id="uniFx" aria-hidden="true"></canvas>
+  <header class="uni-top">
+    <a class="uni-brand" href="#top"><span class="campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>Acubins University</b><small>Command Center</small></span></a>
+    <nav class="uni-nav"><a href="#overview">Overview</a><a href="#colleges">Colleges</a><a href="#access">Accessibility</a><a href="#portals">Portals</a></nav>
+    <div class="uni-tools">
+      <div data-accent-picker></div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="btn btn--sm btn--ghost" id="logoutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <main class="uni-main" id="top">
+    <section class="uni-hero">
+      <div class="uni-hero__copy">
+        <p class="mono uni-k"><i></i><span id="uniDate"></span></p>
+        <h1>One campus. <em>Every learner.</em></h1>
+        <p class="uni-lead">Live picture of enrolment, attendance and student support across Acubins University — and one click into Student Accessibility Services and the Faculty portal.</p>
+        <div class="uni-hero__btns">
+          <a class="btn btn--accent btn--big uni-go" href="counselor.html" data-portal="sas"><span>Open SAS Dashboard</span><span aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost btn--big uni-go" href="faculty.html" data-portal="faculty"><span>Faculty portal</span><span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <div class="uni-orbit" aria-hidden="true">
+        <div class="uni-orbit__core"><b id="uniTotal">0</b><small>students</small></div>
+        <div class="uni-orbit__ring uni-orbit__ring--1"><span style="--a:0deg">Eng</span><span style="--a:120deg">Bus</span><span style="--a:240deg">Med</span></div>
+        <div class="uni-orbit__ring uni-orbit__ring--2"><span style="--a:60deg">CS</span><span style="--a:200deg">Arts</span><span style="--a:310deg">SAS</span></div>
+      </div>
+    </section>
+
+    <section class="uni-kpis" id="overview"></section>
+
+    <section class="uni-grid">
+      <div class="dcard dcard--wide uni-card" id="colleges"><div class="dcard__head"><div><h2>Enrolment by college</h2><p class="dcard__sub">Fall 2026 · undergraduate and postgraduate</p></div></div><div class="chart-box chart-box--md"><canvas id="uEnrol"></canvas></div></div>
+      <div class="dcard uni-card"><div class="dcard__head"><div><h2>Attendance this term</h2><p class="dcard__sub">Campus-wide weekly average · midterms in week 7</p></div></div><div class="chart-box chart-box--md"><canvas id="uAtt"></canvas></div></div>
+      <div class="dcard uni-card" id="access"><div class="dcard__head"><div><h2>Student support pipeline</h2><p class="dcard__sub">From early signal to a support plan · this term</p></div></div><div class="uni-funnel" id="uFunnel"></div></div>
+      <div class="dcard uni-card"><div class="dcard__head"><div><h2>Faculty referrals to SAS</h2><p class="dcard__sub">Live from the Faculty portal</p></div><a class="link small" href="faculty.html" data-portal="faculty">Faculty portal →</a></div><div class="uni-refs" id="uRefs"></div></div>
+      <div class="dcard uni-card"><div class="dcard__head"><div><h2>Accessibility at a glance</h2><p class="dcard__sub">People of Determination · accommodations in place</p></div></div><div class="uni-rings" id="uRings"></div></div>
+    </section>
+
+    <section class="uni-portals" id="portals">
+      <h2>Portals</h2>
+      <div class="uni-pgrid">
+        <a class="uni-portal uni-portal--sas" href="counselor.html" data-portal="sas"><span class="uni-portal__ic" id="pSas"></span><b>Student Accessibility Services</b><small>Requests, ERLY evidence packs, assessments, support plans, faculty referrals</small><span class="uni-portal__go">Enter SAS →</span></a>
+        <a class="uni-portal uni-portal--fac" href="faculty.html" data-portal="faculty"><span class="uni-portal__ic" id="pFac"></span><b>Faculty portal</b><small>Courses &amp; streams, attendance, students and classroom observations</small><span class="uni-portal__go">Enter faculty →</span></a>
+        <a class="uni-portal uni-portal--stu" href="index.html" data-signout><span class="uni-portal__ic" id="pStu"></span><b>Student ERLY</b><small>Sign in as a student to see the ERLY companion</small><span class="uni-portal__go">Switch account →</span></a>
+      </div>
+    </section>
+  </main>
+
+  <div class="portal-warp" id="warp" aria-hidden="true"><div class="portal-warp__inner"><span class="portal-warp__logo" id="warpLogo"></span><p id="warpK">Opening</p><b id="warpT">SAS Dashboard</b></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/accent.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/js/campus-data.js"></script>
+  <script src="assets/js/university.js"></script>
+</body>
+</html>

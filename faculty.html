@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faculty portal · Acubins University</title>
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
+  <link rel="stylesheet" href="assets/css/campus.css">
+  <script>
+    try { var r = sessionStorage.getItem('acubins-role'); if (r !== 'faculty' && r !== 'university') location.replace('index.html?next=faculty'); } catch (e) {}
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="dash-body campus-body campus--faculty">
+  <aside class="side" id="side">
+    <a class="brand brand--sas" href="#overview">
+      <span class="sas-mark campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+      <span class="brand__stack"><b>Faculty</b><small>Acubins University</small></span>
+    </a>
+    <nav class="side__nav">
+      <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
+      <button class="side__a" data-view="attendance"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2.5 2.5L16 12"/></svg>Attendance</button>
+      <button class="side__a" data-view="students"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5s6.5 2.5 6.5 6.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2 .8 3.5 2.8 3.5 6"/></svg>Students &amp; observations</button>
+      <button class="side__a" data-view="referrals"><svg viewBox="0 0 24 24"><path d="M4 12h12M12 6l6 6-6 6"/><path d="M20 4v16"/></svg>SAS referrals<span class="side__badge" id="refBadge">0</span></button>
+    </nav>
+    <div class="side__card">
+      <p class="mono small">Observe, don’t diagnose</p>
+      <p class="small">Record what you <b>see</b> in class. Only SAS, with the student, decides what it means. Students are told when you refer them.</p>
+    </div>
+    <div class="side__me">
+      <span class="avatar avatar--hue" style="--h:265">DH</span>
+      <div><b>Dr. Haddad</b><small class="muted">Faculty · Mechanical Eng.</small></div>
+      <button class="icon-btn icon-btn--sm" id="logoutBtn" aria-label="Sign out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </aside>
+
+  <div class="dash">
+    <header class="dash__top">
+      <button class="icon-btn dash__menu" id="menuBtn" aria-label="Menu">☰</button>
+      <div>
+        <p class="mono muted small" id="today"></p>
+        <h1 class="dash__hi" id="hi">Good morning, Dr. Haddad</h1>
+      </div>
+      <div class="dash__tools">
+        <label class="campus-select"><span class="mono small muted">Course</span><select id="course"></select></label>
+        <a class="btn btn--sm btn--ghost" id="toUni" href="university.html" hidden>← University</a>
+        <div data-accent-picker></div>
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+    <main class="dash__main">
+      <section class="view is-on" data-view="overview"></section>
+      <section class="view" data-view="attendance"></section>
+      <section class="view" data-view="students"></section>
+      <section class="view" data-view="referrals"></section>
+    </main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="Student"></aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/accent.js"></script>
+  <script src="assets/vendor/chart.umd.min.js"></script>
+  <script src="assets/js/campus-data.js"></script>
+  <script src="assets/js/faculty.js"></script>
+</body>
+</html>

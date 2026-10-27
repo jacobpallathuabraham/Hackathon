@@ -8,17 +8,22 @@
 
   const ACCOUNTS = {
     student: { user: 'acubins', pass: '1234', go: 'student.html', hi: 'Welcome to ERLY', k: 'Signed in as Acubins' },
-    counselor: { user: 'counselor', pass: '4321', go: 'counselor.html', hi: 'Welcome, Counselor', k: 'Opening the SAS workspace' }
+    counselor: { user: 'counselor', pass: '4321', go: 'counselor.html', hi: 'Welcome, Counselor', k: 'Opening the SAS workspace' },
+    faculty: { user: 'faculty', pass: '5678', go: 'faculty.html', hi: 'Welcome, Dr. Haddad', k: 'Opening the Faculty portal' },
+    university: { user: 'university', pass: '2468', go: 'university.html', hi: 'Acubins University', k: 'Opening the Command Center' }
   };
   const ROLE_UI = {
     student: { title: 'Student sign-in', sub: 'Use your university username and password.', badge: 'Student account' },
-    counselor: { title: 'Counselor sign-in', sub: 'Student Accessibility Services staff only.', badge: 'Counselor account' }
+    counselor: { title: 'Counselor sign-in', sub: 'Student Accessibility Services staff only.', badge: 'Counselor account' },
+    faculty: { title: 'Faculty sign-in', sub: 'Teaching staff of Acubins University.', badge: 'Faculty account' },
+    university: { title: 'University sign-in', sub: 'Leadership & administration — opens the Command Center.', badge: 'University account' }
   };
 
   // icons
   const fill = (id, n) => { const el = document.getElementById(id); if (el) el.innerHTML = ICON(n); };
   fill('icA', 'volume'); fill('icB', 'calendar'); fill('f1', 'sparkle'); fill('f2', 'shield'); fill('f3', 'users');
   fill('icStudent', 'cap'); fill('icCounsel', 'counsel'); fill('go1', 'arrow'); fill('go2', 'arrow');
+  fill('icFaculty', 'pen'); fill('icUni', 'building'); fill('go3', 'arrow'); fill('go4', 'arrow');
   fill('icLock', 'lock'); fill('icUser', 'users'); fill('icPass', 'lock'); fill('eyeBtn', 'eye');
 
   let role = null, fails = 0, busy = false;
@@ -54,6 +59,8 @@
     $('#roleBadge').className = 'lcard__badge lcard__badge--' + role;
     $('#user').value = ''; $('#pass').value = ''; clearErr();
     card.classList.toggle('is-counselor', role === 'counselor');
+    card.classList.toggle('is-faculty', role === 'faculty');
+    card.classList.toggle('is-university', role === 'university');
     show('form');
     setTimeout(() => $('#user').focus(), 380);
   }));
@@ -99,7 +106,7 @@
         setTimeout(() => {
           $('#wipeTxt').textContent = acc.hi;
           $('#wipeK').textContent = acc.k;
-          $('#wipe').classList.add('is-on', role === 'counselor' ? 'is-teal' : 'is-accent');
+          $('#wipe').classList.add('is-on', role === 'counselor' ? 'is-teal' : role === 'faculty' ? 'is-violet' : role === 'university' ? 'is-gold' : 'is-accent');
           setTimeout(() => { location.href = acc.go; }, 900);
         }, 520);
       } else {
