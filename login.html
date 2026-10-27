@@ -15,6 +15,15 @@
   <link rel="stylesheet" href="assets/css/portal.css">
   <link rel="stylesheet" href="assets/css/accents.css">
   <script>
+    // opened directly (not from inside the site): start the demo from scratch
+    (function () {
+      try {
+        if (document.referrer && new URL(document.referrer).origin === location.origin) return;
+        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1 };
+        Object.keys(localStorage).forEach(function (k) { if (!keep[k] && /^(erly-|acubins-)/.test(k)) localStorage.removeItem(k); });
+        ['acubins-role', 'acubins-portal-warp', 'erly-warp'].forEach(function (k) { sessionStorage.removeItem(k); });
+      } catch (e) {}
+    })();
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');

@@ -24,10 +24,10 @@
     function show() {
       if (i >= items.length) return done(right / items.length);
       const it = items[i];
-      stage.innerHTML = head(T('How many beats?', 'كم مقطعاً؟'), T('Listen, clap along, then tap the number', 'استمع وصفّق ثم انقر الرقم'), i, items.length) + `
+      stage.innerHTML = head(T('How many syllables?', 'كم مقطعاً؟'), T('Breaking long words into parts makes them easier to read and spell', 'تقسيم الكلمات الطويلة يسهّل قراءتها وكتابتها'), i, items.length) + `
         <div class="gg-center"><button class="gg-word" data-say>${esc(it.word)} <span>${ICON('volume')}</span></button>
         <div class="gg-claps" aria-hidden="true">${Array.from({ length: it.n }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</div>
-        <div class="gg-opts gg-opts--num">${[1, 2, 3, 4, 5].map(n => `<button data-n="${n}">${n}</button>`).join('')}</div></div>`;
+        <div class="gg-opts gg-opts--num">${[1, 2, 3, 4, 5, 6].map(n => `<button data-n="${n}">${n}</button>`).join('')}</div></div>`;
       speak(it.word, 'en', 0.8);
       stage.querySelector('[data-say]').onclick = () => speak(it.word, 'en', 0.7);
       stage.querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
@@ -158,7 +158,7 @@
     async function show() {
       if (i >= items.length) return done(right / items.length);
       const it = items[i];
-      stage.innerHTML = head(T('How many dots?', 'كم نقطة؟'), T('They flash quickly — trust your first impression', 'تومض بسرعة — ثق بانطباعك الأول'), i, items.length) + `<div class="gg-center"><div class="gg-dotbox">${it.pts.map(([x, y], k) => `<i style="left:${x * 100}%;top:${y * 100}%;--k:${k}"></i>`).join('')}</div><div class="gg-opts gg-opts--num" hidden>${it.opts.map(n => `<button data-n="${n}">${n}</button>`).join('')}</div></div>`;
+      stage.innerHTML = head(T('How many data points?', 'كم نقطة بيانات؟'), T('A scatter plot flashes — estimate, don’t count', 'يومض مخطط انتشار — قدّر ولا تعدّ'), i, items.length) + `<div class="gg-center"><div class="gg-dotbox">${it.pts.map(([x, y], k) => `<i style="left:${x * 100}%;top:${y * 100}%;--k:${k}"></i>`).join('')}</div><div class="gg-opts gg-opts--num" hidden>${it.opts.map(n => `<button data-n="${n}">${n}</button>`).join('')}</div></div>`;
       await wait(c.fast ? 10 : [1100, 850, 650][c.level - 1]);
       const box = stage.querySelector('.gg-dotbox'); if (!box) return;
       box.classList.add('is-hid'); stage.querySelector('.gg-opts').hidden = false;

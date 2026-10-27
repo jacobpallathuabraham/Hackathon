@@ -70,7 +70,7 @@ test('test anxiety needs the timed drop AND worry or answer changes', () => {
   assert.ok(!C.synthesize(statuses({ Q: hist('Q', { timedDrop: 2 }) })).explore.some(x => x.id === 'testanxiety'));
   assert.ok(C.synthesize(statuses({ Q: hist('Q', { timedDrop: 2, anxiety: 2 }) })).explore.some(x => x.id === 'testanxiety'));
 });
-test('repeated runs and agreement with 28-day tracking raise the evidence level', () => {
+test('repeated runs and agreement with 14-day tracking raise the evidence level', () => {
   const run = () => C.scoreRun('U', metricsAt('U', { noiseCost: 1.6 }));
   const once = C.synthesize(statuses({ U: [run()] })).explore.find(x => x.id === 'auditory');
   const twice = C.synthesize(statuses({ U: [run(), run()] }), { available: true, areas: ['reading'] }).explore.find(x => x.id === 'auditory');

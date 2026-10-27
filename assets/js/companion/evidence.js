@@ -3,7 +3,7 @@
    Brings together independent sources of what ERLY observed, only from the
    student's consented activity:
      - Check-ins (ten activities, already scored with convergence rules)
-     - the 28-day Support Pact tracker (100 indicators, own baseline)
+     - the 14-day Support Pact tracker (100 indicators, own baseline)
      - lecture videos (rewinds to the same part, slowing playback, restarts,
        transcript use)
      - the Reading Studio (sessions with repeated reading friction)
@@ -63,7 +63,7 @@
       add(area, 'checkins', W[x.level] || 1, `Check-ins: several measures pointed here (${x.level === 'stronger' ? 'stronger evidence' : x.level === 'moderate' ? 'some evidence' : 'early sign'})`, `الفحوصات: أشارت عدة مقاييس إلى هنا (${x.level === 'stronger' ? 'دلائل أقوى' : x.level === 'moderate' ? 'بعض الدلائل' : 'إشارة أولية'})`);
     });
     const tr = src.tracker || {};
-    if (tr.available) (tr.areas || []).forEach(a => { const area = TRACK_MAP[a]; if (area) add(area, 'tracker', 2, '28-day tracking: stayed above your own normal across several domains', 'التتبّع لـ٢٨ يوماً: بقي فوق معدلك الطبيعي عبر عدة مجالات'); });
+    if (tr.available) (tr.areas || []).forEach(a => { const area = TRACK_MAP[a]; if (area) add(area, 'tracker', 2, '14-day tracking: stayed above your own normal across several domains', 'التتبّع لـ١٤ يوماً: بقي فوق معدلك الطبيعي عبر عدة مجالات'); });
     const v = src.video || {};
     if (v.videosWithFriction >= 2) add('listening', 'video', 2, `Videos: you went back to the same part repeatedly in ${v.videosWithFriction} different videos`, `الفيديوهات: عدت إلى الجزء نفسه مراراً في ${v.videosWithFriction} فيديوهات مختلفة`);
     else if (v.episodes >= 1) add('listening', 'video', 1, 'Videos: you went back to the same part of a video several times', 'الفيديوهات: عدت إلى الجزء نفسه من فيديو عدة مرات');

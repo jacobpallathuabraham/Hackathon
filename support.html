@@ -25,6 +25,7 @@
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
         if (sessionStorage.getItem('erly-warp') === '1') { document.documentElement.classList.add('q-arrive'); sessionStorage.removeItem('erly-warp'); }
+        if (sessionStorage.getItem('erly-grow') === '1') { document.documentElement.classList.add('g-arrive'); sessionStorage.removeItem('erly-grow'); }
       } catch (e) {}
     })();
   </script>

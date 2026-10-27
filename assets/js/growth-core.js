@@ -37,17 +37,17 @@
 
   // the exercise library: id, area, minutes, which weeks it suits
   const GAMES = [
-    { id: 'syllables', area: 'reading', mins: 3, weeks: [1, 2, 6], name: B('Clap the syllables', 'صفّق للمقاطع'), desc: B('Hear a word, count its beats', 'اسمع كلمة وعدّ مقاطعها') },
+    { id: 'syllables', area: 'reading', mins: 3, weeks: [1, 2, 6], name: B('Break down academic words', 'فكّك الكلمات الأكاديمية'), desc: B('Hear a long word, count its syllables', 'اسمع كلمة طويلة وعدّ مقاطعها') },
     { id: 'pacer', area: 'reading', mins: 4, weeks: [3, 4, 6], name: B('Pacer reading', 'القراءة مع الموجّه'), desc: B('Read along with a moving highlight, then answer', 'اقرأ مع إضاءة متحركة ثم أجب') },
     { id: 'spelling', area: 'reading', mins: 3, weeks: [2, 5, 6], name: B('Look, say, cover, write', 'انظر، قل، غطِّ، اكتب'), desc: B('The multisensory spelling routine', 'روتين الإملاء متعدد الحواس') },
     { id: 'nback', area: 'attention', mins: 3, weeks: [3, 4, 6], name: B('Memory match (n-back)', 'مطابقة الذاكرة'), desc: B('Spot when a letter repeats', 'التقط تكرار الحرف') },
     { id: 'sprint', area: 'attention', mins: 3, weeks: [2, 4, 5, 6], name: B('Focus sprint', 'جولة تركيز'), desc: B('A short, timed burst on a real task', 'دفعة قصيرة موقوتة على مهمة حقيقية') },
     { id: 'ramp', area: 'attention', mins: 2, weeks: [1, 5, 6], name: B('Tiny first step', 'الخطوة الأولى الصغيرة'), desc: B('Break a task into three tiny steps', 'قسّم مهمة إلى ثلاث خطوات صغيرة') },
-    { id: 'dots', area: 'maths', mins: 2, weeks: [1, 3, 6], name: B('Dot flash', 'ومضة النقاط'), desc: B('How many dots? No counting!', 'كم نقطة؟ دون عدّ!') },
+    { id: 'dots', area: 'maths', mins: 2, weeks: [1, 3, 6], name: B('Quick estimate', 'تقدير سريع'), desc: B('How many data points? Estimate, don’t count', 'كم نقطة بيانات؟ قدّر ولا تعدّ') },
     { id: 'numberline', area: 'maths', mins: 3, weeks: [2, 3, 4, 6], name: B('Number line', 'خط الأعداد'), desc: B('Place numbers where they belong', 'ضع الأعداد في مكانها') },
     { id: 'sentence', area: 'writing', mins: 3, weeks: [1, 4, 6], name: B('Sentence builder', 'بناء الجمل'), desc: B('Put the words in order', 'رتّب الكلمات') },
     { id: 'peel', area: 'writing', mins: 4, weeks: [2, 4, 5, 6], name: B('PEEL planner', 'مخطط الفقرة'), desc: B('Plan a paragraph in four boxes', 'خطط لفقرة في أربعة مربعات') },
-    { id: 'listen', area: 'listening', mins: 3, weeks: [1, 2, 3, 4, 5, 6], name: B('Follow the instructions', 'اتبع التعليمات'), desc: B('Listen once, tap in order', 'استمع مرة واحدة وانقر بالترتيب') },
+    { id: 'listen', area: 'listening', mins: 3, weeks: [1, 2, 3, 4, 5, 6], name: B('Lab instructions', 'تعليمات المختبر'), desc: B('Hear multi-step instructions once, then follow them', 'اسمع تعليمات متعددة الخطوات مرة ثم نفّذها') },
     { id: 'breathe', area: 'wellbeing', mins: 1, weeks: [1, 2, 3, 4, 5, 6], name: B('Box breathing', 'التنفّس المربع'), desc: B('Four slow breaths to reset', 'أربعة أنفاس بطيئة لإعادة الضبط') },
     { id: 'reframe', area: 'wellbeing', mins: 2, weeks: [2, 3, 4, 5, 6], name: B('Reframe it', 'أعد صياغتها'), desc: B('Swap an unhelpful thought for a balanced one', 'استبدل فكرة غير مفيدة بأخرى متوازنة') }
   ];
@@ -144,7 +144,7 @@
   /* ---------- exercise content (seeded, so tests are repeatable) ---------- */
   function rng(seed) { let a = (seed >>> 0) || 1; return () => { a = (a * 1664525 + 1013904223) % 4294967296; return a / 4294967296; }; }
   const shuffle = (xs, r) => { const a = xs.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const SYLL = [['cat', 1], ['study', 2], ['lecture', 2], ['library', 3], ['exam', 2], ['university', 5], ['notebook', 2], ['computer', 3], ['assignment', 3], ['biology', 4], ['calculator', 4], ['information', 4], ['presentation', 4], ['psychology', 4], ['deadline', 2], ['understand', 3], ['vocabulary', 5], ['experiment', 4]];
+  const SYLL = [['campus', 2], ['lecture', 2], ['library', 3], ['deadline', 2], ['professor', 3], ['semester', 3], ['assignment', 3], ['university', 5], ['biology', 4], ['calculator', 4], ['information', 4], ['presentation', 4], ['psychology', 4], ['hypothesis', 4], ['vocabulary', 5], ['experiment', 4], ['laboratory', 5], ['accessibility', 6]];
   function syllables(level, seed) { const r = rng(seed); const pool = SYLL.filter(([, n]) => level === 1 ? n <= 3 : level === 2 ? n <= 4 : true); return shuffle(pool, r).slice(0, 6).map(([w, n]) => ({ word: w, n })); }
   const SPELL = { 1: ['friend', 'because', 'answer', 'thought', 'early'], 2: ['separate', 'necessary', 'definitely', 'different', 'beginning'], 3: ['accommodate', 'conscientious', 'occurrence', 'questionnaire', 'rhythm'] };
   function spelling(level, seed) { return shuffle(SPELL[level] || SPELL[1], rng(seed)).slice(0, 4); }
@@ -163,11 +163,12 @@
     return T ? Math.max(0, Math.min(1, (hits - fa * 0.5) / T)) : 1;
   }
   function dots(level, seed) {
-    const r = rng(seed), max = 4 + level * 2;
+    const r = rng(seed), max = 6 + level * 3;
     return Array.from({ length: 6 }, () => {
-      const n = 3 + Math.floor(r() * (max - 2));
+      const want = 3 + Math.floor(r() * (max - 2));
       const pts = [];
-      while (pts.length < n) { const p = [0.1 + r() * 0.8, 0.1 + r() * 0.8]; if (pts.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) > 0.16)) pts.push(p); }
+      let tries = 0; while (pts.length < want && tries++ < 5000) { const p = [0.08 + r() * 0.84, 0.08 + r() * 0.84]; if (pts.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) > 0.12)) pts.push(p); }
+      const n = pts.length;
       const opts = shuffle([n, n - 1, n + 1, n + 2].filter(x => x > 0), r).slice(0, 4);
       if (!opts.includes(n)) opts[0] = n;
       return { n, pts, opts };

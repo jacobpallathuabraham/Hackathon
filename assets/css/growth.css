@@ -285,3 +285,14 @@ body.gp-lock { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .gx *, .gd-top *, .gd-today *, .gp, .gp *, .gd-card * { animation: none !important; transition: none !important; }
 }
+
+/* arriving from the seedling transition */
+.g-arrive body::before { content: ''; position: fixed; inset: 0; z-index: 3000; pointer-events: none; background: radial-gradient(circle at 50% 50%, #2BB283, #0F5D47 55%, #08362a); animation: gArrive .9s cubic-bezier(.7,0,.2,1) forwards; }
+@keyframes gArrive { to { clip-path: circle(0 at 50% 50%); opacity: .6; } }
+.g-arrive .q-head > * { animation: gRise .9s cubic-bezier(.16,1,.3,1) both; }
+.g-arrive .q-head > :nth-child(2) { animation-delay: .25s; } .g-arrive .q-head > :nth-child(3) { animation-delay: .35s; }
+.g-arrive #growthApp { animation: gRise 1s .45s cubic-bezier(.16,1,.3,1) both; }
+@keyframes gRise { from { opacity: 0; transform: translateY(30px); } }
+.g-arrive body::after { content: '🌱'; position: fixed; left: 50%; top: 50%; z-index: 3001; font-size: 64px; transform: translate(-50%, -50%); pointer-events: none; animation: gSprout 1.1s ease-out forwards; }
+@keyframes gSprout { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -160%) scale(1.6); } }
+@media (prefers-reduced-motion: reduce) { .g-arrive body::before, .g-arrive body::after { display: none; } }

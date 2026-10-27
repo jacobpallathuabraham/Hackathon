@@ -1,5 +1,5 @@
 // Optional end-to-end check of Real tracking: real calendar days, the timed
-// daily check-in, no fast-forward, and automatic end after day 28.
+// daily check-in, no fast-forward, and automatic end after day 14.
 //   python3 -m http.server 8765 &   then   NODE_PATH=$(npm root -g) node tests/e2e/realtrack.e2e.js
 'use strict';
 const assert = require('node:assert/strict');
@@ -25,7 +25,7 @@ const SHOT = process.env.ERLY_SHOTS;
   await page.check('#agree'); await page.click('#startTrack');
   await page.waitForSelector('.live--real');
   assert.equal(await page.locator('[data-act="next"], [data-act="ff"]').count(), 0, 'no simulate / fast-forward');
-  assert.match(await page.textContent('.live--real'), /Day 1 \/ 28/);
+  assert.match(await page.textContent('.live--real'), /Day 1 \/ 14/);
 
   // the check-in
   await page.click('[data-ck="begin"]');
@@ -47,12 +47,12 @@ const SHOT = process.env.ERLY_SHOTS;
   // the next real day opens at midnight, with a fresh check-in
   await page.clock.fastForward('04:01:00');
   await page.waitForTimeout(300);
-  assert.match(await page.textContent('.live--real'), /Day 2 \/ 28/);
+  assert.match(await page.textContent('.live--real'), /Day 2 \/ 14/);
   assert.ok(await page.isVisible('[data-ck="begin"]'));
   // day 1 cell shows the check-in time
   assert.match(await page.textContent('.rcal__d >> nth=0'), /20:0/);
 
-  // skip to after day 28: missed days excluded, raw data deleted, insufficient baseline
+  // skip to after day 14: missed days excluded, raw data deleted, insufficient baseline
   await page.clock.setSystemTime(new Date(2026, 10, 3, 9, 0));
   await page.reload(); await page.waitForSelector('.live--real');
   const t = await page.textContent('.live--real');

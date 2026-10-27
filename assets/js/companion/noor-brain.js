@@ -190,7 +190,7 @@
     const L = lang() === 'ar' ? 1 : 0;
     const lv = { none: 0, early: 1, some: 2, strong: 3 };
     pane.innerHTML = `
-      <p class="cmp-lead">${T('Everything ERLY has noticed across the site — Check-ins, lecture videos, the Reading Studio and your 28-day tracking — plus anything we’ve talked through. An area only rises when different sources agree.', 'كل ما لاحظه إيرلي عبر الموقع — الفحوصات، وفيديوهات المحاضرات، واستوديو القراءة، والتتبّع لـ٢٨ يوماً — إضافة إلى ما تحدثنا عنه. لا يرتفع مجال إلا عندما تتفق مصادر مختلفة.')}</p>
+      <p class="cmp-lead">${T('Everything ERLY has noticed across the site — Check-ins, lecture videos, the Reading Studio and your 14-day tracking — plus anything we’ve talked through. An area only rises when different sources agree.', 'كل ما لاحظه إيرلي عبر الموقع — الفحوصات، وفيديوهات المحاضرات، واستوديو القراءة، والتتبّع لـ١٤ يوماً — إضافة إلى ما تحدثنا عنه. لا يرتفع مجال إلا عندما تتفق مصادر مختلفة.')}</p>
       ${!on ? `<p class="cmp-empty">${T('Noticing is off, so only Check-ins and our conversations count. Turn on noticing in Reading signals to include videos and reading.', 'الملاحظة متوقفة، لذا تُحتسب الفحوصات ومحادثاتنا فقط. شغّل الملاحظة من إشارات القراءة لتضمين الفيديوهات والقراءة.')}</p>` : ''}
       <div class="cprof">${prof ? Object.values(prof).map((o, i) => {
         const r = res[o.area];

@@ -16,6 +16,14 @@
   <link rel="stylesheet" href="assets/css/campus.css">
   <link rel="stylesheet" href="assets/css/gateway.css">
   <script>
+    // every fresh visit starts the demo from scratch (display preferences are kept)
+    (function () {
+      try {
+        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1 };
+        Object.keys(localStorage).forEach(function (k) { if (!keep[k] && /^(erly-|acubins-)/.test(k)) localStorage.removeItem(k); });
+        ['acubins-role', 'acubins-portal-warp', 'erly-warp'].forEach(function (k) { sessionStorage.removeItem(k); });
+      } catch (e) {}
+    })();
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');

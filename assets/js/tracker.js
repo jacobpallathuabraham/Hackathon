@@ -1,11 +1,11 @@
 /* ERLY — the tracker.
    Nothing is recorded until the student signs a Support Pact. Then:
-     days 1–14  the blind fortnight — ERLY only learns the student's own
+     days 1–7  the baseline week — ERLY only learns the student's own
                 normal; every tool works, nothing is judged;
-     days 15–28 watching — a day counts when an indicator is clearly above
+     days 8–14 watching — a day counts when an indicator is clearly above
                 that normal.
    An insight appears only if 3+ of the 10 domains persist through the
-   watched fortnight (the convergence rule). Raw values are deleted on day 28;
+   watched week (the convergence rule). Raw values are deleted on day 14;
    only the summary stays. Indicators marked `live` come from the Reading
    Studio in real time; the rest are simulated (the LMS feed is roadmap). */
 (function () {
@@ -13,16 +13,17 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const T = (en, ar) => I18N.t(en, ar);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const AR = () => I18N.lang === 'ar';
   const { CATS, LIST, SIGNALS, AREAS } = window.ERLY_IND;
   const CK = Object.keys(CATS);
-  const DAYS = 28, BLIND = 14, EXAM = [22, 23, 24];
+  const DAYS = 14, BLIND = 7, EXAM = [11, 12];
   const KEY = 'erly-track-v2';
   const FLAG = LIST.filter(i => i.dir > 0);
 
   const fresh = () => ({
     status: 'none', start: null, day: 0, consent: Object.fromEntries(CK.map(k => [k, true])), pattern: 'reading',
-    pact: { ally: 'Sara', note: '' }, blueprint: {}, exam: true, pause: 0, live: {}, days: [], summary: null,
+    pact: { ally: '', rely: '', relyName: '', involve: 'ask', counselor: '' }, blueprint: {}, exam: true, pause: 0, live: {}, days: [], summary: null,
     events: 0, ledger: {}, selfRef: false, helped: [], mode: 'demo', rdays: {}, pausedKeys: []
   });
   const RT = window.ERLY_REAL;
@@ -143,7 +144,7 @@
     S.status = 'active'; S.start = new Date().toISOString(); S.day = 0; S.days = []; S.summary = null; S.events = 0; S.pause = 0;
     Object.assign(S.live, preview); Object.assign(S.ledger, previewLedger);
     advance(1);
-    ERLY.toast(T('Support Pact signed. The blind fortnight starts now — your tools work from today.', 'تم توقيع ميثاق الدعم. يبدأ الأسبوعان الأعميان الآن — أدواتك تعمل من اليوم.'));
+    ERLY.toast(T('Support Pact signed. The baseline week starts now — your tools work from today.', 'تم توقيع ميثاق الدعم. يبدأ أسبوع الأساس الآن — أدواتك تعمل من اليوم.'));
   }
   function advance(k) {
     for (let i = 0; i < k && S.day < DAYS; i++) {
@@ -165,7 +166,7 @@
       S.status = 'ended';
       S.days = S.days.map(d => ({ n: d.n, vals: {}, exam: d.exam, paused: d.paused }));
       S.live = {};
-      ERLY.toast(T('Day 28 — tracking switched itself off. Raw data deleted.', 'اليوم ٢٨ — توقف التتبّع تلقائياً. حُذفت البيانات الخام.'));
+      ERLY.toast(T('Day 14 — tracking switched itself off. Raw data deleted.', 'اليوم ١٤ — توقف التتبّع تلقائياً. حُذفت البيانات الخام.'));
     }
     save(); render(); ERLY.emit('track', ERLY.getTrack());
   }
@@ -185,12 +186,29 @@
   const AREA_N = { reading: ['Visual decoding', 'فك الرموز البصري'], executive: ['Starting & finishing', 'البدء والإنجاز'], strain: ['Strain & endurance', 'الضغط والتحمّل'], language: ['Language load', 'عبء اللغة'] };
   const AREA_C = { reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)', language: 'var(--c-T)' };
   ERLY.AREA_N = AREA_N; ERLY.AREA_C = AREA_C;
-  const ALLIES = [['', 'Nobody yet', 'لا أحد بعد'], ['Sara', 'Sara · sister', 'سارة · أخت'], ['Mariam', 'Mariam · friend', 'مريم · صديقة'], ['Dr. Hessa', 'Dr. Hessa · advisor', 'د. حصة · مرشدة']];
+  // the four SAS counselors a student can choose from
+  const COUNSELORS = [
+    { id: 'hessa', name: 'Dr. Hessa Al Mansoori', init: 'HM', hue: 18, role: ['Learning-differences specialist', 'أخصائية اختلافات التعلّم'], focus: ['Dyslexia, dyscalculia, reading & writing support', 'عسر القراءة والحساب، ودعم القراءة والكتابة'], langs: 'العربية · English' },
+    { id: 'omar', name: 'Mr. Omar Khalid', init: 'OK', hue: 200, role: ['ADHD & study-skills coach', 'مدرّب الانتباه ومهارات الدراسة'], focus: ['Focus, planning, deadlines and getting started', 'التركيز والتخطيط والمواعيد والبدء'], langs: 'العربية · English' },
+    { id: 'priya', name: 'Ms. Priya Nair', init: 'PN', hue: 330, role: ['Wellbeing counsellor', 'مرشدة الرفاه النفسي'], focus: ['Stress, exam anxiety, low mood and sleep', 'التوتر وقلق الامتحان وانخفاض المزاج والنوم'], langs: 'English · हिन्दी' },
+    { id: 'yousef', name: 'Dr. Yousef Haddad', init: 'YH', hue: 150, role: ['Accessibility & assistive-tech advisor', 'مستشار إمكانية الوصول والتقنيات المساعدة'], focus: ['Exam arrangements, extra time and assistive tools', 'ترتيبات الامتحان والوقت الإضافي والأدوات المساعدة'], langs: 'العربية · English · Français' }
+  ];
+  const RELY = [['mother', 'Mother', 'الأم'], ['father', 'Father', 'الأب'], ['brother', 'Brother', 'الأخ'], ['sister', 'Sister', 'الأخت'], ['spouse', 'Spouse', 'الزوج / الزوجة'], ['friend', 'Close friend', 'صديق مقرّب'], ['mentor', 'Teacher or mentor', 'معلّم أو مرشد'], ['none', 'No one yet', 'لا أحد بعد']];
+  const INVOLVE = [['yes', 'Yes — if a pattern persists', 'نعم — إن استمر نمط'], ['ask', 'Ask me again first', 'اسألني أولاً'], ['no', 'Keep it between me and SAS', 'بيني وبين خدمات الطلبة فقط']];
+  ERLY.COUNSELORS = COUNSELORS; ERLY.RELY = RELY;
+  function syncPactAlly() {
+    const p = S.pact, r = RELY.find(x => x[0] === p.rely);
+    p.ally = !r || p.rely === 'none' || p.involve === 'no' ? '' : (p.relyName && p.relyName.trim()) || T(r[1], r[2]);
+  }
   const BLUE = [
-    ['learn', 'New material sinks in best when I…', 'تترسّخ المادة الجديدة أكثر عندما…', [['listen', 'hear it', 'أسمعها'], ['read', 'read it', 'أقرأها'], ['see', 'see it drawn', 'أراها مرسومة'], ['do', 'try it', 'أجرّبها']]],
-    ['focus', 'I focus best in…', 'أركّز أفضل في…', [['sprint', 'short sprints', 'جولات قصيرة'], ['block', 'long blocks', 'فترات طويلة']]],
-    ['stuck', 'When I’m stuck, I’d rather…', 'عندما أتعثّر، أفضّل…', [['example', 'see an example', 'رؤية مثال'], ['summary', 'get a summary', 'ملخصاً'], ['talk', 'talk it through', 'النقاش'], ['break', 'take a break', 'استراحة']]],
-    ['time', 'My best study time is…', 'أفضل وقت للدراسة…', [['am', 'morning', 'الصباح'], ['pm', 'afternoon', 'الظهيرة'], ['eve', 'evening', 'المساء'], ['late', 'late night', 'آخر الليل']]]
+    ['learn', 'New material sinks in best when I…', 'تترسّخ المادة الجديدة أكثر عندما…', [['listen', 'hear it explained', 'أسمع شرحها'], ['read', 'read it', 'أقرأها'], ['see', 'see a diagram', 'أرى رسماً'], ['do', 'try it myself', 'أجرّبها بنفسي']]],
+    ['focus', 'I concentrate best…', 'أركّز أفضل…', [['sprint', 'in 25-minute sprints', 'في جولات من ٢٥ دقيقة'], ['block', 'in long deep-work blocks', 'في فترات عمل طويلة'], ['company', 'with people around (library)', 'مع وجود آخرين (المكتبة)'], ['silence', 'alone, in silence', 'وحدي في هدوء']]],
+    ['stuck', 'When I’m stuck, I’d rather…', 'عندما أتعثّر، أفضّل…', [['example', 'see a worked example', 'رؤية مثال محلول'], ['summary', 'get a short summary', 'ملخصاً قصيراً'], ['talk', 'talk it through', 'النقاش'], ['break', 'take a break first', 'استراحة أولاً']]],
+    ['time', 'My best study time is…', 'أفضل وقت للدراسة…', [['am', 'morning', 'الصباح'], ['pm', 'afternoon', 'الظهيرة'], ['eve', 'evening', 'المساء'], ['late', 'late night', 'آخر الليل']]],
+    ['english', 'Reading in English feels…', 'القراءة بالإنجليزية…', [['easy', 'easy', 'سهلة'], ['ok', 'fine, a bit slower', 'جيدة، أبطأ قليلاً'], ['harder', 'harder than Arabic', 'أصعب من العربية'], ['both', 'hard in both languages', 'صعبة في اللغتين']]],
+    ['deadline', 'With deadlines, I usually…', 'مع المواعيد النهائية، عادةً…', [['early', 'finish early', 'أنهي مبكراً'], ['just', 'finish just in time', 'أنهي في اللحظة الأخيرة'], ['late', 'ask for extensions', 'أطلب تمديداً'], ['lose', 'lose track of them', 'أنساها']]],
+    ['stress', 'When stress builds up, I…', 'عندما يتراكم التوتر…', [['talk', 'talk to someone', 'أتحدث مع أحد'], ['move', 'exercise or walk', 'أمارس الرياضة أو أمشي'], ['quiet', 'go quiet', 'أنعزل'], ['push', 'push through', 'أتحمّل وأكمل']]],
+    ['remind', 'Reminders work best as…', 'التذكيرات الأفضل…', [['push', 'app notifications', 'إشعارات التطبيق'], ['email', 'email', 'بريد إلكتروني'], ['noor', 'a nudge from Noor', 'تنبيه من نور'], ['none', 'no reminders, please', 'بلا تذكيرات']]]
   ];
   ERLY.BLUE = BLUE;
 
@@ -234,7 +252,7 @@
       S.status = 'ended'; S.day = DAYS;
       S.events = Object.values(S.rdays).reduce((a, b) => a + (b.events || 0), 0);
       S.rdays = {}; S.live = {}; // raw daily counts deleted — only the summary stays
-      ERLY.toast(T('Day 28 is over — tracking switched itself off. Raw data deleted.', 'انتهى اليوم ٢٨ — توقف التتبّع تلقائياً. حُذفت البيانات الخام.'));
+      ERLY.toast(T('Day 14 is over — tracking switched itself off. Raw data deleted.', 'انتهى اليوم ١٤ — توقف التتبّع تلقائياً. حُذفت البيانات الخام.'));
     }
     save(); ERLY.emit('track', ERLY.getTrack());
   }
@@ -297,9 +315,9 @@
           <div class="live__num"><b>${ended ? 0 : DAYS - S.day + 1}</b><span>${ended ? T('switched off', 'متوقف') : T('real days left', 'أيام حقيقية متبقية')}</span></div>
         </div>
         <div class="live__meta">
-          <p class="contract__k mono"><span class="mode-badge mode-badge--real"><i></i>${T('Real tracking', 'تتبّع حقيقي')}</span> ${ended ? T('Ended automatically after day 28', 'انتهى تلقائياً بعد اليوم ٢٨') : T('Day', 'اليوم') + ' ' + S.day + ' / 28 · ' + phase}</p>
+          <p class="contract__k mono"><span class="mode-badge mode-badge--real"><i></i>${T('Real tracking', 'تتبّع حقيقي')}</span> ${ended ? T('Ended automatically after day 14', 'انتهى تلقائياً بعد اليوم ١٤') : T('Day', 'اليوم') + ' ' + S.day + ' / 14 · ' + phase}</p>
           <h3>${ended ? T('Done. It switched itself off.', 'انتهى. توقف من تلقاء نفسه.') : T('Ends on', 'ينتهي في') + ' ' + fmtDate(end)}</h3>
-          ${ended ? `<p class="deleted">${ICON('trash')} ${S.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : `<p class="rnext mono">${ICON('timer')} ${T('Day', 'اليوم')} ${S.day + 1 > DAYS ? T('28 closes', '٢٨ يُغلق') : S.day + 1 + ' ' + T('opens', 'يبدأ')} ${T('at midnight · in', 'عند منتصف الليل · بعد')} <b data-rnext>${hm(left)}</b></p>`}
+          ${ended ? `<p class="deleted">${ICON('trash')} ${S.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : `<p class="rnext mono">${ICON('timer')} ${T('Day', 'اليوم')} ${S.day + 1 > DAYS ? T('14 closes', '١٤ يُغلق') : S.day + 1 + ' ' + T('opens', 'يبدأ')} ${T('at midnight · in', 'عند منتصف الليل · بعد')} <b data-rnext>${hm(left)}</b></p>`}
           <div class="rstat">
             <span><b>${sum.baseline}</b><small>${T('clean baseline days', 'أيام أساس نظيفة')}${needB ? ' · ' + T(`need ${needB} more`, `يلزم ${needB} أخرى`) : ' ✓'}</small></span>
             <span><b>${sum.watched}</b><small>${T('clean watched days', 'أيام مراقبة نظيفة')} · ${T('7+ needed', 'يلزم ٧+')}</small></span>
@@ -310,9 +328,9 @@
             : `<span class="strict-note">${ICON('lock')} ${T('Strict mode · no simulating, no fast-forward, no back-filling', 'وضع صارم · لا محاكاة ولا تقديم ولا تعبئة لاحقة')}</span><button class="btn btn--sm btn--ghost" data-act="pause" ${realPaused() ? 'disabled' : ''}>${T('Pause 7 days', 'إيقاف ٧ أيام')}</button><button class="btn btn--sm btn--stop" data-act="stop">${T('Stop & delete', 'أوقف واحذف')}</button>`}</div>
         </div>
         ${ended ? '' : `<div class="rck-wrap" id="rck">${checkinHTML()}</div>`}
-        <div class="rcal-wrap"><div class="heat14__head"><p class="panel__h mono">${T('Your 28 real days', 'أيامك الثمانية والعشرون الحقيقية')}</p><span class="heat14__key small muted"><i class="rk rk--base"></i>${T('baseline', 'الأساس')}<i class="rk rk--watch"></i>${T('watched', 'مراقَب')}<i class="rk rk--out"></i>${T('excluded', 'مستبعد')}<i class="rk rk--today"></i>${T('today', 'اليوم')}</span></div>${calHTML(sum)}
+        <div class="rcal-wrap"><div class="heat14__head"><p class="panel__h mono">${T('Your 14 real days', 'أيامك الأربعة عشر الحقيقية')}</p><span class="heat14__key small muted"><i class="rk rk--base"></i>${T('baseline', 'الأساس')}<i class="rk rk--watch"></i>${T('watched', 'مراقَب')}<i class="rk rk--out"></i>${T('excluded', 'مستبعد')}<i class="rk rk--today"></i>${T('today', 'اليوم')}</span></div>${calHTML(sum)}
           <p class="small muted">${T('A day is excluded when it was missed, paused, after under 6 hours of sleep, or unusual (ill, travel, a life event, an exam). Excluded days never count for or against you. Only things actually measured on this device and your own answers are used — nothing is simulated.', 'يُستبعد اليوم إذا فات أو كان متوقفاً أو بعد نوم أقل من ٦ ساعات أو كان غير عادي (مرض، سفر، حدث، امتحان). الأيام المستبعدة لا تُحتسب لك أو عليك. لا يُستخدم إلا ما قيس فعلاً على هذا الجهاز وإجاباتك — لا شيء محاكى.')}</p></div>
-        ${ended ? realSumHTML(sum) : S.day > BLIND ? `<p class="rprov small">${ICON('eye')} ${T('Nothing is judged until day 28 is over — a pattern has to hold for the whole watched fortnight.', 'لا يُحكم على شيء قبل انتهاء اليوم ٢٨ — يجب أن يستمر النمط طوال أسبوعي المراقبة.')}</p>` : ''}
+        ${ended ? realSumHTML(sum) : S.day > BLIND ? `<p class="rprov small">${ICON('eye')} ${T('Nothing is judged until day 14 is over — a pattern has to hold for the whole watched week.', 'لا يُحكم على شيء قبل انتهاء اليوم ١٤ — يجب أن يستمر النمط طوال أسبوعي المراقبة.')}</p>` : ''}
       </div>
       ${ledgerHTML()}
       ${liveHTML()}
@@ -369,18 +387,18 @@
       <div class="pact">
         <div class="pact__doc">
           <p class="contract__k mono">${S.status === 'stopped' ? T('Stopped · everything deleted', 'متوقف · حُذف كل شيء') : T('Support Pact · draft', 'ميثاق الدعم · مسودة')}</p>
-          <h3>${T('Four weeks. Two to learn your normal, two to notice. Then it stops.', 'أربعة أسابيع. أسبوعان لتعلّم معدلك، وأسبوعان للملاحظة. ثم يتوقف.')}</h3>
+          <h3>${T('Two weeks. One to learn your normal, one to notice. Then it stops.', 'أسبوعان. أسبوع لتعلّم معدلك، وأسبوع للملاحظة. ثم يتوقف.')}</h3>
           <ol class="pact__time">
-            <li><b>${real() ? fmtDate(new Date()) : T('Days 1–14', 'الأيام ١–١٤')}</b><span>${T('Blind fortnight — ERLY only learns your normal. Your tools work from day one.', 'أسبوعان أعميان — يتعلّم إيرلي معدلك فقط. أدواتك تعمل من اليوم الأول.')}</span></li>
-            <li><b>${T('Days 15–28', 'الأيام ١٥–٢٨')}</b><span>${T('Watching — a day counts only if it is clearly above your own normal.', 'المراقبة — يُحتسب اليوم فقط إن كان أعلى بوضوح من معدلك.')}</span></li>
-            <li><b>${T('Insight', 'الرؤية')}</b><span>${T('Only if 3+ of 10 domains persist for the whole fortnight. You see it first.', 'فقط إن استمرت ٣ مجالات أو أكثر من ١٠ طوال الأسبوعين. أنت ترى ذلك أولاً.')}</span></li>
+            <li><b>${real() ? fmtDate(new Date()) : T('Days 1–7', 'الأيام ١–٧')}</b><span>${T('Baseline week — ERLY only learns your normal. Your tools work from day one.', 'أسبوع أساس — يتعلّم إيرلي معدلك فقط. أدواتك تعمل من اليوم الأول.')}</span></li>
+            <li><b>${T('Days 8–14', 'الأيام ٨–١٤')}</b><span>${T('Watching — a day counts only if it is clearly above your own normal.', 'المراقبة — يُحتسب اليوم فقط إن كان أعلى بوضوح من معدلك.')}</span></li>
+            <li><b>${T('Insight', 'الرؤية')}</b><span>${T('Only if 3+ of 10 domains persist for the whole watched week. You see it first.', 'فقط إن استمرت ٣ مجالات أو أكثر من ١٠ طوال أسبوع المراقبة. أنت ترى ذلك أولاً.')}</span></li>
             <li><b>${fmtDate(end)}</b><span>${T('Ends automatically. Raw data deleted; you keep a one-page picture.', 'ينتهي تلقائياً. تُحذف البيانات الخام؛ وتحتفظ بصورة من صفحة واحدة.')}</span></li>
           </ol>
           <p class="pact__never">${ICON('lock')} ${T('Never collected: what you type, camera, eye-tracking, emotion AI, location, grades.', 'لا يُجمع أبداً: ما تكتبه، الكاميرا، تتبّع العين، تحليل المشاعر، الموقع، الدرجات.')}</p>
         </div>
         <div class="pact__steps">
           <div class="mode-switch" role="radiogroup" aria-label="${T('Tracking mode', 'وضع التتبّع')}">
-            <button role="radio" aria-checked="${!real()}" class="mode-switch__o ${!real() ? 'is-on' : ''}" data-mode="demo"><span>${ICON('rocket')}</span><b>${T('Demo', 'عرض تجريبي')}</b><small>${T('Simulated LMS feed · watch 28 days in seconds', 'بيانات محاكاة · شاهد ٢٨ يوماً في ثوانٍ')}</small></button>
+            <button role="radio" aria-checked="${!real()}" class="mode-switch__o ${!real() ? 'is-on' : ''}" data-mode="demo"><span>${ICON('rocket')}</span><b>${T('Demo', 'عرض تجريبي')}</b><small>${T('Simulated LMS feed · watch 14 days in seconds', 'بيانات محاكاة · شاهد ١٤ يوماً في ثوانٍ')}</small></button>
             <button role="radio" aria-checked="${real()}" class="mode-switch__o ${real() ? 'is-on' : ''}" data-mode="real"><span>${ICON('calendar')}</span><b>${T('Real tracking', 'تتبّع حقيقي')}</b><small>${T('One real day at a time · daily timed check-in · strict', 'يوم حقيقي في كل مرة · تسجيل يومي موقّت · صارم')}</small></button>
             <i class="mode-switch__pill" style="--pos:${real() ? 1 : 0}"></i>
           </div>
@@ -395,12 +413,23 @@
             <div class="dom-toggles">${CK.map(k => `<label class="dtog" style="--c:${CATS[k].color}"><input type="checkbox" data-cat="${k}" ${S.consent[k] ? 'checked' : ''}><span><i class="cat-ic cat-ic--sm">${ICON(CATS[k].icon)}</i>${catName(k)}</span></label>`).join('')}</div>
           </section>
           <section class="pstep">
-            <header><span class="pstep__n">2</span><div><b>${T('Your Learning Blueprint', 'مخطط تعلّمك')}</b><small>${T('4 taps · used to choose support, never for detection', '٤ نقرات · لاختيار الدعم فقط، لا للكشف أبداً')} · ${bpDone}/4</small></div></header>
+            <header><span class="pstep__n">2</span><div><b>${T('Your Learning Blueprint', 'مخطط تعلّمك')}</b><small>${T(`${BLUE.length} quick taps · used to choose support, never for detection`, `${BLUE.length} نقرات سريعة · لاختيار الدعم فقط، لا للكشف أبداً`)} · ${bpDone}/${BLUE.length}</small></div></header>
             ${BLUE.map(([k, en, ar, opts]) => `<div class="bp"><span>${T(en, ar)}</span><div class="bp__opts">${opts.map(([v, oe, oa]) => `<button class="bp__o ${S.blueprint[k] === v ? 'is-on' : ''}" data-bp="${k}" data-v="${v}">${T(oe, oa)}</button>`).join('')}</div></div>`).join('')}
           </section>
           <section class="pstep">
-            <header><span class="pstep__n">3</span><div><b>${T('Who may be involved if a pattern persists', 'من قد يُشرك إن استمر نمط ما')}</b><small>${T('Revocable · expires end of semester · re-confirmed at the moment it matters', 'قابل للإلغاء · ينتهي بنهاية الفصل · يُعاد تأكيده عند الحاجة')}</small></div></header>
-            <div class="bp__opts">${ALLIES.map(([v, en, ar]) => `<button class="bp__o ${(S.pact.ally || '') === v ? 'is-on' : ''}" data-ally="${v}">${T(en, ar)}</button>`).join('')}</div>
+            <header><span class="pstep__n">3</span><div><b>${T('Choose your SAS counselor', 'اختر مرشدك في خدمات الطلبة')}</b><small>${T('Confidential · you can switch any time · only contacted if you choose', 'سري · يمكنك التغيير في أي وقت · لا تواصل إلا باختيارك')}</small></div></header>
+            <div class="csl">${COUNSELORS.map((c, i) => `<button type="button" class="csl__c ${S.pact.counselor === c.id ? 'is-on' : ''}" data-csl="${c.id}" style="--h:${c.hue};--i:${i}"><span class="csl__av">${c.init}</span><span class="csl__t"><b>${esc(c.name)}</b><small>${T(...c.role)}</small><em>${T(...c.focus)}</em><i class="mono">${c.langs}</i></span><span class="csl__ok">${ICON('check')}</span></button>`).join('')}</div>
+            <button type="button" class="bp__o csl__none ${S.pact.counselor === 'any' ? 'is-on' : ''}" data-csl="any">${T('No preference — whoever is free first', 'لا تفضيل — أول من يتاح')}</button>
+          </section>
+          <section class="pstep">
+            <header><span class="pstep__n">4</span><div><b>${T('Who do you rely on most?', 'على من تعتمد أكثر؟')}</b><small>${T('Your person outside university — family or a friend', 'شخصك خارج الجامعة — من العائلة أو صديق')}</small></div></header>
+            <div class="bp__opts">${RELY.map(([v, en, ar]) => `<button class="bp__o ${S.pact.rely === v ? 'is-on' : ''}" data-rely="${v}">${T(en, ar)}</button>`).join('')}</div>
+            ${S.pact.rely && S.pact.rely !== 'none' ? `<label class="field rely-name"><span>${T('Their first name (optional)', 'الاسم الأول (اختياري)')}</span><input id="relyName" maxlength="30" value="${esc(S.pact.relyName || '')}" placeholder="${T('e.g. Sara', 'مثلاً: سارة')}" autocomplete="off"></label>
+            <div class="bp"><span>${T('If a pattern persists, may we suggest involving them?', 'إن استمر نمط، هل نقترح إشراكه؟')}</span><div class="bp__opts">${INVOLVE.map(([v, en, ar]) => `<button class="bp__o ${S.pact.involve === v ? 'is-on' : ''}" data-involve="${v}">${T(en, ar)}</button>`).join('')}</div></div>
+            <p class="small muted">${ICON('lock')} ${T('Nobody is ever contacted automatically. ERLY asks you again at the moment it matters, and they only ever get a support guide — never your data.', 'لا يُتواصل مع أحد تلقائياً أبداً. يسألك إيرلي مجدداً عند الحاجة، ولا يتلقون إلا دليل دعم — لا بياناتك أبداً.')}</p>` : ''}
+          </section>
+          <section class="pstep">
+            <header><span class="pstep__n">5</span><div><b>${T('Exam calendar', 'تقويم الامتحانات')}</b><small>${T('So busy weeks are read fairly', 'لتُقرأ الأسابيع المزدحمة بإنصاف')}</small></div></header>
             <label class="switch-row"><span><b>${T('Exam Mode — sync my calendar', 'وضع الامتحانات — مزامنة تقويمي')}</b><small>${T('Exam-week spikes never count as a pattern', 'ارتفاعات أسابيع الامتحانات لا تُحتسب نمطاً أبداً')}</small></span><input type="checkbox" id="examMode" ${S.exam ? 'checked' : ''}><i></i></label>
           </section>
           ${real() ? '' : `<label class="field demo-pattern"><span class="mono">${T('Demo · synthetic pattern for the LMS signals', 'عرض · نمط اصطناعي لإشارات نظام التعلّم')}</span>
@@ -420,7 +449,7 @@
     const C = 2 * Math.PI * 52;
     const end = new Date(new Date(S.start).getTime() + DAYS * 864e5);
     const maxFlags = Math.max(1, ...CK.map(c => Math.max(0, ...sum.daily.map(d => d.byCat[c] || 0))));
-    const phase = S.pause ? T(`Paused · ${S.pause} days left`, `إيقاف مؤقت · ${S.pause} أيام متبقية`) : S.day <= BLIND ? T('Blind fortnight · learning your normal', 'الأسبوعان الأعميان · تعلّم معدلك') : T('Watching for persistence', 'مراقبة الاستمرار');
+    const phase = S.pause ? T(`Paused · ${S.pause} days left`, `إيقاف مؤقت · ${S.pause} أيام متبقية`) : S.day <= BLIND ? T('Baseline week · learning your normal', 'أسبوع الأساس · تعلّم معدلك') : T('Watching for persistence', 'مراقبة الاستمرار');
     box.innerHTML = `
       <div class="live">
         <div class="live__count">
@@ -428,16 +457,16 @@
           <div class="live__num"><b>${DAYS - S.day}</b><span>${ended ? T('switched off', 'متوقف') : T('days left', 'أيام متبقية')}</span></div>
         </div>
         <div class="live__meta">
-          <p class="contract__k mono">${ended ? T('Ended automatically on day 28', 'انتهى تلقائياً في اليوم ٢٨') : T('Day', 'اليوم') + ' ' + S.day + ' / 28 · ' + phase}</p>
+          <p class="contract__k mono">${ended ? T('Ended automatically on day 14', 'انتهى تلقائياً في اليوم ١٤') : T('Day', 'اليوم') + ' ' + S.day + ' / 14 · ' + phase}</p>
           <h3>${ended ? T('Done. It switched itself off.', 'انتهى. توقف من تلقاء نفسه.') : T('Ends on', 'ينتهي في') + ' ' + fmtDate(end)}</h3>
-          <div class="phasebar"><i style="width:${S.day / DAYS * 100}%"></i><span style="left:50%"></span><em>${T('blind fortnight', 'الأسبوعان الأعميان')}</em><em>${T('watching', 'المراقبة')}</em></div>
+          <div class="phasebar"><i style="width:${S.day / DAYS * 100}%"></i><span style="left:50%"></span><em>${T('baseline week', 'أسبوع الأساس')}</em><em>${T('watching', 'المراقبة')}</em></div>
           ${ended ? `<p class="deleted">${ICON('trash')} ${S.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : ''}
           <div class="row-btns">${ended
             ? `<a href="#insight" class="btn btn--sm btn--accent">${T('See my insight', 'شاهد رؤيتي')}</a><button class="btn btn--sm btn--ghost" data-act="reset">${T('Reset demo', 'أعد العرض')}</button>`
-            : `<button class="btn btn--sm btn--ghost" data-act="next">${T('Simulate next day', 'حاكِ اليوم التالي')} ›</button><button class="btn btn--sm btn--ghost" data-act="ff">${T('Fast-forward to day 28', 'تقدّم إلى اليوم ٢٨')} »</button><button class="btn btn--sm btn--ghost" data-act="pause" ${S.pause ? 'disabled' : ''}>${T('Pause 7 days', 'إيقاف ٧ أيام')}</button><button class="btn btn--sm btn--stop" data-act="stop">${T('Stop & delete', 'أوقف واحذف')}</button>`}</div>
+            : `<button class="btn btn--sm btn--ghost" data-act="next">${T('Simulate next day', 'حاكِ اليوم التالي')} ›</button><button class="btn btn--sm btn--ghost" data-act="ff">${T('Fast-forward to day 14', 'تقدّم إلى اليوم ١٤')} »</button><button class="btn btn--sm btn--ghost" data-act="pause" ${S.pause ? 'disabled' : ''}>${T('Pause 7 days', 'إيقاف ٧ أيام')}</button><button class="btn btn--sm btn--stop" data-act="stop">${T('Stop & delete', 'أوقف واحذف')}</button>`}</div>
         </div>
         <div class="heat14">
-          <div class="heat14__head"><p class="panel__h mono">${T('Indicators above your normal · by domain and day', 'مؤشرات فوق معدلك · حسب المجال واليوم')}</p><span class="heat14__key small muted"><i class="hc14 hc14--cal"></i>${T('blind fortnight', 'الأسبوعان الأعميان')}<i class="hc14 hc14--exam"></i>${T('exam week', 'أسبوع امتحانات')}<i class="hc14 hc14--paused"></i>${T('paused', 'متوقف مؤقتاً')}</span></div>
+          <div class="heat14__head"><p class="panel__h mono">${T('Indicators above your normal · by domain and day', 'مؤشرات فوق معدلك · حسب المجال واليوم')}</p><span class="heat14__key small muted"><i class="hc14 hc14--cal"></i>${T('baseline week', 'أسبوع الأساس')}<i class="hc14 hc14--exam"></i>${T('exam week', 'أسبوع امتحانات')}<i class="hc14 hc14--paused"></i>${T('paused', 'متوقف مؤقتاً')}</span></div>
           <div class="heat14__grid" style="--days:${DAYS}">
             <span></span>${Array.from({ length: DAYS }, (_, i) => `<span class="heat14__d mono">${(i + 1) % 7 === 1 || i === DAYS - 1 ? i + 1 : ''}</span>`).join('')}
             ${CK.map(c => `<span class="heat14__l"><i class="cat-ic cat-ic--sm" style="--c:${CATS[c].color}">${ICON(CATS[c].icon)}</i>${catName(c)}</span>${Array.from({ length: DAYS }, (_, i) => {
@@ -460,9 +489,9 @@
   }
 
   function summaryHTML(sum) {
-    const ally = S.pact.ally;
+    const ally = esc(S.pact.ally);
     return `<div class="live__sum">
-      <p class="panel__h mono">${T('Convergence rule · domains where 3+ indicators persisted through days 15–28', 'قاعدة التقارب · مجالات استمر فيها ٣ مؤشرات أو أكثر في الأيام ١٥–٢٨')}</p>
+      <p class="panel__h mono">${T('Convergence rule · domains where 3+ indicators persisted through days 8–14', 'قاعدة التقارب · مجالات استمر فيها ٣ مؤشرات أو أكثر في الأيام ٨–١٤')}</p>
       <div class="conv"><div class="conv__dots">${CK.map(c => `<span class="${sum.dims.includes(c) ? 'is-on' : ''} ${CATS[c].area === 'support' ? 'is-na' : ''}" title="${catName(c)}">${ICON(CATS[c].icon)}</span>`).join('')}</div><b>${sum.dims.length}<small>/10</small></b><span>${T('need 3+ for an insight', 'يلزم ٣ أو أكثر للرؤية')}</span></div>
       <div class="sig4">${sum.signals.map(s => `<div class="sig4__c ${s.on ? 'is-on' : ''}"><small class="mono">${s.id}</small><b>${T(s.en, s.ar)}</b><span>${s.on ? T('persisted', 'استمر') : T('steady', 'مستقر')}</span></div>`).join('')}</div>
       ${['reading', 'executive', 'strain'].map(a => `<div class="sum-row" style="--c:${AREA_C[a]}"><span>${T(...AREA_N[a])}</span><span class="sum-row__bar"><i style="width:${Math.round(sum.areas[a].score * 100)}%"></i></span><b class="mono">${sum.areas[a].persistent}/${sum.areas[a].n} ${T('persistent', 'مستمر')}</b></div>`).join('')}
@@ -498,7 +527,7 @@
   function fmtLive(i) { const v = ERLY.liveValue(i.id); if (!v) return '—'; return i.id === 'V05' ? v.toFixed(1) + '×' : ['V08', 'M09', 'H03', 'P07'].includes(i.id) ? Math.round(v) + 's' : i.id === 'H10' ? v : Math.round(v); }
   function renderLive() { $$('[data-lv]').forEach(el => { const i = LIST.find(x => x.id === el.dataset.lv); const t = String(fmtLive(i)); if (el.textContent !== t) { el.textContent = t; el.parentElement.classList.remove('bump'); void el.offsetWidth; el.parentElement.classList.add('bump'); } }); }
 
-  const openCats = new Set(['V']);
+  const openCats = new Set();
   function catalogueHTML(sum) {
     const per = sum ? Object.fromEntries(sum.per.map(p => [p.id, p])) : {};
     const ART = window.ERLY_ART || { A: {}, RELATES: {} };
@@ -520,7 +549,7 @@
     </div>`;
   }
 
-  box && box.addEventListener('input', e => { if (e.target.dataset.ckRange != null) e.target.nextElementSibling.textContent = e.target.value + ' h'; });
+  box && box.addEventListener('input', e => { if (e.target.id === 'relyName') { S.pact.relyName = e.target.value.slice(0, 30); syncPactAlly(); save(); ERLY.emit('pact', S.pact); } if (e.target.dataset.ckRange != null) e.target.nextElementSibling.textContent = e.target.value + ' h'; });
   box && box.addEventListener('change', e => {
     if (e.target.dataset.cat) { S.consent[e.target.dataset.cat] = e.target.checked; save(); }
     if (e.target.id === 'agree') $('#startTrack').disabled = !e.target.checked;
@@ -539,11 +568,15 @@
     }
     if (e.target.id === 'startTrack') return start();
     const bp = e.target.closest('[data-bp]');
-    if (bp) { S.blueprint[bp.dataset.bp] = bp.dataset.v; save(); $$(`[data-bp="${bp.dataset.bp}"]`, box).forEach(b => b.classList.toggle('is-on', b === bp)); const n = BLUE.filter(q => S.blueprint[q[0]]).length; const sm = bp.closest('.pstep').querySelector('small'); sm.textContent = sm.textContent.replace(/\d\/4$/, n + '/4'); ERLY.emit('blueprint', S.blueprint); return; }
-    const al = e.target.closest('[data-ally]');
-    if (al) { S.pact.ally = al.dataset.ally; save(); $$('[data-ally]', box).forEach(b => b.classList.toggle('is-on', b === al)); ERLY.emit('pact', S.pact); return; }
+    if (bp) { S.blueprint[bp.dataset.bp] = bp.dataset.v; save(); $$(`[data-bp="${bp.dataset.bp}"]`, box).forEach(b => b.classList.toggle('is-on', b === bp)); const n = BLUE.filter(q => S.blueprint[q[0]]).length; const sm = bp.closest('.pstep').querySelector('small'); sm.textContent = sm.textContent.replace(/\d+\/\d+$/, n + '/' + BLUE.length); ERLY.emit('blueprint', S.blueprint); return; }
+    const cs = e.target.closest('[data-csl]');
+    if (cs) { S.pact.counselor = cs.dataset.csl; save(); $$('[data-csl]', box).forEach(b => b.classList.toggle('is-on', b === cs)); ERLY.emit('pact', S.pact); return; }
+    const rl = e.target.closest('[data-rely]');
+    if (rl) { S.pact.rely = rl.dataset.rely; syncPactAlly(); save(); render(); ERLY.emit('pact', S.pact); const el = $('[data-rely].is-on', box); el && el.focus({ preventScroll: true }); return; }
+    const iv = e.target.closest('[data-involve]');
+    if (iv) { S.pact.involve = iv.dataset.involve; syncPactAlly(); save(); $$('[data-involve]', box).forEach(b => b.classList.toggle('is-on', b === iv)); ERLY.emit('pact', S.pact); return; }
     const pc = e.target.closest('[data-pact]');
-    if (pc) { const ok = pc.dataset.pact === '1'; S.pact.confirmed = ok; save(); if (ok) track('H09'); $('#pactConfirm').innerHTML = `<span>${ICON('check')}</span><p>${ok ? T(`Done — ${S.pact.ally} gets the Support Playbook, never your data.`, `تم — يتلقى ${S.pact.ally} دليل الدعم، لا بياناتك أبداً.`) : T('No problem. Nobody was told anything.', 'لا مشكلة. لم يُخبر أحد بشيء.')}</p>`; ERLY.emit('pact', S.pact); return; }
+    if (pc) { const ok = pc.dataset.pact === '1'; S.pact.confirmed = ok; save(); if (ok) track('H09'); $('#pactConfirm').innerHTML = `<span>${ICON('check')}</span><p>${ok ? T(`Done — ${esc(S.pact.ally)} gets the Support Playbook, never your data.`, `تم — يتلقى ${esc(S.pact.ally)} دليل الدعم، لا بياناتك أبداً.`) : T('No problem. Nobody was told anything.', 'لا مشكلة. لم يُخبر أحد بشيء.')}</p>`; ERLY.emit('pact', S.pact); return; }
     const ckb = e.target.closest('[data-ck]'); if (ckb) return ckClick(ckb);
     const md = e.target.closest('[data-mode]'); if (md) { S.mode = md.dataset.mode; save(); return render(); }
     const a = e.target.closest('[data-act]'); if (!a) return;

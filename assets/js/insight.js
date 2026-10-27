@@ -17,7 +17,7 @@
     rain: '<svg viewBox="0 0 48 48"><path d="M11 28h26a8 8 0 0 0 0-16 11 11 0 0 0-21 2 7 7 0 0 0-5 14z" fill="#B9B4D0" stroke="#8F89AD" stroke-width="1.5"/><g class="wx-rain" stroke="#6E9BD6" stroke-width="2.4" stroke-linecap="round"><line x1="17" y1="33" x2="15" y2="39"/><line x1="25" y1="33" x2="23" y2="39"/><line x1="33" y1="33" x2="31" y2="39"/></g></svg>',
     sprout: '<svg viewBox="0 0 48 48"><path d="M24 40V22" stroke="#4DB3A8" stroke-width="3" stroke-linecap="round"/><path d="M24 26c-8 0-12-5-12-11 7 0 12 4 12 11zM24 22c0-7 5-11 12-11 0 6-4 11-12 11z" fill="#4DB3A8"/><path d="M14 40h20" stroke="#A3875E" stroke-width="3" stroke-linecap="round"/></svg>'
   };
-  const W_LABEL = { sprout: ['blind fortnight', 'الأسبوعان الأعميان'], sun: ['clear', 'صافٍ'], part: ['a little friction', 'احتكاك خفيف'], cloud: ['harder day', 'يوم أصعب'], rain: ['heavy day', 'يوم ثقيل'] };
+  const W_LABEL = { sprout: ['baseline week', 'أسبوع الأساس'], sun: ['clear', 'صافٍ'], part: ['a little friction', 'احتكاك خفيف'], cloud: ['harder day', 'يوم أصعب'], rain: ['heavy day', 'يوم ثقيل'] };
 
   const ILLO = {
     reading: `<svg viewBox="0 0 320 200" class="illo" aria-hidden="true"><rect x="40" y="18" width="170" height="168" rx="10" fill="var(--surface)" stroke="var(--line-2)"/>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<g>${[0, 1, 2].map(j => `<rect x="${58 + j * 48 + (i % 2) * 6}" y="${40 + i * 18}" width="${36 + ((i + j) % 3) * 6}" height="7" rx="3.5" fill="var(--line-2)" class="${(i * 3 + j) % 5 === 2 ? 'il-drift' : ''}"/>`).join('')}</g>`).join('')}<g class="il-loupe"><circle cx="236" cy="104" r="44" fill="var(--bg)" stroke="var(--ink)" stroke-width="5"/><line x1="268" y1="136" x2="296" y2="166" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"/><text x="212" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--accent)" class="il-b">b</text><text x="242" y="116" font-size="34" font-family="Fraunces, serif" fill="var(--teal)" class="il-d">d</text></g></svg>`,
@@ -72,7 +72,7 @@
     if (!ended) {
       box.innerHTML = `<div class="ins-empty">
         <div class="ins-empty__ic">${ICON('sparkle')}</div>
-        <h3>${tr && tr.status === 'active' ? T(`Your picture appears after day 28 — you're on day ${tr.day}.`, `تظهر صورتك بعد اليوم ٢٨ — أنت في اليوم ${tr.day}.`) : T('Your picture appears after the four weeks of your Support Pact.', 'تظهر صورتك بعد أسابيع ميثاق الدعم الأربعة.')}</h3>
+        <h3>${tr && tr.status === 'active' ? T(`Your picture appears after day 14 — you're on day ${tr.day}.`, `تظهر صورتك بعد اليوم ١٤ — أنت في اليوم ${tr.day}.`) : T('Your picture appears after the two weeks of your Support Pact.', 'تظهر صورتك بعد أسبوعي ميثاق الدعم.')}</h3>
         <p>${T('It brings together all 100 indicators — drawn gently, never as a label. Preview a sample:', 'تجمع المؤشرات المئة — مرسومة بلطف، ولا تصنيف أبداً. عاين مثالاً:')}</p>
         ${samples()}</div>`;
       return;
@@ -89,12 +89,12 @@
     box.innerHTML = `
       <div class="ins-hero">
         <div>
-          <p class="contract__k mono">${T('Your picture · 28 days · only you can see this', 'صورتك · ٢٨ يوماً · أنت فقط من يراها')}</p>
+          <p class="contract__k mono">${T('Your picture · 14 days · only you can see this', 'صورتك · ١٤ يوماً · أنت فقط من يراها')}</p>
           <h3>${sum.crisis ? T('A lot changed at once. You don’t have to sort it out alone.', 'تغيّر الكثير دفعة واحدة. لست مضطراً لترتيب ذلك وحدك.') : areas.length ? T('Here\'s what we noticed — and what it might feel like.', 'إليك ما لاحظناه — وكيف قد يبدو الشعور.') : T('A steady month. Nothing stood out against your normal.', 'شهر مستقر. لم يبرز شيء مقارنةً بمعدلك.')}</h3>
           <p>${T('This isn\'t a diagnosis. It\'s a picture you can take to someone who can help — or keep to yourself.', 'هذا ليس تشخيصاً. إنها صورة يمكنك أخذها لمن يستطيع المساعدة — أو الاحتفاظ بها لنفسك.')}</p>
           ${samples()}
         </div>
-        <div class="ins-hero__stat"><b>${sum.dims.length}<small>/10</small></b><span>${T('domains stayed above your normal for two weeks · 3+ needed', 'مجالات بقيت فوق معدلك لأسبوعين · يلزم ٣ أو أكثر')}</span></div>
+        <div class="ins-hero__stat"><b>${sum.dims.length}<small>/10</small></b><span>${T('domains stayed above your normal for the watched week · 3+ needed', 'مجالات بقيت فوق معدلك طوال أسبوع المراقبة · يلزم ٣ أو أكثر')}</span></div>
       </div>
       <button class="rep-cta" data-report>
         <span class="rep-cta__doc" aria-hidden="true"><i></i><i></i><i></i><i></i><b>PDF</b></span>
@@ -105,11 +105,11 @@
       ${areas.length ? `<div class="evcard">
         <div class="evcard__head"><span class="evcard__k mono">${T('Evidence card', 'بطاقة الأدلة')} · ${T('on this device', 'على هذا الجهاز')}</span><span class="honesty honesty--live">${T('you see it first', 'أنت تراها أولاً')}</span></div>
         <div class="evcard__cols">
-          <div dir="ltr" lang="en"><b>Over days 15–28, these stayed above your own normal:</b><ol>${sum.top3.map(p => `<li><span class="mono">${p.id}</span>${p.en}<em>${p.up}/${sum.judged} days</em></li>`).join('')}</ol><small>Not a diagnosis. Compared only with you.</small></div>
-          <div dir="rtl" lang="ar"><b>خلال الأيام ١٥–٢٨، بقيت هذه فوق معدلك:</b><ol>${sum.top3.map(p => `<li><span class="mono">${p.id}</span>${p.ar}<em>${p.up}/${sum.judged} يوماً</em></li>`).join('')}</ol><small>ليس تشخيصاً. مقارنة بك أنت فقط.</small></div>
+          <div dir="ltr" lang="en"><b>Over days 8–14, these stayed above your own normal:</b><ol>${sum.top3.map(p => `<li><span class="mono">${p.id}</span>${p.en}<em>${p.up}/${sum.judged} days</em></li>`).join('')}</ol><small>Not a diagnosis. Compared only with you.</small></div>
+          <div dir="rtl" lang="ar"><b>خلال الأيام ٨–١٤، بقيت هذه فوق معدلك:</b><ol>${sum.top3.map(p => `<li><span class="mono">${p.id}</span>${p.ar}<em>${p.up}/${sum.judged} يوماً</em></li>`).join('')}</ol><small>ليس تشخيصاً. مقارنة بك أنت فقط.</small></div>
         </div></div>` : ''}
       <div class="ins-card ins-weather">
-        <div class="ins-card__head"><h4>${T('Your month, as weather', 'شهرك، كطقس')}</h4><span class="small muted">${T('Sprouts = blind fortnight, learning your normal · more cloud = more indicators above it', 'البراعم = الأسبوعان الأعميان · غيوم أكثر = مؤشرات أكثر فوق معدلك')}</span></div>
+        <div class="ins-card__head"><h4>${T('Your month, as weather', 'شهرك، كطقس')}</h4><span class="small muted">${T('Sprouts = baseline week, learning your normal · more cloud = more indicators above it', 'البراعم = أسبوع الأساس · غيوم أكثر = مؤشرات أكثر فوق معدلك')}</span></div>
         <ol class="wx wx--28">${sum.daily.map((d, i) => { const w = weatherOf(d, totalFlag); return `<li class="wx__d ${d.exam ? 'is-exam' : ''}" style="--i:${i}" title="${T('Day', 'اليوم')} ${d.n} · ${T(...W_LABEL[w])}${d.exam ? ' · ' + T('exam week', 'أسبوع امتحانات') : ''}"><span class="mono">${d.n}</span>${W_ICON[w]}</li>`; }).join('')}</ol>
         <div class="wx__legend">${Object.keys(W_LABEL).map(k => `<span>${W_ICON[k]}${T(...W_LABEL[k])}</span>`).join('')}</div>
       </div>

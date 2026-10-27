@@ -16,7 +16,7 @@
       "worth a look" when one does — one bad trial or one metric never is;
    4. a possible explanation to explore with SAS needs converging domains, and
       gets more weight when it repeats on a second run or matches the
-      student's own 28-day tracking. Ordinary explanations are always listed.
+      student's own 14-day tracking. Ordinary explanations are always listed.
    Results are screening indications, never a diagnosis and never a
    probability. Only a qualified assessment at SAS can confirm anything. */
 (function (root, factory) {
@@ -85,7 +85,7 @@
   const rowFlag = (st, k, key) => { const r = row(st, k, key); return !!(r && r.z != null && r.z >= 1.5); };
 
   // What might be worth exploring with SAS. Each needs converging evidence.
-  // tracking = { areas: ['reading','executive','strain'], available: bool } from the 28-day tracker
+  // tracking = { areas: ['reading','executive','strain'], available: bool } from the 14-day tracker
   const EXPLORE = [
     {
       id: 'reading', area: 'reading', en: 'A specific learning difference in reading (such as dyslexia)', ar: 'اختلاف تعلّم محدد في القراءة (مثل عسر القراءة)',

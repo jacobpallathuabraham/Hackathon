@@ -5,8 +5,8 @@
      - A day is excluded from judgement when it was missed, paused, followed a
        short night (< 6 h sleep) or was unusual (ill, travel, family event,
        exam). Excluded days never count for or against the student.
-     - Days 1–14 learn the student's own normal; a baseline needs 7+ clean
-       days. Days 15–28 are judged against it. Only measured indicators and
+     - Days 1–7 learn the student's own normal; a baseline needs 7+ clean
+       days. Days 8–14 are judged against it. Only measured indicators and
        the student's own check-in answers are used — nothing is simulated.
      - An indicator persists when it is clearly above normal on half or more
        of 5+ clean watched days. An area is flagged only when 2+ indicators
@@ -19,7 +19,7 @@
   else root.ERLY_REAL = api;
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
-  const DAYS = 28, BLIND = 14, MIN_BASE = 7, MIN_WATCH = 7, MIN_IND = 5;
+  const DAYS = 14, BLIND = 7, MIN_BASE = 4, MIN_WATCH = 4, MIN_IND = 4;
 
   /* the daily check-in, asked once per calendar day */
   const QUESTIONS = [
@@ -89,7 +89,7 @@
     return v > Math.max(floor, spread) && v > 0;
   }
 
-  /* days: array of { n, ck, vals, paused } for n = 1..up to 28 (missing = missed)
+  /* days: array of { n, ck, vals, paused } for n = 1..up to 14 (missing = missed)
      ind: [{ id, area, cat, dir }] — measured indicators that may appear in vals */
   function judge(days, ind) {
     const byN = {}; (days || []).forEach(d => { byN[d.n] = d; });

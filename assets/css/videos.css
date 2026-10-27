@@ -43,4 +43,3 @@
 .vroom__notes p { margin: 0 0 8px; font-size: 11.5px; opacity: .7; letter-spacing: .06em; text-transform: uppercase; }
 .vroom__notes ol { margin: 0 0 10px; padding-inline-start: 18px; display: grid; gap: 10px; font-size: 14px; line-height: 1.55; }
 @media (max-width: 860px) { .vroom__body { flex-direction: column; overflow-y: auto; } .vroom__notes { width: 100%; } .vroom__noor { display: none; } }
-.vid-card__pick { position: absolute; top: 8px; inset-inline-start: 8px; padding: 3px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; background: var(--teal, #146A63); color: #fff; letter-spacing: .05em; }

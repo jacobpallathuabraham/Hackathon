@@ -1,4 +1,4 @@
-/* ERLY — the end-of-pact screening report. After day 28 the student can open
+/* ERLY — the end-of-pact screening report. After day 14 the student can open
    a report of what the month showed and the most likely explanation to
    explore with SAS, in a full-screen viewer, and download it as a PDF built on
    the device. It names a likely explanation; it never claims a diagnosis. */
@@ -14,7 +14,7 @@
     reading: {
       title: 'Dyslexia — a specific learning difficulty in reading',
       profile: 'Profile A · visual decoding',
-      why: 'Re-reading loops, slow complexity-adjusted reading pace and early switches to read-aloud stayed above this student’s own normal through the watched fortnight — in both Arabic and English. Friction in both languages is the pattern most consistent with dyslexia, rather than a language barrier.',
+      why: 'Re-reading loops, slow complexity-adjusted reading pace and early switches to read-aloud stayed above this student’s own normal through the watched week — in both Arabic and English. Friction in both languages is the pattern most consistent with dyslexia, rather than a language barrier.',
       assess: ['Psycho-educational assessment at SAS: word reading, decoding, phonological processing and rapid naming, in Arabic and English', 'Vision screening to rule out a visual cause'],
       accom: ['25% extra time in timed assessments', 'Text-to-speech and a reading-friendly font in exams', 'Course readings released one week in advance', 'Recorded lectures']
     },
@@ -42,7 +42,7 @@
     none: {
       title: 'No persistent pattern',
       profile: 'A steady month',
-      why: 'Nothing stayed above this student’s own normal across three or more domains for the watched fortnight. ERLY does not suggest a learning difficulty — but self-referral to SAS is always open.',
+      why: 'Nothing stayed above this student’s own normal across three or more domains for the watched week. ERLY does not suggest a learning difficulty — but self-referral to SAS is always open.',
       assess: ['None indicated by this screening. The student can self-refer at any time.'],
       accom: ['Keep using the Reading Studio and Start-Ramp tools that helped']
     }
@@ -57,7 +57,7 @@
     const areas = s.flaggedAreas.slice().sort((a, b) => (s.crisis ? order.indexOf(a) - order.indexOf(b) : ((s.areas[b] || {}).score || 0) - ((s.areas[a] || {}).score || 0)));
     const primary = s.crisis ? 'strain' : (s.strong && areas[0]) || 'none';
     const also = s.crisis ? [] : areas.filter(a => a !== primary);
-    const start = new Date(tr.start), end = new Date(start.getTime() + 28 * 864e5);
+    const start = new Date(tr.start), end = new Date(start.getTime() + 14 * 864e5);
     const strength = !s.strong ? 'Not met' : s.dims.length >= 6 ? 'Strong' : s.dims.length >= 4 ? 'Clear' : 'Moderate';
     const helped = {};
     (tr.helped || []).forEach(h => { helped[h.tool] = helped[h.tool] || [0, 0]; helped[h.tool][0] += h.ok; helped[h.tool][1]++; });
@@ -82,7 +82,7 @@
     return `<article class="rpage" style="--pi:${n}"><div class="rpage__in">
       <header class="rp-top"><span class="rp-brand"><b>ERLY</b> by SAS</span><span>Screening report · confidential</span></header>
       ${body}
-      <footer class="rp-foot"><span>Screening indication, not a diagnosis. Generated on the student’s device; raw data deleted on day 28.</span><span>Page ${n} of ${total}</span></footer>
+      <footer class="rp-foot"><span>Screening indication, not a diagnosis. Generated on the student’s device; raw data deleted on day 14.</span><span>Page ${n} of ${total}</span></footer>
     </div></article>`;
   }
   function render(D) {
@@ -90,7 +90,7 @@
     const p1 = `
       <section class="rp-hero">
         <p class="rp-k">ERLY screening report</p>
-        <h1>What four weeks showed</h1>
+        <h1>What two weeks showed</h1>
         <dl class="rp-meta"><div><dt>Student</dt><dd>Acubins</dd></div><div><dt>Student ID</dt><dd>2026-0417</dd></div><div><dt>Support Pact</dt><dd>${fmt(D.start)} – ${fmt(D.end)}</dd></div><div><dt>Generated</dt><dd>${fmt(D.generated)}</dd></div></dl>
       </section>
       <section class="rp-likely ${D.primary === 'strain' ? 'is-crisis' : D.primary === 'none' ? 'is-none' : ''}">
@@ -102,7 +102,7 @@
         <p class="rp-note">This is a screening indication based on behaviour measured only against the student’s own normal. It is not a diagnosis. Only a qualified professional at SAS can confirm a learning disability.</p>
       </section>
       <section class="rp-grid2">
-        <div><p class="rp-k">Convergence rule</p><div class="rp-conv">${D.domains.map(d => `<span class="${d.persisted ? 'is-on' : ''} ${d.support ? 'is-na' : ''}" title="${esc(d.name)}">${d.k}</span>`).join('')}</div><p class="rp-small">${s.dims.length >= 3 ? 'Met' : 'Not met'} — an insight needs 3+ domains with 3+ indicators above normal for the whole watched fortnight.</p></div>
+        <div><p class="rp-k">Convergence rule</p><div class="rp-conv">${D.domains.map(d => `<span class="${d.persisted ? 'is-on' : ''} ${d.support ? 'is-na' : ''}" title="${esc(d.name)}">${d.k}</span>`).join('')}</div><p class="rp-small">${s.dims.length >= 3 ? 'Met' : 'Not met'} — an insight needs 3+ domains with 3+ indicators above normal for the whole watched week.</p></div>
         <div><p class="rp-k">Four-signal cluster</p><div class="rp-sig">${s.signals.map(g => `<div class="${g.on ? 'is-on' : ''}"><small>${g.id}</small><b>${esc(g.en)}</b><span>${g.on ? 'persisted' : 'steady'}</span></div>`).join('')}</div></div>
       </section>`;
     const p2 = `
@@ -138,7 +138,7 @@
   let lastBtn = null;
   function open(btn) {
     const D = data();
-    if (!D) return ERLY.toast(T('Your report is ready after day 28.', 'تقريرك جاهز بعد اليوم ٢٨.'));
+    if (!D) return ERLY.toast(T('Your report is ready after day 14.', 'تقريرك جاهز بعد اليوم ١٤.'));
     render(D);
     lastBtn = btn;
     const r = btn ? btn.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
@@ -181,7 +181,7 @@
       text('Screening report · confidential', W - M, 12, { size: 8, color: MUT, align: 'right' });
       doc.setDrawColor(...LINE); doc.line(M, 16, W - M, 16);
       doc.setDrawColor(...LINE); doc.line(M, 282, W - M, 282);
-      text('Screening indication, not a diagnosis. Generated on the student’s device; raw data deleted on day 28.', M, 287, { size: 7, color: MUT, w: 140 });
+      text('Screening indication, not a diagnosis. Generated on the student’s device; raw data deleted on day 14.', M, 287, { size: 7, color: MUT, w: 140 });
       text(`Page ${n} of 3`, W - M, 287, { size: 7, color: MUT, align: 'right' });
       return 26;
     };
@@ -190,7 +190,7 @@
     // page 1
     y = head(1);
     text('ERLY SCREENING REPORT', M, y, { size: 8, bold: true, color: ACC }); y += 9;
-    text('What four weeks showed', M, y, { size: 24, bold: true }); y += 10;
+    text('What two weeks showed', M, y, { size: 24, bold: true }); y += 10;
     [['Student', 'Acubins'], ['Student ID', '2026-0417'], ['Support Pact', `${fmt(D.start)} – ${fmt(D.end)}`], ['Generated', fmt(D.generated)]].forEach(([k, v], i) => {
       const x = M + (i % 2) * (CW / 2), yy = y + Math.floor(i / 2) * 11;
       text(k.toUpperCase(), x, yy, { size: 7, bold: true, color: MUT }); text(v, x, yy + 5, { size: 10.5 });

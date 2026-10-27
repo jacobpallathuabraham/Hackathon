@@ -20,7 +20,6 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const track = (id, v, m) => ERLY.track && ERLY.track(id, v, m);
 
-  const GENERIC = [['Before you start: what do you want to get out of this video? Hold that question in mind.', 'قبل أن تبدأ: ماذا تريد أن تستفيد من هذا الفيديو؟ احتفظ بهذا السؤال في ذهنك.'], ['Pause after each section and say the main point in one sentence — out loud if you can.', 'توقف بعد كل قسم وقل الفكرة الرئيسية في جملة — بصوت عالٍ إن أمكن.'], ['Slow the speed or turn on captions if it moves too fast. Going back once is normal.', 'أبطئ السرعة أو شغّل الترجمة إن كان سريعاً. العودة مرة واحدة أمر طبيعي.'], ['Afterwards: write three things you learned and one question you still have.', 'بعد ذلك: اكتب ثلاثة أشياء تعلّمتها وسؤالاً واحداً ما زال لديك.']];
   const LESSONS = [
     { id: 'Xb05CaG7TsQ', title: ['First law of thermodynamics & internal energy', 'القانون الأول للديناميكا الحرارية والطاقة الداخلية'], by: 'Khan Academy', course: ['MECH 210 · Week 4', 'MECH 210 · الأسبوع ٤'], mins: 18,
       notes: [['Energy is conserved: it can change form, but it isn’t created or destroyed.', 'الطاقة محفوظة: يمكن أن يتغير شكلها، لكنها لا تُستحدث ولا تفنى.'], ['Internal energy (U) is the total energy stored in a system’s particles.', 'الطاقة الداخلية (U) هي مجموع الطاقة المخزنة في جسيمات النظام.'], ['ΔU = Q − W: change in internal energy = heat added to the system − work done by the system. (Some books write + W for work done ON the system — same idea, different sign convention.)', 'ΔU = Q − W: التغير في الطاقة الداخلية = الحرارة المضافة للنظام − الشغل الذي يبذله النظام. (بعض الكتب تكتب + W للشغل المبذول على النظام — الفكرة نفسها باصطلاح إشارة مختلف.)'], ['Heat and work are ways energy crosses the boundary — they are not “stored” in the system.', 'الحرارة والشغل طريقتان لعبور الطاقة حدود النظام — وليستا «مخزنتين» فيه.']] },
@@ -29,22 +28,13 @@
     { id: 'arj7oStGLkU', title: ['Inside the mind of a master procrastinator', 'داخل عقل المماطل المحترف'], by: 'TED · Tim Urban', course: ['Wellbeing & focus', 'الرفاه والتركيز'], mins: 14,
       notes: [['Procrastination often comes from the brain choosing what’s easy and fun now over what matters later.', 'التسويف غالباً ينبع من اختيار الدماغ للسهل والممتع الآن على حساب المهم لاحقاً.'], ['Deadlines create urgency — but long-term goals without deadlines are where procrastination does the most damage.', 'المواعيد النهائية تخلق إلحاحاً — لكن الأهداف طويلة المدى بلا مواعيد هي حيث يضر التسويف أكثر.'], ['Tiny first steps and visible deadlines help — try ERLY’s Start-Ramp.', 'الخطوات الأولى الصغيرة والمواعيد الواضحة تساعد — جرّب منحدر البداية في إيرلي.']] },
     { id: 'qEoP-857sKc', title: ['Immersive Reader in Word', 'القارئ الشامل في وورد'], by: 'Microsoft Helps', course: ['Reading tools', 'أدوات القراءة'], mins: 2,
-      notes: [['Line focus, text spacing, column width and page colour make dense text easier to follow.', 'تركيز السطر وتباعد النص وعرض العمود ولون الصفحة تجعل النص الكثيف أسهل للمتابعة.'], ['Read Aloud highlights each word as it is spoken.', 'القراءة بصوت عالٍ تبرز كل كلمة أثناء نطقها.'], ['ERLY’s Reading Studio offers the same kinds of tools for course readings.', 'يوفر استوديو القراءة في إيرلي أدوات مشابهة لقراءات المقررات.']] },
-    // picked by the SAS team; content not previewed by ERLY, so the notes are general listening prompts
-    { id: 'Jd_T6CzWpHM', title: ['SAS pick · lesson 1', 'اختيار خدمات الطلبة · الدرس ١'], by: 'Picked by your SAS team', course: ['SAS picks', 'اختيارات خدمات الطلبة'], mins: null, pick: true,
-      notes: GENERIC },
-    { id: 'DNu4WiQaVTI', title: ['SAS pick · lesson 2', 'اختيار خدمات الطلبة · الدرس ٢'], by: 'Picked by your SAS team', course: ['SAS picks', 'اختيارات خدمات الطلبة'], mins: null, pick: true,
-      notes: GENERIC },
-    { id: 'cx13a2-unjE', title: ['SAS pick · lesson 3', 'اختيار خدمات الطلبة · الدرس ٣'], by: 'Picked by your SAS team', course: ['SAS picks', 'اختيارات خدمات الطلبة'], mins: null, pick: true,
-      notes: GENERIC },
-    { id: 'aUTxmxzzwyw', title: ['SAS pick · lesson 4', 'اختيار خدمات الطلبة · الدرس ٤'], by: 'Picked by your SAS team', course: ['SAS picks', 'اختيارات خدمات الطلبة'], mins: null, pick: true,
-      notes: GENERIC }
+      notes: [['Line focus, text spacing, column width and page colour make dense text easier to follow.', 'تركيز السطر وتباعد النص وعرض العمود ولون الصفحة تجعل النص الكثيف أسهل للمتابعة.'], ['Read Aloud highlights each word as it is spoken.', 'القراءة بصوت عالٍ تبرز كل كلمة أثناء نطقها.'], ['ERLY’s Reading Studio offers the same kinds of tools for course readings.', 'يوفر استوديو القراءة في إيرلي أدوات مشابهة لقراءات المقررات.']] }
   ];
 
   /* ---------------- grid ---------------- */
   function renderGrid() {
     grid.innerHTML = LESSONS.map((v, i) => `<button class="vid-card" data-vid="${v.id}" style="--i:${i}">
-      <span class="vid-card__th"><img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.display='none'"><span class="vid-card__play">${ICON('volume')}</span>${v.mins ? `<span class="vid-card__len mono">~${v.mins} min</span>` : ''}${v.pick ? `<span class="vid-card__pick mono">SAS</span>` : ''}</span>
+      <span class="vid-card__th"><img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.style.display='none'"><span class="vid-card__play">${ICON('volume')}</span>${v.mins ? `<span class="vid-card__len mono">~${v.mins} min</span>` : ''}</span>
       <span class="vid-card__b"><small class="mono">${esc(P(...v.course))}</small><b>${esc(P(...v.title))}</b><span>${esc(v.by)}</span></span>
     </button>`).join('');
   }

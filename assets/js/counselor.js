@@ -2,7 +2,7 @@
    book SAS and share their ERLY Evidence Pack. Every number on the page is
    derived from one caseload model, so the KPIs, charts, tables and drawers
    always agree. Records are synthetic, except an optional "Acubins (you)" row
-   built from the 28-day Support Pact run in this same browser. */
+   built from the 14-day Support Pact run in this same browser. */
 (function () {
   'use strict';
   const $ = (s, r = document) => r.querySelector(s);
@@ -10,7 +10,7 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const { CATS, LIST, SIGNALS } = window.ERLY_IND;
   const CK = Object.keys(CATS), DK = CK.filter(c => CATS[c].area !== 'support');
-  const DAYS = 28, CAL = 14, JUDGED = DAYS - CAL, EXAM = [22, 23, 24];
+  const DAYS = 14, CAL = 7, JUDGED = DAYS - CAL, EXAM = [11, 12];
 
   /* ---------- small helpers ---------- */
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('is-on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('is-on'), 2800); }
@@ -40,7 +40,7 @@
     strain: `<svg viewBox="0 0 300 150" class="illo"><rect x="50" y="44" width="170" height="70" rx="16" fill="none" stroke="var(--ink)" stroke-width="5"/><rect x="222" y="66" width="16" height="26" rx="4" fill="var(--ink)"/><rect x="62" y="56" width="50" height="46" rx="8" fill="var(--accent)" class="il-batt"/><path d="M140 26c8 10 8 18 0 26M164 18c12 14 12 28 0 42" fill="none" stroke="var(--s3)" stroke-width="4" stroke-linecap="round" class="il-zz"/></svg>`
   };
   const FEEL = {
-    reading: 'Profile A — re-reading, longer dwell and slower pace than their own normal, in both Arabic and English, through the watched fortnight.',
+    reading: 'Profile A — re-reading, longer dwell and slower pace than their own normal, in both Arabic and English, through the watched week.',
     executive: 'Profile B — 11th-hour spikes, abandoned submissions and late starts against their own baseline.',
     language: 'Reading friction on English pages only — the per-language baselines point to language load rather than a learning difference.',
     strain: 'Profile C — a sudden drop across almost every baseline at once. Route to a counsellor first; never tools.',
@@ -61,8 +61,8 @@
     { id: '2026-0461', name: 'Saeed Al Nuaimi', prog: 'Electrical Eng.', year: 1, status: 'plan', confirmed: 'ADHD (inattentive)', track: ['executive'], dw: [1.3, 1.2], gpa: [null, 3.2, 2.5, 3.0], on: [null, 76, 55, 84], plan: 3, accom: ['Distraction-reduced exam room', '48h extensions by arrangement', 'Focus-sprint coaching'], req: -70, ally: null, note: 'On-time submissions up 29 points since the plan started.' }
   ];
 
-  // Per-indicator "days above normal" over the 28-day pact — computed exactly as tracker.js does:
-  // days 1–14 are the blind fortnight, 15–28 are judged, and Exam Mode days never count.
+  // Per-indicator "days above normal" over the 14-day pact — computed exactly as tracker.js does:
+  // days 1–7 are the baseline week, 8–14 are judged, and Exam Mode days never count.
   function month(seed, areas, dw) {
     const hotAreas = areas.map(a => a === 'language' ? 'reading' : a);
     const boost = hotAreas.includes('reading') ? ['M03', 'M07', 'M09', 'Q05', 'P01'] : [];
@@ -102,7 +102,7 @@
   S.forEach((s, i) => {
     s.init = s.name.split(' ').map(w => w[0]).slice(0, 2).join('');
     s.hue = (i * 47) % 360;
-    s.via = s.track ? 'Support Pact · 28 days' : 'Self-referral';
+    s.via = s.track ? 'Support Pact · 14 days' : 'Self-referral';
     s.fx = s.track ? month(s.id, s.track, s.dw) : null;
     s.areas = s.fx ? s.fx.flagged : [];
   });
@@ -119,7 +119,7 @@
         const sm = t.summary;
         fx = { per: sm.per, daily: sm.daily.map(d => ({ n: d.n, exam: d.exam, byArea: d.byArea })), areas: sm.areas, flagged: sm.flaggedAreas, cats: sm.cats, catsN: sm.catsN, dims: sm.dims, strong: sm.strong, crisis: sm.crisis, signals: sm.signals, top3: sm.top3, englishOnly: sm.englishOnly, judged: sm.judged };
       }
-      S.unshift({ id: '2026-0417', name: 'Acubins (you)', init: 'A', hue: 18, prog: 'Demo student', year: 1, status: 'new', via: fx ? 'Support Pact · 28 days' : 'Self-referral', fx, areas: fx ? fx.flagged : [], track: fx ? fx.flagged : null, dw: null, gpa: [null, null, 3.5, 3.3], on: [null, null, 86, 80], req: 0, ally: t.pact && t.pact.confirmed && t.pact.ally ? t.pact.ally : null, live: true, note: fx ? 'Built from the 28-day Support Pact you just ran on the student page — live.' : 'Self-referral from the student page — live.' });
+      S.unshift({ id: '2026-0417', name: 'Acubins (you)', init: 'A', hue: 18, prog: 'Demo student', year: 1, status: 'new', via: fx ? 'Support Pact · 14 days' : 'Self-referral', fx, areas: fx ? fx.flagged : [], track: fx ? fx.flagged : null, dw: null, gpa: [null, null, 3.5, 3.3], on: [null, null, 86, 80], req: 0, ally: t.pact && t.pact.confirmed && t.pact.ally ? t.pact.ally : null, live: true, note: fx ? 'Built from the 14-day Support Pact you just ran on the student page — live.' : 'Self-referral from the student page — live.' });
     } catch (e) {}
   })();
 
@@ -460,7 +460,7 @@
   document.addEventListener('click', e => { const r = e.target.closest('.req, .agenda__w'); if (r) openDrawer(S.find(x => x.id === r.dataset.id)); });
 
   /* ---------- cohort ---------- */
-  const FUNNEL = [['Signed a Support Pact', 1840], ['Completed 28 days', 1612], ['Insight (3+ domains)', 236], ['Booked SAS', 118], ['Assessed', 87], ['Support plan', 63]];
+  const FUNNEL = [['Signed a Support Pact', 1840], ['Completed 14 days', 1612], ['Insight (3+ domains)', 236], ['Booked SAS', 118], ['Assessed', 87], ['Support plan', 63]];
   const LANG = [['Both languages', 37], ['English only', 41], ['Arabic only', 6], ['Not reading-related', 16]];
   const WEEKLY = { reading: [0, 0, 0, 6, 7, 8, 5, 9, 10, 9], language: [0, 0, 0, 5, 6, 6, 4, 7, 7, 8], executive: [0, 0, 0, 4, 5, 7, 4, 8, 9, 11], strain: [0, 0, 0, 3, 3, 4, 3, 5, 6, 7] };
   function renderCohort() {
@@ -541,13 +541,13 @@ ${s.name.replace(' (you)', '')} · ${s.id}`;
       </section>
       <section class="dr__sec">
         <div class="dr__h"><h4>Domains</h4><button class="tbl-btn" data-table="dr-cats">Table</button></div>
-        <p class="dcard__sub">Indicators per domain that stayed above this student's own normal on ≥ half of watched days (15–28) · a domain persists at 3+ · coloured by the profile it feeds</p>
+        <p class="dcard__sub">Indicators per domain that stayed above this student's own normal on ≥ half of watched days (8–14) · a domain persists at 3+ · coloured by the profile it feeds</p>
         <div class="chart-box chart-box--md"><canvas id="drCats" role="img" aria-label="Category scores"></canvas></div>
         <div class="chart-table" hidden></div>
       </section>
       <section class="dr__sec">
         <div class="dr__h"><h4>The month, day by day</h4><button class="tbl-btn" data-table="dr-days">Table</button></div>
-        <p class="dcard__sub">Indicators above normal each day, by profile · days 1–14 are the blind fortnight · exam days never count</p>
+        <p class="dcard__sub">Indicators above normal each day, by profile · days 1–7 are the baseline week · exam days never count</p>
         <div class="chart-box chart-box--md"><canvas id="drDays" role="img" aria-label="Stacked bars of indicators above normal per day"></canvas></div>
         <div class="chart-table" hidden></div>
       </section>
@@ -581,7 +581,7 @@ ${s.name.replace(' (you)', '')} · ${s.id}`;
         <button class="btn btn--ghost" id="drMsg">Message student</button>
         <button class="btn btn--quiet" id="drPack">Download Evidence Pack</button>
       </div>
-      <p class="small muted dr__priv">${ICON('lock')} Shared by the student. Raw tracking data was deleted on day 28 — this is the summary they approved.</p>`;
+      <p class="small muted dr__priv">${ICON('lock')} Shared by the student. Raw tracking data was deleted on day 14 — this is the summary they approved.</p>`;
     if (!drawer.classList.contains('is-open')) {
       drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false');
       scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add('is-on'));
@@ -601,7 +601,7 @@ ${s.name.replace(' (you)', '')} · ${s.id}`;
         const labels = fx.daily.map(d => 'Day ' + d.n);
         const PA = ['reading', 'executive', 'strain'];
         mk('dr-days', $('#drDays'), { type: 'bar', data: { labels, datasets: PA.map(a => ({ label: 'Profile ' + AREA[a].profile + ' · ' + AREA[a].label, data: fx.daily.map(d => (d.byArea || {})[a] || 0), backgroundColor: areaColor(a), borderColor: TH.surface, borderWidth: { top: 2, left: 0, right: 0, bottom: 0 }, borderSkipped: 'start', barPercentage: .78 })) },
-          options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, erlyMarks: { bands: [{ from: 0, to: CAL - 1, label: 'blind fortnight · learning normal' }, { from: EXAM[0] - 1, to: EXAM[EXAM.length - 1] - 1, label: 'exam' }] }, tooltip: { filter: it => it.raw > 0, callbacks: { title: it => it[0].label + (it[0].dataIndex < CAL ? ' · blind fortnight' : EXAM.includes(it[0].dataIndex + 1) ? ' · Exam Mode' : ''), footer: it => 'Total: ' + it.reduce((a, b) => a + b.raw, 0) + ' indicators' } } },
+          options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } }, erlyMarks: { bands: [{ from: 0, to: CAL - 1, label: 'baseline week · learning normal' }, { from: EXAM[0] - 1, to: EXAM[EXAM.length - 1] - 1, label: 'exam' }] }, tooltip: { filter: it => it.raw > 0, callbacks: { title: it => it[0].label + (it[0].dataIndex < CAL ? ' · baseline week' : EXAM.includes(it[0].dataIndex + 1) ? ' · Exam Mode' : ''), footer: it => 'Total: ' + it.reduce((a, b) => a + b.raw, 0) + ' indicators' } } },
             scales: { x: gridX({ stacked: true, ticks: { color: TH.muted, autoSkip: false, callback: (v, i) => (i + 1) % 7 === 1 || i === DAYS - 1 ? i + 1 : '' } }), y: gridY({ stacked: true, beginAtZero: true, ticks: { color: TH.muted, precision: 0 }, title: { display: true, text: 'indicators above normal', color: TH.muted } }) } } });
         setTable('dr-days', ['Day', ...PA.map(a => AREA[a].label), 'Total'], fx.daily.map(d => [d.n <= CAL ? `${d.n} (blind)` : d.exam ? `${d.n} (exam)` : d.n, ...PA.map(a => (d.byArea || {})[a] || 0), PA.reduce((x, a) => x + ((d.byArea || {})[a] || 0), 0)]));
       }
