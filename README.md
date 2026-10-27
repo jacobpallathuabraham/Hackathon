@@ -6,7 +6,9 @@ This is the website and interactive prototype for Team Rising Stars' entry in th
 
 ## Acubins University home (start here)
 
-`index.html` is the **Acubins University** website. It offers two ways in:
+`index.html` is the **Acubins University** website. It has an animated crest intro, a sunset-skyline hero, a programme finder with search and filters, admissions steps with a live deadline countdown, a scholarship estimator, research, a scroll-driven campus-life gallery, testimonials, news, events (add to calendar), an academic calendar, working student-service demos (library search, timetable, live shuttle times, dining, GPA calculator, health, careers, IT tickets, accessibility), an interactive campus map, site search (`/`), FAQ, contact and dark mode. All content is demo data.
+
+It offers two ways in:
 
 1. **University login** (university details login): asks for the university username and password (`University` / `2468`) and opens the Command Center (`university.html`). From there, one click opens the SAS Dashboard or the Faculty portal. Signing out returns to the university home.
 2. **Login for students, faculty and counselors**: opens `login.html`, the SAS sign-in page described below.

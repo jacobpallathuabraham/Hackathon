@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acubins University</title>
-  <meta name="description" content="Acubins University — university details login, and sign-in for students, faculty and counselors (Student Accessibility Services and ERLY).">
-  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+  <title>Acubins University · Abu Dhabi</title>
+  <meta name="description" content="Acubins University, Abu Dhabi — programmes, admissions, research, campus life and student services. Sign in to the university portal, or as a student, faculty member or counselor.">
+  <meta name="theme-color" content="#0E1B2C">
   <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/portal.css">
   <link rel="stylesheet" href="assets/css/accents.css">
   <link rel="stylesheet" href="assets/css/campus.css">
+  <link rel="stylesheet" href="assets/css/gateway.css">
   <script>
     (function () {
       try {
@@ -22,83 +22,282 @@
         if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (sessionStorage.getItem('acu-seen-intro')) document.documentElement.classList.add('no-intro');
       } catch (e) {}
     })();
   </script>
 </head>
-<body class="uni-body gw-body">
-  <canvas class="uni-fx" id="uniFx" aria-hidden="true"></canvas>
-  <header class="uni-top">
-    <a class="uni-brand" href="#top"><span class="campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>Acubins University</b><small>Abu Dhabi · UAE</small></span></a>
-    <nav class="uni-nav"><a href="#about">About</a><a href="#colleges">Colleges</a><a href="#access">Accessibility</a><a href="#logins">Sign in</a></nav>
-    <div class="uni-tools">
-      <div data-accent-picker></div>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
-        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      </button>
+<body class="acu">
+  <!-- intro: the crest draws itself, then the curtain lifts -->
+  <div class="acu-intro" id="intro" aria-hidden="true">
+    <div class="acu-intro__in">
+      <svg class="acu-crest" viewBox="0 0 120 140"><path class="c1" d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z"/><path class="c2" d="M30 58 60 42l30 16-30 16z"/><path class="c3" d="M40 66v18c10 10 30 10 40 0V66"/><path class="c4" d="M90 58v20"/><path class="c5" d="M38 104h44"/></svg>
+      <p class="acu-intro__name"><span>Acubins</span><span>University</span></p>
+      <p class="acu-intro__est mono">Est. 1998 · Abu Dhabi</p>
+    </div>
+    <i class="acu-intro__panel acu-intro__panel--a"></i><i class="acu-intro__panel acu-intro__panel--b"></i>
+  </div>
+  <div class="acu-progress" aria-hidden="true"><i id="acuProg"></i></div>
+
+  <div class="acu-util">
+    <div class="acu-wrap acu-util__in">
+      <span class="mono">Fall 2026 applications close <b id="utilDeadline">Nov 30</b></span>
+      <nav aria-label="Quick links"><a href="#admissions">Apply</a><a href="#map">Visit</a><a href="#events">Events</a><a href="#services">Student services</a><a href="#contact">Contact</a></nav>
+    </div>
+  </div>
+
+  <header class="acu-nav" id="acuNav">
+    <div class="acu-wrap acu-nav__in">
+      <a class="acu-brand" href="#top" aria-label="Acubins University home"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="var(--navy)"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b><small>University</small></span></a>
+      <nav class="acu-links" aria-label="Main">
+        <div class="acu-mega-wrap"><button class="acu-link" aria-expanded="false" data-mega>Study <span aria-hidden="true">▾</span></button>
+          <div class="acu-mega" hidden>
+            <div><p class="mono">Undergraduate</p><a href="#programs" data-filter="ug">Bachelor’s degrees</a><a href="#admissions">How to apply</a><a href="#scholar">Scholarships</a></div>
+            <div><p class="mono">Postgraduate</p><a href="#programs" data-filter="pg">Master’s degrees</a><a href="#programs" data-filter="phd">PhD programmes</a><a href="#programs">Executive education</a></div>
+            <div class="acu-mega__card"><b>Open Day · Nov 4</b><p>Tour the campus, meet professors and get same-day admission advice.</p><a href="#events" class="acu-btn acu-btn--gold acu-btn--sm">Register</a></div>
+          </div>
+        </div>
+        <a class="acu-link" href="#research">Research</a>
+        <a class="acu-link" href="#life">Campus life</a>
+        <a class="acu-link" href="#news">News</a>
+        <a class="acu-link" href="#services">Services</a>
+      </nav>
+      <div class="acu-nav__tools">
+        <button class="acu-icon" id="searchOpen" aria-label="Search the site"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <button class="acu-icon" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </button>
+        <a class="acu-btn acu-btn--gold acu-btn--sm acu-mag" href="#logins">Sign in</a>
+        <button class="acu-burger" id="burger" aria-label="Menu" aria-expanded="false"><i></i><i></i></button>
+      </div>
     </div>
   </header>
 
-  <main class="uni-main gw-main" id="top">
-    <section class="gw-hero">
-      <p class="mono uni-k"><i></i><span>Welcome to Acubins University</span></p>
-      <h1>Learning that <em>fits every learner.</em></h1>
-      <p class="uni-lead">Five colleges, one campus, and a student-support service built around consent and early help. Choose how you’d like to sign in.</p>
-    </section>
-
-    <section class="gw-choices" id="logins" aria-label="Sign-in options">
-      <article class="gw-card gw-card--uni" id="uniCard" style="--i:0">
-        <div class="gw-card__face">
-          <span class="gw-card__ic" id="gwIcUni"></span>
-          <p class="gw-card__k mono">Option 1</p>
-          <h2>University login</h2>
-          <p class="gw-card__sub">University details login — leadership and administration. Opens the Command Center: enrolment, attendance, support pipeline, and the SAS &amp; Faculty dashboards.</p>
-          <button class="btn btn--accent gw-card__go" id="uniOpen">University login <span aria-hidden="true">→</span></button>
+  <main id="top">
+    <!-- HERO -->
+    <section class="acu-hero" id="hero">
+      <div class="acu-hero__sky" aria-hidden="true"><i class="sun"></i><i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i><canvas id="heroFx"></canvas></div>
+      <svg class="acu-skyline" data-par="0.15" viewBox="0 0 1440 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <g class="sk-far"><path d="M0 300h80v-60h40v-30h30v30h50v80h60v-120h20v-20h40v20h20v120h70v-70h90v70h40v-150l40-30 40 30v150h60v-90h50v90h70v-60h40v-40h50v40h40v60h80v-110h30v-30h50v30h30v110h60v-80h80v80h120v60H0z"/></g>
+        <g class="sk-near"><path d="M0 360v-70h120v-40h70v40h40v-90h20l20-40 20 40h20v90h60v-60h140v-40h20v-30h80v30h20v40h140v60h50v-120l70-50 70 50v120h60v-70h110v-30h60v30h70v70h80v-50h110v50h40v70z"/><path class="dome" d="M640 240a60 60 0 0 1 120 0z"/><rect class="mast" x="696" y="150" width="8" height="30"/></g>
+        <g class="sk-win"></g>
+      </svg>
+      <div class="acu-wrap acu-hero__in">
+        <p class="acu-eyebrow"><i></i>Ranked top 5 in the UAE · QS 2026</p>
+        <h1 class="acu-h1"><span class="ln"><span>Where you become</span></span><span class="ln"><span class="acu-rot" id="heroRot"><b class="is-on">an engineer.</b><b>a doctor.</b><b>a designer.</b><b>a founder.</b><b>a leader.</b><b>yourself.</b></span></span></h1>
+        <p class="acu-lead">Five colleges, 120+ programmes and one of the region’s most supportive campuses — in the heart of Abu Dhabi.</p>
+        <div class="acu-hero__cta">
+          <a class="acu-btn acu-btn--gold acu-mag" href="#programs">Explore programmes <span aria-hidden="true">→</span></a>
+          <a class="acu-btn acu-btn--glass acu-mag" href="#logins">Sign in to the portal</a>
+          <button class="acu-play" id="tourBtn"><span><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>Virtual tour</button>
         </div>
-        <form class="gw-form" id="uniForm" autocomplete="off" novalidate hidden>
-          <button type="button" class="lcard__back" id="uniBack">← Back</button>
-          <div class="lcard__badge lcard__badge--university">University details login</div>
-          <h2>Sign in to Acubins University</h2>
-          <label class="fld"><span>Username</span><span class="fld__box"><span class="fld__ic" id="gwIcUser"></span><input id="uniUser" type="text" autocomplete="username" spellcheck="false" required></span></label>
-          <label class="fld"><span>Password</span><span class="fld__box"><span class="fld__ic" id="gwIcPass"></span><input id="uniPass" type="password" autocomplete="current-password" required><button type="button" class="fld__eye" id="uniEye" aria-label="Show password"></button></span></label>
-          <p class="lerr" id="uniErr" role="alert" hidden></p>
-          <button class="btn btn--accent btn--block lbtn" id="uniSignIn" type="submit"><span class="lbtn__txt">Sign in</span><span class="lbtn__spin" aria-hidden="true"></span><svg class="lbtn__ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <details class="demo-creds"><summary>Demo account</summary><p><b>University</b> · University / 2468</p></details>
-        </form>
-      </article>
+      </div>
+      <a class="acu-scroll" href="#logins" aria-label="Scroll down"><i></i></a>
+    </section>
 
-      <article class="gw-card gw-card--people" style="--i:1">
-        <div class="gw-card__face">
-          <span class="gw-card__ic gw-card__ic--teal" id="gwIcPeople"></span>
-          <p class="gw-card__k mono">Option 2</p>
-          <h2>Login for students, faculty and counselors</h2>
-          <p class="gw-card__sub">Students open ERLY and the Reading Studio, faculty open courses and attendance, and counselors open the Student Accessibility Services workspace.</p>
-          <div class="gw-roles"><span>Students</span><span>Faculty</span><span>Counselors (SAS)</span></div>
-          <a class="btn btn--accent gw-card__go" href="login.html" id="peopleGo">Go to sign-in <span aria-hidden="true">→</span></a>
+    <!-- QUICK LINKS -->
+    <section class="acu-quick acu-wrap" aria-label="Quick links">
+      <a href="#programs" class="rv"><span>01</span><b>Find a programme</b><small>120+ degrees</small></a>
+      <a href="#admissions" class="rv"><span>02</span><b>Apply</b><small>Deadline Nov 30</small></a>
+      <a href="#scholar" class="rv"><span>03</span><b>Scholarships</b><small>Up to 100%</small></a>
+      <a href="#map" class="rv"><span>04</span><b>Visit campus</b><small>Map & tours</small></a>
+    </section>
+
+    <!-- SIGN IN: the two options -->
+    <section class="acu-sec acu-signin" id="logins">
+      <div class="acu-wrap">
+        <header class="acu-head rv"><p class="acu-kick">Portals</p><h2 class="acu-h2">Sign in to Acubins</h2><p class="acu-sub">Two doors, depending on who you are.</p></header>
+        <div class="gw-choices">
+          <article class="gw-card gw-card--uni rv acu-tilt" id="uniCard" style="--i:0">
+            <div class="gw-card__face">
+              <span class="gw-card__ic" id="gwIcUni"></span>
+              <p class="gw-card__k mono">Option 1</p>
+              <h2>University login</h2>
+              <p class="gw-card__sub">University details login — leadership and administration. Opens the Command Center: enrolment, attendance, the support pipeline, and the SAS &amp; Faculty dashboards.</p>
+              <button class="btn btn--accent gw-card__go" id="uniOpen">University login <span aria-hidden="true">→</span></button>
+            </div>
+            <form class="gw-form" id="uniForm" autocomplete="off" novalidate hidden>
+              <button type="button" class="lcard__back" id="uniBack">← Back</button>
+              <div class="lcard__badge lcard__badge--university">University details login</div>
+              <h2>Sign in to Acubins University</h2>
+              <label class="fld"><span>Username</span><span class="fld__box"><span class="fld__ic" id="gwIcUser"></span><input id="uniUser" type="text" autocomplete="username" spellcheck="false" required></span></label>
+              <label class="fld"><span>Password</span><span class="fld__box"><span class="fld__ic" id="gwIcPass"></span><input id="uniPass" type="password" autocomplete="current-password" required><button type="button" class="fld__eye" id="uniEye" aria-label="Show password"></button></span></label>
+              <p class="lerr" id="uniErr" role="alert" hidden></p>
+              <button class="btn btn--accent btn--block lbtn" id="uniSignIn" type="submit"><span class="lbtn__txt">Sign in</span><span class="lbtn__spin" aria-hidden="true"></span><svg class="lbtn__ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <details class="demo-creds"><summary>Demo account</summary><p><b>University</b> · University / 2468</p></details>
+            </form>
+          </article>
+          <article class="gw-card gw-card--people rv acu-tilt" style="--i:1">
+            <div class="gw-card__face">
+              <span class="gw-card__ic gw-card__ic--teal" id="gwIcPeople"></span>
+              <p class="gw-card__k mono">Option 2</p>
+              <h2>Login for students, faculty and counselors</h2>
+              <p class="gw-card__sub">Students open ERLY and the Reading Studio, faculty open courses and attendance, and counselors open the Student Accessibility Services workspace.</p>
+              <div class="gw-roles"><span>Students</span><span>Faculty</span><span>Counselors (SAS)</span></div>
+              <a class="btn btn--accent gw-card__go" href="login.html" id="peopleGo">Go to sign-in <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
         </div>
-      </article>
+      </div>
     </section>
 
-    <section class="gw-about" id="about">
-      <div class="gw-stats" id="gwStats"></div>
+    <!-- MARQUEE -->
+    <section class="acu-marq" aria-label="Accreditations and partners"><div class="acu-marq__track" id="marq"></div></section>
+
+    <!-- STATS -->
+    <section class="acu-sec acu-stats-sec">
+      <div class="acu-wrap acu-stats" id="stats"></div>
     </section>
 
-    <section class="gw-cols" id="colleges"><h2>Our colleges</h2><div class="gw-colgrid" id="gwCols"></div></section>
+    <!-- PROGRAMMES -->
+    <section class="acu-sec" id="programs">
+      <div class="acu-wrap">
+        <header class="acu-head acu-head--row rv"><div><p class="acu-kick">Study</p><h2 class="acu-h2">Find your programme</h2></div>
+          <div class="acu-finder"><label class="acu-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="progQ" placeholder="Search programmes, e.g. AI, nursing…" aria-label="Search programmes"></label></div>
+        </header>
+        <div class="acu-tabs rv" role="tablist" id="progTabs"><button class="is-on" data-lv="all">All</button><button data-lv="ug">Undergraduate</button><button data-lv="pg">Master’s</button><button data-lv="phd">PhD</button><i class="acu-tabs__ink"></i></div>
+        <div class="acu-colfilter rv" id="colFilter"></div>
+        <div class="acu-progs" id="progGrid"></div>
+        <p class="acu-empty" id="progEmpty" hidden>No programmes match — try another word.</p>
+      </div>
+    </section>
 
-    <section class="gw-access" id="access">
-      <span class="gw-access__ic" id="gwIcAccess"></span>
-      <div><h2>Accessibility at Acubins</h2><p>People of Determination are part of every college. Student Accessibility Services offers confidential support, accommodations and ERLY — a consent-first study companion that helps students notice study friction early and decide for themselves what happens next. It never diagnoses.</p></div>
+    <!-- ADMISSIONS -->
+    <section class="acu-sec acu-adm" id="admissions">
+      <div class="acu-wrap">
+        <header class="acu-head rv"><p class="acu-kick acu-kick--light">Admissions · Fall 2026</p><h2 class="acu-h2">Five steps to Acubins</h2></header>
+        <div class="acu-countdown rv" id="countdown"></div>
+        <ol class="acu-steps" id="steps">
+          <li class="rv"><i>1</i><b>Create your account</b><p>Start an online application in ten minutes.</p></li>
+          <li class="rv"><i>2</i><b>Upload documents</b><p>Transcripts, ID, English score (IELTS 6.0 / EmSAT).</p></li>
+          <li class="rv"><i>3</i><b>Placement & interview</b><p>Online, or on campus during Open Day.</p></li>
+          <li class="rv"><i>4</i><b>Receive your offer</b><p>Decisions within two weeks, with scholarship.</p></li>
+          <li class="rv"><i>5</i><b>Enrol & orientation</b><p>Welcome week, buddy programme and SAS intake.</p></li>
+        </ol>
+        <div class="acu-adm__cta rv"><button class="acu-btn acu-btn--gold acu-mag" data-modal="apply">Start an application</button><a class="acu-btn acu-btn--glass" href="#scholar">Check scholarships</a></div>
+      </div>
+    </section>
+
+    <!-- SCHOLARSHIP ESTIMATOR -->
+    <section class="acu-sec" id="scholar">
+      <div class="acu-wrap acu-split">
+        <div class="rv"><p class="acu-kick">Scholarships</p><h2 class="acu-h2">Estimate your scholarship</h2><p class="acu-sub">Merit, sports, community and People of Determination awards — most students receive support.</p>
+          <ul class="acu-ticks"><li>Merit awards from 25% to 100%</li><li>Sibling and Emirati national discounts</li><li>Need-based grants reviewed every semester</li></ul></div>
+        <div class="acu-est rv">
+          <label><span>High-school average <b id="gpaV">92%</b></span><input type="range" id="gpa" min="70" max="100" value="92"></label>
+          <label><span>Programme</span><select id="estProg"></select></label>
+          <div class="acu-est__chk"><label><input type="checkbox" id="estSport"> Athlete</label><label><input type="checkbox" id="estSib"> Sibling at Acubins</label></div>
+          <div class="acu-est__out"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="52" id="estArc"/></svg><div><b id="estPct">50%</b><small>estimated award</small></div></div>
+          <p class="acu-est__fee">Tuition after award: <b id="estFee">AED 0</b> / year</p>
+          <p class="acu-fine">Estimate only — final awards are confirmed in your offer letter.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESEARCH -->
+    <section class="acu-sec acu-research" id="research">
+      <div class="acu-wrap">
+        <header class="acu-head rv"><p class="acu-kick acu-kick--light">Research</p><h2 class="acu-h2">Ideas that travel</h2><p class="acu-sub">Six research institutes working on the questions that matter to the region and the world.</p></header>
+        <div class="acu-rgrid">
+          <article class="rv" style="--h:200"><span>Energy & Water</span><b>Solar desalination</b><p>Low-energy membranes for coastal cities.</p></article>
+          <article class="rv" style="--h:15"><span>AI & Society</span><b>Inclusive AI</b><p>Assistive tools for learning differences, including ERLY.</p></article>
+          <article class="rv" style="--h:150"><span>Health</span><b>Precision medicine</b><p>Genomics for Gulf populations.</p></article>
+          <article class="rv" style="--h:45"><span>Space</span><b>Small satellites</b><p>Student-built CubeSats in low Earth orbit.</p></article>
+          <article class="rv" style="--h:270"><span>Cities</span><b>Smart mobility</b><p>Autonomous shuttles tested on campus.</p></article>
+          <article class="rv" style="--h:330"><span>Heritage</span><b>Digital archives</b><p>Preserving Emirati oral history in 3D and audio.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- CAMPUS LIFE: horizontal scroller -->
+    <section class="acu-life" id="life">
+      <div class="acu-life__pin">
+        <div class="acu-wrap acu-head rv"><p class="acu-kick">Campus life</p><h2 class="acu-h2">More than a degree</h2></div>
+        <div class="acu-life__track" id="lifeTrack"></div>
+      </div>
+    </section>
+
+    <!-- VOICES -->
+    <section class="acu-sec acu-voices">
+      <div class="acu-wrap">
+        <div class="acu-quote rv" id="quote"></div>
+        <div class="acu-quote__dots" id="quoteDots"></div>
+      </div>
+    </section>
+
+    <!-- NEWS + EVENTS -->
+    <section class="acu-sec" id="news">
+      <div class="acu-wrap">
+        <header class="acu-head acu-head--row rv"><div><p class="acu-kick">Newsroom</p><h2 class="acu-h2">Latest from Acubins</h2></div><div class="acu-tabs acu-tabs--sm" id="newsTabs"></div></header>
+        <div class="acu-news" id="newsGrid"></div>
+      </div>
+    </section>
+    <section class="acu-sec acu-events-sec" id="events">
+      <div class="acu-wrap acu-split acu-split--events">
+        <div class="rv"><p class="acu-kick">What’s on</p><h2 class="acu-h2">Upcoming events</h2><div class="acu-events" id="eventList"></div></div>
+        <aside class="acu-cal rv"><p class="acu-kick">Academic calendar 2026–27</p><ol id="acCal"></ol></aside>
+      </div>
+    </section>
+
+    <!-- STUDENT SERVICES -->
+    <section class="acu-sec acu-services" id="services">
+      <div class="acu-wrap">
+        <header class="acu-head rv"><p class="acu-kick">Student services</p><h2 class="acu-h2">Everything in one app</h2><p class="acu-sub">The same tools students use every day — try them here.</p></header>
+        <div class="acu-svc" id="svcGrid"></div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="acu-sec" id="map">
+      <div class="acu-wrap acu-split acu-split--map">
+        <div class="rv"><p class="acu-kick">Visit</p><h2 class="acu-h2">Explore the campus</h2><p class="acu-sub">Tap a building to see what’s inside. Guided tours run every weekday at 11:00 and 15:00.</p><div class="acu-mapinfo" id="mapInfo"><b>Select a building</b><p>Every building is step-free, with accessible entrances and lifts.</p></div></div>
+        <div class="acu-map rv" id="campusMap"></div>
+      </div>
+    </section>
+
+    <!-- FAQ + CONTACT -->
+    <section class="acu-sec" id="contact">
+      <div class="acu-wrap acu-split">
+        <div class="rv"><p class="acu-kick">Questions</p><h2 class="acu-h2">Frequently asked</h2>
+          <div class="acu-faq" id="faq">
+            <details><summary>When is the application deadline?</summary><p>Fall 2026 applications close on November 30. Spring applications close on December 15.</p></details>
+            <details><summary>What English score do I need?</summary><p>IELTS 6.0, TOEFL iBT 79 or EmSAT English 1250 for most undergraduate programmes.</p></details>
+            <details><summary>Is support available for students with learning differences?</summary><p>Yes. Student Accessibility Services offers confidential support, exam accommodations and ERLY, a consent-first study companion. Sign in through Option 2 to explore it.</p></details>
+            <details><summary>Can I live on campus?</summary><p>Yes — residences are available for first-year and international students, with separate halls for men and women.</p></details>
+            <details><summary>Do you offer transfer credit?</summary><p>Up to 50% of a degree can be transferred from accredited institutions.</p></details>
+          </div></div>
+        <form class="acu-contact rv" id="contactForm"><p class="acu-kick">Get in touch</p><h3>Talk to admissions</h3>
+          <label><span>Name</span><input required id="cName"></label><label><span>Email</span><input type="email" required id="cMail"></label>
+          <label><span>Interested in</span><select id="cProg"></select></label><label><span>Message</span><textarea rows="3" id="cMsg"></textarea></label>
+          <button class="acu-btn acu-btn--gold" type="submit">Send message</button><p class="acu-fine">Demo form — nothing is sent anywhere.</p></form>
+      </div>
     </section>
   </main>
 
-  <footer class="gw-foot"><span>© 2026 Acubins University · Demo environment</span><span>Privacy under UAE PDPL (Federal Decree-Law 45/2021)</span></footer>
+  <footer class="acu-foot">
+    <div class="acu-wrap acu-foot__in">
+      <div><a class="acu-brand acu-brand--light" href="#top"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="#fff"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b><small>University</small></span></a>
+        <p>Saadiyat Knowledge District, Abu Dhabi, UAE<br>+971 2 000 0000 · admissions@acubins.example</p>
+        <form class="acu-news-sub" id="subForm"><input type="email" placeholder="Your email for news" aria-label="Email for newsletter" required><button class="acu-btn acu-btn--gold acu-btn--sm">Subscribe</button></form></div>
+      <div><p class="mono">Study</p><a href="#programs">Programmes</a><a href="#admissions">Admissions</a><a href="#scholar">Scholarships</a><a href="#events">Open Day</a></div>
+      <div><p class="mono">Students</p><a href="login.html">Student sign-in</a><a href="#services">Services</a><a href="#life">Campus life</a><a href="#map">Campus map</a></div>
+      <div><p class="mono">University</p><a href="#research">Research</a><a href="#news">News</a><a href="#logins">University login</a><a href="#contact">Contact</a></div>
+    </div>
+    <div class="acu-wrap acu-foot__bar"><span>© 2026 Acubins University · Demo environment</span><span>Privacy under UAE PDPL (Federal Decree-Law 45/2021) · Accessibility statement</span></div>
+  </footer>
+
+  <button class="acu-top" id="toTop" aria-label="Back to top"><svg viewBox="0 0 24 24"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  <div class="acu-modal" id="modal" hidden><div class="acu-modal__scrim" data-close></div><div class="acu-modal__box" role="dialog" aria-modal="true" aria-labelledby="modalT"><button class="acu-icon acu-modal__x" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="modalBody"></div></div></div>
+  <div class="acu-search-ov" id="searchOv" hidden><div class="acu-search-ov__box"><input id="siteQ" placeholder="Search programmes, news, services…" aria-label="Search the site"><div id="siteRes"></div><p class="acu-fine">Esc to close</p></div></div>
+  <div class="acu-cursor" id="cursor" aria-hidden="true"></div>
 
   <div class="portal-warp" id="warp" aria-hidden="true"><div class="portal-warp__inner"><span class="portal-warp__logo" id="warpLogo"></span><p id="warpK">Acubins University</p><b id="warpT">Opening</b></div></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="assets/js/icons.js"></script>
-  <script src="assets/js/accent.js"></script>
   <script src="assets/js/campus-data.js"></script>
+  <script src="assets/js/fun.js"></script>
+  <script src="assets/js/gateway-data.js"></script>
   <script src="assets/js/gateway.js"></script>
 </body>
 </html>
