@@ -23,8 +23,14 @@
   const fresh = () => ({
     status: 'none', start: null, day: 0, consent: Object.fromEntries(CK.map(k => [k, true])), pattern: 'reading',
     pact: { ally: 'Sara', note: '' }, blueprint: {}, exam: true, pause: 0, live: {}, days: [], summary: null,
-    events: 0, ledger: {}, selfRef: false, helped: []
+    events: 0, ledger: {}, selfRef: false, helped: [], mode: 'demo', rdays: {}, pausedKeys: []
   });
+  const RT = window.ERLY_REAL;
+  const real = () => S.mode === 'real';
+  const now = () => Date.now();
+  const todayKey = () => RT.dateKey(now());
+  const realPaused = () => real() && (S.pausedKeys || []).includes(todayKey());
+  function bucket() { const k = todayKey(); return S.rdays[k] || (S.rdays[k] = { vals: {}, ck: null, events: 0 }); }
   let S;
   try { S = Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { S = fresh(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
@@ -34,16 +40,17 @@
   /* ---------- public API used by the Reading Studio ---------- */
   const LEDGER_OF = { V01: 'scroll', V04: 'line', V05: 'dwell', V02: 'zoom', V07: 'layout', V08: 'tts', U02: 'replay', U03: 'speed', M03: 'lookup', H01: 'tts', H07: 'tap', O07: 'summary', Q02: 'answer' };
   ERLY.track = (id, v = 1, mode = 'add') => {
-    const on = S.status === 'active' && !S.pause;
+    const on = ERLY.isTracking();
     const bag = on ? S.live : preview;
     bag[id] = mode === 'set' ? v : (bag[id] || 0) + v;
+    if (on && real()) { const b = bucket(); b.vals[id] = mode === 'set' ? v : (b.vals[id] || 0) + v; b.events++; }
     const k = LEDGER_OF[id];
     if (k && mode === 'add') { const L = on ? S.ledger : previewLedger; L[k] = (L[k] || 0) + 1; }
     if (on) { S.events++; save(); }
     renderLive();
   };
-  ERLY.liveValue = id => (S.status === 'active' ? S.live : preview)[id] || 0;
-  ERLY.isTracking = () => S.status === 'active' && !S.pause;
+  ERLY.liveValue = id => (S.status === 'active' ? (real() ? (S.rdays[todayKey()] || { vals: {} }).vals : S.live) : preview)[id] || 0;
+  ERLY.isTracking = () => S.status === 'active' && !S.pause && !realPaused();
   ERLY.getTrack = () => ({ ...S, DAYS, BLIND, CATS, LIST });
   ERLY.helped = (tool, ok) => { S.helped.push({ tool, ok, day: S.day }); S.helped = S.helped.slice(-30); save(); };
 
@@ -127,6 +134,12 @@
 
   /* ---------- actions ---------- */
   function start() {
+    if (real()) {
+      S.status = 'active'; S.start = new Date(now()).toISOString(); S.day = 1; S.days = []; S.summary = null; S.events = 0; S.pause = 0; S.rdays = {}; S.pausedKeys = []; S.live = {}; S.ledger = {};
+      bucket(); save(); render(); ERLY.emit('track', ERLY.getTrack());
+      ERLY.toast(T('Real tracking started. Day 1 is today — answer today’s check-in below.', 'بدأ التتبّع الحقيقي. اليوم هو اليوم الأول — أجب عن تسجيل اليوم أدناه.'));
+      return;
+    }
     S.status = 'active'; S.start = new Date().toISOString(); S.day = 0; S.days = []; S.summary = null; S.events = 0; S.pause = 0;
     Object.assign(S.live, preview); Object.assign(S.ledger, previewLedger);
     advance(1);
@@ -156,10 +169,12 @@
     }
     save(); render(); ERLY.emit('track', ERLY.getTrack());
   }
-  function stop() { const self = S.selfRef; S = fresh(); S.selfRef = self; S.status = 'stopped'; save(); render(); ERLY.emit('track', ERLY.getTrack()); ERLY.toast(T('Stopped. Everything was deleted.', 'توقف. حُذف كل شيء.')); }
-  function reset() { const self = S.selfRef; S = fresh(); S.selfRef = self; save(); render(); ERLY.emit('track', ERLY.getTrack()); }
-  function pause7() { S.pause = 7; save(); render(); ERLY.emit('track', ERLY.getTrack()); ERLY.toast(T('Paused for 7 days. Nothing is recorded until then.', 'تم الإيقاف المؤقت ٧ أيام. لن يُسجَّل شيء حتى ذلك الحين.')); }
-  ERLY.on('trackDemo', pattern => { const keep = { blueprint: S.blueprint, pact: S.pact, selfRef: S.selfRef }; S = Object.assign(fresh(), keep); S.pattern = pattern || 'reading'; S.status = 'active'; S.start = new Date().toISOString(); advance(DAYS); });
+  function stop() { const self = S.selfRef, md = S.mode; S = fresh(); S.selfRef = self; S.mode = md; S.status = 'stopped'; save(); render(); ERLY.emit('track', ERLY.getTrack()); ERLY.toast(T('Stopped. Everything was deleted.', 'توقف. حُذف كل شيء.')); }
+  function reset() { const self = S.selfRef, md = S.mode; S = fresh(); S.selfRef = self; S.mode = md; save(); render(); ERLY.emit('track', ERLY.getTrack()); }
+  function pause7() {
+    if (real()) { const st = new Date(S.start).getTime(), d = RT.dayIndex(st, now()); for (let i = 0; i < 7; i++) { const k = RT.keyForDay(st, d + i); if (!S.pausedKeys.includes(k)) S.pausedKeys.push(k); } save(); render(); ERLY.emit('track', ERLY.getTrack()); ERLY.toast(T('Paused for 7 days. Nothing is recorded and these days never count.', 'تم الإيقاف ٧ أيام. لا يُسجَّل شيء ولا تُحتسب هذه الأيام.')); return; }
+    S.pause = 7; save(); render(); ERLY.emit('track', ERLY.getTrack()); ERLY.toast(T('Paused for 7 days. Nothing is recorded until then.', 'تم الإيقاف المؤقت ٧ أيام. لن يُسجَّل شيء حتى ذلك الحين.')); }
+  ERLY.on('trackDemo', pattern => { const keep = { blueprint: S.blueprint, pact: S.pact, selfRef: S.selfRef }; S = Object.assign(fresh(), keep); S.mode = 'demo'; S.pattern = pattern || 'reading'; S.status = 'active'; S.start = new Date().toISOString(); advance(DAYS); });
   ERLY.on('selfRef', () => { S.selfRef = true; save(); });
   ERLY.on('pactConfirm', ok => { S.pact.confirmed = ok; save(); });
 
@@ -182,7 +197,169 @@
   function render() {
     if (!box) return;
     if (S.status === 'none' || S.status === 'stopped') return renderContract();
+    if (real()) { realSync(); return renderReal(); }
     renderActive();
+  }
+
+  /* ---------- real tracking: one calendar day at a time ---------- */
+  const startMs = () => new Date(S.start).getTime();
+  function realDays(upto) {
+    const out = [];
+    for (let n = 1; n <= upto; n++) {
+      const k = RT.keyForDay(startMs(), n), d = S.rdays[k];
+      out.push({ n, key: k, vals: d ? d.vals : {}, ck: d ? d.ck : null, events: d ? d.events : 0, paused: (S.pausedKeys || []).includes(k) });
+    }
+    return out;
+  }
+  function realSummary(j) {
+    const per = j.per.map(p => Object.assign({}, p, { live: !p.self }));
+    const cats = {}, catsN = {};
+    CK.forEach(c => { const inC = per.filter(p => p.cat === c && p.base != null); cats[c] = inC.length ? inC.reduce((x, p) => x + p.frac, 0) / inC.length : null; catsN[c] = inC.length && CATS[c].area !== 'support' ? inC.filter(p => p.persistent).length : null; });
+    const dims = CK.filter(c => catsN[c]);
+    const signals = SIGNALS.map(sg => { const ps = per.filter(p => sg.ind.includes(p.id)); return { id: sg.id, en: sg.en, ar: sg.ar, on: ps.filter(p => p.persistent).length >= 2, score: ps.length ? ps.reduce((x, p) => x + p.frac, 0) / ps.length : 0 }; });
+    return {
+      real: true, per, cats, catsN, dims, areas: j.areas, lang: { en: 0, ar: 0 }, englishOnly: false, flaggedAreas: j.flaggedAreas, strong: j.strong, crisis: j.crisis, signals,
+      top3: per.slice().sort((a, b) => b.frac - a.frac).slice(0, 3), judged: j.watched, fp: { lang: [], format: [], time: [], deadline: [] },
+      daily: j.daily.map(d => ({ n: d.n, exam: d.why === 'exam', paused: !!d.why, why: d.why, at: d.at, flags: d.flags, byCat: d.byCat, byArea: d.byArea })),
+      baseline: j.baseline, watched: j.watched, excluded: j.excluded, insufficient: j.insufficient
+    };
+  }
+  function realSync() {
+    if (S.status !== 'active' || !real()) return;
+    const d = RT.dayIndex(startMs(), now());
+    if (d === S.day && S.summary) return;
+    S.day = Math.min(DAYS, Math.max(1, d));
+    S.summary = realSummary(RT.judge(realDays(S.day), LIST));
+    if (d > DAYS) {
+      S.status = 'ended'; S.day = DAYS;
+      S.events = Object.values(S.rdays).reduce((a, b) => a + (b.events || 0), 0);
+      S.rdays = {}; S.live = {}; // raw daily counts deleted — only the summary stays
+      ERLY.toast(T('Day 28 is over — tracking switched itself off. Raw data deleted.', 'انتهى اليوم ٢٨ — توقف التتبّع تلقائياً. حُذفت البيانات الخام.'));
+    }
+    save(); ERLY.emit('track', ERLY.getTrack());
+  }
+  let ckDraft = null;
+  const ckQ = RT.QUESTIONS;
+  const hm = ms => { const m = Math.max(0, Math.round(ms / 6e4)); return (m >= 60 ? Math.floor(m / 60) + T('h ', ' س ') : '') + (m % 60) + T('m', ' د'); };
+  const clock = iso => new Date(iso).toLocaleTimeString(AR() ? 'ar-AE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+  const ansLabel = (q, v) => q.type === 'range' ? v + ' h' : q.type === 'scale' ? v + '/5' : T(...q.opts.find(o => o[0] === v).slice(1));
+
+  function checkinHTML() {
+    const b = S.rdays[todayKey()];
+    if (realPaused()) return `<div class="rck rck--done"><span class="rck__ic">${ICON('lock')}</span><div><b>${T('Paused today', 'متوقف مؤقتاً اليوم')}</b><p>${T('No check-in and no recording. Paused days never count.', 'لا تسجيل ولا قياس. الأيام المتوقفة لا تُحتسب أبداً.')}</p></div></div>`;
+    if (b && b.ck) return `<div class="rck rck--done"><span class="rck__ic">${ICON('check')}</span><div><b>${T('Today’s check-in is locked in', 'تسجيل اليوم مُثبّت')}</b><p class="mono">${T('Answered at', 'أُجيب في')} ${clock(b.ck.at)} · ${T('took', 'استغرق')} ${b.ck.secs}s${RT.exclusion({ ck: b.ck }) ? ' · <em>' + T('today won’t be judged', 'لن يُحكم على اليوم') + ': ' + T(...RT.REASONS[RT.exclusion({ ck: b.ck })]) + '</em>' : ''}</p>
+      <div class="rck__chips">${ckQ.map(q => `<span><small>${T(q.en, q.ar).replace(/\?$/, '')}</small><b>${ansLabel(q, b.ck[q.id])}</b></span>`).join('')}</div>
+      <p class="small muted">${T('Strict mode: answers can’t be edited and missed days can’t be filled in later.', 'الوضع الصارم: لا يمكن تعديل الإجابات ولا تعبئة الأيام الفائتة لاحقاً.')}</p></div></div>`;
+    if (!ckDraft) return `<div class="rck rck--open"><span class="rck__ic rck__ic--pulse">${ICON('calendar')}</span><div><b>${T('Today’s check-in · 8 quick questions', 'تسجيل اليوم · ٨ أسئلة سريعة')}</b><p>${T('About a minute. It is timed and stamped, and only today can be answered — that keeps the picture honest.', 'حوالي دقيقة. يُوقَّت ويُختم، ولا يمكن الإجابة إلا عن اليوم — هذا يُبقي الصورة صادقة.')}</p><button class="btn btn--accent btn--sm" data-ck="begin">${T('Start today’s check-in', 'ابدأ تسجيل اليوم')} →</button></div></div>`;
+    const i = ckDraft.i;
+    if (i >= ckQ.length) return `<div class="rck rck--step"><div class="rck__bar"><i style="width:100%"></i></div><b class="rck__q">${T('Lock in today’s answers?', 'تثبيت إجابات اليوم؟')}</b>
+      <div class="rck__chips">${ckQ.map((q, k) => `<button data-ck="goto" data-i="${k}"><small>${T(q.en, q.ar).replace(/\?$/, '')}</small><b>${ansLabel(q, ckDraft.a[q.id])}</b></button>`).join('')}</div>
+      <div class="row-btns"><button class="btn btn--accent btn--sm" data-ck="lock">${ICON('lock')} ${T('Lock in', 'ثبّت')}</button><span class="small muted mono" data-ck-timer></span></div></div>`;
+    const q = ckQ[i], v = ckDraft.a[q.id];
+    const body = q.type === 'range'
+      ? `<div class="rck__range"><input type="range" min="${q.min}" max="${q.max}" step="${q.step}" value="${v != null ? v : q.def}" data-ck-range aria-label="${T(q.en, q.ar)}"><output class="mono">${v != null ? v : q.def} h</output></div><button class="btn btn--sm btn--accent" data-ck="next">${T('Next', 'التالي')} →</button>`
+      : q.type === 'scale'
+        ? `<div class="rck__scale">${[1, 2, 3, 4, 5].map(n => `<button data-ck="ans" data-v="${n}" class="${v === n ? 'is-on' : ''}" style="--k:${n}">${n}</button>`).join('')}</div><div class="rck__ends small muted"><span>${T(...q.lo)}</span><span>${T(...q.hi)}</span></div>`
+        : `<div class="rck__opts">${q.opts.map(o => `<button data-ck="ans" data-v="${o[0]}" class="${v === o[0] ? 'is-on' : ''}">${T(o[1], o[2])}</button>`).join('')}</div>`;
+    return `<div class="rck rck--step" style="--n:${i}"><div class="rck__bar"><i style="width:${i / ckQ.length * 100}%"></i></div>
+      <div class="rck__head"><small class="mono">${i + 1} / ${ckQ.length}</small><span class="small muted mono" data-ck-timer></span>${i ? `<button class="link small" data-ck="back">← ${T('Back', 'رجوع')}</button>` : ''}</div>
+      <b class="rck__q">${T(q.en, q.ar)}</b>${body}</div>`;
+  }
+
+  function calHTML(sum) {
+    const st = startMs();
+    return `<div class="rcal">${Array.from({ length: DAYS }, (_, i) => {
+      const n = i + 1, k = RT.keyForDay(st, n), d = sum.daily.find(x => x.n === n), date = new Date(k + 'T12:00');
+      const lbl = date.toLocaleDateString(AR() ? 'ar-AE' : 'en-GB', { day: 'numeric', month: 'short' });
+      let cls = 'is-future', tip = T('Not yet', 'لم يأتِ بعد');
+      if (n === S.day && S.status === 'active') { cls = 'is-today'; tip = T('Today', 'اليوم'); }
+      else if (d && n < S.day || d && S.status === 'ended') {
+        if (d.why) { cls = 'is-out'; tip = T(...RT.REASONS[d.why]); }
+        else if (n <= BLIND) { cls = 'is-base'; tip = T('Clean day · learning your normal', 'يوم نظيف · تعلّم معدلك'); }
+        else { cls = 'is-watch'; tip = d.flags + ' ' + T('indicators above your normal', 'مؤشرات فوق معدلك'); }
+      }
+      return `<span class="rcal__d ${cls} ${n === BLIND + 1 ? 'is-split' : ''}" style="--i:${i};--f:${d && !d.why ? Math.min(1, d.flags / 4) : 0}" title="${T('Day', 'اليوم')} ${n} · ${lbl} · ${tip}"><b>${n}</b><small>${lbl}</small>${d && d.at ? `<em class="mono">${clock(d.at)}</em>` : ''}</span>`;
+    }).join('')}</div>`;
+  }
+
+  function renderReal() {
+    const sum = S.summary || realSummary(RT.judge(realDays(S.day), LIST));
+    const ended = S.status === 'ended';
+    const C = 2 * Math.PI * 52;
+    const end = new Date(startMs() + DAYS * 864e5);
+    const left = RT.msToMidnight(now());
+    const phase = realPaused() ? T('Paused today', 'متوقف اليوم') : S.day <= BLIND ? T('Learning your normal', 'تعلّم معدلك') : T('Watching for persistence', 'مراقبة الاستمرار');
+    const needB = Math.max(0, RT.MIN_BASE - sum.baseline);
+    box.innerHTML = `
+      <div class="live live--real">
+        <div class="live__count">
+          <svg viewBox="0 0 120 120" class="ring"><circle cx="60" cy="60" r="52" class="ring__bg"/><circle cx="60" cy="60" r="52" class="ring__fg" style="stroke-dasharray:${C};stroke-dashoffset:${C * (1 - S.day / DAYS)}"/></svg>
+          <div class="live__num"><b>${ended ? 0 : DAYS - S.day + 1}</b><span>${ended ? T('switched off', 'متوقف') : T('real days left', 'أيام حقيقية متبقية')}</span></div>
+        </div>
+        <div class="live__meta">
+          <p class="contract__k mono"><span class="mode-badge mode-badge--real"><i></i>${T('Real tracking', 'تتبّع حقيقي')}</span> ${ended ? T('Ended automatically after day 28', 'انتهى تلقائياً بعد اليوم ٢٨') : T('Day', 'اليوم') + ' ' + S.day + ' / 28 · ' + phase}</p>
+          <h3>${ended ? T('Done. It switched itself off.', 'انتهى. توقف من تلقاء نفسه.') : T('Ends on', 'ينتهي في') + ' ' + fmtDate(end)}</h3>
+          ${ended ? `<p class="deleted">${ICON('trash')} ${S.events.toLocaleString('en-US')} ${T('raw events deleted from this device. Summary kept.', 'حدثاً خاماً حُذفت من هذا الجهاز. بقي الملخص.')}</p>` : `<p class="rnext mono">${ICON('timer')} ${T('Day', 'اليوم')} ${S.day + 1 > DAYS ? T('28 closes', '٢٨ يُغلق') : S.day + 1 + ' ' + T('opens', 'يبدأ')} ${T('at midnight · in', 'عند منتصف الليل · بعد')} <b data-rnext>${hm(left)}</b></p>`}
+          <div class="rstat">
+            <span><b>${sum.baseline}</b><small>${T('clean baseline days', 'أيام أساس نظيفة')}${needB ? ' · ' + T(`need ${needB} more`, `يلزم ${needB} أخرى`) : ' ✓'}</small></span>
+            <span><b>${sum.watched}</b><small>${T('clean watched days', 'أيام مراقبة نظيفة')} · ${T('7+ needed', 'يلزم ٧+')}</small></span>
+            <span><b>${sum.excluded.filter(e => e.n < S.day || ended).length}</b><small>${T('days excluded', 'أيام مستبعدة')}</small></span>
+          </div>
+          <div class="row-btns">${ended
+            ? `<a href="#insight" class="btn btn--sm btn--accent">${T('See my insight', 'شاهد رؤيتي')}</a><button class="btn btn--sm btn--ghost" data-act="reset">${T('Start over', 'ابدأ من جديد')}</button>`
+            : `<span class="strict-note">${ICON('lock')} ${T('Strict mode · no simulating, no fast-forward, no back-filling', 'وضع صارم · لا محاكاة ولا تقديم ولا تعبئة لاحقة')}</span><button class="btn btn--sm btn--ghost" data-act="pause" ${realPaused() ? 'disabled' : ''}>${T('Pause 7 days', 'إيقاف ٧ أيام')}</button><button class="btn btn--sm btn--stop" data-act="stop">${T('Stop & delete', 'أوقف واحذف')}</button>`}</div>
+        </div>
+        ${ended ? '' : `<div class="rck-wrap" id="rck">${checkinHTML()}</div>`}
+        <div class="rcal-wrap"><div class="heat14__head"><p class="panel__h mono">${T('Your 28 real days', 'أيامك الثمانية والعشرون الحقيقية')}</p><span class="heat14__key small muted"><i class="rk rk--base"></i>${T('baseline', 'الأساس')}<i class="rk rk--watch"></i>${T('watched', 'مراقَب')}<i class="rk rk--out"></i>${T('excluded', 'مستبعد')}<i class="rk rk--today"></i>${T('today', 'اليوم')}</span></div>${calHTML(sum)}
+          <p class="small muted">${T('A day is excluded when it was missed, paused, after under 6 hours of sleep, or unusual (ill, travel, a life event, an exam). Excluded days never count for or against you. Only things actually measured on this device and your own answers are used — nothing is simulated.', 'يُستبعد اليوم إذا فات أو كان متوقفاً أو بعد نوم أقل من ٦ ساعات أو كان غير عادي (مرض، سفر، حدث، امتحان). الأيام المستبعدة لا تُحتسب لك أو عليك. لا يُستخدم إلا ما قيس فعلاً على هذا الجهاز وإجاباتك — لا شيء محاكى.')}</p></div>
+        ${ended ? realSumHTML(sum) : S.day > BLIND ? `<p class="rprov small">${ICON('eye')} ${T('Nothing is judged until day 28 is over — a pattern has to hold for the whole watched fortnight.', 'لا يُحكم على شيء قبل انتهاء اليوم ٢٨ — يجب أن يستمر النمط طوال أسبوعي المراقبة.')}</p>` : ''}
+      </div>
+      ${ledgerHTML()}
+      ${liveHTML()}
+      ${catalogueHTML(ended ? sum : null)}`;
+    tickTimer();
+  }
+
+  function realSumHTML(sum) {
+    const top = sum.per.filter(p => p.persistent).sort((a, b) => b.frac - a.frac);
+    const msg = sum.insufficient === 'baseline' ? T('Not enough clean days to learn your normal, so nothing was judged. That is the strict rule working — you can start a new pact any time.', 'لا أيام نظيفة كافية لتعلّم معدلك، لذا لم يُحكم على شيء. هذه هي القاعدة الصارمة — يمكنك بدء ميثاق جديد في أي وقت.')
+      : sum.insufficient === 'watch' ? T('Too few clean watched days to say anything either way.', 'أيام مراقبة نظيفة قليلة جداً للحكم بأي اتجاه.') : null;
+    return `<div class="live__sum">
+      <p class="panel__h mono">${T('Strict rule · an area needs 2+ indicators above your normal on half of 5+ clean days, at least one measured (not only self-report)', 'قاعدة صارمة · يحتاج المجال مؤشرين أو أكثر فوق معدلك في نصف ٥ أيام نظيفة أو أكثر، أحدها مقاس (لا تقرير ذاتي فقط)')}</p>
+      ${['reading', 'executive', 'strain'].map(a => `<div class="sum-row" style="--c:${AREA_C[a]}"><span>${T(...AREA_N[a])}</span><span class="sum-row__bar"><i style="width:${Math.round(sum.areas[a].score * 100)}%"></i></span><b class="mono">${sum.areas[a].persistent}/${sum.areas[a].n} ${T('persistent', 'مستمر')}</b></div>`).join('')}
+      ${top.length ? `<ul class="rtop">${top.map(p => `<li><span class="mono">${p.id}</span><b>${T(p.en, p.ar)}</b><em class="mono">${p.up}/${p.n} ${T('clean days', 'أيام نظيفة')}</em></li>`).join('')}</ul>` : ''}
+      <div class="sum-verdict ${sum.strong ? 'is-strong' : ''} ${sum.crisis ? 'is-crisis' : ''}">
+        <b>${msg || (sum.crisis ? T('Stress and low mood held on with everything else. Let’s get you a person, not a tool.', 'استمر التوتر وانخفاض المزاج مع كل شيء آخر. لنوصلك بإنسان، لا بأداة.') : sum.strong ? T('A pattern held through real, clean days — worth taking to SAS.', 'استمر نمط عبر أيام حقيقية نظيفة — يستحق أخذه إلى خدمات الطلبة.') : T('Nothing persisted strongly enough to flag.', 'لم يستمر شيء بما يكفي للتنبيه.'))}</b>
+        <span>${T('Not a diagnosis. SAS confirms with a professional assessment.', 'ليس تشخيصاً. تؤكد خدمات الطلبة ذلك بتقييم مهني.')}</span>
+        <a href="#handoff" class="btn btn--sm ${sum.strong ? 'btn--accent' : 'btn--ghost'}">${sum.crisis ? T('Talk to a counsellor', 'تحدّث مع مرشد') : sum.strong ? T('Take it to SAS', 'خذه إلى خدمات الطلبة') : T('Self-refer anyway', 'أحِل نفسك على أي حال')}</a>
+      </div></div>`;
+  }
+
+  function tickTimer() {
+    const el = $('[data-rnext]', box); if (el) el.textContent = hm(RT.msToMidnight(now()));
+    $$('[data-ck-timer]', box).forEach(t => { if (ckDraft) { const s = Math.round((now() - ckDraft.t0) / 1000); t.textContent = '⏱ ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); } });
+  }
+  setInterval(() => {
+    if (!real() || S.status !== 'active') return;
+    if (RT.dayIndex(startMs(), now()) !== S.day) { ckDraft = null; render(); } else tickTimer();
+  }, 1000);
+  function ckRender() { const w = $('#rck', box); if (w) { w.innerHTML = checkinHTML(); tickTimer(); } }
+  function ckClick(btn) {
+    const act = btn.dataset.ck;
+    if (act === 'begin') ckDraft = { i: 0, a: {}, t0: now() };
+    else if (act === 'ans') { const q = ckQ[ckDraft.i]; ckDraft.a[q.id] = q.type === 'scale' ? +btn.dataset.v : btn.dataset.v; btn.classList.add('is-on'); setTimeout(() => { ckDraft.i = ckDraft.back ? ckQ.length : ckDraft.i + 1; ckDraft.back = false; ckRender(); }, 220); return; }
+    else if (act === 'next') { const q = ckQ[ckDraft.i]; const r = $('[data-ck-range]', box); ckDraft.a[q.id] = +r.value; ckDraft.i = ckDraft.back ? ckQ.length : ckDraft.i + 1; ckDraft.back = false; }
+    else if (act === 'back') ckDraft.i = Math.max(0, ckDraft.i - 1);
+    else if (act === 'goto') { ckDraft.i = +btn.dataset.i; ckDraft.back = true; }
+    else if (act === 'lock') {
+      if (S.rdays[todayKey()] && S.rdays[todayKey()].ck) { ckDraft = null; return render(); }
+      const ck = Object.assign({}, ckDraft.a, { at: new Date(now()).toISOString(), secs: Math.max(1, Math.round((now() - ckDraft.t0) / 1000)) });
+      if (!RT.validCheckin(ck)) return ERLY.toast(T('Please answer every question.', 'يُرجى الإجابة عن كل سؤال.'));
+      bucket().ck = ck; ckDraft = null; S.summary = null; save(); render(); ERLY.emit('track', ERLY.getTrack());
+      if (window.FUN && FUN.confetti) FUN.confetti($('#rck', box) || box, 40);
+      return ERLY.toast(T('Locked in for today. See you tomorrow.', 'تم التثبيت لليوم. نراك غداً.'));
+    }
+    ckRender();
   }
 
   function renderContract() {
@@ -194,7 +371,7 @@
           <p class="contract__k mono">${S.status === 'stopped' ? T('Stopped · everything deleted', 'متوقف · حُذف كل شيء') : T('Support Pact · draft', 'ميثاق الدعم · مسودة')}</p>
           <h3>${T('Four weeks. Two to learn your normal, two to notice. Then it stops.', 'أربعة أسابيع. أسبوعان لتعلّم معدلك، وأسبوعان للملاحظة. ثم يتوقف.')}</h3>
           <ol class="pact__time">
-            <li><b>${T('Days 1–14', 'الأيام ١–١٤')}</b><span>${T('Blind fortnight — ERLY only learns your normal. Your tools work from day one.', 'أسبوعان أعميان — يتعلّم إيرلي معدلك فقط. أدواتك تعمل من اليوم الأول.')}</span></li>
+            <li><b>${real() ? fmtDate(new Date()) : T('Days 1–14', 'الأيام ١–١٤')}</b><span>${T('Blind fortnight — ERLY only learns your normal. Your tools work from day one.', 'أسبوعان أعميان — يتعلّم إيرلي معدلك فقط. أدواتك تعمل من اليوم الأول.')}</span></li>
             <li><b>${T('Days 15–28', 'الأيام ١٥–٢٨')}</b><span>${T('Watching — a day counts only if it is clearly above your own normal.', 'المراقبة — يُحتسب اليوم فقط إن كان أعلى بوضوح من معدلك.')}</span></li>
             <li><b>${T('Insight', 'الرؤية')}</b><span>${T('Only if 3+ of 10 domains persist for the whole fortnight. You see it first.', 'فقط إن استمرت ٣ مجالات أو أكثر من ١٠ طوال الأسبوعين. أنت ترى ذلك أولاً.')}</span></li>
             <li><b>${fmtDate(end)}</b><span>${T('Ends automatically. Raw data deleted; you keep a one-page picture.', 'ينتهي تلقائياً. تُحذف البيانات الخام؛ وتحتفظ بصورة من صفحة واحدة.')}</span></li>
@@ -202,6 +379,17 @@
           <p class="pact__never">${ICON('lock')} ${T('Never collected: what you type, camera, eye-tracking, emotion AI, location, grades.', 'لا يُجمع أبداً: ما تكتبه، الكاميرا، تتبّع العين، تحليل المشاعر، الموقع، الدرجات.')}</p>
         </div>
         <div class="pact__steps">
+          <div class="mode-switch" role="radiogroup" aria-label="${T('Tracking mode', 'وضع التتبّع')}">
+            <button role="radio" aria-checked="${!real()}" class="mode-switch__o ${!real() ? 'is-on' : ''}" data-mode="demo"><span>${ICON('rocket')}</span><b>${T('Demo', 'عرض تجريبي')}</b><small>${T('Simulated LMS feed · watch 28 days in seconds', 'بيانات محاكاة · شاهد ٢٨ يوماً في ثوانٍ')}</small></button>
+            <button role="radio" aria-checked="${real()}" class="mode-switch__o ${real() ? 'is-on' : ''}" data-mode="real"><span>${ICON('calendar')}</span><b>${T('Real tracking', 'تتبّع حقيقي')}</b><small>${T('One real day at a time · daily timed check-in · strict', 'يوم حقيقي في كل مرة · تسجيل يومي موقّت · صارم')}</small></button>
+            <i class="mode-switch__pill" style="--pos:${real() ? 1 : 0}"></i>
+          </div>
+          ${real() ? `<div class="real-rules">${ICON('lock')}<div><b>${T('Strict mode — for an actual student', 'الوضع الصارم — لطالب حقيقي')}</b><ul>
+            <li>${T('Day 1 is today. Days follow the real calendar — nothing can be simulated or skipped ahead.', 'اليوم الأول هو اليوم. تتبع الأيام التقويم الحقيقي — لا يمكن محاكاة شيء أو تخطّيه.')}</li>
+            <li>${T('Each day: an 8-question check-in (sleep, mood, stress, study time, what was hard), timed and stamped. Only today can be answered.', 'كل يوم: تسجيل من ٨ أسئلة (النوم، المزاج، التوتر، وقت الدراسة، ما كان صعباً)، موقّت ومختوم. لا يُجاب إلا عن اليوم.')}</li>
+            <li>${T('Only what this device actually measures in the Reading Studio, plus your answers, is used. LMS indicators are left out.', 'لا يُستخدم إلا ما يقيسه هذا الجهاز فعلاً في استوديو القراءة، مع إجاباتك. تُستبعد مؤشرات نظام التعلّم.')}</li>
+            <li>${T('Missed, paused, short-sleep (< 6 h) and unusual days are excluded. A baseline needs 7+ clean days.', 'تُستبعد الأيام الفائتة والمتوقفة وقصيرة النوم (أقل من ٦ ساعات) وغير العادية. يحتاج الأساس ٧ أيام نظيفة أو أكثر.')}</li>
+          </ul></div></div>` : ''}
           <section class="pstep">
             <header><span class="pstep__n">1</span><div><b>${T('What ERLY may notice', 'ما قد يلاحظه إيرلي')}</b><small>${T('10 domains · 100 indicators · metadata only', '١٠ مجالات · ١٠٠ مؤشر · بيانات وصفية فقط')}</small></div></header>
             <div class="dom-toggles">${CK.map(k => `<label class="dtog" style="--c:${CATS[k].color}"><input type="checkbox" data-cat="${k}" ${S.consent[k] ? 'checked' : ''}><span><i class="cat-ic cat-ic--sm">${ICON(CATS[k].icon)}</i>${catName(k)}</span></label>`).join('')}</div>
@@ -215,10 +403,10 @@
             <div class="bp__opts">${ALLIES.map(([v, en, ar]) => `<button class="bp__o ${(S.pact.ally || '') === v ? 'is-on' : ''}" data-ally="${v}">${T(en, ar)}</button>`).join('')}</div>
             <label class="switch-row"><span><b>${T('Exam Mode — sync my calendar', 'وضع الامتحانات — مزامنة تقويمي')}</b><small>${T('Exam-week spikes never count as a pattern', 'ارتفاعات أسابيع الامتحانات لا تُحتسب نمطاً أبداً')}</small></span><input type="checkbox" id="examMode" ${S.exam ? 'checked' : ''}><i></i></label>
           </section>
-          <label class="field demo-pattern"><span class="mono">${T('Demo · synthetic pattern for the LMS signals', 'عرض · نمط اصطناعي لإشارات نظام التعلّم')}</span>
-            <select id="pattern">${Object.entries(PNAMES).map(([v, n]) => `<option value="${v}" ${S.pattern === v ? 'selected' : ''}>${T(...n)}</option>`).join('')}</select></label>
+          ${real() ? '' : `<label class="field demo-pattern"><span class="mono">${T('Demo · synthetic pattern for the LMS signals', 'عرض · نمط اصطناعي لإشارات نظام التعلّم')}</span>
+            <select id="pattern">${Object.entries(PNAMES).map(([v, n]) => `<option value="${v}" ${S.pattern === v ? 'selected' : ''}>${T(...n)}</option>`).join('')}</select></label>`}
           <label class="check-row"><input type="checkbox" id="agree"><span>${T('I understand, and I can pause, stop or delete everything at any time.', 'أفهم ذلك، ويمكنني الإيقاف المؤقت أو الإيقاف أو حذف كل شيء في أي وقت.')}</span></label>
-          <button class="btn btn--accent btn--block" id="startTrack" disabled>${T('Sign the pact & start', 'وقّع الميثاق وابدأ')}</button>
+          <button class="btn btn--accent btn--block" id="startTrack" disabled>${real() ? T('Sign the pact & start real tracking today', 'وقّع الميثاق وابدأ التتبّع الحقيقي اليوم') : T('Sign the pact & start', 'وقّع الميثاق وابدأ')}</button>
         </div>
       </div>
       ${ledgerHTML()}
@@ -332,11 +520,13 @@
     </div>`;
   }
 
+  box && box.addEventListener('input', e => { if (e.target.dataset.ckRange != null) e.target.nextElementSibling.textContent = e.target.value + ' h'; });
   box && box.addEventListener('change', e => {
     if (e.target.dataset.cat) { S.consent[e.target.dataset.cat] = e.target.checked; save(); }
     if (e.target.id === 'agree') $('#startTrack').disabled = !e.target.checked;
     if (e.target.id === 'pattern') { S.pattern = e.target.value; save(); }
     if (e.target.id === 'examMode') { S.exam = e.target.checked; save(); }
+    if (e.target.dataset.ckRange != null) e.target.nextElementSibling.textContent = e.target.value + ' h';
   });
   box && box.addEventListener('click', e => {
     const head = e.target.closest('.catg__head');
@@ -354,6 +544,8 @@
     if (al) { S.pact.ally = al.dataset.ally; save(); $$('[data-ally]', box).forEach(b => b.classList.toggle('is-on', b === al)); ERLY.emit('pact', S.pact); return; }
     const pc = e.target.closest('[data-pact]');
     if (pc) { const ok = pc.dataset.pact === '1'; S.pact.confirmed = ok; save(); if (ok) track('H09'); $('#pactConfirm').innerHTML = `<span>${ICON('check')}</span><p>${ok ? T(`Done — ${S.pact.ally} gets the Support Playbook, never your data.`, `تم — يتلقى ${S.pact.ally} دليل الدعم، لا بياناتك أبداً.`) : T('No problem. Nobody was told anything.', 'لا مشكلة. لم يُخبر أحد بشيء.')}</p>`; ERLY.emit('pact', S.pact); return; }
+    const ckb = e.target.closest('[data-ck]'); if (ckb) return ckClick(ckb);
+    const md = e.target.closest('[data-mode]'); if (md) { S.mode = md.dataset.mode; save(); return render(); }
     const a = e.target.closest('[data-act]'); if (!a) return;
     ({ next: () => advance(1), ff: () => advance(DAYS), stop, reset, pause: pause7 })[a.dataset.act]();
   });
