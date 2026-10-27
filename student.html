@@ -20,6 +20,8 @@
   <link rel="stylesheet" href="assets/css/realtrack.css">
   <link rel="stylesheet" href="assets/css/hand.css">
   <link rel="stylesheet" href="assets/css/companion.css">
+  <link rel="stylesheet" href="assets/css/studio.css">
+  <link rel="stylesheet" href="assets/css/noor.css">
   <link rel="stylesheet" href="assets/css/checkins.css">
   <link rel="stylesheet" href="assets/css/videos.css">
   <script>
@@ -45,7 +47,7 @@
   <header class="nav" id="nav">
     <div class="nav__inner wrap">
       <a href="#top" class="brand" aria-label="ERLY home">
-        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg>
+        <img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
         <span class="brand__word brand__word--caps">ERLY</span><span class="brand__sub mono">by SAS</span>
       </a>
       <nav class="nav__links" aria-label="Primary">
@@ -209,14 +211,14 @@
         <div class="studio-cta__copy">
           <p class="kicker"><span class="num">04</span><span data-i18n="sc2.kicker">The Reading Studio</span></p>
           <h2 class="h2" data-i18n="sc2.title">Every reading, made to fit you.</h2>
-          <p class="section__lead" data-i18n="sc2.lead">Open any course PDF in a calm, full-screen studio. Change the font, size and spacing. Have it read aloud in the voice you like. Tap any highlighted word for its meaning in English and Arabic. Noor, the AI reading companion, is there when you want her: talk it through by text or voice, try settings in the Reading Lab, and keep a summary that’s yours. She only checks in if you allow it — and never diagnoses.</p>
+          <p class="section__lead" data-i18n="sc2.lead">Pick a reading from your course library, or open your own PDF — it is read on your device and never uploaded. Highlight in four colours and add notes, search, bookmark, listen in the voice you like, and revise with summaries, flip flashcards and quizzes. Noor, the AI reading companion, is there when you want her: talk it through by text or voice. She only checks in if you allow it — and never diagnoses.</p>
           <ul class="studio-cta__list">
-            <li><span id="scIc1"></span><span data-i18n="sc2.l1">5 fonts, size, line, letter and word spacing, line length, 6 page tints</span></li>
-            <li><span id="scIc2"></span><span data-i18n="sc2.l2">Read-aloud with any voice on your device, speed and pitch, word-by-word highlight</span></li>
-            <li><span id="scIc3"></span><span data-i18n="sc2.l3">Noor, the AI reading companion: voice or text chat, plain-word explanations, a Reading Lab and an editable summary — consent first, no labels</span></li>
-            <li><span id="scIc4"></span><span data-i18n="sc2.l4">Glossary with Arabic meanings, line focus, word anchors, a breathing break</span></li>
+            <li><span id="scIc1"></span><span data-i18n="sc2.l1">A library of readings from 6 courses, or open your own PDF or text file</span></li>
+            <li><span id="scIc2"></span><span data-i18n="sc2.l2">Highlights in 4 colours with notes, bookmarks, search, page thumbnails and time left</span></li>
+            <li><span id="scIc3"></span><span data-i18n="sc2.l3">Summaries, key terms, flip flashcards and quizzes — plus Noor to explain by text or voice</span></li>
+            <li><span id="scIc4"></span><span data-i18n="sc2.l4">Read-aloud in any voice, 5 fonts, 6 page tints, line focus, a focus timer and auto-scroll</span></li>
           </ul>
-          <button class="btn btn--accent btn--big" data-studio><span data-i18n="sc2.btn">Enter the Reading Studio</span><span id="scIc5"></span></button>
+          <button class="btn btn--accent btn--big" data-studio><span data-i18n="sc2.btn">Open the library</span><span id="scIc5"></span></button>
         </div>
         <button class="studio-cta__peek" data-studio aria-label="Open the Reading Studio">
           <span class="peek__page">
@@ -519,7 +521,7 @@
 
   <section class="close">
     <div class="wrap close__inner">
-      <svg class="close__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="11" r="1.6" fill="var(--accent)"/></svg>
+      <img class="close__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
       <h2 class="display display--close reveal" data-i18n="cl2.title">Notice sooner.<br><em>On your terms.</em></h2>
       <p class="lead reveal" data-i18n="cl.p">ERLY — Early Recognition of Learning barriers, on Your terms.</p>
       <div class="hero__cta reveal" style="justify-content:center">
@@ -534,7 +536,7 @@
   <footer class="foot">
     <div class="wrap foot__grid">
       <div>
-        <a href="#top" class="brand"><svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg><span class="brand__word brand__word--caps">ERLY</span></a>
+        <a href="#top" class="brand"><img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true"><span class="brand__word brand__word--caps">ERLY</span></a>
         <p class="muted small" data-i18n="ft.team">Team Rising Stars · UAE Hackathon 2026 · SAS early-identification challenge.</p>
         <p class="muted small" data-i18n="ft2.syn">A screening prototype, not a diagnostic tool. LMS-side indicators and cohort data are synthetic.</p>
       </div>
@@ -582,6 +584,7 @@
   <script src="assets/js/realtrack.js"></script>
   <script src="assets/js/handwriting.js"></script>
   <script src="assets/js/tracker.js"></script>
+  <script src="assets/js/study-tools.js"></script>
   <script src="assets/js/studio-content.js"></script>
   <script src="assets/js/studio.js"></script>
   <script src="assets/js/companion/config.js"></script>
@@ -589,6 +592,8 @@
   <script src="assets/js/companion/dialogue.js"></script>
   <script src="assets/js/companion/store.js"></script>
   <script src="assets/js/companion/llm.js"></script>
+  <script src="assets/js/companion/md.js"></script>
+  <script src="assets/js/companion/ai.js"></script>
   <script src="assets/js/companion/voice.js"></script>
   <script src="assets/js/companion/summary.js"></script>
   <script src="assets/js/companion/kb-extra.js"></script>

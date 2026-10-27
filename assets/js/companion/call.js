@@ -29,16 +29,21 @@
 
   function render() {
     el.setAttribute('aria-label', T('Voice conversation with Noor', 'محادثة صوتية مع نور'));
+    const brain = U.ai ? pick(U.ai.label().en, U.ai.label().ar) : '';
     el.innerHTML = `
       <div class="ncall__bg" aria-hidden="true"><i></i><i></i><i></i></div>
       <header class="ncall__top">
-        <span class="ncall__live"><i></i>${T('Voice conversation', 'محادثة صوتية')}</span>
-        <span class="ncall__mode">${U.llm.active().simulated ? T('Demo · built-in knowledge', 'عرض · معرفة مدمجة') : T('AI model connected', 'نموذج ذكاء اصطناعي متصل')}</span>
+        <span class="ncall__live"><i></i>${T('Voice · Noor', 'صوت · نور')}</span>
+        <div class="ncall__seg" role="group" aria-label="${T('Conversation style', 'أسلوب المحادثة')}">
+          <button type="button" data-m="care" aria-pressed="${C.callMode !== 'chat'}">${ICON('stetho')} ${T('Check-in', 'جلسة اطمئنان')}</button>
+          <button type="button" data-m="chat" aria-pressed="${C.callMode === 'chat'}">${ICON('sparkle')} ${T('Ask anything', 'اسأل أي شيء')}</button>
+        </div>
+        <span class="ncall__mode">${esc(brain)}</span>
       </header>
       <main class="ncall__main">
         <button type="button" class="ncall__orb" id="ncOrb" aria-label="${T('Tap to interrupt Noor or to talk', 'انقر لمقاطعة نور أو للتحدث')}">
           <span class="ncall__ring"></span><span class="ncall__ring"></span><span class="ncall__ring"></span>
-          <span class="ncall__face"><i class="ncall__eye"></i><i class="ncall__eye"></i><i class="ncall__mouth"></i></span>
+          <span class="nblob" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>
         </button>
         <p class="ncall__state" id="ncState" aria-live="polite"></p>
         <div class="ncall__caps">
@@ -49,18 +54,28 @@
         <div class="ncall__consent" id="ncConsent" hidden></div>
       </main>
       <footer class="ncall__bar">
-        <label class="ncall__barge"><input type="checkbox" id="ncBarge" ${st.bargeIn ? 'checked' : ''}><span>${T('Interrupt by talking (best with headphones)', 'المقاطعة بالكلام (الأفضل مع سماعات)')}</span></label>
         <div class="ncall__btns">
           <button type="button" class="ncall__btn" id="ncMute" aria-pressed="false" aria-label="${T('Pause listening', 'إيقاف الاستماع مؤقتاً')}">${MIC_ICON}</button>
-          <button type="button" class="ncall__btn ncall__btn--end" id="ncEnd" aria-label="${T('End the conversation', 'إنهاء المحادثة')}">${END_ICON}</button>
+          <button type="button" class="ncall__btn ncall__btn--end" id="ncEnd" aria-label="${T('End the conversation', 'إنهاء المحادثة')}">${ICON('x')}</button>
           <button type="button" class="ncall__btn" id="ncType" aria-label="${T('Switch to typing', 'التحول إلى الكتابة')}">${ICON('text')}</button>
         </div>
+        <label class="ncall__barge"><input type="checkbox" id="ncBarge" ${st.bargeIn ? 'checked' : ''}><span>${T('Interrupt by talking (best with headphones)', 'المقاطعة بالكلام (الأفضل مع سماعات)')}</span></label>
+        <p class="ncall__fine">${T('Turn-by-turn voice: what you say becomes text, Noor answers, then reads it aloud. Not a real-time voice model, and not a diagnosis. No audio is recorded.', 'صوت بالتناوب: يتحول كلامك إلى نص، تجيب نور ثم تقرأ الإجابة. ليس نموذجاً صوتياً فورياً، وليس تشخيصاً. لا يُسجَّل أي صوت.')}</p>
       </footer>`;
     el.querySelector('#ncOrb').onclick = interrupt;
     el.querySelector('#ncEnd').onclick = end;
     el.querySelector('#ncType').onclick = () => { end(); C.open('chat'); };
     el.querySelector('#ncMute').onclick = toggleMute;
     el.querySelector('#ncBarge').onchange = e => { st.bargeIn = e.target.checked; };
+    el.querySelector('.ncall__seg').onclick = e => {
+      const b = e.target.closest('[data-m]'); if (!b || C.callMode === b.dataset.m) return;
+      C.callMode = b.dataset.m;
+      el.querySelectorAll('.ncall__seg [data-m]').forEach(x => x.setAttribute('aria-pressed', x === b));
+      st.queue = []; v.stop(); st.speaking = false;
+      const line = C.callMode === 'chat' ? pick('Sure — ask me anything at all: a topic, a plan, an idea.', 'بالتأكيد — اسألني أي شيء: موضوع، أو خطة، أو فكرة.') : pick('Okay, let’s slow down. This is just a quiet check-in — what has been feeling hard lately?', 'حسناً، لنهدأ قليلاً. هذه مجرد جلسة اطمئنان — ما الذي كان صعباً عليك مؤخراً؟');
+      U.bubble('ai', line, { text: true });
+      enqueue(line);
+    };
   }
   const MIC_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
   const END_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5c5-4.6 13-4.6 18 0l-2.3 2.6-3.6-1.6v-2.6a9.6 9.6 0 0 0-6.2 0v2.6l-3.6 1.6z" fill="currentColor"/></svg>';
@@ -105,7 +120,7 @@
   }
   async function begin() {
     if (v.supported.stt && U.store.consent('mic')) meter();
-    const hello = pick('Hi! I’m listening. You can ask me anything, or tell me what’s been feeling hard lately — reading, lectures, focus, exams, anything.', 'أهلاً! أنا أستمع. يمكنك سؤالي أي شيء، أو إخباري بما كان صعباً مؤخراً — القراءة أو المحاضرات أو التركيز أو الاختبارات، أي شيء.');
+    const hello = C.callMode === 'chat' ? pick('Hi! I’m listening — ask me anything.', 'أهلاً! أنا أستمع — اسألني أي شيء.') : pick('Hi! I’m listening. You can ask me anything, or tell me what’s been feeling hard lately — reading, lectures, focus, exams, anything.', 'أهلاً! أنا أستمع. يمكنك سؤالي أي شيء، أو إخباري بما كان صعباً مؤخراً — القراءة أو المحاضرات أو التركيز أو الاختبارات، أي شيء.');
     U.bubble('ai', hello, { text: true });
     enqueue(hello);
   }
@@ -128,6 +143,8 @@
   /* ---------------- Noor speaking ---------------- */
   ERLY.on('noor:said', ({ text, speak }) => { if (st.on && speak !== false && text) enqueue(text); });
   ERLY.on('noor:chips', ({ list, pick: choose }) => { if (st.on) showChips(list, choose); });
+  // an AI reply finished: if nothing is left to say, start listening again
+  ERLY.on('noor:turn-end', () => { if (st.on && !st.speaking && !st.queue.length) afterSpeaking(); });
   function enqueue(text) {
     st.queue.push(String(text).replace(/<[^>]+>/g, ' '));
     clearTimeout(st.idleT);
@@ -230,5 +247,6 @@
     if (st.ac) try { st.ac.close(); } catch (e) { /* ignore */ }
     st.stream = null; st.ac = null; el.style.setProperty('--lvl', 0);
   }
+  C.callMode = 'care';
   C.call = { start, end, active: () => st.on };
 })();

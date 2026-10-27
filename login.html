@@ -19,7 +19,7 @@
     (function () {
       try {
         if (document.referrer && new URL(document.referrer).origin === location.origin) return;
-        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1 };
+        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1, 'erly-ai-v1': 1 };
         Object.keys(localStorage).forEach(function (k) { if (!keep[k] && /^(erly-|acubins-)/.test(k)) localStorage.removeItem(k); });
         ['acubins-role', 'acubins-portal-warp', 'erly-warp'].forEach(function (k) { sessionStorage.removeItem(k); });
       } catch (e) {}

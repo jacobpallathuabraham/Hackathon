@@ -1658,3 +1658,10 @@ button.hc:hover { transform: scale(1.12); color: var(--ink); z-index: 1; positio
 .ins-feel__c.is-wide .ins-illo { grid-row: span 4; margin: 0; }
 @media (max-width: 760px) { .ins-feel__c.is-wide { grid-template-columns: 1fr; } .ins-feel__c.is-wide .ins-illo { grid-row: auto; margin-bottom: 14px; } }
 .pdf__fig svg, .illo { direction: ltr; }
+
+/* ERLY emblem — sunrise over an open book */
+.erly-mark { display: block; border-radius: 27%; box-shadow: 0 4px 14px -6px rgba(26, 23, 69, .55); transition: transform .5s cubic-bezier(.2, .9, .3, 1.4), box-shadow .3s; }
+.brand:hover .erly-mark { transform: rotate(-6deg) scale(1.08); box-shadow: 0 8px 20px -6px rgba(240, 106, 63, .55); }
+.close__mark.erly-mark { width: 72px; height: 72px; animation: erlyRise 3.6s ease-in-out infinite; }
+@keyframes erlyRise { 50% { transform: translateY(-5px); box-shadow: 0 14px 26px -10px rgba(240, 106, 63, .6); } }
+@media (prefers-reduced-motion: reduce) { .close__mark.erly-mark { animation: none; } }

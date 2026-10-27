@@ -28,12 +28,12 @@
   const MAX_ANSWER = 600;
 
   // strip things that could identify the student before anything leaves the device
-  function redact(text) {
+  function redact(text, max) {
     return String(text || '')
       .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]')
       .replace(/\+?\d[\d\s-]{7,}\d/g, '[number]')
       .replace(/\b\d{6,}\b/g, '[number]')
-      .slice(0, MAX_ANSWER);
+      .slice(0, max || MAX_ANSWER);
   }
 
   function validate(out, allowed) {
@@ -58,13 +58,13 @@
       // the student's (redacted) answer, the allowed intents and the UI language.
       payloadFor(req) { return { question: String(req.question || '').slice(0, 400), answer: redact(req.answer), allowed: req.allowed, lang: req.lang === 'ar' ? 'ar' : 'en' }; },
       // knowledge chat: the student's question (redacted) + ERLY's own reference text for grounding
-      chatPayload(req) { return { mode: 'chat', question: redact(req.question), context: String(req.context || '').slice(0, 3000), history: (req.history || []).slice(-6).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', text: redact(h.text).slice(0, 400) })), lang: req.lang === 'ar' ? 'ar' : 'en' }; },
-      async chat(req) { return this.post(this.chatPayload(req)); },
+      chatPayload(req) { return { mode: 'chat', question: redact(req.question, 2000), context: String(req.context || '').slice(0, 3500), history: (req.history || []).slice(-8).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', text: redact(h.text, 1200) })), lang: req.lang === 'ar' ? 'ar' : 'en', voice: !!req.voice }; },
+      async chat(req) { return this.post(this.chatPayload(req), Math.max(timeoutMs, 30000)); },
       async interpret(req) { return this.post(this.payloadFor(req)); },
-      async post(payload) {
+      async post(payload, ms) {
         if (!fetchFn) throw new Error('no-fetch');
         const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const t = setTimeout(() => ctrl && ctrl.abort(), timeoutMs);
+        const t = setTimeout(() => ctrl && ctrl.abort(), ms || timeoutMs);
         try {
           const r = await fetchFn(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: ctrl ? ctrl.signal : undefined, credentials: 'omit' });
           if (!r.ok) throw new Error('http-' + r.status);
@@ -119,7 +119,7 @@
   function validateReply(r) {
     if (typeof r !== 'string') return '';
     const t = r.trim();
-    if (!t || t.length > 1500 || VERDICT.test(t) || /<script|<iframe|javascript:/i.test(t)) return '';
+    if (!t || t.length > 6000 || VERDICT.test(t) || /<script|<iframe|javascript:/i.test(t)) return '';
     return t.replace(/<[^>]+>/g, '');
   }
   return { create, validate, validateReply, redact, BANNED };

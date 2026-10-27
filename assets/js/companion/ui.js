@@ -35,6 +35,15 @@
   /* ---------------- state ---------------- */
   let cfg = S.config(store.thresholds());
   const llm = window.ERLY_LLM.create({ endpoint: (window.ERLY_AI_CONFIG || {}).endpoint || '', getConsent: () => store.consent('llm') });
+  // Noor's brain: built-in by default; on-device or cloud AI only when the student turns it on (ai.js)
+  const ai = window.ERLY_AI ? window.ERLY_AI.create({ cloud: {
+    configured: () => llm.configured, consent: () => store.consent('llm'),
+    chat: async (messages, o) => {
+      const sys = messages[0].content, last = messages[messages.length - 1].content;
+      const r = await llm.chat({ question: last, context: sys.split('\n\n').slice(1).join('\n\n').slice(0, 3000), history: messages.slice(1, -1).map(m => ({ role: m.role, text: m.content })), lang: lang(), voice: !!o.voice });
+      return r.reply || '';
+    } } }) : null;
+  let generating = null; // { stop } while a reply is being written
   let status = 'idle';
   const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
@@ -70,15 +79,15 @@
 
   const orb = (cls = '') => `<span class="cmp-orb ${cls}" aria-hidden="true"><i></i><i></i><i></i></span>`;
   function renderShell() {
-    launch.innerHTML = `${orb()}<span class="cmp-launch__t"><b>Noor</b><small>${T('AI reading companion', 'رفيقة القراءة الذكية')}</small></span><span class="cmp-launch__dot" aria-hidden="true"></span>`;
+    launch.innerHTML = `${orb()}<span class="cmp-launch__t"><b>Noor</b><small>${T('AI study companion', 'رفيقة الدراسة الذكية')}</small></span><span class="cmp-launch__dot" aria-hidden="true"></span>`;
     launch.setAttribute('aria-label', T('Open Noor, the AI reading companion', 'افتح نور، رفيقة القراءة الذكية'));
     panel.setAttribute('aria-label', T('Noor — ERLY AI reading companion', 'نور — رفيقة القراءة الذكية من إيرلي'));
-    const mode = llm.configured && store.consent('llm') ? T('connected to an external AI model', 'متصلة بنموذج ذكاء اصطناعي خارجي') : T('demo mode · rule-based, simulated replies', 'وضع العرض · ردود محاكاة قائمة على القواعد');
     panel.innerHTML = `
       <header class="cmp__head">
         ${orb('cmp-orb--lg')}
-        <div class="cmp__title"><b>Noor</b><small>${T('AI reading companion — not a doctor', 'رفيقة قراءة بالذكاء الاصطناعي — ليست طبيبة')}</small><span class="cmp__mode" id="cmpMode">${mode}</span></div>
+        <div class="cmp__title"><b>Noor</b><small>${T('AI study companion · not a doctor', 'رفيقة دراسة ذكية · ليست طبيبة')}</small><button type="button" class="cmp__mode" id="cmpMode" aria-haspopup="dialog" title="${T('Choose Noor’s brain', 'اختر عقل نور')}">${modeHTML()}</button></div>
         <span class="cmp__status" id="cmpStatus" data-s="idle"><i></i><span></span></span>
+        <button class="icon-btn cmp__x cmp__wide" id="cmpWide" type="button" aria-pressed="false" aria-label="${T('Expand chat', 'توسيع المحادثة')}" title="${T('Expand', 'توسيع')}">${ICON('expand')}</button>
         <button class="icon-btn cmp__x cmp__call" id="cmpCall" type="button" aria-label="${T('Talk to Noor by voice', 'تحدث مع نور بالصوت')}" title="${T('Talk to Noor by voice', 'تحدث مع نور بالصوت')}">${ICON('headphones')}</button>
         <button class="icon-btn cmp__x" id="cmpClose" type="button" aria-label="${T('Close companion', 'إغلاق الرفيقة')}">${ICON('x')}</button>
       </header>
@@ -104,12 +113,22 @@
               <button type="button" class="btn btn--xs btn--ghost" id="cmpVoiceTry">${ICON('volume')} ${T('Hear it', 'استمع')}</button>
               <p class="muted cmp-small" id="cmpVoiceHint"></p>
             </div>
-            <form class="cmp__input" id="cmpForm" autocomplete="off">
+            <div class="cmp__attach" id="cmpAttach" hidden></div>
+            <form class="cmp__input cmp__input--v2" id="cmpForm" autocomplete="off">
+              <button type="button" class="cmp__plus" id="cmpPlus" aria-expanded="false" aria-controls="cmpPlusMenu" aria-label="${T('More options', 'خيارات أخرى')}">${ICON('plus')}</button>
+              <label class="sr-only" for="cmpText">${T('Message Noor', 'راسل نور')}</label>
+              <textarea id="cmpText" rows="1" maxlength="2000" enterkeyhint="send" placeholder="${T('Ask Noor anything…', 'اسأل نور أي شيء…')}"></textarea>
               <button type="button" class="cmp__mic" id="cmpMic" aria-pressed="false">${MIC}<span class="cmp__micring" aria-hidden="true"></span></button>
-              <label class="sr-only" for="cmpText">${T('Type a message to Noor', 'اكتب رسالة إلى نور')}</label>
-              <input id="cmpText" type="text" maxlength="600" placeholder="${T('Type, or tap the mic…', 'اكتب، أو اضغط على الميكروفون…')}">
-              <button type="submit" class="cmp__send" aria-label="${T('Send', 'إرسال')}">${SEND}</button>
+              <button type="button" class="cmp__voice" id="cmpVoice" aria-label="${T('Talk to Noor — voice mode', 'تحدث مع نور — الوضع الصوتي')}" title="${T('Voice mode', 'الوضع الصوتي')}"><span class="cmp__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+              <button type="submit" class="cmp__send" id="cmpSend" aria-label="${T('Send', 'إرسال')}" hidden>${ICON('send')}</button>
             </form>
+            <div class="cmp__plusmenu" id="cmpPlusMenu" hidden role="menu">
+              <button type="button" role="menuitem" data-plus="read">${ICON('book')}<span><b>${T('Ask about what I’m reading', 'اسأل عما أقرؤه')}</b><small>${T('Attach the open page as context', 'أرفق الصفحة المفتوحة كسياق')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="pdf">${ICON('upload')}<span><b>${T('Open a PDF', 'افتح ملف PDF')}</b><small>${T('In the Reading Studio — stays on this device', 'في استوديو القراءة — يبقى على جهازك')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="voice">${ICON('wave')}<span><b>${T('Voice conversation', 'محادثة صوتية')}</b><small>${T('Talk it through, hands-free', 'تحدث دون استخدام يديك')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="brain">${ICON('chip')}<span><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Built-in, on-device AI or cloud', 'مدمج، أو ذكاء على الجهاز، أو سحابي')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="new">${ICON('edit')}<span><b>${T('New chat', 'محادثة جديدة')}</b><small>${T('Clear this conversation', 'امسح هذه المحادثة')}</small></span></button>
+            </div>
           </div>
         </div>
         <div class="cmp__pane" role="tabpanel" id="cmpP-profile" aria-labelledby="cmpTab-profile" hidden tabindex="0"></div>
@@ -117,11 +136,118 @@
         <div class="cmp__pane" role="tabpanel" id="cmpP-lab" aria-labelledby="cmpTab-lab" hidden tabindex="0"></div>
         <div class="cmp__pane" role="tabpanel" id="cmpP-summary" aria-labelledby="cmpTab-summary" hidden tabindex="0"></div>
       </div>
+      <div class="cbrain" id="cmpBrain" hidden role="dialog" aria-label="${T('Noor’s brain', 'عقل نور')}"></div>
       <p class="sr-only" id="cmpAnnounce" aria-live="assertive"></p>`;
     bindShell();
     setStatus(status);
     renderConvBar();
     renderMic();
+  }
+
+  /* ---------------- composer, brain, attachments ---------------- */
+  function modeHTML() {
+    const s = ai ? ai.state() : { tier: 'local', status: 'idle' };
+    const l = ai ? ai.label() : { en: 'Built-in brain · offline', ar: 'العقل المدمج · دون اتصال' };
+    const k = s.status === 'loading' ? 'loading' : ai && ai.ready() ? s.tier : 'local';
+    return `<i class="cmp__dot cmp__dot--${k}"></i><span>${esc(pick(l.en, l.ar))}</span>${s.status === 'loading' ? `<b class="mono">${Math.round((s.progress || 0) * 100)}%</b>` : ''}`;
+  }
+  function refreshMode() { const m = $('#cmpMode'); if (m) m.innerHTML = modeHTML(); if (!$('#cmpBrain').hidden) renderBrain(); }
+  if (ai) ai.on(() => refreshMode());
+  // ChatGPT-style composer: the voice button turns into "send" while typing, and "stop" while Noor writes
+  function composer() {
+    const t = $('#cmpText'); if (!t) return;
+    t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px';
+    const has = !!t.value.trim();
+    $('#cmpSend').hidden = !has && !generating; $('#cmpVoice').hidden = has || !!generating;
+    $('#cmpSend').innerHTML = ICON(generating ? 'stop' : 'send');
+    $('#cmpSend').setAttribute('aria-label', generating ? T('Stop', 'إيقاف') : T('Send', 'إرسال'));
+    $('#cmpSend').classList.toggle('is-stop', !!generating);
+  }
+  function setGenerating(g) { generating = g; panel.classList.toggle('is-gen', !!g); composer(); }
+  function stopGenerating() { if (generating && generating.stop) generating.stop(); setGenerating(null); }
+  function plusMenu(on) {
+    const m = $('#cmpPlusMenu'); on = on === undefined ? m.hidden : on;
+    m.hidden = !on; $('#cmpPlus').setAttribute('aria-expanded', on); $('#cmpPlus').classList.toggle('is-on', on);
+    if (on) requestAnimationFrame(() => m.classList.add('is-in')); else m.classList.remove('is-in');
+  }
+  document.addEventListener('click', e => { if (!e.target.closest('#cmpPlusMenu, #cmpPlus')) { const m = $('#cmpPlusMenu'); if (m && !m.hidden) plusMenu(false); } });
+  let attached = null;
+  function attach(ctx) {
+    attached = ctx || null;
+    const box = $('#cmpAttach'); if (!box) return;
+    box.hidden = !attached;
+    if (attached) box.innerHTML = `<span class="cmp__chip">${ICON('file')}<span><b>${esc(attached.title)}</b><small>${T('page', 'صفحة')} ${attached.page}${attached.quote ? ' · ' + T('selected passage', 'مقطع محدد') : ''}</small></span><button type="button" data-unattach aria-label="${T('Remove', 'إزالة')}">${ICON('x')}</button></span>`;
+  }
+  function newChat() {
+    stopGenerating();
+    if (brain() && brain().reset) brain().reset();
+    conv = null; helpCtx = null; attach(null);
+    $('#cmpLog').innerHTML = '';
+    renderConvBar();
+    greeting = greet();
+  }
+  // the brain picker
+  let caps = null;
+  async function openBrain() {
+    const b = $('#cmpBrain');
+    b.hidden = false; requestAnimationFrame(() => b.classList.add('is-in'));
+    renderBrain();
+    if (!caps && ai) { caps = await ai.detect(); renderBrain(); }
+  }
+  function closeBrain() { const b = $('#cmpBrain'); b.classList.remove('is-in'); setTimeout(() => { if (!b.classList.contains('is-in')) b.hidden = true; }, reduce ? 0 : 260); }
+  function renderBrain() {
+    const b = $('#cmpBrain'); if (!b || !ai) return;
+    const s = ai.state(), ready = ai.ready();
+    const on = k => (k === 'local' ? !ready && s.status !== 'loading' : s.tier === k && (ready || s.status === 'loading'));
+    const prog = k => (s.tier === k && s.status === 'loading' ? `<span class="cbrain__bar"><i style="--p:${(s.progress || 0).toFixed(3)}"></i></span><small class="cbrain__t">${esc((s.text || '').slice(0, 90))}</small>` : '');
+    const gpu = caps ? caps.webgpu : null;
+    const chrome = caps ? caps.chrome : 'unavailable';
+    b.innerHTML = `
+      <header class="cbrain__h"><span class="cbrain__ic">${ICON('chip')}</span><div><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Choose how Noor thinks. Whatever you choose, she never diagnoses and never gives percentages.', 'اختر كيف تفكر نور. أياً كان اختيارك، لا تشخّص أبداً ولا تعطي نسباً مئوية.')}</small></div><button type="button" class="icon-btn icon-btn--sm" data-b="close" aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button></header>
+      <div class="cbrain__list">
+        <div class="cbopt ${on('local') ? 'is-on' : ''}">
+          <div class="cbopt__h"><b>${T('Built-in', 'مدمج')}</b><span class="cbopt__tag">${T('Always on', 'متاح دائماً')}</span></div>
+          <p>${T('ERLY’s guide to learning differences, studying and exams, plus built-in study tools (summaries, quizzes, plans, maths). Instant and offline — nothing leaves your device.', 'دليل إيرلي لاختلافات التعلّم والمذاكرة والاختبارات، مع أدوات مذاكرة مدمجة (ملخصات واختبارات وخطط وحساب). فوري ودون اتصال — لا يغادر شيء جهازك.')}</p>
+          ${on('local') ? `<span class="cbopt__on">${ICON('check')} ${T('In use', 'قيد الاستخدام')}</span>` : `<button type="button" class="btn btn--xs btn--ghost" data-b="local">${T('Use built-in', 'استخدم المدمج')}</button>`}
+        </div>
+        <div class="cbopt cbopt--star ${s.tier === 'webllm' && (ready || s.status === 'loading') ? 'is-on' : ''}">
+          <div class="cbopt__h"><b>${T('On-device AI', 'ذكاء اصطناعي على الجهاز')}</b><span class="cbopt__tag cbopt__tag--hot">${T('ChatGPT-style · private', 'بأسلوب ChatGPT · خاص')}</span></div>
+          <p>${T('A real language model that answers anything — explanations, essays feedback, code, plans, Arabic. It downloads once into your browser and runs on this device’s graphics chip. Your messages never leave the device.', 'نموذج لغوي حقيقي يجيب عن أي شيء — شروح وملاحظات على المقالات وبرمجة وخطط وعربية. يُنزَّل مرة واحدة في متصفحك ويعمل على معالج الرسوميات في جهازك. لا تغادر رسائلك الجهاز.')}</p>
+          ${gpu === false ? `<p class="cbopt__warn">${ICON('info')} ${T('This browser has no WebGPU, so on-device AI can’t run here. Try the latest Chrome or Edge on a laptop, or Safari on iPadOS / macOS 26.', 'لا يدعم هذا المتصفح WebGPU، لذا لا يعمل الذكاء على الجهاز هنا. جرّب أحدث كروم أو إيدج على حاسوب، أو سفاري على iPadOS / macOS 26.')}</p>` : ''}
+          <div class="cbopt__models">${ai.MODELS.map(m => `<button type="button" class="cbmodel ${s.tier === 'webllm' && s.model === m.key ? 'is-on' : ''}${m.rec ? ' is-rec' : ''}" data-b="web:${m.key}" ${gpu === false || s.status === 'loading' ? 'disabled' : ''}><b>${m.name}${m.rec ? ` <i>${T('Recommended', 'موصى به')}</i>` : ''}</b><small>${pick(m.en, m.ar)}</small><span class="mono">${m.size}${caps && caps.cached && caps.cached[m.key] ? ' · ' + T('downloaded', 'منزّل') : ''}</span></button>`).join('')}</div>
+          ${prog('webllm')}
+          ${s.tier === 'webllm' && ready ? `<span class="cbopt__on">${ICON('check')} ${T('In use — running on this device', 'قيد الاستخدام — يعمل على هذا الجهاز')}</span>` : ''}
+          <small class="muted">${T('Open-source Qwen 3.5 models via WebLLM. First download needs Wi-Fi; later visits load from your browser’s cache.', 'نماذج Qwen 3.5 مفتوحة المصدر عبر WebLLM. يحتاج التنزيل الأول إلى Wi-Fi؛ وتُحمَّل الزيارات اللاحقة من ذاكرة المتصفح.')}</small>
+        </div>
+        ${chrome !== 'unavailable' ? `<div class="cbopt ${s.tier === 'chrome' && (ready || s.status === 'loading') ? 'is-on' : ''}">
+          <div class="cbopt__h"><b>${T('Chrome built-in AI', 'الذكاء المدمج في كروم')}</b><span class="cbopt__tag">Gemini Nano</span></div>
+          <p>${T('Your browser includes its own small AI model that runs on this device. No download from ERLY.', 'يتضمن متصفحك نموذج ذكاء اصطناعي صغيراً يعمل على هذا الجهاز. لا تنزيل من إيرلي.')}</p>
+          ${prog('chrome')}${s.tier === 'chrome' && ready ? `<span class="cbopt__on">${ICON('check')} ${T('In use', 'قيد الاستخدام')}</span>` : `<button type="button" class="btn btn--xs btn--accent" data-b="chrome" ${s.status === 'loading' ? 'disabled' : ''}>${chrome === 'available' ? T('Use it', 'استخدمه') : T('Download & use', 'نزّل واستخدم')}</button>`}
+        </div>` : ''}
+        <div class="cbopt ${s.tier === 'cloud' && ready ? 'is-on' : ''}">
+          <div class="cbopt__h"><b>${T('Cloud AI', 'ذكاء اصطناعي سحابي')}</b><span class="cbopt__tag">${T('University server', 'خادم الجامعة')}</span></div>
+          ${llm.configured ? `<p>${T('Sends your message (emails and phone numbers removed), the recent chat and — if attached — the page you are reading to the university’s AI server. Nothing is stored there. Only turn this on if you agree.', 'يرسل رسالتك (بعد إزالة البريد وأرقام الهاتف) والمحادثة الأخيرة — والصفحة التي تقرؤها إن أرفقتها — إلى خادم الذكاء الاصطناعي في الجامعة. لا يُخزَّن شيء هناك. فعّله فقط إن كنت موافقاً.')}</p>
+            ${s.tier === 'cloud' && ready ? `<button type="button" class="btn btn--xs btn--ghost" data-b="cloud-off">${T('Stop using cloud AI', 'أوقف الذكاء السحابي')}</button>` : `<button type="button" class="btn btn--xs btn--accent" data-b="cloud">${T('I agree — use cloud AI', 'أوافق — استخدم الذكاء السحابي')}</button>`}`
+          : `<p>${T('Not set up here. A university can connect a model through ERLY’s small server (server/llm-proxy.mjs), which keeps the API key secret — keys are never put in a website.', 'غير مُعدّ هنا. يمكن للجامعة ربط نموذج عبر خادم إيرلي الصغير (server/llm-proxy.mjs) الذي يحفظ مفتاح الواجهة سراً — لا توضع المفاتيح في موقع ويب أبداً.')}</p>`}
+        </div>
+      </div>
+      ${s.status === 'error' && s.error ? `<p class="cbrain__err">${ICON('info')} ${T('That didn’t work on this device, so Noor is using her built-in brain.', 'لم ينجح ذلك على هذا الجهاز، لذا تستخدم نور عقلها المدمج.')} <small>${esc(s.error)}</small></p>` : ''}`;
+  }
+  panel.addEventListener('click', async e => {
+    const x = e.target.closest('#cmpBrain [data-b]'); if (!x || !ai) return;
+    const k = x.dataset.b;
+    if (k === 'close') return closeBrain();
+    if (k === 'local') { ai.useLocal(); announce(T('Using the built-in brain', 'استخدام العقل المدمج')); }
+    if (k.startsWith('web:')) { const ok = await ai.useWebLLM(k.slice(4)); if (ok) { caps = null; brainReady(); } }
+    if (k === 'chrome') { const ok = await ai.useChrome(); if (ok) brainReady(); }
+    if (k === 'cloud') { store.setConsent('llm', true); ai.useCloud(); brainReady(); }
+    if (k === 'cloud-off') { store.setConsent('llm', false); ai.useLocal(); }
+    refreshMode();
+  });
+  function brainReady() {
+    refreshMode();
+    ERLY.toast && ERLY.toast(T('Noor’s AI brain is on — ask her anything.', 'عقل نور الذكي مفعّل — اسألها أي شيء.'));
+    setTimeout(closeBrain, 900);
   }
 
   /* ---------------- open / close / tabs ---------------- */
@@ -135,6 +261,7 @@
       document.documentElement.classList.add('cmp-on');
       requestAnimationFrame(() => panel.classList.add('is-in'));
       if (!$('#cmpLog').children.length) greeting = greet();
+      if (ai && !ai.ready() && ai.state().status === 'idle' && !openPanel.resumed) { openPanel.resumed = true; ai.resume(); }
     }
     if (t) setTab(t);
     setTimeout(() => { const f = tab === 'chat' ? $('#cmpText') : $(`#cmpTab-${tab}`); f && f.focus({ preventScroll: true }); }, reduce ? 0 : 260);
@@ -175,11 +302,35 @@
     });
     $('#cmpForm').addEventListener('submit', e => {
       e.preventDefault();
+      if (generating) return stopGenerating();
       const v = $('#cmpText').value.trim();
       if (!v || busy) return;
-      $('#cmpText').value = '';
+      $('#cmpText').value = ''; composer();
       submit(v);
     });
+    $('#cmpText').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#cmpForm').requestSubmit ? $('#cmpForm').requestSubmit() : $('#cmpForm').dispatchEvent(new Event('submit', { cancelable: true })); }
+    });
+    $('#cmpText').addEventListener('input', composer);
+    $('#cmpVoice').addEventListener('click', () => ERLY.emit && ERLY.emit('noor:call'));
+    $('#cmpPlus').addEventListener('click', e => { e.stopPropagation(); plusMenu(); });
+    $('#cmpPlusMenu').addEventListener('click', e => {
+      const b = e.target.closest('[data-plus]'); if (!b) return;
+      plusMenu(false);
+      const k = b.dataset.plus;
+      if (k === 'read') { if (R.isOpen()) attach(R.contextFor()); else { R.openLibrary(); ERLY.toast && ERLY.toast(T('Pick a reading — then ask me about it.', 'اختر قراءة — ثم اسألني عنها.')); } }
+      if (k === 'pdf') { closePanel(); R.openLibrary(); }
+      if (k === 'voice') ERLY.emit && ERLY.emit('noor:call');
+      if (k === 'brain') openBrain();
+      if (k === 'new') newChat();
+    });
+    $('#cmpMode').addEventListener('click', openBrain);
+    $('#cmpWide').addEventListener('click', () => {
+      const on = !panel.classList.contains('is-wide');
+      panel.classList.toggle('is-wide', on); $('#cmpWide').setAttribute('aria-pressed', on); $('#cmpWide').innerHTML = ICON(on ? 'shrink' : 'expand');
+      setTimeout(() => setTab(tab), 320);
+    });
+    $('#cmpAttach').addEventListener('click', e => { if (e.target.closest('[data-unattach]')) attach(null); });
     $('#cmpMic').addEventListener('click', micClick);
     $('#cmpMute').addEventListener('click', () => {
       const m = !store.prefs().muted; store.setPref('muted', m);
@@ -207,6 +358,9 @@
   panel.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     e.stopPropagation();
+    if (!$('#cmpBrain').hidden) return closeBrain();
+    if (!$('#cmpPlusMenu').hidden) return plusMenu(false);
+    if (generating) return stopGenerating();
     const v = voice.state();
     if (v.listening) return voice.abortListening();
     if (v.speaking) return voice.stop();
@@ -319,17 +473,28 @@
 
   function greet() {
     const first = !store.asked('monitoring');
+    const smart = ai && ai.ready();
     return aiSays(
-      'Hi, I’m Noor — your AI study companion. Ask me anything about learning differences, studying or exams, talk to me by voice, or let me help with a reading or a video. If something feels hard, I can ask you the kinds of questions a specialist would, and point you to the right support. I’m not a doctor, so I can’t diagnose — but I can help you find out whether an assessment is worth it.',
-      'أهلاً، أنا نور — رفيقتك الذكية في الدراسة. اسألني أي شيء عن اختلافات التعلّم أو المذاكرة أو الاختبارات، وتحدث معي بالصوت، أو دعني أساعدك في قراءة أو فيديو. إن كان شيء صعباً، يمكنني طرح أسئلة من النوع الذي يطرحه المختص، وتوجيهك إلى الدعم المناسب. لست طبيبة فلا أستطيع التشخيص — لكن يمكنني مساعدتك في معرفة إن كان التقييم يستحق.',
-      { speak: false, tag: llm.active().simulated ? T('Demo · simulated replies', 'عرض · ردود محاكاة') : null }
-    ).then(() => { if (first) consentCard(); else if (!helpCtx) idleChips(); });
+      'Hi, I’m Noor — your AI study companion. Ask me anything: explain a topic, plan your revision, quiz you on a reading, help with an email, or just talk about what feels hard. Tap the wave button to talk to me by voice. I’m not a doctor, so I never diagnose — but I can help you work out what support might help.',
+      'أهلاً، أنا نور — رفيقتك الذكية في الدراسة. اسألني أي شيء: شرح موضوع، أو خطة مراجعة، أو اختبار على قراءة، أو مساعدة في بريد، أو تحدث فقط عما يبدو صعباً. اضغط زر الموجة للتحدث معي بالصوت. لست طبيبة فلا أشخّص أبداً — لكن يمكنني مساعدتك في معرفة الدعم المناسب.',
+      { speak: false, tag: ai ? pick(ai.label().en, ai.label().ar) : null }
+    ).then(() => { if (!smart && ai) brainCard(); if (first) consentCard(); else if (!helpCtx) idleChips(); });
+  }
+  // a gentle prompt to switch on a real AI model (only shown while Noor uses her built-in brain)
+  function brainCard() {
+    const card = document.createElement('div');
+    card.className = 'cbcard';
+    card.innerHTML = `<span class="cbcard__orb" aria-hidden="true"><i></i><i></i><i></i></span><div><b>${T('Want ChatGPT-style answers to anything?', 'تريد إجابات بأسلوب ChatGPT عن أي شيء؟')}</b><small>${T('Turn on my AI brain. It can run privately on this device.', 'فعّل عقلي الذكي. يمكنه العمل بخصوصية على هذا الجهاز.')}</small></div><button type="button" class="btn btn--xs btn--accent" data-brain-open>${T('Turn on', 'فعّل')}</button>`;
+    card.querySelector('[data-brain-open]').onclick = openBrain;
+    $('#cmpLog').appendChild(card); scrollLog();
   }
   function idleChips() {
+    const reading = R.isOpen();
     chipRow([
-      { id: 'call', en: 'Talk to me by voice', ar: 'تحدث معي بالصوت', icon: 'headphones' },
+      ...(reading ? [{ id: 'page', en: 'Explain this page', ar: 'اشرحي هذه الصفحة', icon: 'sparkle' }, { id: 'help', en: 'Help with this paragraph', ar: 'ساعديني في هذه الفقرة', icon: 'book' }] : [{ id: 'plan', en: 'Make me an exam study plan', ar: 'اصنعي لي خطة مذاكرة للامتحانات', icon: 'calendar' }]),
+      { id: 'call', en: 'Talk to me by voice', ar: 'تحدثي معي بالصوت', icon: 'headphones' },
       { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً', icon: 'chat' },
-      ...(R.isOpen() ? [{ id: 'help', en: 'Help with this paragraph', ar: 'ساعدني في هذه الفقرة', icon: 'sparkle' }] : [{ id: 'talk', en: 'Talk about my reading', ar: 'لنتحدث عن قراءتي', icon: 'book' }]),
+      ...(reading ? [] : [{ id: 'talk', en: 'Talk about my reading', ar: 'لنتحدث عن قراءتي', icon: 'book' }]),
       { id: 'ask', en: 'What is dyslexia?', ar: 'ما هو عسر القراءة؟', icon: 'search' },
       { id: 'profile', en: 'How am I doing?', ar: 'كيف حالي؟', icon: 'chart' }
     ], c => {
@@ -340,6 +505,8 @@
       if (c.id === 'call') ERLY.emit && ERLY.emit('noor:call');
       if (c.id === 'hard' && brain()) { bubble('you', pick(c.en, c.ar), { text: true }); brain().freeText('I feel like something is hard for me', { silentUser: true }); }
       if (c.id === 'ask' && brain()) brain().freeText(pick(c.en, c.ar));
+      if (c.id === 'plan' && brain()) brain().freeText(pick(c.en, c.ar));
+      if (c.id === 'page' && brain()) { attach(R.contextFor()); brain().freeText(pick('Explain this page simply, then give me the 3 key ideas.', 'اشرحي هذه الصفحة ببساطة، ثم أعطيني أهم ٣ أفكار.')); }
     });
   }
 
@@ -388,6 +555,7 @@
     if (ev.type === 'close') { endSession(); voice.stop(); voice.abortListening(); hideInvite(); return; }
     if (ev.type === 'tts' && ev.action === 'start') voice.stop(); // the reader's voice wins
     if (!session || paused || !store.consent('monitoring')) return;  // nothing is collected without consent
+    nudgeRecord(ev);
     S.record(session, ev, cfg);
     if (ev.type === 'section' || ev.type === 'zoom' || ev.type === 'pan' || ev.type === 'format') { clearTimeout(checkT); checkT = setTimeout(check, 1700); }
   });
@@ -396,6 +564,7 @@
     if (!session || paused || document.hidden || !R.isOpen()) return;
     S.record(session, { type: 'tick', t: Date.now() }, cfg);
     check();
+    nudgeCheck();
     if (tab === 'signals' && !panel.hidden && !$('#cmpP-signals').contains(document.activeElement)) renderSignals();
   }, 5000);
   const signals = () => (session ? S.evaluate(session, store.baseline(), cfg, Date.now(), avail()) : null);
@@ -460,9 +629,85 @@
   }
   function hideInvite() {
     if (invite.hidden) return;
-    inviteOpen = false; launch.classList.remove('has-invite');
+    inviteOpen = false; launch.classList.remove('has-invite'); clearTimeout(nudgeT);
+    setTimeout(() => invite.classList.remove('cmp-invite--nudge'), reduce ? 0 : 260);
     invite.classList.remove('is-in');
     setTimeout(() => { if (!invite.classList.contains('is-in')) invite.hidden = true; }, reduce ? 0 : 240);
+  }
+
+  /* ---------------- in-the-moment nudges ----------------
+     Quick, friendly check-ins while reading — only with the "notice friction"
+     consent, never more than one every 90 s, each kind at most every 5 min,
+     and "I'm fine" silences that kind for the session. They count interaction
+     events only (zoom, pinch-zoom, scroll direction changes, time on one
+     section); never text, keystrokes, camera or audio. */
+  const nud = { zoom: [], pinch: [], scroll: [], lastAny: 0, last: {}, muted: new Set(), stillKey: null, stillSince: Date.now() };
+  const NUDGE = {
+    zoom: { icon: 'search', t: ['Zooming in and out a lot?', 'تكبّر وتصغّر كثيراً؟'], b: ['Is the text hard to see? I can make it bigger and easier on the eyes, so you don’t have to keep zooming.', 'هل النص صعب الرؤية؟ يمكنني تكبيره وجعله أريح للعين حتى لا تضطر للتكبير باستمرار.'], acts: [['bigger', 'Make text bigger & clearer', 'كبّري النص ووضّحيه'], ['tint', 'Softer page colour', 'لون صفحة أهدأ'], ['tts', 'Read it to me', 'اقرئيه لي']] },
+    pinch: { icon: 'eyeScan', t: ['Pinching to zoom?', 'تكبّر بإصبعين؟'], b: ['Looks like the text might be small on this screen. Want me to make it bigger so you can read without pinching?', 'يبدو أن النص صغير على هذه الشاشة. هل أكبّره لتقرأ دون التكبير بإصبعين؟'], acts: [['bigger', 'Yes, bigger text', 'نعم، نص أكبر'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
+    scroll: { icon: 'scroll', t: ['Scrolling up and down a lot?', 'تمرّر للأعلى والأسفل كثيراً؟'], b: ['Looking for something, or is this part hard to follow? I can help you find it or break it down.', 'تبحث عن شيء، أم أن هذا الجزء صعب المتابعة؟ يمكنني مساعدتك في إيجاده أو تبسيطه.'], acts: [['sum', 'Summarise this page', 'لخّصي هذه الصفحة'], ['find', 'Search the reading', 'ابحثي في القراءة'], ['focus', 'Line focus', 'تركيز السطر']] },
+    stall: { icon: 'clock', t: ['Still on this part?', 'ما زلت عند هذا الجزء؟'], b: ['You’ve been on this section for a while — totally fine. Want me to explain it, or read it aloud?', 'أنت عند هذا القسم منذ مدة — وهذا طبيعي تماماً. هل أشرحه لك أو أقرؤه بصوت عالٍ؟'], acts: [['explain', 'Explain it', 'اشرحيه'], ['tts', 'Read it aloud', 'اقرئيه بصوت'], ['break', '5-minute break', 'استراحة ٥ دقائق']] }
+  };
+  function nudgeRecord(ev) {
+    const t = ev.t || Date.now();
+    if (ev.type === 'zoom' && !ev.figure) nud.zoom.push(t);
+    if (ev.type === 'pinch' && ev.scale > 1.15) nud.pinch.push(t);
+    if (ev.type === 'scrolldir') nud.scroll.push(t);
+    if (ev.type === 'section' && ev.key !== nud.stillKey) { nud.stillKey = ev.key; nud.stillSince = t; }
+    if (ev.type === 'tts' || ev.type === 'open') nud.stillSince = t;
+    ['zoom', 'pinch', 'scroll'].forEach(k => { while (nud[k].length && t - nud[k][0] > 120e3) nud[k].shift(); });
+    if (ev.type === 'zoom' || ev.type === 'pinch' || ev.type === 'scrolldir') { clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 900); }
+  }
+  function nudgeCheck() {
+    if (!session || paused || !store.consent('monitoring') || store.prefs().invitations === 'off' || !R.isOpen()) return;
+    if (inviteOpen || busy || generating || (conv && !conv.done) || Date.now() < snoozeUntil || (ERLY.companion && ERLY.companion.inCall)) return;
+    const now = Date.now();
+    if (now - nud.lastAny < 90e3) return;
+    const n = (arr, ms) => arr.filter(x => now - x < ms).length;
+    let kind = null;
+    if (n(nud.zoom, 60e3) >= 4) kind = 'zoom';
+    else if (n(nud.pinch, 90e3) >= 2) kind = 'pinch';
+    else if (n(nud.scroll, 45e3) >= 8) kind = 'scroll';
+    else if (nud.stillKey && now - nud.stillSince > 150e3 && !R.isReading() && !document.hidden) kind = 'stall';
+    if (!kind || nud.muted.has(kind) || now - (nud.last[kind] || 0) < 5 * 60e3) return;
+    nud.lastAny = now; nud.last[kind] = now;
+    if (kind === 'stall') nud.stillSince = now;
+    nud[kind] && Array.isArray(nud[kind]) && (nud[kind].length = 0);
+    showNudge(kind);
+  }
+  let nudgeT = null;
+  function showNudge(kind) {
+    const N = NUDGE[kind]; if (!N || inviteOpen) return false;
+    inviteOpen = true;
+    invite.classList.add('cmp-invite--nudge');
+    invite.innerHTML = `<span class="cnudge__ic" aria-hidden="true">${ICON(N.icon)}</span><div class="cmp-invite__b">
+      <p class="cnudge__k">${orb('cmp-orb--xs')} Noor <small>${T('just checking in', 'مجرد اطمئنان')}</small></p>
+      <b class="cnudge__t">${esc(pick(...N.t))}</b><p>${esc(pick(...N.b))}</p>
+      <div class="cmp-invite__btns">${N.acts.map((a, i) => `<button type="button" class="btn btn--xs ${i === 0 ? 'btn--accent' : 'btn--ghost'}" data-nu="${a[0]}">${esc(pick(a[1], a[2]))}</button>`).join('')}<button type="button" class="btn btn--xs btn--quiet" data-nu="fine">${T('I’m fine', 'أنا بخير')}</button><button type="button" class="btn btn--xs btn--quiet" data-nu="talk">${T('Talk to Noor', 'تحدث مع نور')}</button></div>
+      <small>${T('Private — only you see this. Nothing is shared.', 'خاص — أنت فقط ترى هذا. لا يُشارك شيء.')}</small></div>
+      <span class="cnudge__timer" aria-hidden="true"></span>`;
+    invite.hidden = false;
+    requestAnimationFrame(() => invite.classList.add('is-in'));
+    launch.classList.add('has-invite');
+    window.FUN && FUN.sfx && FUN.sfx.tick();
+    clearTimeout(nudgeT); nudgeT = setTimeout(() => { if (invite.classList.contains('cmp-invite--nudge')) hideInvite(); }, 30000);
+    invite.onclick = async e => {
+      const b = e.target.closest('[data-nu]'); if (!b) return;
+      const k = b.dataset.nu, para = R.currentPara();
+      hideInvite();
+      if (k === 'fine') { nud.muted.add(kind); ERLY.toast && ERLY.toast(T('Okay! I won’t ask about that again this session.', 'حسناً! لن أسأل عن ذلك مجدداً في هذه الجلسة.')); return; }
+      if (k === 'bigger') { R.act('calm'); ERLY.toast && ERLY.toast(T('Bigger, calmer text — change it any time under Text & voice.', 'نص أكبر وأهدأ — غيّره متى شئت من النص والصوت.')); }
+      if (k === 'tint') { R.act('tint'); ERLY.toast && ERLY.toast(T('Softer page colour on.', 'تم تفعيل لون صفحة أهدأ.')); }
+      if (k === 'tts') R.act('tts', para);
+      if (k === 'find') R.act('search');
+      if (k === 'focus') { R.act('focus', para); ERLY.toast && ERLY.toast(T('Line focus on — move with your mouse or ↑ ↓.', 'تركيز السطر مفعّل — تحرّك بالفأرة أو ↑ ↓.')); }
+      if (k === 'sum') { openPanel('chat'); await greeting; await runTool('summary', para); }
+      if (k === 'explain') { openPanel('chat'); await greeting; helpMenu({ para }); }
+      if (k === 'break') { openPanel('chat'); await greeting; await runTool('break', para); }
+      if (k === 'talk') { openPanel('chat'); await greeting; startConversation({ type: 'invite', signal: kind === 'stall' ? 'regression' : kind === 'scroll' ? 'regression' : 'zoom', section: para }, [], false); }
+      ERLY.emit && ERLY.emit('noor:nudge', { kind, action: k });
+    };
+    return true;
   }
 
   /* ---------------- Layer 3: conversation ---------------- */
@@ -552,8 +797,8 @@
     k = k || R.currentPara();
     R.act(tool, k);
     if (tool === 'summary' && k) {
-      const p = R.paraOf(k).p;
-      await aiSays(p.sum.join(' '), p.sum.join(' '), { html: `<ol class="cmp-sum">${p.sum.map(s => `<li>${esc(s)}</li>`).join('')}</ol><small class="muted">${T('Summary written by the course team for this reading.', 'ملخص كتبه فريق المادة لهذه القراءة.')}</small>`, speak: true });
+      const sum = R.paraSummary(k), prepared = !!R.paraOf(k).p.sum;
+      await aiSays(sum.join(' '), sum.join(' '), { html: `<ol class="cmp-sum">${sum.map(s => `<li>${esc(s)}</li>`).join('')}</ol><small class="muted">${prepared ? T('Summary written by the course team for this reading.', 'ملخص كتبه فريق المادة لهذه القراءة.') : T('Auto summary: key sentences picked from your file on this device.', 'ملخص تلقائي: جمل أساسية مختارة من ملفك على هذا الجهاز.')}</small>`, speak: true });
     }
     if (tool === 'terms' && k) {
       const ts = R.termsIn(k);
@@ -567,6 +812,7 @@
   }
   function diagramWalk() {
     const steps = R.figSteps();
+    if (!steps.length) return aiSays('This reading doesn’t have a diagram to walk through.', 'لا يوجد في هذه القراءة رسم لنشرحه.');
     R.act('diagram');
     return new Promise(async res => {
       for (let i = 0; i < steps.length; i++) {
@@ -617,9 +863,11 @@
     }, 'cchips--tools');
   }
   async function quiz(k) {
-    const p = R.paraOf(k).p;
+    const check = R.paraCheck(k);
+    if (!check) { await aiSays('There isn’t enough text in this part for a quick check. Try the Quiz in Study tools instead.', 'لا يوجد نص كافٍ في هذا الجزء لفحص سريع. جرّب الاختبار في أدوات المذاكرة.'); return askHelped('quiz'); }
+    const p = { check };
     R.act('quiz', k);
-    const order = [0, 1, 2].sort(() => Math.random() - .5);
+    const order = p.check.opts.map((_, i) => i).sort(() => Math.random() - .5);
     const m = await aiSays(p.check.q, p.check.q, { html: `<p class="cmp-q">${esc(p.check.q)}</p><div class="cmp-opts">${order.map(i => `<button type="button" data-o="${i}">${esc(p.check.opts[i])}</button>`).join('')}</div><small class="muted">${T('Just for you — this isn’t saved or scored.', 'لك فقط — لا يُحفظ ولا يُقيَّم.')}</small>` });
     await new Promise(res => m.addEventListener('click', async function on(e) {
       const b = e.target.closest('[data-o]'); if (!b || b.disabled) return;
@@ -760,7 +1008,7 @@
       if (t === 'pause') paused = v;
       if (t === 'inv') store.setPref('invitations', v ? 'on' : 'off');
       if (t === 'mic') { store.setConsent('mic', v); if (!v) voice.abortListening(); }
-      if (t === 'llm') { store.setConsent('llm', v); const m = $('#cmpMode'); if (m) m.textContent = v ? T('connected to an external AI model', 'متصلة بنموذج ذكاء اصطناعي خارجي') : T('demo mode · rule-based, simulated replies', 'وضع العرض · ردود محاكاة قائمة على القواعد'); }
+      if (t === 'llm') { store.setConsent('llm', v); if (ai) { if (v) ai.useCloud(); else if (ai.state().tier === 'cloud') ai.useLocal(); } refreshMode(); }
       renderSignals();
     });
     pane.addEventListener('click', e => {
@@ -936,7 +1184,17 @@
     open: openPanel, close: closePanel, isOpen: () => !panel.hidden, store, state: () => ({ session, conv, paused, status, consent: store.get().consent }),
     inCall: false, brain: null,
     submitText: t => submit(t),
+    ai,
+    // ask Noor something from elsewhere (the Reading Studio's selection tools, study tab…)
+    ask(text, o) {
+      o = o || {};
+      openPanel('chat');
+      if (o.context) attach(o.context);
+      greeting.then(() => setTimeout(() => { if (generating) stopGenerating(); clearChips(); submit(text); }, 120));
+    },
+    attached: () => attached, attach,
+    _nudge: kind => showNudge(kind),
     // internals shared with noor-brain.js and call.js (same feature, split for size)
-    _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done) }
+    _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done), ai, setGenerating, isGenerating: () => !!generating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
 })();

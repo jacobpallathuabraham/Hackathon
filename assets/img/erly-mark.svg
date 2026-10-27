@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ERLY">
+  <defs>
+    <linearGradient id="eBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1A1745"/><stop offset=".55" stop-color="#2B2370"/><stop offset="1" stop-color="#0F6B66"/></linearGradient>
+    <radialGradient id="eGlow" cx=".5" cy=".58" r=".5"><stop offset="0" stop-color="#FFB86B" stop-opacity=".55"/><stop offset="1" stop-color="#FFB86B" stop-opacity="0"/></radialGradient>
+    <linearGradient id="eSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE29A"/><stop offset=".55" stop-color="#FFAA55"/><stop offset="1" stop-color="#F06A3F"/></linearGradient>
+    <linearGradient id="ePgL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E9F7F4"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+    <linearGradient id="ePgR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#E9F7F4"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+    <clipPath id="eSky"><rect x="0" y="0" width="64" height="41"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="17" fill="url(#eBg)"/>
+  <circle cx="32" cy="38" r="26" fill="url(#eGlow)"/>
+  <g clip-path="url(#eSky)" stroke="#FFC978" stroke-width="2.4" stroke-linecap="round">
+    <path d="M32 13.5v4.6M18.6 19l2.9 3.4M45.4 19l-2.9 3.4M11.8 30.4l4.3 1.4M52.2 30.4l-4.3 1.4"/>
+  </g>
+  <circle cx="32" cy="38" r="11.5" fill="url(#eSun)" clip-path="url(#eSky)"/>
+  <path d="M7 41.5c8.6-4.8 17.4-4.4 25 1.4v11.6c-7.6-5.4-16.4-5.8-25-1.2z" fill="url(#ePgL)"/>
+  <path d="M57 41.5c-8.6-4.8-17.4-4.4-25 1.4v11.6c7.6-5.4 16.4-5.8 25-1.2z" fill="url(#ePgR)"/>
+  <path d="M32 42.9v11.6" stroke="#0F6B66" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M12 45.6c5.6-2 10.8-1.6 15.6 1M37.4 46.6c4.8-2.6 10-3 15.6-1" fill="none" stroke="#7FC8BE" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M50.5 9.5l1.3 3.6 3.6 1.3-3.6 1.3-1.3 3.6-1.3-3.6-3.6-1.3 3.6-1.3z" fill="#FFF3D6"/>
+</svg>

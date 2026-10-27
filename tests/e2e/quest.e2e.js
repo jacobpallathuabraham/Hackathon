@@ -16,7 +16,7 @@ async function drive(page, k) {
     if (SHOT && shots < 3 && await vis('#checkin .ck-brief, #checkin .ck-slide, #checkin .ck-halls, #checkin .ck-mail.is-in, #checkin .ck-trail, #checkin .ck-exam, #checkin .ck-cap')) { await page.screenshot({ path: `${SHOT}/g-${k}-${shots++}.png` }); }
     if (await vis('#checkin [data-go]')) { await page.click('#checkin [data-go]'); continue; }
     if (await vis('#checkin .ck-listen__done')) { await page.click('#checkin .ck-listen__done'); continue; }
-    if (await vis('#checkin .ck-pad')) { await page.click('#checkin .ck-pad [data-k="1"]'); await page.click('#checkin .ck-pad [data-k="ok"]'); continue; }
+    if (await vis('#checkin .ck-pad')) { await page.click('#checkin .ck-pad [data-k="1"]', { timeout: 3000 }).catch(() => {}); await page.click('#checkin .ck-pad [data-k="ok"]', { timeout: 3000 }).catch(() => {}); continue; } // the next round replaces the pad
     if (await vis('#checkin .ck-trail .ck-node')) { const n = await page.locator('#checkin .ck-node').count(); for (let i = 0; i < n; i++) await page.locator(`#checkin .ck-node[data-i="${i}"]`).click(); continue; }
     if (await vis('#checkin .ck-gng__b')) { await page.click('#checkin .ck-gng__b').catch(() => {}); await page.waitForTimeout(300); continue; }
     if (await vis('#checkin .ck-site')) {

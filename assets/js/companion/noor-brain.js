@@ -69,27 +69,196 @@
     else ERLY.toast && ERLY.toast(T('Glad that helped!', 'سعيدة أن ذلك ساعد!'));
   });
 
-  /* ---------------- free-form, knowledgeable chat ---------------- */
+  /* ---------------- free-form chat ----------------
+     1. crisis words → the safety card, always first
+     2. an AI brain is on (ai.js) → a streamed, Markdown answer from the model,
+        grounded on ERLY's guide and (if attached) the page being read
+     3. otherwise the built-in brain: study skills (maths, plans, emails, page
+        summaries, quizzes) and then ERLY's knowledge guide */
+  const MD = window.ERLY_MD, AIX = window.ERLY_AI;
   async function freeText(text, o = {}) {
     if (!o.silentUser) bubble('you', text, { text: true });
     clearChips();
-    history.push({ role: 'user', text });
     const a = K.answer(text, lang(), kctx);
-    if (a.kind === 'crisis') return crisis();
+    if (a.kind === 'crisis') { history.push({ role: 'user', text }); return crisis(); }
+    if (U.ai && U.ai.ready() && MD && AIX) { if (await aiReply(text, a)) return; }
+    history.push({ role: 'user', text });
+    if (await skill(text)) return;
     remember(a);
-    let reply = null;
-    if (U.llm.active().external && (a.kind === 'answer' || a.kind === 'unknown' || a.kind === 'self-check')) {
-      U.setStatus('thinking');
-      const r = await U.llm.chat({ question: text, context: K.context(text, lang()), history, lang: lang() });
-      if (r.reply) reply = r.reply;
-    }
-    if (reply) await say(reply, reply, { tag: T('AI model · grounded on ERLY’s guide', 'نموذج ذكاء اصطناعي · مستند إلى دليل إيرلي') });
-    else if (a.kind === 'answer') await sayKB(a);
-    else await say(a.en, a.ar);
-    history.push({ role: 'assistant', text: reply || pick(a.en, a.ar) });
-    if (history.length > 12) history.splice(0, history.length - 12);
+    if (a.kind === 'answer') await sayKB(a);
+    else if (a.kind === 'unknown' && U.ai) {
+      await mdSay('That’s outside what my **built-in brain** knows — it covers learning differences, studying, exams, wellbeing and the readings here.\n\nTurn on my **AI brain** and I can help with almost anything: any subject, essays, code, plans and more. It can run privately on this device.', 'هذا خارج ما يعرفه **عقلي المدمج** — فهو يغطي اختلافات التعلّم والمذاكرة والاختبارات والرفاه والقراءات هنا.\n\nفعّل **عقلي الذكي** وسأساعدك في كل شيء تقريباً: أي مادة، والمقالات، والبرمجة، والخطط وغيرها. ويمكنه العمل بخصوصية على هذا الجهاز.');
+      history.push({ role: 'assistant', text: 'built-in: unknown' });
+      return offerChips([{ id: 'brain', en: 'Turn on Noor’s AI brain', ar: 'فعّل عقل نور الذكي' }, { id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
+    } else await say(a.en, a.ar);
+    history.push({ role: 'assistant', text: pick(a.en, a.ar) });
+    if (history.length > 16) history.splice(0, history.length - 16);
     offerChips(a.chips && a.chips.length ? a.chips : [{ id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }, { id: 'kb:assessment:what', en: 'How do assessments work?', ar: 'كيف تعمل التقييمات؟' }]);
   }
+  const mdSay = (en, ar, o = {}) => aiSays(en, ar, Object.assign({ html: `<div class="md">${MD.render(pick(en, ar))}</div>`, sayText: MD.toText(pick(en, ar)), stream: true }, o));
+
+  // stream an answer from the AI brain into a new chat bubble
+  const READING_Q = /\b(this|the) (page|paragraph|passage|reading|section|text|chapter|diagram|figure|pdf|article)\b|هذه الصفحة|هذا النص|هذه القراءة|هذا المقطع/i;
+  async function aiReply(text, a) {
+    const ai = U.ai, voiceMode = !!C.inCall;
+    const R = ERLY.reader;
+    const reading = U.attached() || (R && R.isOpen() && READING_Q.test(text) ? R.contextFor() : null);
+    const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) ? K.context(text, lang()) : '';
+    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb });
+    history.push({ role: 'user', text });
+    const m = document.createElement('div');
+    m.className = 'cmsg cmsg--ai cmsg--md is-writing';
+    m.innerHTML = `<span class="cmsg__tag">${ICON('chip')} ${esc(pick(ai.label().en, ai.label().ar))}${reading ? ` · ${ICON('file')} ${esc(reading.title)}` : ''}</span><div class="cmsg__b md"><span class="cdots"><i></i><i></i><i></i></span></div>`;
+    U.$('#cmpLog').appendChild(m); U.scrollLog();
+    const body = m.querySelector('.cmsg__b');
+    U.setStatus('thinking'); U.setBusy(true);
+    let stopped = false, spoken = 0, raf = 0, latest = '';
+    U.setGenerating({ stop: () => { stopped = true; ai.stop(); } });
+    const paint = () => { raf = 0; body.innerHTML = MD.render(latest) + '<span class="ccaret" aria-hidden="true"></span>'; U.scrollLog(); };
+    const speakPart = t => {
+      if (!C.inCall) return;
+      const sub = t.slice(spoken), r = AIX.takeSentences(sub);
+      r.done.forEach(sn => ERLY.emit('noor:said', { text: MD.toText(sn), speak: true }));
+      spoken += sub.length - r.rest.length;
+    };
+    let out = '';
+    try {
+      out = await ai.generate(msgs, { voice: voiceMode, onToken: t => { latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
+    } catch (e) {
+      cancelAnimationFrame(raf);
+      U.setGenerating(null); U.setBusy(false); U.setStatus('idle');
+      if (stopped && latest) { finishReply(m, latest, text, true); history.push({ role: 'assistant', text: latest }); return true; }
+      m.remove(); history.pop();
+      if (e && e.message === 'unsafe') {
+        history.push({ role: 'user', text });
+        await say('I want to be careful here: I can’t tell you whether you have a condition — only a qualified assessment can do that. What I can do is ask you a few questions about how things usually go, or explain what an assessment involves.', 'أريد أن أكون حذرة هنا: لا أستطيع أن أخبرك إن كانت لديك حالة ما — وحده التقييم المتخصص يستطيع ذلك. ما يمكنني فعله هو طرح بعض الأسئلة عن سير الأمور عادةً، أو شرح ما يتضمنه التقييم.');
+        history.push({ role: 'assistant', text: 'I can’t say whether you have a condition; only an assessment can.' });
+        offerChips(a.chips && a.chips.length ? a.chips : [{ id: 'hard', en: 'Ask me some questions', ar: 'اسأليني بعض الأسئلة' }, { id: 'kb:assessment:what', en: 'How do assessments work?', ar: 'كيف تعمل التقييمات؟' }]);
+        ERLY.emit('noor:turn-end');
+        return true;
+      }
+      if (stopped) { ERLY.emit('noor:turn-end'); return true; }
+      bubble('ai', T('My AI brain didn’t answer this time, so here’s my built-in answer.', 'لم يُجب عقلي الذكي هذه المرة، لذا إليك إجابتي المدمجة.'), { text: true, cls: 'cmsg--note' });
+      return false;
+    }
+    cancelAnimationFrame(raf);
+    if (C.inCall) { const rest = out.slice(spoken).trim(); if (rest) ERLY.emit('noor:said', { text: MD.toText(rest), speak: true }); }
+    finishReply(m, out, text, false);
+    history.push({ role: 'assistant', text: out });
+    if (history.length > 16) history.splice(0, history.length - 16);
+    U.setGenerating(null); U.setBusy(false);
+    U.setStatus(U.voice.state().speaking ? 'speaking' : 'idle');
+    if (!C.inCall) U.speak(MD.toText(out).slice(0, 700));
+    ERLY.emit('noor:turn-end');
+    if (!C.inCall) offerChips(a.kind === 'self-check' || a.kind === 'reflect' ? (a.chips || []) : followUps(reading));
+    return true;
+  }
+  function finishReply(m, md, q, stopped) {
+    m.classList.remove('is-writing');
+    m._md = md; m._q = q;
+    m.querySelector('.cmsg__b').innerHTML = MD.render(md) + (stopped ? `<p class="cmsg__stopped">${T('Stopped', 'توقف')}</p>` : '');
+    const acts = document.createElement('div');
+    acts.className = 'cmsg__acts';
+    acts.innerHTML = [['copy', 'copy', T('Copy', 'نسخ')], ['speak', 'volume', T('Read aloud', 'اقرأ بصوت')], ['regen', 'reset', T('Try again', 'حاول مجدداً')], ['up', 'thumbUp', T('Helpful', 'مفيد')], ['down', 'thumbDown', T('Not helpful', 'غير مفيد')]].map(([k, ic, l]) => `<button type="button" data-ma="${k}" aria-label="${l}" title="${l}">${ICON(ic)}</button>`).join('');
+    m.appendChild(acts);
+    U.scrollLog();
+  }
+  function followUps(reading) {
+    return reading
+      ? [{ id: 'fu:simpler', en: 'Explain it more simply', ar: 'اشرحيها بشكل أبسط' }, { id: 'fu:quiz', en: 'Quiz me on this page', ar: 'اختبريني في هذه الصفحة' }, { id: 'fu:example', en: 'Give me a real example', ar: 'أعطيني مثالاً واقعياً' }]
+      : [{ id: 'fu:simpler', en: 'Explain it more simply', ar: 'اشرحيها بشكل أبسط' }, { id: 'fu:example', en: 'Give me an example', ar: 'أعطيني مثالاً' }, { id: 'fu:quiz', en: 'Quiz me on this', ar: 'اختبريني في هذا' }];
+  }
+  document.addEventListener('click', e => {
+    const c = e.target.closest('[data-md-copy]');
+    if (c) { const code = c.closest('.md-code').querySelector('code').textContent; try { navigator.clipboard.writeText(code); } catch (err) { /* no clipboard */ } c.textContent = T('Copied', 'تم النسخ'); setTimeout(() => { c.textContent = 'Copy'; }, 1400); return; }
+    const b = e.target.closest('.cmsg__acts [data-ma]'); if (!b) return;
+    const m = b.closest('.cmsg'), k = b.dataset.ma;
+    if (k === 'copy') { try { navigator.clipboard.writeText(m._md || ''); } catch (err) { /* no clipboard */ } ERLY.toast && ERLY.toast(T('Copied', 'تم النسخ')); }
+    if (k === 'speak') U.speak(MD.toText(m._md || ''), true);
+    if (k === 'up' || k === 'down') { b.parentElement.querySelectorAll('[data-ma="up"],[data-ma="down"]').forEach(x => x.classList.toggle('is-on', x === b)); ERLY.toast && ERLY.toast(k === 'up' ? T('Glad that helped!', 'سعيدة أن ذلك ساعد!') : T('Thanks — try “Try again” or ask me to explain it differently.', 'شكراً — جرّب «حاول مجدداً» أو اطلب شرحاً مختلفاً.')); }
+    if (k === 'regen' && m._q && !U.isBusy()) {
+      const i = history.map(h => h.text).lastIndexOf(m._md);
+      if (i > 0) history.splice(i - 1, 2);
+      m.remove(); clearChips();
+      freeText(m._q, { silentUser: true });
+    }
+  });
+
+  /* ---------------- built-in study skills (no AI model needed) ---------------- */
+  async function skill(text) {
+    const t = text.trim(), R = ERLY.reader;
+    // maths
+    const math = mathOf(t);
+    if (math) { await mdSay(`**${math.show} = ${math.value}**`, `**${math.show} = ${math.value}**`, { tag: T('Calculator', 'الآلة الحاسبة') }); history.push({ role: 'assistant', text: math.value }); return true; }
+    const reading = U.attached() || (R && R.isOpen() ? R.contextFor() : null);
+    if (reading && /\b(summar|sum up|main (idea|point)s?|key ideas|explain (this|the) (page|passage|paragraph|reading)|this (page|passage))|لخّ?ص|اشرح.*(الصفحة|المقطع|القراءة)|الفكرة الرئيسية/i.test(t)) { await pageSummary(reading); return true; }
+    if (R && R.isOpen() && /\bquiz|test me|اختبر/i.test(t)) { R.act('study', 'quiz'); await mdSay('I’ve opened a **quiz** on this reading in *Study tools* — answer one question at a time. It’s just for you: nothing is saved or scored.', 'فتحت **اختباراً** على هذه القراءة في *أدوات المذاكرة* — أجب سؤالاً سؤالاً. إنه لك فقط: لا يُحفظ ولا يُقيَّم.'); return true; }
+    if (R && R.isOpen() && /flash ?cards?|بطاقات/i.test(t)) { R.act('study', 'cards'); await mdSay('Your **flashcards** are open in *Study tools*. Tap a card to flip it, then choose **Got it** or **Again** — the ones you miss come back.', 'بطاقاتك مفتوحة في *أدوات المذاكرة*. اضغط البطاقة لقلبها ثم اختر **عرفتها** أو **مجدداً** — وتعود البطاقات التي أخطأت فيها.'); return true; }
+    if (/(study|revision|revise|exam|test|midterm|final)s?\b.*\b(plan|schedule|timetable)|\b(plan|schedule|timetable)\b.*\b(study|revision|exam|test)|خطة (مذاكرة|مراجعة)|جدول (مذاكرة|مراجعة)/i.test(t)) { await studyPlan(t); return true; }
+    if (/(email|e-mail|mail|message|write|text).*(professor|prof\b|lecturer|instructor|\bdr\b|doctor|teacher|tutor|advis[eo]r)|(professor|lecturer|instructor).*(email|message)|بريد.*(الدكتور|الأستاذ|المحاضر)/i.test(t)) { await emailDraft(); return true; }
+    if (/pomodoro|focus timer|\btimer\b|مؤقت/i.test(t)) {
+      if (R && R.isOpen()) R.act('timer');
+      await mdSay(`${R && R.isOpen() ? 'I’ve started a **focus timer** in the Reading Studio. ' : ''}Try the **Pomodoro** rhythm:\n1. Pick **one** small task.\n2. Work for **25 minutes** — phone face down.\n3. Take a **5-minute** break: stand, stretch, water.\n4. After four rounds, take a longer 20-minute break.`, `${R && R.isOpen() ? 'بدأت **مؤقت تركيز** في استوديو القراءة. ' : ''}جرّب إيقاع **بومودورو**:\n1. اختر مهمة **واحدة** صغيرة.\n2. اعمل **٢٥ دقيقة** — والهاتف مقلوب.\n3. خذ استراحة **٥ دقائق**: قف وتمدّد واشرب الماء.\n4. بعد أربع جولات، خذ استراحة أطول ٢٠ دقيقة.`);
+      return true;
+    }
+    const def = t.match(/^(?:what does|what is|what's|whats|define|meaning of)\s+["“']?(.+?)["”']?(?:\s+mean)?\s*\??$/i);
+    if (def && R && R.isOpen()) {
+      const d = R.doc.terms, key = Object.keys(d).find(k => k.toLowerCase() === def[1].toLowerCase());
+      if (key) { await mdSay(`**${key}** — ${d[key][0]}\n\nArabic: ${d[key][1]}`, `**${key}** — ${d[key][0]}\n\nبالعربية: ${d[key][1]}`, { tag: T('From this reading’s glossary', 'من مسرد هذه القراءة') }); return true; }
+    }
+    return false;
+  }
+  async function pageSummary(ctx) {
+    const R = ERLY.reader, k = R.currentPara();
+    const pg = R.doc.pages[ctx.page - (R.doc.startPage || 1)] || R.doc.pages[0];
+    const pi = R.doc.pages.indexOf(pg);
+    const lines = pg.paras.filter(p => !p.sub).map((p, j) => R.paraSummary(`${pi}-${j}`)[0]).filter(Boolean);
+    R.act('summary', k);
+    const md = `### ${pg.h}\n${lines.map(l => '- ' + l).join('\n')}\n\n${R.doc.uploaded ? '_Auto summary: key sentences picked from your file on this device._' : '_From the course team’s notes for this reading._'}`;
+    await mdSay(md, md, { tag: T('Page summary', 'ملخص الصفحة') });
+    offerChips([{ id: 'fu:quiz', en: 'Quiz me on this page', ar: 'اختبريني في هذه الصفحة' }, { id: 'fu:cards', en: 'Make flashcards', ar: 'اصنعي بطاقات' }, { id: 'brain', en: 'Explain it with AI', ar: 'اشرحيها بالذكاء الاصطناعي' }]);
+  }
+  async function studyPlan(t) {
+    const n = Math.max(2, Math.min(14, +(t.match(/(\d{1,2})\s*(day|days|يوم|أيام)/i) || [])[1] || 7));
+    const ROWS = [
+      ['List every topic and rate it 🙂 😐 😟', 'Make a one-page topic list', 'اكتب كل المواضيع وقيّمها 🙂 😐 😟', 'قائمة مواضيع في صفحة واحدة'],
+      ['Hardest topic #1', 'Read → close the book → write what you remember', 'أصعب موضوع رقم ١', 'اقرأ ← أغلق الكتاب ← اكتب ما تتذكره'],
+      ['Hardest topic #2 + quick review of yesterday', 'Flashcards (retrieval practice)', 'أصعب موضوع رقم ٢ + مراجعة سريعة للأمس', 'بطاقات (ممارسة الاسترجاع)'],
+      ['A past paper, timed', 'Mark it and list every mistake', 'ورقة امتحان سابقة بوقت محدد', 'صحّحها واكتب كل خطأ'],
+      ['Fix the mistakes + topic #3', 'Teach it out loud to an empty chair', 'صحّح الأخطاء + الموضوع ٣', 'اشرحه بصوت عالٍ لكرسي فارغ'],
+      ['Mixed questions from all topics', 'Interleave: switch topic every 20 min', 'أسئلة مختلطة من كل المواضيع', 'بدّل الموضوع كل ٢٠ دقيقة'],
+      ['Light review and an early night', 'Skim your summaries — no cramming', 'مراجعة خفيفة ونوم مبكر', 'تصفّح ملخصاتك — دون حشو']
+    ];
+    const rows = [];
+    for (let d = 1; d <= n; d++) rows.push(d === n ? ROWS[6] : ROWS[Math.min(5, d - 1 < 6 ? d - 1 : 1 + ((d - 1) % 5))]);
+    const en = `### Your ${n}-day exam plan\n| Day | Focus | How |\n|---|---|---|\n${rows.map((r, i) => `| ${i + 1} | ${r[0]} | ${r[1]} |`).join('\n')}\n\n**Every day:** 25-minute focus blocks with 5-minute breaks, a 10-minute review of yesterday, and 7–9 hours of sleep — memory is saved while you sleep.\n\nIf you have exam accommodations (like extra time), SAS can make sure each instructor has your letter before the exam.`;
+    const ar = `### خطتك للامتحانات خلال ${n} أيام\n| اليوم | التركيز | الطريقة |\n|---|---|---|\n${rows.map((r, i) => `| ${i + 1} | ${r[2]} | ${r[3]} |`).join('\n')}\n\n**كل يوم:** فترات تركيز ٢٥ دقيقة مع استراحة ٥ دقائق، ومراجعة ١٠ دقائق للأمس، ونوم ٧–٩ ساعات — فالذاكرة تُثبَّت أثناء النوم.\n\nإن كانت لديك تسهيلات امتحان (مثل وقت إضافي)، يمكن لخدمات الطلبة التأكد من وصول خطابك لكل مدرّس قبل الامتحان.`;
+    await mdSay(en, ar, { tag: T('Study plan', 'خطة مذاكرة') });
+    offerChips([{ id: 'fu:timer', en: 'Start a focus timer', ar: 'ابدئي مؤقت تركيز' }, { id: 'kb:sas:what', en: 'What can SAS do for exams?', ar: 'ماذا تقدم خدمات الطلبة للامتحانات؟' }, { id: 'brain', en: 'Personalise it with AI', ar: 'خصّصيها بالذكاء الاصطناعي' }]);
+  }
+  async function emailDraft() {
+    const en = 'Here’s a short, polite email you can adapt:\n\n**Subject:** Question about [topic] — [course code], section [x]\n\n> Dear Dr. [Surname],\n>\n> I hope you are well. I’m [your name], a student in your [course] class. I’m finding [topic] difficult and would really appreciate a few minutes in your office hours to go over it.\n>\n> Would [day and time] work for you, or is there another time that suits you better?\n>\n> Thank you for your time,\n> [Your name] · [Student ID]\n\n**Tips:** keep it short, put the course code in the subject, and give one or two times that work for you. If it’s about accommodations, SAS can send your letter for you — you don’t have to explain any details.';
+    const ar = 'إليك رسالة قصيرة ومهذبة يمكنك تعديلها:\n\n**الموضوع:** سؤال عن [الموضوع] — [رمز المادة]، الشعبة [x]\n\n> الدكتور/ة [اسم العائلة] المحترم/ة،\n>\n> أتمنى أن تكون بخير. أنا [اسمك]، طالب/ة في مادة [اسم المادة]. أجد [الموضوع] صعباً وسأكون ممتناً لبضع دقائق في ساعاتك المكتبية لمراجعته.\n>\n> هل يناسبك [اليوم والوقت]، أم هناك وقت آخر أنسب لك؟\n>\n> شكراً لوقتك،\n> [اسمك] · [الرقم الجامعي]\n\n**نصائح:** اجعلها قصيرة، وضع رمز المادة في الموضوع، واقترح وقتاً أو وقتين. إن كانت عن التسهيلات، يمكن لخدمات الطلبة إرسال خطابك — دون الحاجة لشرح أي تفاصيل.';
+    await mdSay(en, ar, { tag: T('Email draft', 'مسودة بريد') });
+  }
+  // safe arithmetic: numbers, + − × ÷ ^ ( ) and "x% of y" — no eval
+  function mathOf(t) {
+    const pct = t.match(/^(?:what(?:'s| is)\s+)?(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)\s*\??$/i);
+    if (pct) return { show: `${pct[1]}% of ${pct[2]}`, value: fmt(+pct[1] / 100 * +pct[2]) };
+    const m = t.match(/^(?:what(?:'s| is)|calculate|compute|solve|work out|كم)?\s*([\d\s+\-*/×÷^().,]+?)\s*(?:=\s*\??)?\??$/i);
+    if (!m || !/\d\s*[+\-*/×÷^]\s*[\d(]/.test(m[1])) return null;
+    const src = m[1].replace(/×/g, '*').replace(/÷/g, '/').replace(/,(?=\d{3}\b)/g, '').replace(/\s+/g, '');
+    const toks = src.match(/\d+(?:\.\d+)?|[+\-*/^()]/g);
+    if (!toks || toks.join('') !== src) return null;
+    let i = 0;
+    const peek = () => toks[i], next = () => toks[i++];
+    function prim() { const tk = next(); if (tk === '(') { const v = add(); if (next() !== ')') throw 0; return v; } if (tk === '-') return -prim(); if (tk === '+') return prim(); if (tk == null || isNaN(+tk)) throw 0; return +tk; }
+    function pow() { const b = prim(); if (peek() === '^') { next(); return Math.pow(b, pow()); } return b; }
+    function mul() { let v = pow(); while (peek() === '*' || peek() === '/') { const o = next(), r = pow(); v = o === '*' ? v * r : v / r; } return v; }
+    function add() { let v = mul(); while (peek() === '+' || peek() === '-') { const o = next(), r = mul(); v = o === '+' ? v + r : v - r; } return v; }
+    try { const v = add(); if (i !== toks.length || !isFinite(v)) return null; return { show: m[1].trim().replace(/\*/g, '×').replace(/\//g, '÷'), value: fmt(v) }; } catch (e) { return null; }
+  }
+  const fmt = v => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : String(+v.toFixed(6)));
   function offerChips(list) {
     chipRow(list.slice(0, 5), c => chip(c));
   }
@@ -111,6 +280,10 @@
     if (id === 'summary') return U.setTab('summary');
     if (id === 'assess') return chip({ id: 'kb:assessment:what', en: '', ar: '' });
     if (id === 'call') return ERLY.emit('noor:call');
+    if (id === 'brain') return U.openBrain();
+    if (id === 'fu:timer') { if (ERLY.reader && ERLY.reader.isOpen()) ERLY.reader.act('timer'); return freeText('pomodoro focus timer', { silentUser: true }); }
+    if (id === 'fu:cards') return freeText('flashcards', { silentUser: true });
+    if (id.startsWith('fu:')) return freeText(pick(c.en, c.ar), { silentUser: true });
     if (id === 'no-thanks') return say('No problem at all. I’m here whenever you want.', 'لا مشكلة إطلاقاً. أنا هنا متى أردت.');
   }
   async function crisis() {
@@ -291,5 +464,5 @@
     return Object.values(results()).map(r => ({ type: 'interview', en: `${r.name[0].split(' (')[0]}: ${LEVEL[r.level][0]}. ${r.headline[0]}`, ar: `${r.name[1].split(' (')[0]}: ${LEVEL[r.level][1]}. ${r.headline[1]}` }));
   }
 
-  C.brain = { active: () => !!(iv && !iv.done), freeText, answerText, startInterview, renderProfile, entries, chip };
+  C.brain = { active: () => !!(iv && !iv.done), freeText, answerText, startInterview, renderProfile, entries, chip, reset: () => { history.length = 0; kctx = {}; }, _math: mathOf };
 })();

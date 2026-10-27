@@ -23,7 +23,7 @@ const URL = process.env.ERLY_URL || 'http://localhost:8765/student.html';
     window.SpeechRecognition = window.webkitSpeechRecognition = DeniedMic;
   });
   await page.goto(URL);
-  await page.evaluate(() => ERLY.openStudio());
+  await page.evaluate(() => ERLY.openStudio(null, { doc: 'mech210' }));
   await page.waitForTimeout(1200);
 
   // 1. nothing is collected before consent

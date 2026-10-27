@@ -213,7 +213,32 @@ Noor is now available on the whole student site, not only in the Reading Studio.
 - **Support Pact** now asks eight Learning Blueprint questions (how material sinks in, focus style, when stuck, best time, reading in English, deadlines, stress, reminders), lets the student choose one of four SAS counselors (or no preference), and asks separately who they rely on most (mother, father, brother, sister, spouse, friend, mentor) — with a name and whether that person may be suggested if a pattern persists. Nobody is contacted automatically.
 - **Fresh demo every time**: opening the university home page (or the sign-in page directly) clears all demo data on the device, keeping only display preferences (theme, colour, language).
 
-Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{companion,noor,realtrack,handwriting,growth,quest}.e2e.js`.
+## Reading Studio v2 and Noor's AI brain
+
+- **New logo**: `assets/img/erly-mark.svg`, a sunrise over an open book (early recognition, on your terms). It is also the favicon.
+- **Library** (`assets/js/studio-content.js`): six course readings (Thermodynamics, Psychology, Programming, Cell Biology, Marketing in the UAE, Solar energy in the UAE), each with a glossary, prepared summaries, quick checks and most with a diagram walk-through. Students can search and filter by field.
+- **Open your own PDF or .txt** (`assets/js/study-tools.js`, `assets/vendor/pdf.min.js` — pdf.js, Apache-2.0). The file is read in the browser and never uploaded. Text is rebuilt into headings and paragraphs, so read-aloud and every tool works. An "Original PDF pages" view shows the real pages, and scanned PDFs open there automatically.
+- **Reader tools** (`assets/js/studio.js`, `assets/css/studio.css`):
+  - Highlights in four colours with notes, a Notes panel and Markdown export.
+  - Bookmarks, search (Ctrl F) and page thumbnails.
+  - Contents, reading progress with time left, and resume where you left off.
+  - A selection toolbar (highlight, note, read, define, Arabic, ask Noor, copy).
+  - A Study drawer with summaries, key terms, flip flashcards, quizzes and one-tap prompts for Noor.
+  - A focus timer, auto-scroll, immersive mode, full screen and keyboard shortcuts.
+  - The summaries for your own files are extractive (key sentences picked from the file), and are labelled as such.
+- **Noor's brain** (`assets/js/companion/ai.js`, picker in Noor's header): built-in by default, nothing is downloaded or sent until the student chooses.
+  - **Built-in**: ERLY's guide plus study skills (calculator, study plans, email drafts, page summaries, quizzes, timer).
+  - **On-device AI**: an open Qwen 3.5 model through WebLLM (`@mlc-ai/web-llm`, loaded from jsDelivr), downloaded once into the browser cache and run on the device's GPU via WebGPU. Messages never leave the device. Three sizes: Lite, Plus, Pro.
+  - **Chrome built-in AI** (Gemini Nano via the Prompt API), where the browser offers it.
+  - **Cloud AI** through `server/llm-proxy.mjs` (the API key stays on the server), only after consent. The proxy's chat mode is now a general study assistant.
+  - Every reply streams with Markdown (lists, tables, code with copy), copy / read-aloud / try-again / feedback buttons, and a stop button. Replies that tell the student they have a condition, or give odds, are blocked and replaced. Crisis messages are always answered by the built-in safety card first.
+- **ChatGPT-style composer**: a **+** menu (ask about the open reading, open a PDF, voice, brain, new chat), a growing text box, dictation mic, and a blue **voice-mode** button that becomes Send while typing and Stop while Noor writes. The chat can expand to a large centred window.
+- **Voice mode** (`call.js`): a full-screen animated orb with two styles. *Check-in* (default) is like a calm appointment with a caring specialist: Noor reflects back and asks one gentle question at a time, and never diagnoses. *Ask anything* is for general questions. With an AI brain, sentences are spoken as soon as they are written. It is turn-by-turn (speech recognition → brain → read aloud), not a real-time voice model, and no audio is recorded.
+- **In-the-moment nudges** (in `ui.js`, with the "notice friction" consent only):
+  - Zooming in and out a lot, pinch-zooming on a tablet, scrolling up and down a lot, or staying on one section for a long time brings a friendly, animated check-in with one-tap fixes (bigger calmer text, softer page colour, read aloud, summary, search, line focus, explain, a break).
+  - There is at most one nudge every 90 seconds, and each kind at most every 5 minutes. "I'm fine" silences that kind for the session.
+
+Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{studio-noor,companion,noor,realtrack,handwriting,growth,quest}.e2e.js`. The AI model is mocked in `studio-noor.e2e.js` (no GPU in CI); the real WebLLM download needs a WebGPU browser.
 
 Honest limits: no website can identify a condition with clinical accuracy. These features look for converging evidence and support a referral. Only a qualified assessment can confirm a learning difference. The reference ranges in the check-ins are demo values.
 
