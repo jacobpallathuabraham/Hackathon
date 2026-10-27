@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="assets/css/portal.css">
   <link rel="stylesheet" href="assets/css/accents.css">
   <link rel="stylesheet" href="assets/css/erly.css">
+  <link rel="stylesheet" href="assets/css/companion.css">
   <script>
     // Demo portal guard — must have signed in as a student
     try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('index.html?next=student'); } catch (e) {}
@@ -105,7 +106,7 @@
         </div>
         <div class="hcard hcard--noor">
           <span class="mini-noor"><i></i></span>
-          <div><b>Noor</b><p data-i18n="h2.c3">This paragraph seems to be taking a few passes. Want to go through it together?</p><span class="hcard__chips"><em data-i18n="h2.c4">Yes, let's</em><em data-i18n="h2.c5">Not now</em></span></div>
+          <div><b>Noor</b><p data-i18n="h2.c3">I noticed you returned to this section a few times. Would you like to talk about how the reading is going?</p><span class="hcard__chips"><em data-i18n="h2.c4">Talk about it</em><em data-i18n="h2.c5">Later</em></span></div>
         </div>
         <div class="hcard hcard--voice"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span><div><b data-i18n="h2.c6">Reading aloud</b><small class="muted" data-i18n="h2.c7">your choice of voice · 0.9×</small></div></div>
       </div>
@@ -202,11 +203,11 @@
         <div class="studio-cta__copy">
           <p class="kicker"><span class="num">04</span><span data-i18n="sc2.kicker">The Reading Studio</span></p>
           <h2 class="h2" data-i18n="sc2.title">Every reading, made to fit you.</h2>
-          <p class="section__lead" data-i18n="sc2.lead">Open any course PDF in a calm, full-screen studio. Change the font, size and spacing. Have it read aloud in the voice you like. Tap any highlighted word for its meaning in English and Arabic. If a paragraph is fighting back, Noor, your study buddy, gently offers to work through it with you.</p>
+          <p class="section__lead" data-i18n="sc2.lead">Open any course PDF in a calm, full-screen studio. Change the font, size and spacing. Have it read aloud in the voice you like. Tap any highlighted word for its meaning in English and Arabic. Noor, the AI reading companion, is there when you want her: talk it through by text or voice, try settings in the Reading Lab, and keep a summary that’s yours. She only checks in if you allow it — and never diagnoses.</p>
           <ul class="studio-cta__list">
             <li><span id="scIc1"></span><span data-i18n="sc2.l1">5 fonts, size, line, letter and word spacing, line length, 6 page tints</span></li>
             <li><span id="scIc2"></span><span data-i18n="sc2.l2">Read-aloud with any voice on your device, speed and pitch, word-by-word highlight</span></li>
-            <li><span id="scIc3"></span><span data-i18n="sc2.l3">Noor explains in plain words, asks a friendly check question, and walks through diagrams</span></li>
+            <li><span id="scIc3"></span><span data-i18n="sc2.l3">Noor, the AI reading companion: voice or text chat, plain-word explanations, a Reading Lab and an editable summary — consent first, no labels</span></li>
             <li><span id="scIc4"></span><span data-i18n="sc2.l4">Glossary with Arabic meanings, line focus, word anchors, a breathing break</span></li>
           </ul>
           <button class="btn btn--accent btn--big" data-studio><span data-i18n="sc2.btn">Enter the Reading Studio</span><span id="scIc5"></span></button>
@@ -543,6 +544,14 @@
   <script src="assets/js/tracker.js"></script>
   <script src="assets/js/studio-content.js"></script>
   <script src="assets/js/studio.js"></script>
+  <script src="assets/js/companion/config.js"></script>
+  <script src="assets/js/companion/signals.js"></script>
+  <script src="assets/js/companion/dialogue.js"></script>
+  <script src="assets/js/companion/store.js"></script>
+  <script src="assets/js/companion/llm.js"></script>
+  <script src="assets/js/companion/voice.js"></script>
+  <script src="assets/js/companion/summary.js"></script>
+  <script src="assets/js/companion/ui.js"></script>
   <script src="assets/js/insight.js"></script>
   <script src="assets/vendor/jspdf.umd.min.js" defer></script>
   <script src="assets/js/report.js"></script>

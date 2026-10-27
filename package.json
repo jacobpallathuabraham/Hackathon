@@ -1,0 +1,11 @@
+{
+  "name": "erly-hackathon",
+  "private": true,
+  "description": "ERLY static site. No build step; this file only exists to run the tests.",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "serve": "python3 -m http.server 8765",
+    "proxy": "node server/llm-proxy.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
