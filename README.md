@@ -12,6 +12,8 @@ This is the website and interactive prototype for Team Rising Stars' entry in th
 |---|---|---|---|
 | Student | `Acubins` | `1234` | `student.html` (the ERLY site) |
 | Counselor | `Counselor` | `4321` | `counselor.html` (SAS dashboard) |
+| Faculty | `Faculty` | `5678` | `faculty.html` (Faculty portal) |
+| University | `University` | `2468` | `university.html` (Command Center → SAS / Faculty) |
 
 A wrong password shakes the card and shows an error. Using student credentials on the counselor form (or the other way round) is refused with a hint. The student and counselor pages send you back to the login if you open them without signing in.
 
@@ -167,6 +169,39 @@ Noor is now available on the whole student site, not only in the Reading Studio.
   - Features: a quest map, XP and streaks, a time limit per activity, and confetti.
   - A judge-mode switch unlocks all days for demos.
   - On the student page the check-ins section is a single card that launches the quest page with a warp transition.
+
+## University, Faculty, real tracking, handwriting and the Growth Plan
+
+- **University Command Center** (`university.html`): campus KPIs, enrolment and attendance charts, the support pipeline, live faculty referrals and accessibility rings. "Open SAS Dashboard" and "Faculty portal" go through an animated warp. The University account can open both.
+- **Faculty portal** (`faculty.html`, `assets/js/faculty.js`, `assets/js/campus-data.js`):
+  - Course/stream selector, a per-session attendance register (present / late / absent), and attendance trends.
+  - Student cards with the classroom-observed signs written under each name.
+  - "Refer to SAS…", where the student is always told. SAS sees referrals in a new **Faculty referrals** view and can acknowledge and invite the student.
+  - The roster is synthetic. Observations are things a teacher can see in class, never a diagnosis.
+- **Demo vs Real tracking** (`assets/js/realtrack.js` + tracker): the Support Pact now has a mode switch.
+  - *Demo* simulates 28 days in seconds.
+  - *Real* follows the actual calendar, with no simulate, fast-forward or back-filling.
+  - Real mode asks an 8-question, timed and time-stamped daily check-in (sleep, mood, stress, reading effort, starting effort, study time, hardest thing, unusual day).
+  - It records Reading Studio counts per day. Missed, paused, short-sleep (< 6 h) and unusual days are excluded.
+  - It needs 7+ clean baseline days and judges only after day 28. An area needs 2+ persistent indicators, at least one of them measured, so self-report alone never flags.
+  - Raw days are deleted at the end.
+- **Noor's knowledge** (`assets/js/companion/kb-extra.js`): more than 50 topics and 12 quick facts, including DLD, NVLD, executive function, working memory, processing speed, Arabic dyslexia, study craft, sleep, burnout, panic, OCD, trauma, UAE People of Determination rights, data protection, the SAS process and disclosure.
+  - Typo-tolerant matching.
+  - Follow-ups use the conversation ("tell me more", "simpler", "how is it assessed?").
+  - Two conditions can be compared.
+  - Answers render with a topic tag, bullets, a word-by-word reveal, and helpful / copy buttons.
+- **Handwriting check** (`assets/js/handwriting.js`, `assets/js/hand-ui.js`): Noor dictates three sentences (EN or AR), then the student photographs their handwriting or tries a built-in sample.
+  - Everything runs in the browser and the photo is never uploaded or kept.
+  - Lighting is evened out and ruled lines are ignored. Letter size, baseline, spacing, slant, line direction, margins and crossings-out are measured against demo reference bands, with an annotated overlay. A spelling self-check follows.
+  - The result is a level of features, never a percentage or a diagnosis. Saved summaries count at most as an early sign in the evidence profile.
+- **Growth Plan** (`support.html`, `assets/js/growth-core.js`, `growth-games.js`, `growth.js`): a six-week programme run like a learning specialist would run it.
+  - An intake consult with areas pre-selected from the student's own evidence, SMART goals, and short daily sessions built from 13 interactive exercises.
+  - Difficulty adapts to scores, and one plan session counts per real day.
+  - A weekly review adjusts the plan and suggests a counsellor when mood is low.
+  - It builds skills and strategies alongside SAS or a specialist, never instead of them.
+- **SAS picks**: four videos chosen by the team are in the lecture-video library. ERLY couldn't preview them, so their notes are general active-listening prompts.
+
+Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{companion,noor,realtrack,handwriting,growth}.e2e.js`.
 
 Honest limits: no website can identify a condition with clinical accuracy. These features look for converging evidence and support a referral. Only a qualified assessment can confirm a learning difference. The reference ranges in the check-ins are demo values.
 
