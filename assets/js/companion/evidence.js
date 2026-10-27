@@ -52,7 +52,7 @@
   const W = { early: 1, moderate: 2, stronger: 3 };
   const TRACK_MAP = { reading: 'reading', executive: 'attention', strain: 'wellbeing' };
 
-  // src = { checkins: [{id, level}], tracker: {available, areas}, video: {videosWithFriction, episodes, slowdowns, restarts, transcript}, reading: {frictionSessions} }
+  // src = { checkins: [{id, level}], tracker: {available, areas}, video: {videosWithFriction, episodes, slowdowns, restarts, transcript}, reading: {frictionSessions}, handwriting: {level, spelling} }
   function profile(src) {
     src = src || {};
     const out = {};
@@ -69,6 +69,10 @@
     else if (v.episodes >= 1) add('listening', 'video', 1, 'Videos: you went back to the same part of a video several times', 'الفيديوهات: عدت إلى الجزء نفسه من فيديو عدة مرات');
     if (v.slowdowns >= 3) add('listening', 'video', 1, 'Videos: you often slowed the playback down', 'الفيديوهات: أبطأت التشغيل كثيراً');
     if (v.restarts >= 3) add('attention', 'video', 1, 'Videos: several videos were restarted from the beginning', 'الفيديوهات: أُعيد تشغيل عدة فيديوهات من البداية');
+    // a handwriting check the student chose to do: supporting evidence only, never enough on its own
+    const hw = src.handwriting;
+    if (hw && hw.level === 'several') add('writing', 'handwriting', 1, 'Handwriting check: several features often seen with dysgraphia or dyslexia', 'فحص الكتابة: عدة سمات تظهر غالباً مع عسر الكتابة أو القراءة');
+    if (hw && hw.spelling === 'notable') add('reading', 'handwriting', 1, 'Dictation: several words were spelled differently', 'الإملاء: كُتبت عدة كلمات بشكل مختلف');
     const rd = src.reading || {};
     if (rd.frictionSessions >= 4) add('reading', 'studio', 2, `Reading Studio: repeated re-reading in ${rd.frictionSessions} sessions`, `استوديو القراءة: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);
     else if (rd.frictionSessions >= 2) add('reading', 'studio', 1, `Reading Studio: repeated re-reading in ${rd.frictionSessions} sessions`, `استوديو القراءة: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);

@@ -43,7 +43,8 @@
     const vs = Object.values(D.videos);
     return { videosWithFriction: vs.filter(v => v.episodes > 0).length, episodes: vs.reduce((a, v) => a + (v.episodes || 0), 0), slowdowns: vs.reduce((a, v) => a + (v.slowdowns || 0), 0), restarts: vs.reduce((a, v) => a + (v.restarts || 0), 0), transcript: vs.reduce((a, v) => a + (v.transcript || 0), 0) };
   }
-  const profile = () => E.profile({ checkins: checkinSources(), tracker: tracker(), video: videoSummary(), reading: D.reading });
+  function handwriting() { try { return JSON.parse(localStorage.getItem('erly-hand-v1') || 'null'); } catch (e) { return null; } }
+  const profile = () => E.profile({ checkins: checkinSources(), tracker: tracker(), video: videoSummary(), reading: D.reading, handwriting: handwriting() });
 
   function check() {
     const c = companion();
@@ -69,6 +70,6 @@
     setInterviewed(area, result) { D.notify.interviewed[area] = Date.now(); D.interviews[area] = result; save(); },
     interviews: () => D.interviews,
     snooze(ms) { D.notify.snoozeUntil = Date.now() + ms; save(); },
-    deleteAll() { D = blank(); try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+    deleteAll() { D = blank(); try { localStorage.removeItem(KEY); localStorage.removeItem('erly-hand-v1'); } catch (e) { /* ignore */ } }
   };
 })();

@@ -56,3 +56,9 @@ test('Noor offers help for one area at a time, never nags, and respects â€œoffâ€
   assert.equal(E.shouldNotify(prof, { now, snoozeUntil: now + 1 }), null);
   assert.equal(E.shouldNotify(E.profile({ video: { episodes: 1 } }), { now }), null, 'early evidence never triggers a notification');
 });
+test('a handwriting check alone is never more than an early sign', () => {
+  const p = E.profile({ handwriting: { level: 'several', spelling: 'notable' } });
+  assert.equal(p.writing.level, 'early'); assert.equal(p.reading.level, 'early');
+  assert.ok(p.writing.sources.includes('handwriting'));
+  assert.equal(E.profile({ handwriting: { level: 'few', spelling: 'typical' } }).writing.level, 'none');
+});
