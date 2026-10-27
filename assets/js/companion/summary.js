@@ -56,6 +56,7 @@
       out.reported.push((q ? pick(q) + ': ' : '') + '“' + (lang ? e.ar : e.en) + '”');
     });
     entries.filter(e => e.type === 'interpretation').forEach(e => out.context.push(lang ? e.ar : e.en));
+    const talked = entries.filter(e => e.type === 'interview').map(e => lang ? e.ar : e.en); // careful screening wording from interview.js
     entries.filter(e => e.type === 'tried').forEach(e => out.tried.push(lang ? e.ar : e.en));
     entries.filter(e => e.type === 'recommendation').forEach(e => out.helpful.push(lang ? e.ar : e.en));
     if (input.lab && input.lab.ratings) {
@@ -76,6 +77,8 @@
     if (!entries.some(e => e.type === 'referral')) out.next.push(pick(['If reading keeps feeling harder than you’d like, you can self-refer to Student Accessibility Services at any time. That’s always your choice.', 'إذا استمرت القراءة أصعب مما تريد، يمكنك التواصل بنفسك مع خدمات الطلبة في أي وقت. هذا قرارك دائماً.']));
     // safety net on generated text (the fixed limitation lines name what ERLY is NOT, so they're exempt)
     Object.keys(out).forEach(k => { if (k === 'limitations') return; out[k] = out[k].filter(line => !BANNED.test(line) || /^“/.test(line)); });
+    if (talked.length) out.context = out.context.filter(l => !/Not enough information to suggest|لا توجد معلومات كافية لاقتراح/.test(l));
+    talked.forEach(t => out.context.unshift(t)); // added after the wording filter: it names what to explore, never a verdict
     return { id: 's' + Date.now().toString(36), created: new Date().toISOString(), lang: lang ? 'ar' : 'en', sections: out };
   }
 

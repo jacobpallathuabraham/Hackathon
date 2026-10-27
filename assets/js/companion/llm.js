@@ -57,12 +57,16 @@
       // payload = exactly what is listed in the consent card: the question text,
       // the student's (redacted) answer, the allowed intents and the UI language.
       payloadFor(req) { return { question: String(req.question || '').slice(0, 400), answer: redact(req.answer), allowed: req.allowed, lang: req.lang === 'ar' ? 'ar' : 'en' }; },
-      async interpret(req) {
+      // knowledge chat: the student's question (redacted) + ERLY's own reference text for grounding
+      chatPayload(req) { return { mode: 'chat', question: redact(req.question), context: String(req.context || '').slice(0, 3000), history: (req.history || []).slice(-6).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', text: redact(h.text).slice(0, 400) })), lang: req.lang === 'ar' ? 'ar' : 'en' }; },
+      async chat(req) { return this.post(this.chatPayload(req)); },
+      async interpret(req) { return this.post(this.payloadFor(req)); },
+      async post(payload) {
         if (!fetchFn) throw new Error('no-fetch');
         const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
         const t = setTimeout(() => ctrl && ctrl.abort(), timeoutMs);
         try {
-          const r = await fetchFn(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(this.payloadFor(req)), signal: ctrl ? ctrl.signal : undefined, credentials: 'omit' });
+          const r = await fetchFn(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: ctrl ? ctrl.signal : undefined, credentials: 'omit' });
           if (!r.ok) throw new Error('http-' + r.status);
           return await r.json();
         } finally { clearTimeout(t); }
@@ -93,8 +97,30 @@
           lastError = e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'network';
           return { intents: [], ack: '', source: 'rules', fallback: lastError };
         }
+      },
+      // free-form answer from the external model, checked before it is shown
+      async chat(req) {
+        const p = this.active();
+        if (!p.external) return { reply: '', source: 'rules', simulated: true };
+        try {
+          const out = await p.chat(req);
+          lastError = null;
+          const reply = validateReply(out && out.reply);
+          return reply ? { reply, source: 'model' } : { reply: '', source: 'rules', fallback: 'invalid-output' };
+        } catch (e) {
+          lastError = e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'network';
+          return { reply: '', source: 'rules', fallback: lastError };
+        }
       }
     };
   }
-  return { create, validate, redact, BANNED };
+  // General explanations may name conditions; telling THIS student they have one, or giving odds, may not.
+  const VERDICT = /\byou (definitely |probably |likely |clearly )?(have|are|suffer from) (a |an )?(dyslexi|adhd|autis|dyscalcul|dysgraph|dyspraxi|depress|anxiety disorder|learning disab)|\b\d{1,3}\s?%|probabilit|likelihood|أنت مصاب|لديك (عسر|اضطراب|توحد)/i;
+  function validateReply(r) {
+    if (typeof r !== 'string') return '';
+    const t = r.trim();
+    if (!t || t.length > 1500 || VERDICT.test(t) || /<script|<iframe|javascript:/i.test(t)) return '';
+    return t.replace(/<[^>]+>/g, '');
+  }
+  return { create, validate, validateReply, redact, BANNED };
 });

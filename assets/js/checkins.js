@@ -39,7 +39,8 @@
   }
 
   /* ---------------- Noor's voice ---------------- */
-  const voice = window.ERLY_VOICE ? ERLY_VOICE.create({ getVoiceName: l => { try { return ((ERLY.companion && ERLY.companion.store.prefs().voices) || {})[l] || ''; } catch (e) { return ''; } } }) : null;
+  const voiceName = l => { try { const prefs = ERLY.companion ? ERLY.companion.store.prefs() : (JSON.parse(localStorage.getItem('erly-companion-v1') || '{}').prefs || {}); return (prefs.voices || {})[l] || ''; } catch (e) { return ''; } };
+  const voice = window.ERLY_VOICE ? ERLY_VOICE.create({ getVoiceName: voiceName }) : null;
   let muted = false;
 
   /* ---------------- the activities ---------------- */
@@ -62,10 +63,103 @@
   };
   const LEVEL = { stronger: ['Stronger evidence', 'دلائل أقوى'], moderate: ['Some evidence', 'بعض الدلائل'], early: ['Early sign', 'إشارة أولية'] };
 
-  /* ---------------- section ---------------- */
-  function render() {
+  /* ---------------- the daily quest: 2 activities a day for 5 days ---------------- */
+  const SCHEDULE = [['V', 'U'], ['M', 'E'], ['P', 'O'], ['N', 'Q'], ['C', 'H']];
+  const LIMIT = { V: 5, U: 6, M: 6, E: 5, P: 5, O: 6, N: 4, Q: 6, H: 2, C: 3 }; // minutes; generous, so most finish well within
+  const limitMin = k => (DB.short ? Math.ceil(LIMIT[k] / 2) : LIMIT[k]);
+  const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${x.getMonth() + 1}-${x.getDate()}`; };
+  const startOfDay = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+  function quest() {
+    DB.quest = DB.quest || {};
+    if (!DB.quest.start && MODE === 'quest') { DB.quest.start = startOfDay(Date.now()); save(); }
+    const start = DB.quest.start || startOfDay(Date.now());
+    const day = Math.min(5, Math.floor((startOfDay(Date.now()) - start) / 864e5) + 1);
+    const done = k => (DB.history[k] || []).length > 0;
+    const days = SCHEDULE.map((ks, i) => ({ n: i + 1, ks, unlocked: DB.quest.judge || i + 1 <= day, done: ks.every(done), started: ks.some(done) }));
+    const runs = C.DOMAINS.flatMap(k => (DB.history[k] || []).map(r => r.at)).filter(Boolean);
+    const active = new Set(runs.map(dayKey));
+    let streak = 0; for (let d = Date.now(); active.has(dayKey(d)) || (streak === 0 && d === Date.now()); d -= 864e5) { if (active.has(dayKey(d))) streak++; else if (streak === 0) continue; if (streak > 30) break; }
+    const completed = C.DOMAINS.filter(done).length;
+    return { day, days, streak, completed, xp: completed * 100 + days.filter(d => d.done).length * 50, today: days[Math.min(day, 5) - 1], done };
+  }
+  const MODE = app.dataset.mode || 'full';
+  function render() { if (MODE === 'cta') return renderCTA(); if (MODE === 'quest') return renderQuest(); return renderFull(); }
+
+  function renderCTA() {
+    const q = quest(), st = statuses();
+    const ring = q.completed / 10;
+    app.innerHTML = `<div class="q-cta">
+      <div class="q-cta__ring" style="--p:${ring}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="52" class="q-cta__arc"/></svg><span><b>${q.completed}</b><small>/ 10</small></span></div>
+      <div class="q-cta__copy">
+        <p class="mono q-cta__k">${ICON('rocket')} ${T('Daily Quest', 'المهمة اليومية')} · ${T(`Day ${q.day} of 5`, `اليوم ${q.day} من ٥`)}${q.streak ? ` · 🔥 ${q.streak}` : ''}</p>
+        <h3>${T('Two short challenges a day, five days, every part of studying.', 'تحدّيان قصيران يومياً، لخمسة أيام، لكل جوانب الدراسة.')}</h3>
+        <div class="q-cta__today">${q.today.ks.map(k => `<span class="q-chip ${q.done(k) ? 'is-done' : ''}">${ICON(CATS[k].icon)} ${esc(P(CATS[k].en, CATS[k].ar))}${q.done(k) ? ' ✓' : ''}</span>`).join('')}</div>
+      </div>
+      <a class="btn btn--accent btn--big q-cta__go" href="checkins.html" data-warp>${q.completed ? T('Continue the quest', 'تابع المهمة') : T('Start today’s quest', 'ابدأ مهمة اليوم')} <span aria-hidden="true">→</span></a>
+    </div>`;
+  }
+
+  function renderQuest() {
+    const q = quest(), st = statuses();
+    const pos = [[8, 70], [28, 30], [50, 64], [72, 26], [92, 58]];
+    app.innerHTML = `
+      <section class="q-hero">
+        <div class="q-stats">
+          <div><small>${T('Today', 'اليوم')}</small><b>${T(`Day ${q.day}`, `اليوم ${q.day}`)}<span>/5</span></b></div>
+          <div><small>XP</small><b class="q-xp" data-to="${q.xp}">${q.xp}</b></div>
+          <div><small>${T('Streak', 'سلسلة الأيام')}</small><b>🔥 ${q.streak}</b></div>
+          <div><small>${T('Done', 'منجز')}</small><b>${q.completed}<span>/10</span></b></div>
+        </div>
+        <div class="q-map" aria-label="${T('Quest map', 'خريطة المهمة')}">
+<svg aria-hidden="true"><path class="q-map__path"/><path class="q-map__done" data-p="${q.days.filter(d => d.done).length / 4}"/></svg>
+          ${q.days.map((d, i) => `<button type="button" class="q-node ${d.done ? 'is-done' : ''} ${d.n === q.day ? 'is-today' : ''} ${d.unlocked ? '' : 'is-locked'}" style="left:${pos[i][0]}%;top:${pos[i][1]}%;--i:${i}" data-day="${d.n}" ${d.unlocked ? '' : 'disabled'} aria-label="${T(`Day ${d.n}`, `اليوم ${d.n}`)}${d.done ? ' ✓' : d.unlocked ? '' : ' 🔒'}"><span>${d.done ? '✓' : d.unlocked ? d.n : '🔒'}</span><small>${d.ks.map(k => esc(P(CATS[k].en, CATS[k].ar).split(' & ')[0])).join(' · ')}</small></button>`).join('')}
+        </div>
+      </section>
+      <section class="q-today" id="qToday">
+        <h2>${q.today.done ? T('Today’s quest is complete! 🎉', 'أنجزت مهمة اليوم! 🎉') : T('Today’s challenges', 'تحدّيات اليوم')}</h2>
+        <div class="q-cards">${dayCards(selDay || q.day, q, st)}</div>
+        ${q.today.done && q.day < 5 && !DB.quest.judge ? `<p class="muted">${T('Come back tomorrow for the next two — spreading them out gives a more reliable picture.', 'عد غداً للتحدّيين التاليين — توزيعها على أيام يعطي صورة أكثر موثوقية.')}</p>` : ''}
+      </section>
+      ${profileHTML(st)}`;
+    drawMap(pos);
+  }
+  // the winding path between the day nodes, drawn in real pixels so it never stretches
+  let mapPos = null;
+  function drawMap(pos) {
+    mapPos = pos || mapPos;
+    const map = app.querySelector('.q-map'); if (!map || !mapPos) return;
+    const W = map.clientWidth, Hh = map.clientHeight;
+    const pts = mapPos.map(([x, y]) => [x / 100 * W, y / 100 * Hh]);
+    let d = `M${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], mx = (x0 + x1) / 2; d += ` C${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`; }
+    const svg = map.querySelector('svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${Hh}`);
+    svg.querySelectorAll('path').forEach(pa => pa.setAttribute('d', d));
+    const done = svg.querySelector('.q-map__done'), len = done.getTotalLength(), frac = +done.dataset.p || 0;
+    done.style.strokeDasharray = `${len}`; done.style.strokeDashoffset = `${len}`;
+    requestAnimationFrame(() => requestAnimationFrame(() => { done.style.strokeDashoffset = `${len * (1 - frac)}`; }));
+  }
+  addEventListener('resize', () => { clearTimeout(drawMap.t); drawMap.t = setTimeout(() => drawMap(), 150); });
+  let selDay = null;
+  function dayCards(n, q, st) {
+    const d = q.days[n - 1];
+    return d.ks.map((k, i) => {
+      const s = st[k], a = ACT[k], cat = CATS[k];
+      return `<article class="q-card ${q.done(k) ? 'is-done' : ''} ${d.unlocked ? '' : 'is-locked'}" style="--i:${i}">
+        <div class="q-card__ic">${ICON(cat.icon)}</div>
+        <div class="q-card__b">
+          <small class="mono">${T(`Day ${n} · challenge ${i + 1}`, `اليوم ${n} · التحدي ${i + 1}`)}</small>
+          <h3>${esc(P(...a.task))}</h3>
+          <p>${esc(P(...a.why))}</p>
+          <div class="q-card__meta"><span>${ICON('timer')} ${T(`${limitMin(k)} min limit`, `حد ${limitMin(k)} دقائق`)}</span><span>+100 XP</span>${s.latest ? `<span class="ck-chip ck-chip--${s.band}">${P(...BAND[s.band])}</span>` : ''}</div>
+        </div>
+        <div class="q-card__go">${d.unlocked ? `${s.latest ? `<button class="btn btn--xs btn--quiet" data-ck-view="${k}">${T('Result', 'النتيجة')}</button>` : ''}<button class="btn ${s.latest ? 'btn--ghost' : 'btn--accent'}" data-ck-start="${k}">${s.latest ? T('Play again', 'العب مجدداً') : T('Play', 'ابدأ')}</button>` : `<span class="muted">🔒 ${T(`Unlocks on day ${n}`, `يُفتح في اليوم ${n}`)}</span>`}</div>
+      </article>`;
+    }).join('');
+  }
+
+  function renderFull() {
     const st = statuses();
-    const syn = C.synthesize(st, tracking());
     app.innerHTML = `
       <div class="ck-grid">${C.DOMAINS.map((k, i) => {
         const s = st[k], a = ACT[k], cat = CATS[k];
@@ -78,6 +172,11 @@
             <div>${s.latest ? `<button class="btn btn--xs btn--quiet" data-ck-view="${k}">${T('Result', 'النتيجة')}</button>` : ''}<button class="btn btn--xs ${s.latest ? 'btn--ghost' : 'btn--accent'}" data-ck-start="${k}">${s.latest ? T('Redo', 'أعد') : T('Start', 'ابدأ')}</button></div></div>
         </article>`;
       }).join('')}</div>
+      ${profileHTML(st)}`;
+  }
+  function profileHTML(st) {
+    const syn = C.synthesize(st, tracking());
+    return `
       <div class="ck-profile reveal is-in">
         <div class="ck-profile__head">
           <div><p class="panel__h mono">${T('Your check-in profile', 'ملفك من الفحوصات')}</p>
@@ -91,13 +190,14 @@
               <p class="ck-ex__ev">${T('Based on', 'بناءً على')}: ${x.domains.map(d => esc(P(CATS[d].en, CATS[d].ar))).join(' · ')}${x.repeated ? ` · ${T('seen on two runs', 'ظهر في محاولتين')}` : ''}${x.trackingAvailable ? (x.agreesWithTracking ? ` · ${T('matches your 28-day tracking', 'يتوافق مع تتبّعك لـ٢٨ يوماً')}` : ` · ${T('not seen in your 28-day tracking', 'لم يظهر في تتبّعك لـ٢٨ يوماً')}`) : ''}</p>
               <ul>${(L() === 'ar' ? x.assessAr : x.assess).map(a => `<li>${esc(a)}</li>`).join('')}</ul></div>`).join('')}</div>
             <details class="ck-ordinary"><summary>${T('Everyday things that can cause the same results', 'أمور يومية قد تسبب النتائج نفسها')}</summary><ul>${syn.ordinary.map(o => `<li>${esc(P(o[0], o[1]))}</li>`).join('')}</ul></details>
-            <div class="ck-actions"><a class="btn btn--sm btn--accent" href="#handoff">${T('Talk to SAS', 'تحدّث مع خدمات الطلبة')}</a><button class="btn btn--sm btn--ghost" data-ck-download>${T('Download my results (.txt)', 'نزّل نتائجي (.txt)')}</button></div>`
+            <div class="ck-actions"><a class="btn btn--sm btn--accent" href="${MODE === 'quest' ? 'student.html#handoff' : '#handoff'}">${T('Talk to SAS', 'تحدّث مع خدمات الطلبة')}</a><button class="btn btn--sm btn--ghost" data-ck-download>${T('Download my results (.txt)', 'نزّل نتائجي (.txt)')}</button></div>`
             : `<p class="ck-lead">${T('Nothing stood out across your check-ins — your results sit in the typical range. If something still feels hard, you can always talk to SAS.', 'لم يبرز شيء عبر فحوصاتك — نتائجك ضمن النطاق المعتاد. إن بقي شيء صعباً، يمكنك دائماً التحدث مع خدمات الطلبة.')}</p><div class="ck-actions"><button class="btn btn--sm btn--ghost" data-ck-download>${T('Download my results (.txt)', 'نزّل نتائجي (.txt)')}</button></div>`}
         <details class="ck-acc"><summary>${T('How accurate is this?', 'ما مدى دقة هذا؟')}</summary>
           <p>${T('Each activity is modelled on a well-known screening task — lexical decision, visual crowding, speech-in-noise, digit span, dot comparison, Trail Making A/B, go/no-go, a continuous-performance task, copy vs free writing, timed vs untimed items. ERLY looks for several measures agreeing, re-runs that repeat, and agreement with your own 28-day tracking before it suggests anything, which makes it far more careful than any single test.', 'كل نشاط مستوحى من مهمة فحص معروفة — قرار الكلمات، والازدحام البصري، والكلام وسط الضوضاء، وسعة الأرقام، ومقارنة النقاط، واختبار المسارات أ/ب، والاستجابة/الكبح، ومهمة الأداء المستمر، والنسخ مقابل الكتابة الحرة، والأسئلة مع المؤقت وبدونه. يبحث إيرلي عن اتفاق عدة مقاييس، وتكرار النتيجة عند الإعادة، وتوافقها مع تتبّعك لـ٢٨ يوماً قبل أن يقترح أي شيء.')}</p>
           <p>${T('But no online activity can identify a condition with doctor-level accuracy. The reference ranges here are demo values, not validated norms; device, sleep, mood and language all move the results. Only a qualified assessment can confirm a learning difference or any other condition — that’s why the result is always “worth exploring with SAS”, never a label.', 'لكن لا يمكن لأي نشاط عبر الإنترنت تحديد حالة بدقة الطبيب. نطاقات المقارنة هنا قيم تجريبية وليست معايير معتمدة؛ والجهاز والنوم والمزاج واللغة تؤثر جميعها في النتائج. وحده التقييم المتخصص يمكنه تأكيد اختلاف تعلّم أو أي حالة أخرى — لذلك تكون النتيجة دائماً «تستحق الاستكشاف مع خدمات الطلبة»، وليست تصنيفاً.')}</p></details>
         <div class="ck-foot">
           <label class="switch-row switch-row--inline"><span><b>${T('Short demo versions', 'نسخ تجريبية قصيرة')}</b><small>${T('Half-length activities for a quick demo — less reliable.', 'أنشطة بنصف الطول لعرض سريع — أقل موثوقية.')}</small></span><input type="checkbox" id="ckShort" ${DB.short ? 'checked' : ''}><i></i></label>
+          ${MODE === 'quest' ? `<label class="switch-row switch-row--inline"><span><b>${T('Judge mode', 'وضع الحكام')}</b><small>${T('Unlock all five days now (for demos).', 'افتح الأيام الخمسة الآن (للعروض).')}</small></span><input type="checkbox" id="ckJudge" ${DB.quest && DB.quest.judge ? 'checked' : ''}><i></i></label>` : ''}
           <button class="btn btn--xs btn--quiet" data-ck-clear>${ICON('trash')} ${T('Delete my check-in results', 'احذف نتائج فحوصاتي')}</button>
         </div>
       </div>`;
@@ -109,7 +209,28 @@
     if (e.target.closest('[data-ck-clear]') && confirm(T('Delete all your check-in results from this device?', 'حذف جميع نتائج فحوصاتك من هذا الجهاز؟'))) { DB.history = {}; save(); render(); ERLY.toast && ERLY.toast(T('Check-in results deleted', 'حُذفت نتائج الفحوصات')); }
     if (e.target.closest('[data-ck-download]')) download();
   });
-  app.addEventListener('change', e => { if (e.target.id === 'ckShort') { DB.short = e.target.checked; save(); render(); } });
+  app.addEventListener('change', e => {
+    if (e.target.id === 'ckShort') { DB.short = e.target.checked; save(); render(); }
+    if (e.target.id === 'ckJudge') { DB.quest = DB.quest || {}; DB.quest.judge = e.target.checked; save(); render(); }
+  });
+  app.addEventListener('click', e => {
+    const d = e.target.closest('[data-day]');
+    if (d && !d.disabled) { selDay = +d.dataset.day; render(); const t = document.getElementById('qToday'); t && t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
+    const w = e.target.closest('[data-warp]');
+    if (w && !reduce) { e.preventDefault(); warp(w); }
+  });
+  // a playful transition into the quest page
+  function warp(from) {
+    const r = from.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'q-warp';
+    el.style.setProperty('--x', (r.left + r.width / 2) + 'px'); el.style.setProperty('--y', (r.top + r.height / 2) + 'px');
+    el.innerHTML = `<div class="q-warp__stars">${Array.from({ length: 24 }, (_, i) => `<i style="--a:${i * 15}deg;--d:${(i % 5) * 60}ms"></i>`).join('')}</div><span class="q-warp__rocket">${ICON('rocket')}</span><b>${T('Launching your quest…', 'جارٍ إطلاق مهمتك…')}</b>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('is-on'));
+    try { sessionStorage.setItem('erly-warp', '1'); } catch (err) { /* ignore */ }
+    setTimeout(() => { location.href = from.getAttribute('href'); }, 900);
+  }
 
   function download() {
     const st = statuses(), syn = C.synthesize(st, tracking());
@@ -145,6 +266,7 @@
         <button class="icon-btn" data-ck-close aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button>
         <div class="ck-ov__t"><span class="ck-card__ic">${ICON(cat.icon)}</span><b>${esc(P(cat.en, cat.ar))}</b></div>
         <div class="ck-ov__prog" aria-hidden="true"><i id="ckProg"></i></div>
+        <span class="ck-time mono" id="ckTime" hidden title="${T('Time left', 'الوقت المتبقي')}">${ICON('timer')}<b></b></span>
         <button class="icon-btn" id="ckMute" aria-pressed="${muted}" aria-label="${T('Noor’s voice on/off', 'صوت نور تشغيل/إيقاف')}">${ICON(muted ? 'mute' : 'volume')}</button>
       </header>
       <main class="ck-stage" id="ckStage" tabindex="-1"></main>
@@ -231,6 +353,7 @@
         <p>${esc(P(...a.why))}</p>
         <ul class="ck-intro__list">
           <li>${ICON('clock')} ${T(`About ${DB.short ? Math.max(1, Math.round(a.min / 2)) : a.min} minutes${DB.short ? ' (short demo version)' : ''}`, `نحو ${DB.short ? Math.max(1, Math.round(a.min / 2)) : a.min} دقائق${DB.short ? ' (نسخة قصيرة)' : ''}`)}</li>
+          <li>${ICON('timer')} ${T(`Time limit: ${limitMin(k)} minutes — plenty of time, no rush`, `الحد الزمني: ${limitMin(k)} دقائق — وقت كافٍ، بلا عجلة`)}</li>
           <li>${ICON('lock')} ${T('Private — results stay on this device and are only shared if you choose.', 'خاص — تبقى النتائج على هذا الجهاز ولا تُشارك إلا إن اخترت.')}</li>
           <li>${ICON('sprout')} ${T('Not a test you pass or fail. Do it when you’re rested, somewhere quiet.', 'ليس اختباراً تنجح فيه أو ترسب. أنجزه وأنت مرتاح، في مكان هادئ.')}</li>
         </ul>
@@ -242,10 +365,18 @@
     const mins = DB.short ? Math.max(1, Math.round(a.min / 2)) : a.min;
     say(`Hi! This one takes about ${mins} minute${mins > 1 ? 's' : ''}. ${P(...a.why)} Whenever you’re ready, tap I’m ready.`, `أهلاً! يستغرق هذا نحو ${mins} دقائق. ${P(...a.why)} عندما تكون مستعداً، اضغط «أنا مستعد».`);
   }
+  class TimeUp extends Error {}
   async function start(k) {
     run = { k, aborted: false, away: 0, awayAt: 0, t0: now() };
+    const me = run, limitMs = limitMin(k) * 60e3;
+    const timeEl = $('#ckTime', ov);
+    const tick = () => { const left = Math.max(0, limitMs - (now() - me.t0)); if (timeEl) { timeEl.hidden = false; timeEl.querySelector('b').textContent = `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`; timeEl.classList.toggle('is-low', left < 30000); } };
+    tick(); me.clock = setInterval(tick, 500);
+    const timeUp = new Promise((_, rej) => { me.tu = setTimeout(() => rej(new TimeUp()), limitMs); });
+    timeUp.catch(() => {});
     try {
-      const out = await RUN[k]();
+      const out = await Promise.race([RUN[k](), timeUp]);
+      clearTimeout(me.tu); clearInterval(me.clock); if (timeEl) timeEl.hidden = true;
       guard();
       const dur = now() - run.t0;
       const res = C.scoreRun(k, out.metrics, Object.assign({ durationMs: dur, awayMs: run.away }, out.validity || {}));
@@ -254,6 +385,16 @@
       run = null;
       showResult(k, res);
     } catch (e) {
+      clearTimeout(me.tu); clearInterval(me.clock); if (timeEl) timeEl.hidden = true;
+      if (e instanceof TimeUp) {
+        me.aborted = true; run = null; stopNoise();
+        const res = C.scoreRun(k, {}, { complete: false }); res.notes.push('time-up'); res.short = DB.short;
+        DB.history[k] = (DB.history[k] || []).concat([res]).slice(-3); save();
+        H(`<div class="ck-res"><span class="ck-intro__ic">${ICON('timer')}</span><h2>${T('Time’s up!', 'انتهى الوقت!')}</h2><p class="ck-res__lead">${T('No worries — that happens. This run won’t count; you can play it again whenever you like.', 'لا بأس — يحدث هذا. لن تُحتسب هذه المحاولة؛ يمكنك اللعب مجدداً متى شئت.')}</p><div class="ck-res__btns"><button class="btn btn--accent" data-redo>${T('Try again', 'حاول مجدداً')}</button><button class="btn btn--ghost" data-done>${T('Back', 'رجوع')}</button></div></div>`);
+        $('[data-done]', stage()).onclick = close; $('[data-redo]', stage()).onclick = () => intro(k);
+        say('Time’s up! No worries, that one won’t count. You can try again whenever you like.', 'انتهى الوقت! لا بأس، لن تُحتسب. يمكنك المحاولة مجدداً متى شئت.');
+        return;
+      }
       if (!(e instanceof Aborted)) { console.error(e); H(`<p class="ck-warn">${T('Something went wrong — please try again.', 'حدث خطأ — حاول مجدداً.')}</p>`); }
       run = null;
       stopNoise();
@@ -261,6 +402,7 @@
   }
   function showResult(k, res, viewOnly) {
     prog(1);
+    if (!viewOnly && MODE === 'quest') setTimeout(() => celebrate(k), 400);
     const cat = CATS[k];
     const band = res.band;
     if (k === 'H') return showSupportStyle(res);
@@ -771,6 +913,14 @@
     return { metrics: { comfort: vals.reduce((a, b) => a + b, 0) / vals.length, avoid: vals.filter(v => v <= 2).length * (SCEN.length / list.length) }, validity: { complete: true } };
   }
 
+  function celebrate(k) {
+    const q = quest();
+    const day = q.days.find(d => d.ks.includes(k));
+    const chip = $('.ck-res .ck-chip', ov) || $('.ck-res', ov);
+    if (window.FUN && FUN.confetti && chip) FUN.confetti(chip, day && day.done ? 60 : 24);
+    const xp = document.createElement('div'); xp.className = 'q-xpfly'; xp.textContent = day && day.done ? '+150 XP · ' + T('Day complete!', 'أنجزت اليوم!') : '+100 XP';
+    ov.appendChild(xp); setTimeout(() => xp.remove(), 2200);
+  }
   const RUN = { V: runV, U: runU, M: runM, E: runE, P: runP, O: runO, N: runN, Q: runQ, H: runH, C: runC };
   render();
   I18N.onChange(render);

@@ -143,6 +143,33 @@ How results are reached (`assets/js/checkins-score.js`, unit-tested):
 
 Results stay in `localStorage` (`erly-checkins-v1`). The student can download them as .txt or delete them. A "Short demo versions" switch halves every activity for pitches.
 
+## Noor everywhere: knowledge, interviews, voice calls, videos and the site analyser
+
+Noor is now available on the whole student site, not only in the Reading Studio. Open her from the launcher or press `Alt+N`.
+
+- **Knowledgeable chat** (`assets/js/companion/knowledge.js`): a bilingual guide to dyslexia, dyscalculia, dysgraphia, ADHD, auditory processing, vision, dyspraxia/DCD, autism, test anxiety, low mood, studying in a second language, assessment, accommodations and study skills.
+  - Noor works out what the question is about (what it is, signs, assessment, what helps, myths, how it differs from similar things) and answers with follow-up chips.
+  - "Do I have…?" questions and "I always… / I can't…" statements are reflected back with an offer to explore, never a verdict.
+  - Crisis language always leads to UAE emergency (999) and 800 HOPE support.
+  - With the optional proxy and the student's consent, an external model answers instead, using the same text as its reference. Replies are rejected if they tell the student they have a condition or give a probability.
+- **"Talk it through" interviews** (`assets/js/companion/interview.js`): specialist-style questions, one at a time, for reading, attention, maths, writing, listening, vision, wellbeing and social communication.
+  - Each covers how often things happen, childhood history, more than one setting, impact, and what else to check first (eye or hearing test, sleep, mood, second language, gaps in schooling).
+  - Students can answer with chips, typing or voice, and can skip or stop at any time.
+  - The wellbeing module includes a safety question that leads straight to crisis support.
+  - Outcome: "a clear pattern often seen with X — worth a formal assessment", "some signs", "few signs" or "not enough to say". It is combined with what ERLY observed and never includes a percentage.
+- **Site analyser** (`assets/js/analyser.js` + `assets/js/companion/evidence.js`): consented summaries from Check-ins, lecture videos, Reading Studio sessions and the 28-day tracker are turned into a per-area evidence level.
+  - An area reaches "some" only when two independent sources agree.
+  - At that point Noor gently offers help (Yes / Later / No thanks), at most once every 3 days per area, and never for 14 days after an interview. Saying yes leads to an explanation, tools and the interview.
+  - The **Profile** tab shows everything that was noticed.
+- **Lecture videos** (`assets/js/videos.js`): YouTube lessons play inside a video room using YouTube's privacy-enhanced player. With consent, ERLY reads playback info only: rewinds (including YouTube's own controls), speed, restarts and notes. Going back to the same 30-second part 3 times within 10 minutes triggers "Are you having any trouble understanding it?", followed by targeted help (slow down, key points, focus tips) and an offer to talk it through.
+- **Two-way voice call** (`assets/js/companion/call.js`): Noor speaks, then listens, then answers, turn by turn, with live captions, an animated face that reacts to the microphone level, tap-to-interrupt and optional interrupt-by-talking. It starts only after microphone consent and stores no audio.
+- **Daily Quest** (`checkins.html`): the ten check-ins are now two a day for five days.
+  - Features: a quest map, XP and streaks, a time limit per activity, and confetti.
+  - A judge-mode switch unlocks all days for demos.
+  - On the student page the check-ins section is a single card that launches the quest page with a warp transition.
+
+Honest limits: no website can identify a condition with clinical accuracy. These features look for converging evidence and support a referral. Only a qualified assessment can confirm a learning difference. The reference ranges in the check-ins are demo values.
+
 ## References
 
 - Aboudan, R. et al. (2011). *International Journal of English Linguistics* 1(2):64. doi:10.5539/ijel.v1n2p64
