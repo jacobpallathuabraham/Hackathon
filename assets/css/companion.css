@@ -356,3 +356,26 @@ em.clab__r--easier, em.clab__r--same, em.clab__r--harder { background: none; fon
 .cprof__iv { margin: 0; font-size: 12.5px; display: flex; gap: 6px; align-items: center; }
 .cprof__iv svg { width: 13px; height: 13px; }
 .cprof__a .btn { justify-self: start; }
+
+/* ---------- knowledge answers: streaming, structure, feedback ---------- */
+.cmsg__b.is-streaming .sw { opacity: 0; filter: blur(3px); animation: swIn .38s ease-out forwards; animation-delay: calc(var(--w) * 14ms); }
+@keyframes swIn { to { opacity: 1; filter: none; } }
+.kb-tag { display: inline-flex; align-items: center; gap: 6px; font: 600 10.5px var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.kb-tag svg { width: 13px; height: 13px; }
+.kb-tag i { font-style: normal; color: var(--muted); padding-inline-start: 6px; border-inline-start: 1px solid var(--line); }
+.cmsg__b p { margin: 0 0 8px; }
+.cmsg__b p:last-child { margin-bottom: 0; }
+.kb-h { font-weight: 600; }
+.kb-ul { margin: 2px 0 10px; padding: 0; list-style: none; display: grid; gap: 5px; }
+.kb-ul li { position: relative; padding-inline-start: 18px; line-height: 1.45; }
+.kb-ul li::before { content: ''; position: absolute; inset-inline-start: 4px; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); transform: scale(0); animation: liDot .4s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay: calc(var(--li) * 70ms + .1s); }
+@keyframes liDot { to { transform: scale(1); } }
+.kb-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.kb-foot small { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.kb-foot small svg { width: 12px; height: 12px; }
+.kb-fb { display: inline-flex; gap: 2px; }
+.kb-fb button { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; border: 0; background: none; color: var(--muted); cursor: pointer; transition: background .2s, color .2s, transform .25s cubic-bezier(.34,1.56,.64,1); }
+.kb-fb button svg { width: 15px; height: 15px; }
+.kb-fb button:hover { background: var(--surface-2); color: inherit; transform: translateY(-1px); }
+.kb-fb button.is-on { color: var(--accent); transform: scale(1.15); }
+@media (prefers-reduced-motion: reduce) { .cmsg__b.is-streaming .sw, .kb-ul li::before { animation: none; opacity: 1; filter: none; transform: none; } }

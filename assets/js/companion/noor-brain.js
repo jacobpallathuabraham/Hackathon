@@ -25,14 +25,58 @@
 
   const html = text => esc(text).replace(/\n• /g, '<br>• ').replace(/\n/g, '<br><br>');
   async function say(en, ar, o = {}) { return aiSays(en, ar, Object.assign({ html: o.html || html(pick(en, ar)) }, o)); }
+  // knowledge answers: a heading, real bullet lists, a source line and feedback
+  let kctx = {};
+  function remember(a) {
+    if (!a || !a.topic) return;
+    if (kctx.topic === a.topic) { kctx.aspect = a.aspect; if (!kctx.seen.includes(a.aspect)) kctx.seen.push(a.aspect); }
+    else kctx = { topic: a.topic, aspect: a.aspect, seen: [a.aspect] };
+  }
+  function richHTML(text) {
+    const lines = String(text).split('\n');
+    let out = '', list = [];
+    const flush = () => { if (list.length) { out += '<ul class="kb-ul">' + list.map((l, i) => `<li style="--li:${i}">${esc(l)}</li>`).join('') + '</ul>'; list = []; } };
+    lines.forEach((l, i) => {
+      if (/^• /.test(l)) return list.push(l.slice(2));
+      flush();
+      const m = l.match(/^([^:：]{3,60})[:：]\s(.+)$/);
+      if (i === 0 && /:$/.test(l)) out += `<p class="kb-h">${esc(l)}</p>`;
+      else if (m && !/^https?/.test(m[1])) out += `<p><b>${esc(m[1])}:</b> ${esc(m[2])}</p>`;
+      else out += `<p>${esc(l)}</p>`;
+    });
+    flush();
+    return out;
+  }
+  const ASP_N = { what: ['Overview', 'نظرة عامة'], signs: ['Signs', 'العلامات'], assess: ['Assessment', 'التقييم'], support: ['What helps', 'ما يساعد'], similar: ['Look-alikes', 'ما يشبهه'], myths: ['Myths', 'خرافات'], faq: ['Quick fact', 'معلومة سريعة'], simple: ['In short', 'باختصار'], compare: ['Comparison', 'مقارنة'], list: ['Topics', 'المواضيع'], done: ['', ''] };
+  async function sayKB(a) {
+    const asp = ASP_N[a.aspect] || ['', ''];
+    const tp = a.topic && K.topicById(a.topic);
+    const head = tp && asp[0] ? `<span class="kb-tag">${ICON('book')} ${esc(pick(...tp.title).split(' (')[0])}${a.compared ? ' · ' + esc(pick(...K.topicById(a.compared[1]).title).split(' (')[0]) : ''} <i>${esc(pick(...asp))}</i></span>` : '';
+    const foot = a.kind === 'answer' && tp ? `<div class="kb-foot"><small>${ICON('shield')} ${T('From ERLY’s guide · general information, not a diagnosis', 'من دليل إيرلي · معلومات عامة لا تشخيص')}</small><span class="kb-fb" data-kb="${esc(a.topic)}:${esc(a.aspect)}"><button data-fb="up" aria-label="${T('Helpful', 'مفيد')}">${ICON('thumbUp')}</button><button data-fb="down" aria-label="${T('Not helpful', 'غير مفيد')}">${ICON('thumbDown')}</button><button data-fb="copy" aria-label="${T('Copy', 'نسخ')}">${ICON('copy')}</button></span></div>` : '';
+    return aiSays(a.en, a.ar, { html: head + richHTML(pick(a.en, a.ar)) + foot, stream: true });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.kb-fb button'); if (!b) return;
+    const box = b.parentElement, key = box.dataset.kb;
+    if (b.dataset.fb === 'copy') {
+      const txt = b.closest('.cmsg__b').innerText.trim();
+      try { navigator.clipboard.writeText(txt); } catch (err) { /* no clipboard */ }
+      return ERLY.toast && ERLY.toast(T('Copied', 'تم النسخ'));
+    }
+    try { const f = JSON.parse(localStorage.getItem('erly-noor-feedback') || '{}'); f[key] = b.dataset.fb; localStorage.setItem('erly-noor-feedback', JSON.stringify(f)); } catch (err) { /* private mode */ }
+    box.querySelectorAll('[data-fb="up"],[data-fb="down"]').forEach(x => x.classList.toggle('is-on', x === b));
+    if (b.dataset.fb === 'down') { const t = K.topicById(key.split(':')[0]); if (t) { say('Thanks — I’ll keep it simpler. Here’s the short version:', 'شكراً — سأبسّطها. إليك النسخة المختصرة:', { speak: false }).then(() => { const s2 = K.aspectAnswer(t.id, 'simple'); remember(s2); return sayKB(s2); }).then(() => offerChips(K.aspectAnswer(t.id, 'simple').chips)); } }
+    else ERLY.toast && ERLY.toast(T('Glad that helped!', 'سعيدة أن ذلك ساعد!'));
+  });
 
   /* ---------------- free-form, knowledgeable chat ---------------- */
   async function freeText(text, o = {}) {
     if (!o.silentUser) bubble('you', text, { text: true });
     clearChips();
     history.push({ role: 'user', text });
-    const a = K.answer(text, lang());
+    const a = K.answer(text, lang(), kctx);
     if (a.kind === 'crisis') return crisis();
+    remember(a);
     let reply = null;
     if (U.llm.active().external && (a.kind === 'answer' || a.kind === 'unknown' || a.kind === 'self-check')) {
       U.setStatus('thinking');
@@ -40,6 +84,7 @@
       if (r.reply) reply = r.reply;
     }
     if (reply) await say(reply, reply, { tag: T('AI model · grounded on ERLY’s guide', 'نموذج ذكاء اصطناعي · مستند إلى دليل إيرلي') });
+    else if (a.kind === 'answer') await sayKB(a);
     else await say(a.en, a.ar);
     history.push({ role: 'assistant', text: reply || pick(a.en, a.ar) });
     if (history.length > 12) history.splice(0, history.length - 12);
@@ -54,10 +99,11 @@
     if (id.startsWith('kb:')) {
       const [, topic, asp] = id.split(':');
       const a = K.aspectAnswer(topic, asp);
-      if (a) { await say(a.en, a.ar); return offerChips(a.chips); }
+      if (a) { remember(a); await sayKB(a); return offerChips(a.chips); }
     }
     if (id.startsWith('interview:')) return startInterview(id.split(':')[1], 'student');
     if (id === 'talk') return U.startConversation({ type: 'student' });
+    if (id === 'topics') return freeText('what can you answer?', { silentUser: true });
     if (id === 'hard') return freeText('I feel like something is hard for me', { silentUser: true });
     if (id === 'profile') return U.setTab('profile');
     if (id === 'summary') return U.setTab('summary');

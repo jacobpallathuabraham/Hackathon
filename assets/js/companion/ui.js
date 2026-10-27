@@ -275,9 +275,28 @@
     setStatus(voice.state().speaking ? 'speaking' : 'idle');
     const text = pick(en, ar);
     const m = bubble('ai', o.html ? o.html : esc(text).replace(/\n/g, '<br>'), { tag: o.tag });
+    if (o.stream && !reduce) streamIn(m.querySelector('.cmsg__b'));
     ERLY.emit && ERLY.emit('noor:said', { text: o.sayText || text, speak: o.speak !== false });
     if (o.speak !== false) speak(o.sayText || text);
     return m;
+  }
+  // reveal a reply word by word, like it is being written (visual only — the text is already there for screen readers)
+  function streamIn(el) {
+    if (!el) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('button, .kb-foot, .kb-tag') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    let k = 0;
+    nodes.forEach(n => {
+      const frag = document.createDocumentFragment();
+      n.textContent.split(/(\s+)/).forEach(w => {
+        if (!w) return;
+        if (/^\s+$/.test(w)) return frag.appendChild(document.createTextNode(w));
+        const sp = document.createElement('span'); sp.className = 'sw'; sp.style.setProperty('--w', Math.min(k++, 160)); sp.textContent = w; frag.appendChild(sp);
+      });
+      n.replaceWith(frag);
+    });
+    el.classList.add('is-streaming');
+    setTimeout(() => el.classList.remove('is-streaming'), Math.min(k, 160) * 14 + 400);
   }
   function chipRow(list, onPick, cls = '') {
     clearChips();

@@ -1,6 +1,9 @@
 /* SAS / ERLY — one consistent line-icon set, used instead of emoji. */
 (function () {
   const P = {
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+    thumbUp: '<path d="M7 11v9H4v-9zM7 11l4-7a2 2 0 0 1 3 2l-1 4h6a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 17.8 20H7"/>',
+    thumbDown: '<path d="M17 13V4h3v9zM17 13l-4 7a2 2 0 0 1-3-2l1-4H5a2 2 0 0 1-2-2.3l1.2-6A2 2 0 0 1 6.2 4H17"/>',
     book: '<path d="M4 5.5C6.5 4.3 9.5 4.3 12 6v13c-2.5-1.7-5.5-1.7-8-.5zM20 5.5C17.5 4.3 14.5 4.3 12 6v13c2.5-1.7 5.5-1.7 8-.5z"/>',
     headphones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/>',
     calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',

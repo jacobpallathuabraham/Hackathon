@@ -14,9 +14,9 @@
 
    Pure module: window.ERLY_KB in the browser, CommonJS for the tests. */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.ERLY_KB = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./kb-extra.js'));
+  else root.ERLY_KB = factory(root.ERLY_KB_EXTRA);
+})(typeof self !== 'undefined' ? self : this, function (EXTRA) {
   'use strict';
   const B = (en, ar) => [en, ar];
 
@@ -76,7 +76,7 @@
     },
     {
       id: 'adhd', area: 'attention',
-      keys: ['adhd', 'add', 'attention deficit', 'mind wanders', 'zone out', 'can\'t sit still', 'last minute', 'miss deadlines', 'missing deadlines', 'deadlines', 'disorganized', 'start tasks', 'getting started', 'يشرد ذهني', 'آخر لحظة', 'hyperactivity', 'focus', 'concentrate', 'concentration', 'distracted', 'procrastinate', 'procrastination', 'forgetful', 'disorganised', 'disorganized', 'restless', 'impulsive', 'fidget', 'executive function', 'فرط الحركة', 'تشتت الانتباه', 'التركيز', 'التسويف', 'النسيان', 'تشتت'],
+      keys: ['adhd', 'add', 'attention deficit', 'mind wanders', 'zone out', 'can\'t sit still', 'last minute', 'miss deadlines', 'missing deadlines', 'deadlines', 'disorganized', 'start tasks', 'getting started', 'يشرد ذهني', 'آخر لحظة', 'hyperactivity', 'focus', 'concentrate', 'concentration', 'distracted', 'procrastinate', 'procrastination', 'forgetful', 'disorganised', 'disorganized', 'restless', 'impulsive', 'fidget', 'فرط الحركة', 'تشتت الانتباه', 'التركيز', 'التسويف', 'النسيان', 'تشتت'],
       title: B('ADHD (attention and executive-function differences)', 'اضطراب فرط الحركة وتشتت الانتباه (اختلافات الانتباه والوظائف التنفيذية)'),
       what: B('ADHD is a neurodevelopmental difference in regulating attention, activity and impulses. In adults it often looks less like hyperactivity and more like trouble starting and finishing tasks, time blindness, forgetfulness and restlessness. For a diagnosis, signs must have started in childhood (before about age 12), appear in more than one setting (study, work, home), and cause real difficulties. Around 3–5% of adults have ADHD.', 'اضطراب فرط الحركة وتشتت الانتباه اختلاف نمائي عصبي في تنظيم الانتباه والنشاط والاندفاع. لدى البالغين غالباً لا يظهر كفرط حركة بقدر ما يظهر كصعوبة في بدء المهام وإنهائها، وضعف الإحساس بالوقت، والنسيان، والتململ. وللتشخيص يجب أن تكون العلامات قد بدأت في الطفولة (قبل ١٢ عاماً تقريباً)، وأن تظهر في أكثر من بيئة (الدراسة، العمل، البيت)، وأن تسبب صعوبات حقيقية. يصيب نحو ٣–٥٪ من البالغين.'),
       signs: [
@@ -111,7 +111,7 @@
     },
     {
       id: 'vision', area: 'vision',
-      keys: ['vision', 'eyes', 'eye strain', 'blurry', 'blur', 'headache', 'glare', 'visual stress', 'irlen', 'coloured overlays', 'colored overlays', 'squint', 'النظر', 'العين', 'ضبابي', 'صداع', 'إجهاد العين', 'الوهج'],
+      keys: ['vision', 'eyes', 'eye strain', 'blurry', 'blur', 'headache', 'glare', 'squint', 'النظر', 'العين', 'ضبابي', 'صداع', 'إجهاد العين', 'الوهج'],
       title: B('Vision and visual comfort when reading', 'النظر والراحة البصرية أثناء القراءة'),
       what: B('Uncorrected short- or long-sightedness, astigmatism, or problems with how the two eyes work together (focusing and convergence) can make reading tiring and slow. Some people also report “visual stress” — text that seems to shimmer or crowd — which is debated in research, but tinted backgrounds and spacing help some readers feel more comfortable.', 'قصر النظر أو طوله غير المصحح، أو اللابؤرية، أو مشكلات في تعاون العينين معاً (التركيز والتقارب) قد تجعل القراءة متعبة وبطيئة. ويصف بعض الناس «إجهاداً بصرياً» — نص يبدو كأنه يلمع أو يتزاحم — وهو موضوع نقاش في الأبحاث، لكن الخلفيات الملونة والتباعد تريح بعض القراء.'),
       signs: [B('Blur, double vision or words moving', 'تشوش أو رؤية مزدوجة أو حركة الكلمات'), B('Headaches or sore eyes after reading', 'صداع أو ألم في العينين بعد القراءة'), B('Rubbing eyes, covering one eye, or getting very close to the screen', 'فرك العينين، أو تغطية عين واحدة، أو الاقتراب كثيراً من الشاشة'), B('Strong preference for larger text or zoom', 'تفضيل قوي للنص الأكبر أو التكبير')],
@@ -144,7 +144,7 @@
     },
     {
       id: 'anxiety', area: 'wellbeing',
-      keys: ['anxiety', 'anxious', 'test anxiety', 'exam stress', 'stress', 'panic', 'worry', 'nervous', 'blank in exams', 'overwhelmed', 'القلق', 'قلق الاختبار', 'التوتر', 'الذعر', 'متوتر', 'ضغط'],
+      keys: ['anxiety', 'anxious', 'test anxiety', 'exam stress', 'stress', 'worry', 'nervous', 'blank in exams', 'overwhelmed', 'القلق', 'قلق الاختبار', 'التوتر', 'متوتر', 'ضغط'],
       title: B('Test anxiety and stress', 'قلق الاختبار والتوتر'),
       what: B('Some worry before exams is normal and even useful. Test anxiety is when worry is so strong that your mind goes blank, you can’t show what you know, or you avoid assessments. Ongoing anxiety can also affect sleep, concentration and memory — and it often sits alongside learning differences.', 'بعض القلق قبل الاختبارات طبيعي ومفيد أحياناً. أما قلق الاختبار فهو قلق شديد يجعل ذهنك فارغاً، فلا تستطيع إظهار ما تعرفه، أو تتجنب التقييمات. والقلق المستمر قد يؤثر أيضاً في النوم والتركيز والذاكرة — وكثيراً ما يرافق اختلافات التعلّم.'),
       signs: [B('Racing heart, nausea or shaking before or during exams', 'تسارع القلب أو الغثيان أو الارتجاف قبل الاختبارات أو أثناءها'), B('Mind going blank even when you studied', 'فراغ الذهن رغم أنك ذاكرت'), B('Doing much better on untimed or practice work', 'أداء أفضل بكثير في الأعمال غير المؤقتة أو التدريبية'), B('Avoiding or delaying assessments', 'تجنّب التقييمات أو تأجيلها')],
@@ -155,7 +155,7 @@
     },
     {
       id: 'mood', area: 'wellbeing',
-      keys: ['depression', 'depressed', 'sad', 'low mood', 'no motivation', 'unmotivated', 'hopeless', 'tired all the time', 'burnout', 'sleep', 'insomnia', 'الاكتئاب', 'حزين', 'مكتئب', 'لا دافع', 'الإرهاق', 'النوم', 'الأرق'],
+      keys: ['depression', 'depressed', 'sad', 'low mood', 'no motivation', 'unmotivated', 'hopeless', 'الاكتئاب', 'حزين', 'مكتئب', 'لا دافع', 'الإرهاق'],
       title: B('Low mood, burnout and sleep', 'انخفاض المزاج والإرهاق والنوم'),
       what: B('Low mood, depression, burnout and poor sleep make concentrating, remembering and reading much harder — and can look like a learning difficulty. If you’ve felt down, hopeless or lost interest in things for two weeks or more, it’s worth talking to someone. You don’t have to be in crisis to ask for help.', 'انخفاض المزاج والاكتئاب والإرهاق وقلة النوم تجعل التركيز والتذكر والقراءة أصعب بكثير — وقد تبدو كصعوبة تعلّم. إن شعرت بالإحباط أو اليأس أو فقدان الاهتمام لأسبوعين أو أكثر، فمن المفيد التحدث مع شخص ما. لا يلزم أن تكون في أزمة لتطلب المساعدة.'),
       signs: [B('Feeling down or empty most days', 'الشعور بالحزن أو الفراغ معظم الأيام'), B('Losing interest in things you used to enjoy', 'فقدان الاهتمام بأشياء كنت تستمتع بها'), B('Sleeping much more or less than usual; constant tiredness', 'النوم أكثر أو أقل بكثير من المعتاد؛ وتعب دائم'), B('Concentration and motivation collapsing', 'انهيار التركيز والدافع')],
@@ -177,7 +177,7 @@
     },
     {
       id: 'assessment', area: 'general',
-      keys: ['assessment', 'get tested', 'get assessed', 'diagnosis', 'diagnosed', 'test for', 'how do i know', 'who can diagnose', 'evaluation', 'psychologist', 'sas', 'accessibility services', 'التقييم', 'التشخيص', 'فحص', 'كيف أعرف', 'أخصائي', 'خدمات الطلبة'],
+      keys: ['assessment', 'get tested', 'get assessed', 'diagnosis', 'diagnosed', 'test for', 'how do i know', 'who can diagnose', 'evaluation', 'psychologist', 'التقييم', 'التشخيص', 'فحص', 'كيف أعرف', 'أخصائي'],
       title: B('Getting assessed', 'الحصول على تقييم'),
       what: B('Only qualified professionals can diagnose a learning difference or condition. At university, Student Accessibility Services (SAS) is the place to start: they listen, can arrange or refer you for an assessment, and can put temporary support in place while you wait. You choose what to share — ERLY never contacts SAS for you.', 'وحدهم المختصون المؤهلون يمكنهم تشخيص اختلاف تعلّم أو حالة ما. في الجامعة، خدمات الطلبة هي نقطة البداية: يستمعون إليك، ويمكنهم ترتيب تقييم أو تحويلك، ويمكنهم توفير دعم مؤقت أثناء الانتظار. أنت من يقرر ما تشاركه — ولا يتواصل إيرلي مع خدمات الطلبة نيابة عنك.'),
       signs: [B('Bring: your ERLY summary (if you want), school reports, any past assessments, and examples of what feels hard', 'أحضر: ملخص إيرلي (إن أردت)، والتقارير المدرسية، وأي تقييمات سابقة، وأمثلة على ما تجده صعباً'), B('Dyslexia / dyscalculia / dysgraphia: educational psychologist or specialist assessor', 'عسر القراءة / الحساب / الكتابة: أخصائي نفسي تربوي أو مقيّم متخصص'), B('ADHD and autism: psychiatrist or clinical psychologist', 'اضطراب الانتباه والتوحد: طبيب نفسي أو أخصائي نفسي إكلينيكي'), B('Hearing: audiologist · Vision: optometrist', 'السمع: أخصائي السمعيات · النظر: أخصائي البصريات')],
@@ -188,7 +188,7 @@
     },
     {
       id: 'accommodations', area: 'general',
-      keys: ['accommodation', 'accommodations', 'adjustments', 'extra time', 'support plan', 'exam arrangements', 'assistive technology', 'الترتيبات', 'وقت إضافي', 'التسهيلات', 'خطة الدعم', 'التقنيات المساعدة'],
+      keys: ['accommodation', 'accommodations', 'adjustments', 'extra time', 'support plan', 'exam arrangements', 'الترتيبات', 'وقت إضافي', 'التسهيلات', 'خطة الدعم'],
       title: B('Accommodations and support', 'الترتيبات والتسهيلات'),
       what: B('Accommodations are changes that remove barriers without lowering standards: extra exam time, a quiet room, readings in advance, recorded lectures, assistive software, flexible deadlines. They are agreed with SAS and shared with lecturers only with your consent.', 'الترتيبات تغييرات تزيل العوائق دون خفض المعايير: وقت إضافي في الاختبار، وقاعة هادئة، وقراءات مسبقة، ومحاضرات مسجلة، وبرامج مساعدة، ومواعيد مرنة. يُتفق عليها مع خدمات الطلبة ولا تُشارك مع المحاضرين إلا بموافقتك.'),
       signs: [B('Exam: extra time, separate room, rest breaks, reader or scribe, computer use', 'الاختبار: وقت إضافي، قاعة منفصلة، استراحات، قارئ أو كاتب، استخدام الحاسوب'), B('Teaching: slides in advance, recordings, captions', 'التدريس: الشرائح مسبقاً، التسجيلات، الترجمة النصية'), B('Tools: text-to-speech, speech-to-text, mind-mapping, planners', 'الأدوات: تحويل النص إلى كلام والكلام إلى نص، والخرائط الذهنية، والمخططات')],
@@ -196,7 +196,7 @@
     },
     {
       id: 'study', area: 'general',
-      keys: ['study tips', 'how to study', 'memory', 'remember', 'revision', 'revise', 'notes', 'note taking', 'exam preparation', 'motivation', 'time management', 'مذاكرة', 'الدراسة', 'التذكر', 'المراجعة', 'الملاحظات', 'إدارة الوقت'],
+      keys: ['study tips', 'how to study', 'revision', 'revise', 'exam preparation', 'مذاكرة', 'الدراسة', 'المراجعة'],
       title: B('Studying smarter', 'المذاكرة بذكاء'),
       what: B('Evidence-based techniques beat long hours: test yourself (retrieval practice) instead of re-reading, spread study over days (spacing), mix topics (interleaving), explain ideas in your own words, and pair words with diagrams. Short focused sessions (25–45 minutes) with breaks work for most brains.', 'التقنيات المثبتة علمياً أفضل من الساعات الطويلة: اختبر نفسك (ممارسة الاسترجاع) بدلاً من إعادة القراءة، ووزّع المذاكرة على أيام (التباعد)، وامزج المواضيع، واشرح الأفكار بكلماتك، واربط الكلمات بالرسوم. الجلسات القصيرة المركزة (٢٥–٤٥ دقيقة) مع استراحات تناسب معظم الأدمغة.'),
       signs: [B('Make flashcards or practice questions from each lecture', 'اصنع بطاقات أو أسئلة تدريبية من كل محاضرة'), B('Use the Start-Ramp to make the first step tiny', 'استخدم «منحدر البداية» لجعل الخطوة الأولى صغيرة جداً'), B('Sleep consolidates memory — late-night cramming backfires', 'النوم يثبّت الذاكرة — السهر للحفظ يأتي بنتيجة عكسية')],
@@ -211,6 +211,12 @@
     }
   ];
 
+  const BLANK = B('', '');
+  if (EXTRA && EXTRA.TOPICS) EXTRA.TOPICS.forEach(t => TOPICS.push(t));
+  TOPICS.forEach(t => { ['similar', 'assess', 'support', 'myths', 'causes'].forEach(k => { t[k] = t[k] || BLANK; }); t.signs = t.signs || []; t.related = t.related || []; });
+  const FAQS = (EXTRA && EXTRA.FAQS) || [];
+  const IV_AREAS = ['reading', 'attention', 'maths', 'writing', 'listening', 'vision', 'wellbeing', 'social'];
+
   // what part of a topic the question is about
   const ASPECTS = [
     ['signs', /sign|symptom|indicat|how do i know|do i have|could i have|am i|look like|traits|علامات|أعراض|هل لدي|هل عندي|كيف أعرف/i],
@@ -220,22 +226,47 @@
     ['myths', /myth|true that|is it true|خرافة|هل صحيح/i],
     ['what', /what is|what's|what are|explain|mean|define|tell me about|ما هو|ما هي|اشرح|عرّف|أخبرني عن/i]
   ];
+  const ORDER = ['what', 'signs', 'similar', 'assess', 'support', 'myths'];
   const norm = s => String(s || '').toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{N}' ]+/gu, ' ').replace(/\s+/g, ' ').trim();
 
-  function find(text) {
-    const t = ' ' + norm(text) + ' ';
-    // a named condition beats a general topic: "how do I get tested for ADHD" is about ADHD
-    const best = { cond: [null, 0], gen: [null, 0] };
-    TOPICS.forEach(tp => {
-      let s = 0;
-      tp.keys.forEach(k => { const kk = norm(k); if (t.includes(' ' + kk + ' ') || (kk.length > 5 && t.includes(kk))) s += kk.split(' ').length * 2 + (kk.length > 8 ? 1 : 0); });
-      const slot = tp.area === 'general' ? best.gen : best.cond;
-      if (s > slot[1]) { slot[0] = tp; slot[1] = s; }
+  // small typo tolerance: "dyslexa", "dyscalcula", "adhd's"
+  function lev(a, b, max) {
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i]; let best = i;
+      for (let j = 1; j <= b.length; j++) { cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); best = Math.min(best, cur[j]); }
+      if (best > max) return max + 1;
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  function scoreTopic(tp, t, words) {
+    let s = 0;
+    tp.keys.forEach(k => {
+      const kk = norm(k);
+      if (t.includes(' ' + kk + ' ') || (kk.length > 5 && t.includes(kk))) s += kk.split(' ').length * 2 + (kk.length > 8 ? 1 : 0);
+      else if (kk.length >= 6 && !kk.includes(' ')) { const max = kk.length >= 9 ? 2 : 1; if (words.some(w => w.length >= 5 && lev(w, kk, max) <= max)) s += 2; }
     });
-    const [tp, score] = best.cond[1] >= 2 ? best.cond : best.gen;
-    return score >= 2 ? { topic: tp, score } : null;
+    return s;
+  }
+  function rank(text) {
+    const t = ' ' + norm(text) + ' ', words = t.trim().split(' ');
+    return TOPICS.map(tp => ({ topic: tp, score: scoreTopic(tp, t, words) })).filter(x => x.score >= 2).sort((a, b) => b.score - a.score);
+  }
+  function find(text) {
+    // a named condition beats a general topic: "how do I get tested for ADHD" is about ADHD
+    const r = rank(text);
+    const cond = r.find(x => x.topic.area !== 'general'), gen = r.find(x => x.topic.area === 'general');
+    return cond || gen || null;
   }
   function aspect(text) { const hit = ASPECTS.find(([, re]) => re.test(text)); return hit ? hit[0] : 'what'; }
+  function faq(text) {
+    const t = ' ' + norm(text) + ' ';
+    let best = null, bs = 0;
+    FAQS.forEach(f => f.keys.forEach(k => { const kk = norm(k); if (t.includes(' ' + kk + ' ') || (kk.length > 8 && t.includes(kk))) { const sc = kk.length; if (sc > bs) { bs = sc; best = f; } } }));
+    return best;
+  }
 
   const CRISIS = /suicid|kill myself|end my life|self[- ]?harm|hurt myself|want to die|don'?t want to live|انتحار|أقتل نفسي|أؤذي نفسي|أريد أن أموت|إنهاء حياتي/i;
   const SELF_DX = /(do|could|might|can) i have|am i (dyslexic|autistic|adhd)|i think i (have|might have|am)|test me|diagnose me|is it (dyslexia|adhd)|هل لدي|هل عندي|هل أنا مصاب|أعتقد أن لدي|شخصني/i;
@@ -245,8 +276,27 @@
   // "I always / I keep / I can't …" about a known difficulty: reflect it and offer to explore
   const STRUGGLE = /\b(i (always|keep|often|usually|can'?t|cannot|struggle|find it (hard|difficult)|have (trouble|to)|never)|it'?s (so )?hard (for me )?to)\b|دائماً|لا أستطيع|أجد صعوبة|أعاني/i;
   const QUESTION = /\?|؟|\b(what|how|why|which|who|where|when|can|could|is|are|does|do|should)\b|ماذا|كيف|لماذا|هل|أين|ما هو|ما هي/i;
+  // follow-ups that lean on the conversation so far
+  const MORE = /^(ok(ay)?,? )?(tell me more|more|go on|continue|keep going|what else|and\??|elaborate|more (info|details?)|explain (more|further)|anything else|أكثر|المزيد|أخبرني المزيد|أخبريني المزيد|أكمل|أكملي|وماذا أيضا|وماذا أيضاً)\b/i;
+  const SIMPLE = /\b(simpler|simply|easier|eli5|in short|short version|summari[sz]e|tl;?dr|in simple|plain (words|english)|too long|i don'?t understand)\b|بشكل أبسط|ببساطة|باختصار|لخص|لخصي|لم أفهم/i;
+  const EXAMPLE = /\b(example|for instance|like what|such as|what does it look like)\b|مثال|مثلا|مثلاً/i;
+  const PRONOUN = /\b(it|this|that|they|them|those)\b|هذا|ذلك|هذه|ذلك/i;
+  const COMPARE = /differen|\bvs\.?\b|versus|compare|or is it|الفرق|مقارنة/i;
+  const TOPICS_Q = /what (can|do) you (know|answer|talk about|help with)|list (of )?topics|what topics|ماذا تعرفين|ما المواضيع/i;
   const shortName = tp => { const n = tp.title[0].split(' (')[0]; return n === n.toUpperCase() ? n : n.toLowerCase(); };
+  const sentences = x => String(x || '').split(/(?<=[.!?؟])\s+/).filter(Boolean);
+  const first = (x, n = 1) => sentences(x).slice(0, n).join(' ');
 
+  function chipsFor(tp, asp) {
+    const chips = [];
+    if (asp !== 'signs' && tp.signs.length) chips.push({ id: `kb:${tp.id}:signs`, en: 'What are the signs?', ar: 'ما العلامات؟' });
+    if (asp !== 'assess' && tp.assess[0]) chips.push({ id: `kb:${tp.id}:assess`, en: 'How is it assessed?', ar: 'كيف يُقيَّم؟' });
+    if (asp !== 'support' && tp.support[0]) chips.push({ id: `kb:${tp.id}:support`, en: 'What helps?', ar: 'ما الذي يساعد؟' });
+    if (IV_AREAS.includes(tp.area) && tp.area !== 'general') chips.push({ id: 'interview:' + tp.area, en: 'Could this be me?', ar: 'هل ينطبق هذا عليّ؟' });
+    const rel = tp.related.map(topicById).filter(Boolean)[0];
+    if (rel) chips.push({ id: `kb:${rel.id}:what`, en: 'Related: ' + rel.title[0].split(' (')[0], ar: 'ذو صلة: ' + rel.title[1].split(' (')[0] });
+    return chips.slice(0, 5);
+  }
   // the answer for one topic and one aspect of it
   function compose(tp, asp) {
     const parts = [];
@@ -257,44 +307,83 @@
     else if (asp === 'myths' && tp.myths[0]) parts.push(tp.myths);
     else { asp = 'what'; parts.push(tp.what); if (tp.signs.length) parts.push([`For example: ${tp.signs.slice(0, 3).map(x => x[0].toLowerCase()).join('; ')}.`, `على سبيل المثال: ${tp.signs.slice(0, 3).map(x => x[1]).join('؛ ')}.`]); }
     const clean = parts.filter(Boolean);
-    const chips = [];
-    if (asp !== 'signs' && tp.signs.length) chips.push({ id: `kb:${tp.id}:signs`, en: 'What are the signs?', ar: 'ما العلامات؟' });
-    if (asp !== 'assess' && tp.assess[0]) chips.push({ id: `kb:${tp.id}:assess`, en: 'How is it assessed?', ar: 'كيف يُقيَّم؟' });
-    if (asp !== 'support' && tp.support[0]) chips.push({ id: `kb:${tp.id}:support`, en: 'What helps?', ar: 'ما الذي يساعد؟' });
-    if (tp.area !== 'general') chips.push({ id: 'interview:' + tp.area, en: 'Could this be me?', ar: 'هل ينطبق هذا عليّ؟' });
-    return { kind: 'answer', topic: tp.id, aspect: asp, area: tp.area, en: clean.map(p => p[0]).join('\n'), ar: clean.map(p => p[1]).join('\n'), chips: chips.slice(0, 4), source: tp.title };
+    return { kind: 'answer', topic: tp.id, aspect: asp, area: tp.area, en: clean.map(p => p[0]).join('\n'), ar: clean.map(p => p[1]).join('\n'), chips: chipsFor(tp, asp), source: tp.title };
+  }
+  function simple(tp) {
+    const en = [`In short: ${first(tp.what[0])}`], ar = [`باختصار: ${first(tp.what[1])}`];
+    if (tp.signs[0]) { en.push(`For example: ${tp.signs[0][0].toLowerCase()}.`); ar.push(`مثلاً: ${tp.signs[0][1]}.`); }
+    if (tp.support[0]) { en.push(`What helps: ${first(tp.support[0])}`); ar.push(`ما يساعد: ${first(tp.support[1])}`); }
+    return { kind: 'answer', topic: tp.id, aspect: 'simple', area: tp.area, en: en.join('\n'), ar: ar.join('\n'), chips: chipsFor(tp, 'what'), source: tp.title };
+  }
+  function compare(a, b) {
+    const sim = a.similar[0] ? a.similar : b.similar;
+    const en = [`${a.title[0]}: ${first(a.what[0], 2)}`, `${b.title[0]}: ${first(b.what[0], 2)}`, sim[0] ? `How to tell them apart: ${sim[0]}` : '', 'They can also occur together, so a good assessment looks at both.'].filter(Boolean);
+    const ar = [`${a.title[1]}: ${first(a.what[1], 2)}`, `${b.title[1]}: ${first(b.what[1], 2)}`, sim[1] ? `كيف تفرّق بينهما: ${sim[1]}` : '', 'وقد يجتمعان أيضاً، لذا ينظر التقييم الجيد في الاثنين.'].filter(Boolean);
+    const chips = [{ id: `kb:${a.id}:signs`, en: `Signs of ${a.title[0].split(' (')[0]}`, ar: `علامات ${a.title[1].split(' (')[0]}` }, { id: `kb:${b.id}:signs`, en: `Signs of ${b.title[0].split(' (')[0]}`, ar: `علامات ${b.title[1].split(' (')[0]}` }, { id: 'kb:assessment:what', en: 'How do I get assessed?', ar: 'كيف أحصل على تقييم؟' }];
+    return { kind: 'answer', topic: a.id, aspect: 'compare', area: a.area, compared: [a.id, b.id], en: en.join('\n'), ar: ar.join('\n'), chips, source: a.title };
   }
   function feeling(hit) {
-    const chips = hit && hit.topic.area !== 'general' ? [{ id: 'interview:' + hit.topic.area, en: 'Talk it through', ar: 'لنتحدث عن ذلك' }, { id: 'kb:' + hit.topic.id + ':support', en: 'What helps?', ar: 'ما الذي يساعد؟' }] : AREA_CHIPS;
+    const chips = hit && IV_AREAS.includes(hit.topic.area) ? [{ id: 'interview:' + hit.topic.area, en: 'Talk it through', ar: 'لنتحدث عن ذلك' }, { id: 'kb:' + hit.topic.id + ':support', en: 'What helps?', ar: 'ما الذي يساعد؟' }] : AREA_CHIPS;
     return { kind: 'feeling', en: 'That sounds really tough, and thank you for telling me. You don’t have to figure it out alone. Would it help to talk through what’s been hardest — reading, listening, focusing, writing, exams, or something else?', ar: 'يبدو هذا صعباً حقاً، وشكراً لإخباري. لا يجب أن تتعامل مع الأمر وحدك. هل يفيد أن نتحدث عن الأصعب — القراءة، أو الاستماع، أو التركيز، أو الكتابة، أو الاختبارات، أو شيء آخر؟', chips };
   }
+  function topicList() {
+    const groups = [['Learning differences', 'اختلافات التعلّم', ['dyslexia', 'dyscalculia', 'dysgraphia', 'adhd', 'apd', 'dld', 'dcd', 'autism', 'nvld', 'tics']], ['Thinking skills', 'مهارات التفكير', ['executive', 'working-memory', 'processing-speed']], ['Study craft', 'مهارات الدراسة', ['reading-strategies', 'note-taking', 'memory', 'writing-essays', 'time-management', 'procrastination', 'assistive-tech', 'exams']], ['Wellbeing', 'الرفاه', ['anxiety', 'mood', 'sleep', 'burnout', 'panic', 'ocd', 'trauma']], ['Rights & support', 'الحقوق والدعم', ['assessment', 'accommodations', 'sas', 'uae-rights', 'disclosure', 'privacy-law']]];
+    const line = (L) => groups.map(g => `${g[L]}: ${g[2].map(topicById).filter(Boolean).map(t => t.title[L].split(' (')[0]).join(', ')}`).join('\n');
+    return { kind: 'answer', topic: null, aspect: 'list', en: `I know about ${TOPICS.length - 2} topics and many quick facts. Here are the main ones:\n${line(0)}\nAsk about any of them — or compare two, like “dyslexia vs ADHD”.`, ar: `أعرف عن ${TOPICS.length - 2} موضوعاً وكثيراً من الحقائق السريعة. هذه أهمها:\n${line(1)}\nاسألني عن أي منها — أو قارن بين اثنين، مثل «عسر القراءة مقابل اضطراب الانتباه».`, chips: [{ id: 'kb:dyslexia:what', en: 'What is dyslexia?', ar: 'ما عسر القراءة؟' }, { id: 'kb:executive:what', en: 'Executive function', ar: 'الوظائف التنفيذية' }, { id: 'kb:uae-rights:what', en: 'My rights in the UAE', ar: 'حقوقي في الإمارات' }] };
+  }
 
-  // the conversational brain for free text outside a structured interview
-  function answer(text) {
+  // the conversational brain for free text outside a structured interview.
+  // ctx = { topic, aspect, seen } from the previous answer, for follow-ups.
+  function answer(text, lang, ctx) {
     const raw = String(text || '');
+    ctx = ctx || {};
     if (CRISIS.test(raw)) return { kind: 'crisis', en: CRISIS_TEXT[0], ar: CRISIS_TEXT[1] };
+    if (TOPICS_Q.test(raw)) return topicList();
+    const ranked = rank(raw);
+    const conds = ranked.filter(x => x.topic.area !== 'general');
     const hit = find(raw);
     if (FEEL.test(raw) && !QUESTION.test(raw)) return feeling(hit);
-    if (hit && STRUGGLE.test(raw) && !SELF_DX.test(raw) && !QUESTION.test(raw) && hit.topic.area !== 'general') {
+    if (hit && STRUGGLE.test(raw) && !SELF_DX.test(raw) && !QUESTION.test(raw) && IV_AREAS.includes(hit.topic.area)) {
       const tp = hit.topic;
       return { kind: 'reflect', topic: tp.id, area: tp.area,
         en: `Thank you for telling me — that sounds really frustrating, and it’s more common than you might think. Lots of things can cause it: tiredness, the material itself, the language — and sometimes a learning difference like ${shortName(tp)}. Would it help if I asked you a few questions, the way a specialist would, to understand it better? You can stop any time.`,
         ar: `شكراً لإخباري — يبدو هذا محبطاً حقاً، وهو أكثر شيوعاً مما تظن. أسباب كثيرة قد تؤدي إليه: التعب، أو المادة نفسها، أو اللغة — وأحياناً اختلاف تعلّم مثل ${tp.title[1].split(' (')[0]}. هل يفيدك أن أطرح عليك بعض الأسئلة، كما يفعل المختص، لنفهم الأمر أكثر؟ يمكنك التوقف في أي وقت.`,
         chips: [{ id: 'interview:' + tp.area, en: 'Yes, ask me', ar: 'نعم، اسأليني' }, { id: `kb:${tp.id}:support`, en: 'Just tips for now', ar: 'نصائح فقط الآن' }, { id: `kb:${tp.id}:what`, en: `What is ${tp.title[0].split(' (')[0]}?`, ar: `ما هو ${tp.title[1].split(' (')[0]}؟` }] };
     }
-    if (hit && SELF_DX.test(raw) && hit.topic.area !== 'general') {
+    if (hit && SELF_DX.test(raw) && IV_AREAS.includes(hit.topic.area)) {
       const tp = hit.topic;
       return { kind: 'self-check', topic: tp.id, area: tp.area,
         en: `That’s a really good question to ask — and you’re not alone in wondering. I can’t diagnose anything, but I can help you think it through. ${tp.what[0].split('. ').slice(0, 2).join('. ')}. Common signs in students include: ${tp.signs.slice(0, 3).map(x => x[0].toLowerCase()).join('; ')}. If you like, I can ask you some questions — the same kinds of things a specialist would ask — and tell you honestly whether it looks worth a formal assessment.`,
         ar: `هذا سؤال جيد جداً — ولست وحدك من يتساءل. لا أستطيع التشخيص، لكن يمكنني مساعدتك في التفكير فيه. ${tp.what[1].split('. ').slice(0, 2).join('. ')}. من العلامات الشائعة لدى الطلبة: ${tp.signs.slice(0, 3).map(x => x[1]).join('؛ ')}. إن أردت، يمكنني طرح بعض الأسئلة — من النوع الذي يطرحه المختص — وأخبرك بصدق إن كان الأمر يستحق تقييماً رسمياً.`,
         chips: [{ id: 'interview:' + tp.area, en: 'Yes, ask me the questions', ar: 'نعم، اسأليني' }, { id: 'kb:' + tp.id + ':signs', en: 'Tell me more about the signs', ar: 'أخبريني أكثر عن العلامات' }, { id: 'kb:' + tp.id + ':assess', en: 'How is it assessed?', ar: 'كيف يُقيَّم؟' }] };
     }
+    // "dyslexia vs ADHD", or "how is that different from ADHD?" after talking about dyslexia
+    if (COMPARE.test(raw)) {
+      if (conds.length >= 2) return compare(conds[0].topic, conds[1].topic);
+      const prev = ctx.topic && topicById(ctx.topic);
+      if (conds.length === 1 && prev && prev.id !== conds[0].topic.id && prev.area !== 'general') return compare(prev, conds[0].topic);
+    }
+    const f = faq(raw);
+    if (f) { const tp = topicById(f.topic); return { kind: 'answer', topic: f.topic, aspect: 'faq', area: tp ? tp.area : 'general', en: f.a[0], ar: f.a[1], chips: tp ? chipsFor(tp, 'faq') : [], source: tp ? tp.title : null }; }
+    // follow-ups about the topic we were just talking about
+    const prev = ctx.topic && topicById(ctx.topic);
+    if (prev && (!hit || (hit.topic.id === prev.id))) {
+      if (SIMPLE.test(raw)) return simple(prev);
+      if (MORE.test(raw.trim())) {
+        const seen = (ctx.seen || [ctx.aspect]).filter(Boolean);
+        const next = ORDER.find(a => !seen.includes(a) && (a === 'what' || (a === 'signs' ? prev.signs.length : prev[a][0])));
+        if (next) return compose(prev, next);
+        return { kind: 'answer', topic: prev.id, aspect: 'done', area: prev.area, en: `That’s everything I have on ${shortName(prev)}. Want to explore something related, or talk about how it affects you?`, ar: `هذا كل ما لدي عن ${prev.title[1].split(' (')[0]}. هل تريد استكشاف موضوع ذي صلة، أو الحديث عن أثره عليك؟`, chips: chipsFor(prev, 'done') };
+      }
+      if (EXAMPLE.test(raw) && prev.signs.length) return compose(prev, 'signs');
+      if (!hit && (PRONOUN.test(raw) || ASPECTS.slice(0, 5).some(([, re]) => re.test(raw)))) return compose(prev, aspect(raw));
+    }
     if (hit) return compose(hit.topic, aspect(raw));
     if (GREET.test(raw)) return { kind: 'smalltalk', en: 'Hey! Good to see you. What would you like to do — ask me something, get help with a reading or video, or talk about how studying is going?', ar: 'أهلاً! سعيدة برؤيتك. ماذا تود أن تفعل — تسألني شيئاً، أو تحصل على مساعدة في قراءة أو فيديو، أو نتحدث عن سير دراستك؟' };
     if (THANKS.test(raw)) return { kind: 'smalltalk', en: 'Any time! I’m right here whenever you need me.', ar: 'في أي وقت! أنا هنا متى احتجتني.' };
     if (FEEL.test(raw)) return feeling(null);
-    return { kind: 'unknown', en: 'I’m not completely sure I understood — I know most about learning differences (like dyslexia, ADHD, dyscalculia), studying, exams and wellbeing. Could you say it another way, or pick one of these?', ar: 'لست متأكدة تماماً أنني فهمت — أعرف أكثر عن اختلافات التعلّم (مثل عسر القراءة واضطراب الانتباه وعسر الحساب)، والمذاكرة، والاختبارات، والرفاه. هل يمكنك قولها بطريقة أخرى، أو اختيار أحد هذه؟',
-      chips: [{ id: 'kb:dyslexia:what', en: 'What is dyslexia?', ar: 'ما عسر القراءة؟' }, { id: 'kb:adhd:signs', en: 'Signs of ADHD', ar: 'علامات اضطراب الانتباه' }, { id: 'kb:assessment:what', en: 'How do I get assessed?', ar: 'كيف أحصل على تقييم؟' }, { id: 'talk', en: 'Talk about my studying', ar: 'لنتحدث عن دراستي' }] };
+    return { kind: 'unknown', en: 'I’m not completely sure I understood — I know about learning differences (like dyslexia, ADHD, dyscalculia, DLD), thinking skills, study techniques, exams, wellbeing, and your rights and support in the UAE. Could you say it another way, or pick one of these?', ar: 'لست متأكدة تماماً أنني فهمت — أعرف عن اختلافات التعلّم (مثل عسر القراءة واضطراب الانتباه وعسر الحساب واضطراب اللغة)، ومهارات التفكير، وتقنيات الدراسة، والاختبارات، والرفاه، وحقوقك والدعم في الإمارات. هل يمكنك قولها بطريقة أخرى، أو اختيار أحد هذه؟',
+      chips: [{ id: 'kb:dyslexia:what', en: 'What is dyslexia?', ar: 'ما عسر القراءة؟' }, { id: 'kb:adhd:signs', en: 'Signs of ADHD', ar: 'علامات اضطراب الانتباه' }, { id: 'kb:assessment:what', en: 'How do I get assessed?', ar: 'كيف أحصل على تقييم؟' }, { id: 'topics', en: 'What can you answer?', ar: 'عمَّ تستطيعين الإجابة؟' }, { id: 'talk', en: 'Talk about my studying', ar: 'لنتحدث عن دراستي' }] };
   }
   const AREA_CHIPS = [
     { id: 'interview:reading', en: 'Reading', ar: 'القراءة' }, { id: 'interview:listening', en: 'Listening', ar: 'الاستماع' }, { id: 'interview:attention', en: 'Focus & organising', ar: 'التركيز والتنظيم' },
@@ -304,13 +393,13 @@
     'أنا ممتنة حقاً لأنك أخبرتني، وأريدك أن تكون بأمان الآن. أرجو أن تتواصل مع أحد فوراً: في الإمارات اتصل بـ٩٩٩ للطوارئ، أو بخط دعم الصحة النفسية 800 HOPE (800 4673). ويمكن لخدمة الإرشاد في جامعتك مقابلتك بشكل عاجل. إن استطعت، أخبر شخصاً تثق به قريباً منك. أنت مهم، والمساعدة متاحة.');
 
   function topicById(id) { return TOPICS.find(t => t.id === id) || null; }
-  function aspectAnswer(id, asp) { const tp = topicById(id); return tp ? compose(tp, asp || 'what') : null; }
-  // compact grounding text for an external model (RAG)
+  function aspectAnswer(id, asp) { const tp = topicById(id); return tp ? (asp === 'simple' ? simple(tp) : compose(tp, asp || 'what')) : null; }
+  // compact grounding text for an external model (RAG): the best two topics
   function context(text, lang) {
-    const hit = find(text); const L = lang === 'ar' ? 1 : 0;
-    if (!hit) return '';
-    const t = hit.topic;
-    return [t.title[L], t.what[L], 'Signs: ' + t.signs.map(s => s[L]).join('; '), 'Similar: ' + t.similar[L], 'Assessment: ' + t.assess[L], 'Support: ' + t.support[L]].filter(x => x && !/:\s*$/.test(x)).join('\n');
+    const L = lang === 'ar' ? 1 : 0;
+    const r = rank(text).slice(0, 2);
+    if (!r.length) return '';
+    return r.map(({ topic: t }) => [t.title[L], t.what[L], 'Signs: ' + t.signs.map(s => s[L]).join('; '), 'Similar: ' + t.similar[L], 'Assessment: ' + t.assess[L], 'Support: ' + t.support[L], 'Myths: ' + t.myths[L]].filter(x => x && !/:\s*$/.test(x)).join('\n')).join('\n\n');
   }
-  return { TOPICS, AREA_CHIPS, CRISIS, CRISIS_TEXT, answer, find, aspect, aspectAnswer, topicById, context, norm };
+  return { TOPICS, FAQS, AREA_CHIPS, CRISIS, CRISIS_TEXT, answer, find, rank, aspect, aspectAnswer, topicById, context, norm, faq, lev };
 });
