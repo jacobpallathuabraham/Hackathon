@@ -104,6 +104,7 @@
     if (id.startsWith('interview:')) return startInterview(id.split(':')[1], 'student');
     if (id === 'talk') return U.startConversation({ type: 'student' });
     if (id === 'hand') return ERLY.emit('hand:open', { from: 'noor' });
+    if (id === 'growth') { location.href = 'support.html'; return; }
     if (id === 'topics') return freeText('what can you answer?', { silentUser: true });
     if (id === 'hard') return freeText('I feel like something is hard for me', { silentUser: true });
     if (id === 'profile') return U.setTab('profile');
@@ -174,6 +175,7 @@
     const next = [];
     if (r.level === 'strong' || r.level === 'some') next.push({ id: 'kb:assessment:what', en: 'How do I get assessed?', ar: 'كيف أحصل على تقييم؟' }, { id: 'summary', en: 'Put this in my summary for SAS', ar: 'ضعه في ملخصي لخدمات الطلبة' });
     if ((iv.area === 'reading' || iv.area === 'writing') && (r.level === 'strong' || r.level === 'some')) next.unshift({ id: 'hand', en: 'Check my handwriting too', ar: 'افحصي كتابتي أيضاً' });
+    if (r.level === 'strong' || r.level === 'some') next.push({ id: 'growth', en: 'Start a Growth Plan for this', ar: 'ابدئي خطة نمو لهذا' });
     if (tp) next.push({ id: `kb:${tp.id}:support`, en: 'More about what helps', ar: 'المزيد عما يساعد' });
     next.push({ id: 'hard', en: 'Talk about another area', ar: 'لنتحدث عن مجال آخر' });
     offerChips(next);
@@ -215,7 +217,7 @@
     const S = res.summary;
     const lines = [S.head, S.spl, S.note].filter(Boolean);
     await say(lines.map(x => x[0]).join('\n'), lines.map(x => x[1]).join('\n'), { tag: T('Handwriting check', 'فحص الكتابة'), speak: false });
-    offerChips([{ id: 'profile', en: 'See my profile', ar: 'اعرض ملفي' }, { id: 'kb:dysgraphia:what', en: 'What is dysgraphia?', ar: 'ما عسر الكتابة؟' }, { id: 'kb:sas:what', en: 'What happens at SAS?', ar: 'ماذا يحدث في خدمات الطلبة؟' }]);
+    offerChips([{ id: 'growth', en: 'Build these skills (Growth Plan)', ar: 'ابنِ هذه المهارات (خطة النمو)' }, { id: 'profile', en: 'See my profile', ar: 'اعرض ملفي' }, { id: 'kb:dysgraphia:what', en: 'What is dysgraphia?', ar: 'ما عسر الكتابة؟' }, { id: 'kb:sas:what', en: 'What happens at SAS?', ar: 'ماذا يحدث في خدمات الطلبة؟' }]);
   });
 
   /* ---------------- proactive notices ---------------- */

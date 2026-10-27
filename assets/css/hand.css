@@ -127,3 +127,6 @@ body.hw-lock { overflow: hidden; }
   .hw__panel, .hw__scrim { transition: none; }
   .hw-in, .hw-met, .hw-gauge i, .hw-drop__ic, .hw-play__ring, .hw-beam, .hw-wave.is-on i { animation: none !important; }
 }
+.growth-cta { text-decoration: none; }
+.growth-cta > span:first-child { background: linear-gradient(135deg, #1baf7a, #146a63); }
+.nav__growth { color: var(--accent) !important; font-weight: 600; }

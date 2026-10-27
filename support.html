@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Growth Plan · ERLY</title>
+  <meta name="description" content="ERLY Growth Plan: a six-week programme of short daily exercises and strategies, with weekly reviews with Noor.">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
+  <link rel="stylesheet" href="assets/css/erly.css">
+  <link rel="stylesheet" href="assets/css/companion.css">
+  <link rel="stylesheet" href="assets/css/checkins.css">
+  <link rel="stylesheet" href="assets/css/growth.css">
+  <script>
+    try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('index.html?next=student'); } catch (e) {}
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
+        if (sessionStorage.getItem('erly-warp') === '1') { document.documentElement.classList.add('q-arrive'); sessionStorage.removeItem('erly-warp'); }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="quest-page growth-page">
+  <div class="q-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <header class="q-top">
+    <a class="q-back" href="student.html#insight"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
+    <a href="student.html" class="brand" aria-label="ERLY home">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 21a7 7 0 0 1 14 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg>
+      <span class="brand__word brand__word--caps">ERLY</span>
+    </a>
+    <div class="q-top__tools">
+      <button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button>
+      <div data-accent-picker></div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="q-main" id="main">
+    <div class="q-head">
+      <p class="kicker"><span data-i18n="g.kicker">Growth Plan · with Noor</span></p>
+      <h1 class="q-title" data-i18n="g.title">Build the skills, slowly. A little every day.</h1>
+      <p class="q-lead" data-i18n="g.lead">A six-week programme, run like a learning specialist would: a first consult, specific goals, short daily exercises that adapt to you, and a weekly review where the plan changes with you. It builds skills and strategies — alongside, never instead of, support from SAS or a specialist.</p>
+    </div>
+    <div id="growthApp"></div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/fun.js"></script>
+  <script>
+    // a slim version of the main site's shared bus for this standalone page
+    (function () {
+      const bus = {};
+      let tt;
+      window.ERLY = {
+        on(e, f) { (bus[e] = bus[e] || []).push(f); }, emit(e, d) { (bus[e] || []).forEach(f => f(d)); },
+        toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('is-on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('is-on'), 2600); }
+      };
+      I18N.apply(I18N.lang);
+      document.getElementById('langToggle').addEventListener('click', () => I18N.apply(I18N.lang === 'ar' ? 'en' : 'ar'));
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('erly-theme', next); } catch (e) {}
+      });
+    })();
+  </script>
+  <script src="assets/js/accent.js"></script>
+  <script src="assets/js/growth-core.js"></script>
+  <script src="assets/js/growth-games.js"></script>
+  <script src="assets/js/growth.js"></script>
+</body>
+</html>

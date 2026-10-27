@@ -328,6 +328,15 @@
       related: ['assessment', 'accommodations', 'disclosure']
     }),
     T({
+      id: 'growth-plan', area: 'general',
+      keys: ['growth plan', 'improve my reading', 'get better at', 'how can i improve', 'exercises', 'practice', 'training programme', 'training program', 'overcome', 'خطة النمو', 'أتحسن', 'تمارين', 'كيف أتحسن', 'التغلب على'],
+      title: B('Getting better, step by step (the Growth Plan)', 'التحسّن خطوة بخطوة (خطة النمو)'),
+      what: B('Skills like decoding words, holding instructions in mind, number sense, planning and staying calm can all be strengthened with short, regular practice — and strategies make the rest easier. ERLY’s Growth Plan runs this like a learning specialist would: a first consult, specific goals, about 10–20 minutes a day of adaptive exercises, and a weekly review that changes the plan. It complements, never replaces, SAS, a specialist tutor or a clinician.', 'يمكن تقوية مهارات مثل فك الكلمات، والاحتفاظ بالتعليمات في الذهن، والحس العددي، والتخطيط، والهدوء بالتدريب القصير المنتظم — والاستراتيجيات تسهّل الباقي. تدير خطة النمو في إيرلي ذلك كما يفعل أخصائي التعلّم: استشارة أولى، وأهداف محددة، ونحو ١٠–٢٠ دقيقة يومياً من التمارين المتكيّفة، ومراجعة أسبوعية تغيّر الخطة. إنها تكمّل ولا تحل محل خدمات الطلبة أو المدرّس المتخصص أو الطبيب.'),
+      signs: [B('Little and often beats long and rare', 'القليل الدائم أفضل من الكثير المنقطع'), B('Exercises get harder only when you’re ready', 'تصعب التمارين فقط حين تكون مستعداً'), B('Open it from “Growth Plan” in the menu', 'افتحها من «خطة النمو» في القائمة')],
+      myths: B('Myth: learning differences can be “cured” with brain games. Practice builds specific skills and confidence; strategies and accommodations do the rest.', 'خرافة: أن اختلافات التعلّم «تُشفى» بألعاب الدماغ. التدريب يبني مهارات محددة وثقة؛ والاستراتيجيات والتسهيلات تكمل الباقي.'),
+      related: ['assistive-tech', 'study', 'sas']
+    }),
+    T({
       id: 'disclosure', area: 'general',
       keys: ['disclose', 'disclosure', 'tell my professor', 'tell my teacher', 'should i tell', 'tell my parents', 'tell my family', 'tell my employer', 'stigma', 'ashamed', 'embarrassed', 'الإفصاح', 'أخبر أستاذي', 'أخبر أهلي', 'الوصمة', 'محرج'],
       title: B('Telling people (disclosure)', 'إخبار الآخرين (الإفصاح)'),
