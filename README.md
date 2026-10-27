@@ -4,16 +4,22 @@
 
 This is the website and interactive prototype for Team Rising Stars' entry in the UAE Hackathon (Student Accessibility Services early-identification challenge). ERLY is a browser companion that asks for consent first and does its work on the student's own device. It notices study-strain patterns in university students. It shows each insight to the student first, and it lets the student decide who else is told.
 
-## SAS portal (start here)
+## Acubins University home (start here)
 
-`index.html` is the **SAS — Student Accessibility Services** sign-in page. You choose Student or Counselor, then sign in:
+`index.html` is the **Acubins University** website. It offers two ways in:
+
+1. **University login** (university details login): asks for the university username and password (`University` / `2468`) and opens the Command Center (`university.html`). From there, one click opens the SAS Dashboard or the Faculty portal. Signing out returns to the university home.
+2. **Login for students, faculty and counselors**: opens `login.html`, the SAS sign-in page described below.
+
+## SAS sign-in for students, faculty and counselors
+
+`login.html` is the **SAS — Student Accessibility Services** sign-in page. You choose Student, Faculty or Counselor, then sign in:
 
 | Role | Username | Password | Goes to |
 |---|---|---|---|
 | Student | `Acubins` | `1234` | `student.html` (the ERLY site) |
 | Counselor | `Counselor` | `4321` | `counselor.html` (SAS dashboard) |
 | Faculty | `Faculty` | `5678` | `faculty.html` (Faculty portal) |
-| University | `University` | `2468` | `university.html` (Command Center → SAS / Faculty) |
 
 A wrong password shakes the card and shows an error. Using student credentials on the counselor form (or the other way round) is refused with a hint. The student and counselor pages send you back to the login if you open them without signing in.
 
@@ -36,7 +42,7 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-You can also open `index.html` directly. To host it, enable GitHub Pages on the branch. The site works as is.
+You can also open `index.html` (the university home) directly. To host it, enable GitHub Pages on the branch. The site works as is.
 
 ## The flow (v2): test first, watch only with permission, then stop
 

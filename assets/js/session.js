@@ -15,6 +15,6 @@
   if (out) out.addEventListener('click', () => {
     try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
     document.body.classList.add('is-leaving');
-    setTimeout(() => location.href = 'index.html', 450);
+    setTimeout(() => location.href = 'login.html', 450);
   });
 })();

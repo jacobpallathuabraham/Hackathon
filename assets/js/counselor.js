@@ -263,9 +263,10 @@
   });
   addEventListener('accentchange', () => setTimeout(() => { readTheme(); refresh(); if (open) openDrawer(open.s, open.ask, true); }, 60));
   $('#logoutBtn').addEventListener('click', () => {
-    try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
+    let to = 'login.html';
+    try { if (sessionStorage.getItem('acubins-role') === 'university') to = 'index.html'; sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
     document.body.classList.add('is-leaving');
-    setTimeout(() => location.href = 'index.html', 450);
+    setTimeout(() => location.href = to, 450);
   });
   $('#menuBtn').addEventListener('click', () => $('#side').classList.toggle('is-open'));
 

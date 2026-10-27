@@ -25,7 +25,7 @@
   $('#hi').textContent = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${ME}`;
   $('#today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   $('#themeToggle').addEventListener('click', () => { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('erly-theme', n); } catch (e) {} render(current); });
-  $('#logoutBtn').addEventListener('click', () => { try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {} location.href = 'index.html'; });
+  $('#logoutBtn').addEventListener('click', () => { let to = 'login.html'; try { if (sessionStorage.getItem('acubins-role') === 'university') to = 'index.html'; sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {} location.href = to; });
   $('#menuBtn').addEventListener('click', () => $('#side').classList.toggle('is-open'));
   try { if (sessionStorage.getItem('acubins-role') === 'university') $('#toUni').hidden = false; } catch (e) {}
   const courseSel = $('#course');

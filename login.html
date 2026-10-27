@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAS — Student Accessibility Services · Sign in</title>
+  <meta name="description" content="Student Accessibility Services portal. Students sign in to ERLY, a consent-first study companion. Counselors sign in to review support requests.">
+  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+      } catch (e) {}
+    })();
+  </script>
+  <script src="assets/js/icons.js"></script>
+</head>
+<body class="login-body">
+  <div class="login-bg" aria-hidden="true">
+    <i class="aur aur--1"></i><i class="aur aur--2"></i><i class="aur aur--3"></i>
+    <canvas class="login-fx" id="loginFx"></canvas>
+    <svg class="login-grid" width="100%" height="100%"><defs><pattern id="g" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0v44" fill="none" stroke="currentColor" stroke-width=".6"/></pattern></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>
+    <div class="login-spot" id="loginSpot"></div>
+  </div>
+
+  <header class="login-top">
+    <a class="brand brand--sas" href="login.html" aria-label="SAS — Student Accessibility Services">
+      <span class="sas-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 22h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 22a6.5 6.5 0 0 1 13 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg></span>
+      <span class="brand__stack"><b>SAS</b><small>Student Accessibility Services</small></span>
+    </a>
+    <div class="login-tools">
+      <a class="btn btn--sm btn--ghost uni-backlink" href="index.html">← Acubins University</a>
+      <div class="swatch-pill"><span class="mono">Colour</span><div class="swatch-row" data-swatches></div></div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+    </div>
+  </header>
+
+  <main class="login">
+    <section class="login__hero">
+      <p class="eyebrow stag"><span class="dot"></span>Acubins University · students, faculty &amp; counselors</p>
+      <h1 class="login__title stag"><span class="login__sas">SAS</span><em>Student Accessibility Services</em></h1>
+      <p class="login__lead stag">One place for students to study with tools that fit them — and for counselors to support them early. ERLY notices sooner, on your terms: consent first, no quizzes, no labels.</p>
+
+      <div class="doc-anim stag" aria-hidden="true">
+        <div class="doc-anim__page">
+          <div class="doc-anim__bar"><i></i><i></i><i></i><span>Week 4 reading.pdf</span></div>
+          <div class="doc-anim__lines">
+            <span style="--w:88%;--i:0"></span><span style="--w:94%;--i:1"></span><span style="--w:76%;--i:2"></span><span style="--w:90%;--i:3"></span><span style="--w:64%;--i:4"></span><span style="--w:84%;--i:5"></span>
+          </div>
+          <div class="doc-anim__hl"></div>
+        </div>
+        <div class="doc-anim__chip doc-anim__chip--a"><span class="doc-anim__ic" id="icA"></span><div><b>Read-aloud on</b><small>following each word</small></div></div>
+        <div class="doc-anim__chip doc-anim__chip--b"><span class="doc-anim__ic doc-anim__ic--teal" id="icB"></span><div><b>SAS appointment</b><small>Tue 10:30 · intake ready</small></div></div>
+      </div>
+
+      <ul class="login__feats stag">
+        <li><span class="feat-ic" id="f1"></span><div><b>ERLY companion</b><small>Reading Studio and Noor, from day one</small></div></li>
+        <li><span class="feat-ic" id="f2"></span><div><b>A Support Pact</b><small>Four weeks, your normal only, then it stops</small></div></li>
+        <li><span class="feat-ic" id="f3"></span><div><b>Counselor workspace</b><small>Requests, outcomes, support plans</small></div></li>
+      </ul>
+    </section>
+
+    <section class="login__panel">
+      <div class="lcard" id="lcard">
+        <div class="lcard__step is-active" data-step="role">
+          <h2>Sign in</h2>
+          <p class="muted">Choose your account type to continue.</p>
+          <div class="roles">
+            <button class="role" data-role="student">
+              <span class="role__ic" id="icStudent"></span>
+              <span class="role__txt"><b>Student</b><small>ERLY, the Reading Studio and your support</small></span>
+              <span class="role__go" id="go1"></span>
+            </button>
+            <button class="role" data-role="faculty">
+              <span class="role__ic role__ic--violet" id="icFaculty"></span>
+              <span class="role__txt"><b>Faculty</b><small>Courses, attendance, classroom observations</small></span>
+              <span class="role__go" id="go3"></span>
+            </button>
+            <button class="role" data-role="counselor">
+              <span class="role__ic role__ic--teal" id="icCounsel"></span>
+              <span class="role__txt"><b>Counselor (SAS)</b><small>Requests, student insights, support plans</small></span>
+              <span class="role__go" id="go2"></span>
+            </button>
+          </div>
+          <p class="lcard__foot muted small"><span id="icLock"></span> Encrypted session · Demo environment</p>
+        </div>
+
+        <form class="lcard__step" data-step="form" id="loginForm" autocomplete="off" novalidate>
+          <button type="button" class="lcard__back" id="backBtn" aria-label="Back to account type">← Back</button>
+          <div class="lcard__badge" id="roleBadge"></div>
+          <h2 id="formTitle">Student sign-in</h2>
+          <p class="muted" id="formSub">Use your university username.</p>
+          <label class="fld">
+            <span>Username</span>
+            <span class="fld__box"><span class="fld__ic" id="icUser"></span><input id="user" name="user" type="text" autocomplete="username" spellcheck="false" required></span>
+          </label>
+          <label class="fld">
+            <span>Password</span>
+            <span class="fld__box"><span class="fld__ic" id="icPass"></span><input id="pass" name="pass" type="password" autocomplete="current-password" required><button type="button" class="fld__eye" id="eyeBtn" aria-label="Show password"></button></span>
+          </label>
+          <label class="check-row lcard__remember"><input type="checkbox" checked> <span>Keep me signed in on this device</span></label>
+          <p class="lerr" id="lerr" role="alert" hidden></p>
+          <button class="btn btn--accent btn--block lbtn" id="signIn" type="submit"><span class="lbtn__txt">Sign in</span><span class="lbtn__spin" aria-hidden="true"></span><svg class="lbtn__ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <details class="demo-creds"><summary>Demo accounts</summary><p><b>Student</b> · Acubins / 1234<br><b>Faculty</b> · Faculty / 5678<br><b>Counselor</b> · Counselor / 4321</p></details>
+        </form>
+      </div>
+      <p class="login__legal muted small">By signing in you agree to the SAS privacy notice (UAE PDPL, Federal Decree-Law 45/2021).</p>
+    </section>
+  </main>
+
+  <div class="wipe" id="wipe" aria-hidden="true"><div class="wipe__inner"><p class="wipe__k" id="wipeK">Signing you in</p><p id="wipeTxt">Welcome</p></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/accent.js"></script>
+  <script src="assets/js/portal.js"></script>
+  <script src="assets/js/loginfx.js"></script>
+</body>
+</html>

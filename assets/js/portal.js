@@ -9,21 +9,19 @@
   const ACCOUNTS = {
     student: { user: 'acubins', pass: '1234', go: 'student.html', hi: 'Welcome to ERLY', k: 'Signed in as Acubins' },
     counselor: { user: 'counselor', pass: '4321', go: 'counselor.html', hi: 'Welcome, Counselor', k: 'Opening the SAS workspace' },
-    faculty: { user: 'faculty', pass: '5678', go: 'faculty.html', hi: 'Welcome, Dr. Haddad', k: 'Opening the Faculty portal' },
-    university: { user: 'university', pass: '2468', go: 'university.html', hi: 'Acubins University', k: 'Opening the Command Center' }
+    faculty: { user: 'faculty', pass: '5678', go: 'faculty.html', hi: 'Welcome, Dr. Haddad', k: 'Opening the Faculty portal' }
   };
   const ROLE_UI = {
     student: { title: 'Student sign-in', sub: 'Use your university username and password.', badge: 'Student account' },
     counselor: { title: 'Counselor sign-in', sub: 'Student Accessibility Services staff only.', badge: 'Counselor account' },
-    faculty: { title: 'Faculty sign-in', sub: 'Teaching staff of Acubins University.', badge: 'Faculty account' },
-    university: { title: 'University sign-in', sub: 'Leadership & administration — opens the Command Center.', badge: 'University account' }
+    faculty: { title: 'Faculty sign-in', sub: 'Teaching staff of Acubins University.', badge: 'Faculty account' }
   };
 
   // icons
   const fill = (id, n) => { const el = document.getElementById(id); if (el) el.innerHTML = ICON(n); };
   fill('icA', 'volume'); fill('icB', 'calendar'); fill('f1', 'sparkle'); fill('f2', 'shield'); fill('f3', 'users');
   fill('icStudent', 'cap'); fill('icCounsel', 'counsel'); fill('go1', 'arrow'); fill('go2', 'arrow');
-  fill('icFaculty', 'pen'); fill('icUni', 'building'); fill('go3', 'arrow'); fill('go4', 'arrow');
+  fill('icFaculty', 'pen'); fill('go3', 'arrow');
   fill('icLock', 'lock'); fill('icUser', 'users'); fill('icPass', 'lock'); fill('eyeBtn', 'eye');
 
   let role = null, fails = 0, busy = false;
@@ -112,6 +110,7 @@
       } else {
         busy = false;
         btn.classList.remove('is-loading');
+        if (u.toLowerCase() === 'university' && p === '2468') return fail('That’s the university login — use “University login” on the Acubins University home page.');
         const other = Object.keys(ACCOUNTS).find(k => k !== role && ACCOUNTS[k].user === u.toLowerCase() && ACCOUNTS[k].pass === p);
         fail(other ? `That's a ${other} account — go back and choose “${other[0].toUpperCase() + other.slice(1)}”.` : fails >= 2 ? 'Still incorrect. Check the username and password (passwords are case-sensitive).' : 'Incorrect username or password.');
       }
