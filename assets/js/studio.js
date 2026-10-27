@@ -22,8 +22,8 @@
 
   const FONTS = [['classic', 'Classic', '"Fraunces", Georgia, serif'], ['lexend', 'Lexend', '"Lexend", sans-serif'], ['atkinson', 'Atkinson', '"Atkinson Hyperlegible", sans-serif'], ['andika', 'Andika', '"Andika", sans-serif'], ['sans', 'Sans', '"Instrument Sans", sans-serif']];
   const TINTS = [['paper', '#FFFFFF', '#1B1915'], ['cream', '#FBF3DF', '#2B2418'], ['blue', '#E3EEFA', '#14243A'], ['mint', '#E2F4EC', '#11291F'], ['rose', '#FBE7EA', '#331A1F'], ['night', '#1E1D24', '#E9E6F2']];
-  const STYLES = { friendly: [0.96, 1.06], calm: [0.86, 0.98], clear: [1.0, 1.0], brisk: [1.12, 1.02] };
-  const st = { font: 'classic', size: 19, lh: 1.75, ls: 0, ws: 0, width: 660, tint: 'paper', focus: false, anchors: false, zoom: 1, voice: '', style: 'friendly', rate: 0.96, pitch: 1.06, hl: true };
+  const STYLES = { friendly: [1.0, 1.0], calm: [0.9, 0.97], clear: [0.96, 1.0], brisk: [1.12, 1.0] };
+  const st = { font: 'classic', size: 19, lh: 1.75, ls: 0, ws: 0, width: 660, tint: 'paper', focus: false, anchors: false, zoom: 1, voice: '', style: 'friendly', rate: 1.0, pitch: 1.0, hl: true };
   const ZOOMS = [0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
 
   // event bus for the companion: interaction metadata only
@@ -70,8 +70,8 @@
         <section class="stool"><p class="stool__h mono">${T('Read aloud', 'القراءة الصوتية')}</p>
           <div class="vstyles" id="stStyles">${[['friendly', 'Friendly', 'ودود'], ['calm', 'Calm', 'هادئ'], ['clear', 'Clear', 'واضح'], ['brisk', 'Brisk', 'سريع']].map(([k, en, ar]) => `<button class="vstyle ${k === st.style ? 'is-on' : ''}" data-style="${k}">${T(en, ar)}</button>`).join('')}</div>
           <label class="field"><span class="mono">${T('Voice', 'الصوت')}</span><select id="stVoice"></select></label>
-          <label class="slider slider--sm"><span><span>${T('Speed', 'السرعة')}</span><b class="mono" id="vRate2">0.96×</b></span><input type="range" id="stRate" min="0.6" max="1.5" step="0.02" value="0.96"></label>
-          <label class="slider slider--sm"><span><span>${T('Pitch', 'طبقة الصوت')}</span><b class="mono" id="vPitch">1.06</b></span><input type="range" id="stPitch" min="0.6" max="1.5" step="0.02" value="1.06"></label>
+          <label class="slider slider--sm"><span><span>${T('Speed', 'السرعة')}</span><b class="mono" id="vRate2">1.00×</b></span><input type="range" id="stRate" min="0.6" max="1.5" step="0.02" value="1"></label>
+          <label class="slider slider--sm"><span><span>${T('Pitch', 'طبقة الصوت')}</span><b class="mono" id="vPitch">1.00</b></span><input type="range" id="stPitch" min="0.6" max="1.5" step="0.02" value="1"></label>
           <button class="btn btn--xs btn--ghost" id="stTest">${ICON('volume')} ${T('Try this voice', 'جرّب هذا الصوت')}</button>
           <label class="switch-row"><span><b>${T('Highlight each word', 'إبراز كل كلمة')}</b></span><input type="checkbox" id="stHl" checked><i></i></label>
         </section>
@@ -301,9 +301,9 @@
   const natural = v => {
     const n = v.name;
     let s = 0;
-    if (/natural|neural/i.test(n)) s += 6; if (/online/i.test(n)) s += 3; if (/google/i.test(n)) s += 2;
-    if (/aria|jenny|sonia|libby|natasha|emma|michelle|ava|samantha|serena|allison|karen|moira|tessa|daniel|guy|ryan/i.test(n)) s += 3;
-    if (/compact|espeak|robot|novelty|whisper|bells|bad news|zarvox|trinoids|cellos/i.test(n)) s -= 8;
+    if (/natural|neural/i.test(n)) s += 8; if (/premium|enhanced|siri/i.test(n)) s += 7; if (/online/i.test(n)) s += 3; if (/google/i.test(n)) s += 3;
+    if (/aria|jenny|sonia|libby|natasha|emma|michelle|ava|samantha|serena|allison|karen|moira|tessa|daniel|guy|ryan|zoe|evan/i.test(n)) s += 3;
+    if (/compact|espeak|robot|novelty|whisper|bells|bad news|zarvox|trinoids|cellos|boing|bubbles|jester|organ|superstar|wobble|albert|fred|junior|ralph/i.test(n)) s -= 12;
     if (/^en-(GB|US|AU|IE)/i.test(v.lang)) s += 1;
     return s;
   };
@@ -313,7 +313,7 @@
     const groups = { en: [], ar: [], other: [] };
     voices.forEach((v, i) => { const k = /^en/i.test(v.lang) ? 'en' : /^ar/i.test(v.lang) ? 'ar' : 'other'; groups[k].push([i, v]); });
     groups.en.sort((a, b) => natural(b[1]) - natural(a[1]));
-    const opt = ([i, v]) => `<option value="${i}">${natural(v) >= 5 ? '★ ' : ''}${v.name.replace(/Microsoft |Google |\(Natural\)|Online/g, '').trim()} · ${v.lang}</option>`;
+    const opt = ([i, v]) => `<option value="${i}">${natural(v) >= 7 ? '★ ' : ''}${v.name.replace(/Microsoft |Google |\(Natural\)|Online/g, '').trim()} · ${v.lang}</option>`;
     $('#stVoice', root).innerHTML = voices.length
       ? `${groups.en.length ? `<optgroup label="English — most natural first">${groups.en.map(opt).join('')}</optgroup>` : ''}${groups.ar.length ? `<optgroup label="العربية">${groups.ar.map(opt).join('')}</optgroup>` : ''}${groups.other.length ? `<optgroup label="${T('Other', 'أخرى')}">${groups.other.map(opt).join('')}</optgroup>` : ''}`
       : `<option value="">${T('Default voice', 'الصوت الافتراضي')}</option>`;
@@ -384,7 +384,7 @@
         const mark = i => { words.forEach(w => w.classList.remove('is-say')); if (words[i]) { if (st.hl) words[i].classList.add('is-say'); vizWord(words[i].dataset.raw); $('#vdWord', root).textContent = words[i].dataset.raw.replace(/[^\p{L}\p{N}'’-]/gu, ''); } };
         let gotB = false, idx = -1;
         const question = /\?$/.test(text);
-        const u = utter(text, (rate || st.rate) * (0.98 + Math.random() * .05), st.pitch * (question ? 1.04 : 0.97 + Math.random() * .07));
+        const u = utter(text, (rate || st.rate) * (0.98 + Math.random() * .04), st.pitch * (question ? 1.04 : 0.98 + Math.random() * .04));
         u.onboundary = e => { if (e.name && e.name !== 'word') return; gotB = true; const i = starts.findIndex((s, k) => s <= e.charIndex && (starts[k + 1] === undefined || starts[k + 1] > e.charIndex)); if (i >= 0) { idx = i; mark(i); } };
         u.onstart = () => { mark(0); idx = 0; };
         u.onend = u.onerror = () => { clearInterval(fallback); words.forEach(w => w.classList.remove('is-say')); viz.target = .05; if (reading) setTimeout(nextPhrase, /[.!?]$/.test(text) ? 260 : 120); };
@@ -556,7 +556,7 @@
     speechSynthesis.cancel();
     const parts = plain.match(/[^.!?]+[.!?]*/g) || [plain];
     parts.forEach((p, i) => {
-      const u = utter(p.trim(), Math.max(0.86, st.rate * 0.98), Math.min(1.5, st.pitch * 1.04 + (i % 2 ? -.03 : .02)));
+      const u = utter(p.trim().replace(/\bI am\b/g, "I'm").replace(/\bdo not\b/g, "don't"), Math.max(0.86, st.rate), Math.min(1.5, st.pitch + (i % 2 ? -.02 : .02)));
       u.onstart = () => talking(true);
       u.onboundary = e => { if (!e.name || e.name === 'word') vizWord(p.slice(e.charIndex).split(/\s/)[0] || 'a'); };
       u.onend = u.onerror = () => { if (i === parts.length - 1) talking(false); };

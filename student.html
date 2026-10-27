@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="assets/css/accents.css">
   <link rel="stylesheet" href="assets/css/erly.css">
   <link rel="stylesheet" href="assets/css/companion.css">
+  <link rel="stylesheet" href="assets/css/checkins.css">
   <script>
     // Demo portal guard — must have signed in as a student
     try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('index.html?next=student'); } catch (e) {}
@@ -48,6 +49,7 @@
         <a href="#flow" data-i18n="nav.flow">How it works</a>
         <a href="#tracking" data-i18n="nav.tracking">Tracking</a>
         <a href="#reading-studio" data-i18n="nav.studio">Reading Studio</a>
+        <a href="#checkins" data-i18n="nav.checkins">Check-ins</a>
         <a href="#ai" data-i18n="nav.ai">How it thinks</a>
         <a href="#insight" data-i18n="nav.insight">Insight</a>
         <a href="#handoff" data-i18n="nav.handoff">Get support</a>
@@ -226,12 +228,27 @@
   </section>
 
 
+  <!-- ============ CHECK-INS ============ -->
+  <section class="section section--tint" id="checkins">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">05</span><span data-i18n="ck.kicker">Check-ins · beyond reading</span></p>
+          <h2 class="h2 reveal" data-i18n="ck.title">Ten short activities, one for every part of studying.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="ck.lead">Listening in noise, memory, planning and switching, steady focus, writing flow, finding your way, quizzes under a timer, and how you work with others. Noor guides each one by voice. Several results have to agree before anything is suggested, and the answer is always “worth exploring with SAS” — never a label.</p>
+      </header>
+      <div id="checkins-app"></div>
+    </div>
+  </section>
+
+
   <!-- ============ START-RAMP ============ -->
   <section class="section section--tint" id="ramp">
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">05</span><span data-i18n="rp.kicker">Day-one tools · Start-Ramp</span></p>
+          <p class="kicker"><span class="num">06</span><span data-i18n="rp.kicker">Day-one tools · Start-Ramp</span></p>
           <h2 class="h2 reveal" data-i18n="rp.title">When starting is the hard part, make the first step tiny.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="rp.lead">For the “11th-hour spike” and the “Forum Ghost”: deadline-aware nudges you choose, a five-minute first step, big tasks split into micro-tasks, and a quiet body-doubling room. Works from day one — no tracking needed.</p>
@@ -266,7 +283,7 @@
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">06</span><span data-i18n="ai.kicker">How ERLY thinks</span></p>
+          <p class="kicker"><span class="num">07</span><span data-i18n="ai.kicker">How ERLY thinks</span></p>
           <h2 class="h2 reveal" data-i18n="ai.title">It looks at your textbook. <em>Never at you.</em></h2>
         </div>
         <p class="section__lead reveal" data-i18n="ai.lead">Fully on-device edge AI. No labelled disability data is needed — the data that ethically shouldn’t exist publicly — because ERLY only ever compares you with you.</p>
@@ -306,7 +323,7 @@
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">07</span><span data-i18n="in.kicker">Your insight</span></p>
+          <p class="kicker"><span class="num">08</span><span data-i18n="in.kicker">Your insight</span></p>
           <h2 class="h2 reveal" data-i18n="in.title">A picture, not a label.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="in3.lead">After day 28, all 100 indicators come together in a page made for you: a bilingual evidence card, your month as weather, a friction fingerprint, what stayed steady — and what actually helped you.</p>
@@ -320,7 +337,7 @@
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span class="num">08</span><span data-i18n="ho.kicker">The hand-off</span></p>
+          <p class="kicker"><span class="num">09</span><span data-i18n="ho.kicker">The hand-off</span></p>
           <h2 class="h2 reveal" data-i18n="ho2.title">From a private insight to a real appointment, with someone beside you.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="ho3.lead">Four weeks of indicators can build evidence strong enough to justify a referral. Only a professional assessment can confirm a learning disability, and SAS does that part.</p>
@@ -375,7 +392,7 @@
   <section class="section section--ink" id="privacy">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">09</span><span data-i18n="pv.kicker">Privacy by design</span></p>
+        <p class="kicker"><span class="num">10</span><span data-i18n="pv.kicker">Privacy by design</span></p>
         <h2 class="h2 reveal" data-i18n="pv.title">The best privacy feature is a finish line.</h2>
       </header>
       <div class="privacy-grid">
@@ -414,7 +431,7 @@
   <section class="section section--tint" id="data">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">10</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
+        <p class="kicker"><span class="num">11</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
         <h2 class="h2 reveal" data-i18n="dt.title">Move the assumptions. We'll replace each one with a measured number.</h2>
       </header>
       <div class="calc reveal">
@@ -461,7 +478,7 @@
   <section class="section" id="faq">
     <div class="wrap faq-wrap">
       <header class="section__head">
-        <p class="kicker"><span class="num">11</span><span data-i18n="fq.kicker">Hard questions</span></p>
+        <p class="kicker"><span class="num">12</span><span data-i18n="fq.kicker">Hard questions</span></p>
         <h2 class="h2 reveal" data-i18n="fq.title">Ask us anything. We already asked ourselves.</h2>
       </header>
       <div class="faq">
@@ -552,6 +569,8 @@
   <script src="assets/js/companion/voice.js"></script>
   <script src="assets/js/companion/summary.js"></script>
   <script src="assets/js/companion/ui.js"></script>
+  <script src="assets/js/checkins-score.js"></script>
+  <script src="assets/js/checkins.js"></script>
   <script src="assets/js/insight.js"></script>
   <script src="assets/vendor/jspdf.umd.min.js" defer></script>
   <script src="assets/js/report.js"></script>

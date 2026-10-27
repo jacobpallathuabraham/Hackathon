@@ -248,3 +248,11 @@ em.clab__r--easier, em.clab__r--same, em.clab__r--harder { background: none; fon
 
 /* the sample reading is English: keep it left-to-right in the Arabic interface */
 [dir="rtl"] .spage { direction: ltr; }
+
+/* Noor's voice picker */
+.cmp__vset { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; align-items: end; margin-bottom: 8px; padding: 10px 12px; border-radius: 14px; background: var(--bg-2); animation: msgIn .3s var(--ease) both; }
+.cmp__vset[hidden] { display: none; }
+.cmp__vset label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.cmp__vset select { height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 0 8px; font: 500 13px var(--f-body); max-width: 100%; }
+.cmp__vset p { grid-column: 1 / -1; margin: 0; }
+.cmp__vset .btn svg { width: 14px; height: 14px; }

@@ -36,7 +36,7 @@
   let cfg = S.config(store.thresholds());
   const llm = window.ERLY_LLM.create({ endpoint: (window.ERLY_AI_CONFIG || {}).endpoint || '', getConsent: () => store.consent('llm') });
   let status = 'idle';
-  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
+  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
   const lab = { lang: lang(), variant: 'default', ratings: {} };
   const avail = () => Object.assign({}, R.availability);
@@ -90,8 +90,14 @@
               <button type="button" class="cmp__mini" id="cmpRepeat" aria-label="${T('Repeat the last reply', 'كرّر آخر رد')}">${REPEAT}</button>
               <button type="button" class="cmp__mini" id="cmpSkip" aria-label="${T('Skip this sentence', 'تخطَّ هذه الجملة')}" disabled>${SKIP}</button>
               <button type="button" class="cmp__mini" id="cmpMute" aria-pressed="${store.prefs().muted}" aria-label="${T('Speak replies aloud', 'قراءة الردود بصوت')}">${ICON(store.prefs().muted ? 'mute' : 'volume')}</button>
+              <button type="button" class="cmp__mini" id="cmpVoiceSet" aria-expanded="false" aria-controls="cmpVSet" aria-label="${T('Choose Noor’s voice', 'اختر صوت نور')}">${ICON('headphones')}</button>
               <span class="cmp__vhint" id="cmpVHint"></span>
               <button type="button" class="btn btn--xs cmp__conv" id="cmpConv"></button>
+            </div>
+            <div class="cmp__vset" id="cmpVSet" hidden>
+              <label><span>${T('Noor’s voice', 'صوت نور')}</span><select id="cmpVoiceSel"></select></label>
+              <button type="button" class="btn btn--xs btn--ghost" id="cmpVoiceTry">${ICON('volume')} ${T('Hear it', 'استمع')}</button>
+              <p class="muted cmp-small" id="cmpVoiceHint"></p>
             </div>
             <form class="cmp__input" id="cmpForm" autocomplete="off">
               <button type="button" class="cmp__mic" id="cmpMic" aria-pressed="false">${MIC}<span class="cmp__micring" aria-hidden="true"></span></button>
@@ -173,6 +179,16 @@
       const b = $('#cmpMute'); b.setAttribute('aria-pressed', m); b.innerHTML = ICON(m ? 'mute' : 'volume');
       announce(m ? T('Spoken replies off', 'الردود الصوتية متوقفة') : T('Spoken replies on', 'الردود الصوتية مفعّلة'));
     });
+    $('#cmpVoiceSet').addEventListener('click', () => {
+      const box = $('#cmpVSet'), open = box.hidden;
+      box.hidden = !open; $('#cmpVoiceSet').setAttribute('aria-expanded', open);
+      if (open) fillVoices();
+    });
+    $('#cmpVoiceSel').addEventListener('change', e => {
+      const v = Object.assign({}, store.prefs().voices || {}); v[lang()] = e.target.value; store.setPref('voices', v);
+      sayHello();
+    });
+    $('#cmpVoiceTry').addEventListener('click', sayHello);
     $('#cmpPause').addEventListener('click', () => { const s = voice.state(); if (s.paused) voice.resume(); else voice.pause(); });
     $('#cmpRepeat').addEventListener('click', () => { if (lastSpoken) speak(lastSpoken, true); });
     $('#cmpSkip').addEventListener('click', () => voice.skip());
@@ -204,6 +220,19 @@
     $('#cmpSkip').disabled = !v.speaking;
     $('#cmpMic').setAttribute('aria-pressed', v.listening);
   }
+  function fillVoices() {
+    const sel = $('#cmpVoiceSel'); if (!sel) return;
+    const vs = voice.voices(lang()), cur = voice.voiceFor(lang());
+    sel.innerHTML = vs.length ? vs.map(v => `<option value="${esc(v.name)}" ${cur && cur.name === v.name ? 'selected' : ''}>${window.ERLY_VOICE.isNatural(v) ? '★ ' : ''}${esc(v.name.replace(/Microsoft |Google |\(Natural\)| Online/g, '').trim())} · ${esc(v.lang)}</option>`).join('') : `<option>${T('Default voice', 'الصوت الافتراضي')}</option>`;
+    const anyNatural = vs.some(window.ERLY_VOICE.isNatural);
+    $('#cmpVoiceHint').textContent = anyNatural
+      ? T('★ = a natural, human-sounding voice. I picked the best one on this device.', '★ = صوت طبيعي يشبه صوت الإنسان. اخترت أفضلها على هذا الجهاز.')
+      : T('This device only has basic voices. For a much more human voice, open ERLY in Microsoft Edge (its “Natural” voices) or Chrome, or add an “Enhanced/Premium” voice in your device’s speech settings.', 'هذا الجهاز يحتوي على أصوات أساسية فقط. للحصول على صوت أقرب للإنسان، افتح إيرلي في متصفح إيدج (أصوات Natural) أو كروم، أو أضف صوتاً «محسّناً» من إعدادات الكلام في جهازك.');
+  }
+  function sayHello() {
+    voice.speak(pick('Hey! This is how I sound. If you like it, I’ll keep using this voice whenever we chat.', 'أهلاً! هكذا يبدو صوتي. إن أعجبك، سأستخدم هذا الصوت كلما تحدثنا.'), { lang: lang() });
+  }
+  if (window.speechSynthesis && typeof speechSynthesis.addEventListener === 'function') speechSynthesis.addEventListener('voiceschanged', () => { if ($('#cmpVSet') && !$('#cmpVSet').hidden) fillVoices(); });
   function announce(t) { const a = $('#cmpAnnounce'); if (a) { a.textContent = ''; setTimeout(() => { a.textContent = t; }, 30); } }
   let lastSpoken = '';
   function speak(text, force) {

@@ -117,6 +117,32 @@ npm test        # Node 18+, no dependencies: signals, baseline, branching, conse
 - Browser zoom and pinch-zoom can't be measured, so only the reader's own zoom control counts. Panning is only possible while the reader is zoomed in.
 - Voice is turn-by-turn (listen, then reply). It is not a real-time conversational voice model. Speech recognition availability depends on the browser. In Chrome and Edge the browser may send audio to its vendor's speech service, and the consent card says so.
 
+## Check-ins (beyond reading)
+
+The student site has a **Check-ins** section with ten short, game-like activities, one for each domain of the 100-point matrix. Noor guides each one by voice.
+
+| Domain | Activity (modelled on) | Measures |
+|---|---|---|
+| Visual & reading | Real word or made-up? (lexical decision) · letters in a crowd (visual crowding) | accuracy, decision time, crowding cost |
+| Auditory & video | Listen and answer, first in quiet, then with background noise (speech-in-noise) | quiet accuracy, drop in noise, replays |
+| Working memory | Digits forward and backward (digit span) · which side has more dots (number sense) | spans, quantity accuracy |
+| Executive function | Connect the trail 1-2-3 / 1-A-2-B (Trail Making A/B) · tap except for X (go/no-go) | switching cost, errors, commission errors, response variability |
+| Endurance & pacing | Spot the 3 for 2–3 minutes (continuous performance) plus tiredness before and after | accuracy drop, slowing, tiredness rise |
+| Output & drafting | Copy a sentence · write in your own words for 2 minutes (the text is discarded) | copy speed, writing speed, start time, long pauses, deletions |
+| Navigation | Find five things on a pretend course site | time per item, wrong turns |
+| Assessment | The same kinds of questions without and then with a timer, plus self-rated worry | accuracy, drop under time pressure, answer changes |
+| Help-seeking | Four questions about how you like to get help | support style only; this never flags |
+| Collaboration | Comfort in eight everyday class situations | comfort, avoidance |
+
+How results are reached (`assets/js/checkins-score.js`, unit-tested):
+- Each metric is compared with a reference range and given a z-score. **The reference ranges are demo placeholders, not validated norms.**
+- A run is marked unclear when there are too many very early taps, chance-level responding, time away from the screen, or an unfinished task. An unclear run says nothing.
+- A domain is "Notable" only when two or more of its measures agree. "Worth a look" needs one clear measure.
+- A possible explanation to explore with SAS (for example dyslexia, dyscalculia, ADHD, auditory processing plus a hearing check, dysgraphia, test anxiety, stamina, or communication confidence) needs converging domains. It is graded as an early sign, some evidence or stronger evidence. The grade rises when a result repeats on a second run and when it matches the student's own 28-day tracking. Everyday explanations are always listed. Results never include probabilities.
+- No online activity can identify a condition with clinical accuracy. Results are screening indications to discuss with SAS, and only a qualified assessment can confirm anything.
+
+Results stay in `localStorage` (`erly-checkins-v1`). The student can download them as .txt or delete them. A "Short demo versions" switch halves every activity for pitches.
+
 ## References
 
 - Aboudan, R. et al. (2011). *International Journal of English Linguistics* 1(2):64. doi:10.5539/ijel.v1n2p64
