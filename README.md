@@ -253,3 +253,12 @@ Honest limits: no website can identify a condition with clinical accuracy. These
 - Vos, M. & Hartman, C. (2022). The decreasing prevalence of ADHD across the adult lifespan confirmed. *J Glob Health* 12:03024.
 - Bayanat open data: Grade 12 pass rates, higher-education enrolment.
 - UAE Federal Decree-Law No. 45 of 2021 (PDPL).
+
+## Find it on Google ("Acubins University")
+
+The home page is set up to be found: a clear title and description, a canonical URL, share previews (Open Graph / X, `assets/img/og-acubins.png`), `CollegeOrUniversity` structured data with the name "Acubins University", a `sitemap.xml`, and the name in the page's main heading. The sign-in portals are marked `noindex` so only the university home shows up in results.
+
+Google has to discover and index the page first, which takes from a day to a few weeks. To speed it up:
+1. Open [Google Search Console](https://search.google.com/search-console), add a **URL prefix** property for `https://jacobpallathuabraham.github.io/Hackathon/`.
+2. Choose **HTML tag** verification, copy the `google-site-verification` tag into the commented spot in `index.html`'s `<head>`, push, and click Verify.
+3. Submit the sitemap `https://jacobpallathuabraham.github.io/Hackathon/sitemap.xml`, then use **URL inspection → Request indexing** on the home page.
