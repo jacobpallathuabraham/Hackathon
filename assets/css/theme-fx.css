@@ -1,0 +1,66 @@
+/* ERLY — theme and language switching (see theme-fx.js), plus dark-mode
+   fixes for the "highlight" panels that used to invert into bright cream
+   boxes in dark mode. Loaded last on every page. */
+
+/* ---------- dark mode: highlight panels stay dark, lit by the accent ---------- */
+[data-theme="dark"] :is(.gap__stat--hot, .tile--ink, .flow__col--device, .calc__out, .phase--gate, .ins-hero__stat, .pact__doc, .contract__doc) {
+  background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%), linear-gradient(160deg, #262219, #1B1916 75%);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 28px 60px -34px color-mix(in srgb, var(--accent) 70%, transparent);
+  --muted: #A8A091;
+  --ink-2: #D6CFC1;
+  --line: #3A352D;
+}
+[data-theme="dark"] .gap__stat--hot .bar { background: rgba(255, 255, 255, .08); }
+[data-theme="dark"] :is(.pact__doc, .contract__doc) :is(h3, b, strong, li, span, p) { color: inherit; }
+[data-theme="dark"] :is(.pact__doc, .contract__doc) .muted, [data-theme="dark"] :is(.pact__doc, .contract__doc) small { color: var(--muted); }
+
+/* ---------- theme switch ---------- */
+/* View Transitions: the new theme is revealed in a circle by theme-fx.js */
+html.vt-theme::view-transition-old(root),
+html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-theme::view-transition-old(root) { z-index: 1; }
+html.vt-theme::view-transition-new(root) { z-index: 2; }
+/* fallback: everything eases to its new colour */
+html.tfx-fade, html.tfx-fade *, html.tfx-fade *::before, html.tfx-fade *::after {
+  transition: background-color .6s ease, color .5s ease, border-color .6s ease, fill .5s ease, stroke .5s ease, box-shadow .6s ease !important;
+}
+.tfx-wash { position: fixed; inset: 0; z-index: 9998; pointer-events: none; clip-path: circle(0 at var(--tfx-x, 50%) var(--tfx-y, 50%)); animation: tfxWash .85s cubic-bezier(.65, 0, .25, 1) forwards; }
+@keyframes tfxWash { 60% { clip-path: circle(var(--r) at var(--tfx-x) var(--tfx-y)); opacity: .9; } 100% { clip-path: circle(var(--r) at var(--tfx-x) var(--tfx-y)); opacity: 0; } }
+/* the sun / moon that rises from the button */
+.tfx-badge { position: fixed; z-index: 9999; pointer-events: none; }
+.tfx-orb { width: 64px; height: 64px; margin: -32px 0 0 -32px; display: grid; place-items: center; border-radius: 50%; animation: tfxOrb 1.2s cubic-bezier(.2, .8, .2, 1) forwards; }
+.tfx-orb svg { width: 34px; height: 34px; }
+.tfx-orb--sun { color: #F2A93B; background: radial-gradient(circle, rgba(255, 214, 120, .55), rgba(255, 214, 120, 0) 70%); }
+.tfx-orb--moon { color: #C9D2FF; background: radial-gradient(circle, rgba(170, 185, 255, .45), rgba(170, 185, 255, 0) 70%); }
+@keyframes tfxOrb {
+  0% { transform: scale(.3) rotate(-90deg); opacity: 0; }
+  25% { transform: scale(1.5) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(46px) scale(2.6) rotate(25deg); opacity: 0; }
+}
+#themeToggle.tfx-spin svg { animation: tfxSpin .7s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes tfxSpin { from { transform: rotate(-200deg) scale(.4); opacity: 0; } }
+
+/* ---------- language switch ---------- */
+html.vt-lang::view-transition-old(root) { animation: tfxLangOut .42s cubic-bezier(.4, 0, 1, 1) both; }
+html.vt-lang::view-transition-new(root) { animation: tfxLangIn .62s cubic-bezier(.15, .85, .25, 1) .08s both; }
+@keyframes tfxLangOut { to { opacity: 0; transform: translateX(calc(var(--tfx-dx, 60px) * -1)); filter: blur(8px); } }
+@keyframes tfxLangIn { from { opacity: 0; transform: translateX(var(--tfx-dx, 60px)); filter: blur(8px); } }
+/* fallback: the page fades and slides with the text direction */
+html.tfx-lang-out body { transition: opacity .2s ease, transform .2s ease, filter .2s ease; opacity: 0; transform: translateX(calc(var(--tfx-dx, 60px) * -.5)); filter: blur(4px); }
+html.tfx-lang-in body { animation: tfxBodyIn .6s cubic-bezier(.15, .85, .25, 1); }
+@keyframes tfxBodyIn { from { opacity: 0; transform: translateX(calc(var(--tfx-dx, 60px) * .5)); filter: blur(4px); } }
+/* the "العربية" / "English" badge */
+.tfx-lang { left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 38px; border-radius: 26px; background: color-mix(in srgb, var(--surface, #FBF8F2) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line, rgba(0, 0, 0, .1)); box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .45); color: var(--ink, #1B1915); animation: tfxBadge 1.35s cubic-bezier(.2, .8, .2, 1) forwards; }
+.tfx-lang b { font: 500 clamp(30px, 5vw, 48px)/1.1 var(--f-display, Georgia, serif); }
+.tfx-lang b[lang="ar"] { font-family: var(--f-ar, "IBM Plex Sans Arabic", sans-serif); font-weight: 600; }
+.tfx-lang i { display: block; width: 100%; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--accent, #C1502B), var(--teal, #146A63)); transform-origin: right; animation: tfxLine .9s .15s cubic-bezier(.65, 0, .25, 1) both; }
+[dir="ltr"] .tfx-lang i { transform-origin: left; }
+@keyframes tfxBadge { 0% { opacity: 0; transform: translate(-50%, -40%) scale(.9); } 18%, 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -58%) scale(.96); } }
+@keyframes tfxLine { from { transform: scaleX(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html.vt-lang::view-transition-old(root), html.vt-lang::view-transition-new(root) { animation: none; }
+  .tfx-badge, #themeToggle.tfx-spin svg { animation: none; display: none; }
+}

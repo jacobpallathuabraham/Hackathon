@@ -44,17 +44,7 @@
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem('erly-theme', next); } catch (err) {}
     };
-    if (!document.startViewTransition || reduceMotion) return set();
-    const r = themeBtn.getBoundingClientRect();
-    const x = e && e.clientX ? e.clientX : r.left + r.width / 2;
-    const y = e && e.clientY ? e.clientY : r.top + r.height / 2;
-    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    document.startViewTransition(set).ready.then(() => {
-      document.documentElement.animate(
-        { clipPath: [`circle(0 at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-        { duration: 650, easing: 'cubic-bezier(.2,.7,.2,1)', pseudoElement: '::view-transition-new(root)' }
-      );
-    });
+    set(); // the animated switch lives in theme-fx.js, shared by every page
   }
 
   /* ---------- nav: stuck state, burger, current section, progress ---------- */
@@ -152,8 +142,8 @@
       { label: T('Start-Ramp', 'منحدر البدء'), hint: '05', run: go('#ramp') },
       { label: T('How ERLY thinks', 'كيف يفكّر إيرلي'), hint: '06', run: go('#ai') },
       { label: T('Demo: a typical month', 'عرض: شهر عادي'), hint: T('demo', 'عرض'), run: () => { ERLY.emit('trackDemo', 'typical'); go('#insight')(); } },
-      { label: T('Toggle dark / light', 'بدّل الوضع الداكن / الفاتح'), hint: 'T', run: () => toggleTheme() },
-      { label: T('Switch to Arabic / English', 'بدّل إلى العربية / الإنجليزية'), hint: 'L', run: toggleLang },
+      { label: T('Toggle dark / light', 'بدّل الوضع الداكن / الفاتح'), hint: 'T', run: () => themeBtn.click() },
+      { label: T('Switch to Arabic / English', 'بدّل إلى العربية / الإنجليزية'), hint: 'L', run: () => $('#langToggle').click() },
       { label: T('Start 5-minute pitch timer', 'ابدأ مؤقت العرض'), hint: 'P', run: startPitch }
     ];
   }
@@ -196,8 +186,8 @@
     if (['input', 'textarea', 'select'].includes(tag) || e.target.isContentEditable || e.metaKey || e.ctrlKey || e.altKey) return;
     if (document.body.classList.contains('is-playing')) return;
     const k = e.key.toLowerCase();
-    if (k === 't') toggleTheme();
-    else if (k === 'l') toggleLang();
+    if (k === 't') themeBtn.click();
+    else if (k === 'l') $('#langToggle').click();
     else if (k === 'p') $('#pitch').hidden ? startPitch() : stopPitch();
   });
 
