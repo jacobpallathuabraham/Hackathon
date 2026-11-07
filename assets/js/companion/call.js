@@ -19,6 +19,13 @@
   const { T, pick, esc } = U;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const v = U.voice;
+  // iPad/iPhone and Safari can't run speech recognition while the page also
+  // holds the microphone for a level meter: there the orb reacts to the words
+  // being recognised instead, and "interrupt by talking" is off.
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const SAFARI = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
+  let pulseT = null;
+  function pulse(x) { el.style.setProperty('--lvl', Math.min(1, x).toFixed(2)); clearTimeout(pulseT); pulseT = setTimeout(() => el.style.setProperty('--lvl', 0), 260); }
 
   const el = document.createElement('div');
   el.className = 'ncall'; el.hidden = true;
@@ -119,7 +126,8 @@
     };
   }
   async function begin() {
-    if (v.supported.stt && U.store.consent('mic')) meter();
+    if (v.supported.stt && U.store.consent('mic') && !SAFARI) meter();
+    if (SAFARI) { const b = el.querySelector('.ncall__barge'); if (b) b.hidden = true; }
     const hello = C.callMode === 'chat' ? pick('Hi! I’m listening — ask me anything.', 'أهلاً! أنا أستمع — اسألني أي شيء.') : pick('Hi! I’m listening. You can ask me anything, or tell me what’s been feeling hard lately — reading, lectures, focus, exams, anything.', 'أهلاً! أنا أستمع. يمكنك سؤالي أي شيء، أو إخباري بما كان صعباً مؤخراً — القراءة أو المحاضرات أو التركيز أو الاختبارات، أي شيء.');
     U.bubble('ai', hello, { text: true });
     enqueue(hello);
@@ -161,7 +169,7 @@
   function afterSpeaking() {
     clearTimeout(st.idleT);
     // give the chat a moment to add any follow-up line, then listen
-    st.idleT = setTimeout(() => { if (st.on && !st.speaking && !st.queue.length && !U.isBusy()) listen(); }, 450);
+    st.idleT = setTimeout(() => { if (st.on && !st.speaking && !st.queue.length && !U.isBusy()) listen(); }, SAFARI ? 650 : 350);
   }
   function caption(sel, text) {
     const p = $(sel); if (!p) return;
@@ -169,6 +177,7 @@
   }
   function interrupt() {
     if (!st.on) return;
+    st.misses = 0; st.blocked = false;
     if (st.speaking) { st.queue = []; v.stop(); st.speaking = false; }
     if (st.muted) toggleMute();
     listen();
@@ -181,17 +190,18 @@
     st.listening = true; setState('listening'); caption('#ncYou', '');
     const ok = v.listen({
       lang: U.lang(),
-      onresult: t => { const p = $('#ncYou'); if (p) p.textContent = t; },
+      onresult: t => { const p = $('#ncYou'); if (p) { p.textContent = t; p.classList.add('is-live'); } pulse(.45 + Math.random() * .4); },
+      onspeech: () => pulse(.6),
       onerror: code => {
         st.listening = false;
-        if (code === 'not-allowed' || code === 'service-not-allowed') { setState('idle'); caption('#ncNoor', T('I can’t use the microphone — it’s blocked in your browser settings. You can tap answers or type instead.', 'لا أستطيع استخدام الميكروفون — إنه محظور في إعدادات المتصفح. يمكنك النقر على الإجابات أو الكتابة بدلاً من ذلك.')); }
+        if (code === 'not-allowed' || code === 'service-not-allowed') { st.blocked = true; setState('idle'); caption('#ncNoor', T('I can’t use the microphone — it’s blocked in your browser settings. You can tap answers or type instead.', 'لا أستطيع استخدام الميكروفون — إنه محظور في إعدادات المتصفح. يمكنك النقر على الإجابات أو الكتابة بدلاً من ذلك.')); }
         if (code === 'network') caption('#ncNoor', T('Voice recognition needs an internet connection in this browser.', 'يحتاج التعرف على الصوت إلى اتصال بالإنترنت في هذا المتصفح.'));
       },
       onend: final => {
         st.listening = false;
-        if (!st.on) return;
+        if (!st.on || st.blocked) return;
         if (final) { st.misses = 0; setState('thinking'); caption('#ncYou', final); C.submitText(final); return; }
-        if (++st.misses <= 2 && !st.muted) setTimeout(listen, 300); else setState('idle');
+        if (++st.misses <= 2 && !st.muted) setTimeout(listen, 250); else { setState('idle'); caption('#ncNoor', T('I didn’t hear anything — tap me when you’re ready to talk.', 'لم أسمع شيئاً — انقر عليّ عندما تكون مستعداً للتحدث.')); }
       }
     });
     if (!ok) { st.listening = false; setState('idle'); }

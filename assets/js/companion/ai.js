@@ -207,7 +207,13 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       } else if (st.tier === 'online') {
         const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
         abort = () => ctrl && ctrl.abort();
-        await onlineGenerate(messages, o, ctrl, push);
+        let first = false, tooSlow = false;
+        const slow = setTimeout(() => { if (!first && ctrl) { tooSlow = true; ctrl.abort(); } }, 25000);
+        try { await onlineGenerate(messages, o, ctrl, d => { first = true; push(d); }); }
+        catch (e) { if (tooSlow) throw new Error('slow'); throw e; }
+        finally { clearTimeout(slow); }
+        if (tooSlow) throw new Error('slow');
+        if (!first && !raw) throw new Error('online-empty');
       } else if (st.tier === 'cloud') {
         let cancelled = false; abort = () => { cancelled = true; };
         const r = await opts.cloud.chat(messages, o);
@@ -225,8 +231,16 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
        a plain GET as a fallback for browsers or networks that block the POST.
        The free tier allows one request at a time per network, so a "busy"
        answer is retried once after the wait the service asks for. */
+    let onlineAt = 0;
     async function onlineGenerate(messages, o, ctrl, push) {
       const svc = online();
+      const free = svc.url === ONLINE_DEFAULT.url; // the free tier allows about one message every 30 s
+      if (free) {
+        const left = Math.ceil((30000 - (Date.now() - onlineAt)) / 1000);
+        if (left > 5) throw new Error('busy:' + left); // don't make the student wait: answer another way now
+        if (left > 0) { o.onStatus && o.onStatus({ busy: left }); await wait(left * 1000); }
+        onlineAt = Date.now();
+      }
       const clean = messages.map(m => ({ role: m.role, content: m.role === 'user' ? redact(m.content) : m.content }));
       const body = JSON.stringify({ model: svc.model, messages: clean, stream: true, temperature: o.voice ? 0.6 : 0.5, private: true, referrer: 'erly' });
       const signal = ctrl ? ctrl.signal : undefined;
@@ -240,7 +254,8 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
           lastErr = e; break; // blocked POST → try the GET form below
         }
         if (r.status === 402 || r.status === 429 || r.status === 503) {
-          const secs = Math.min(35, Math.max(3, +(r.headers.get('retry-after') || 0) || 20));
+          const secs = Math.min(60, Math.max(2, +(r.headers.get('retry-after') || 0) || 30));
+          if (secs > 5 || tries > 1) { onlineAt = Date.now() - 30000 + secs * 1000; throw new Error('busy:' + secs); }
           o.onStatus && o.onStatus({ busy: secs });
           await wait(secs * 1000);
           continue;
@@ -301,7 +316,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       if (st.status === 'loading') return { en: 'Waking up the AI brain…', ar: 'جارٍ تشغيل عقل الذكاء الاصطناعي…' };
       if (st.tier === 'webllm' && st.status === 'ready') { const m = MODELS.find(x => x.key === st.model); return { en: `On-device AI · ${m ? m.name : 'Noor'}`, ar: `ذكاء اصطناعي على الجهاز · ${m ? m.name : 'نور'}` }; }
       if (st.tier === 'chrome' && st.status === 'ready') return { en: 'On-device AI · Gemini Nano', ar: 'ذكاء اصطناعي على الجهاز · Gemini Nano' };
-      if (st.tier === 'online' && ready()) return { en: 'Noor Online · AI', ar: 'نور أونلاين · ذكاء اصطناعي' };
+      if (st.tier === 'online' && ready()) { const n = online().name; return n && n !== ONLINE_DEFAULT.name ? { en: `Noor AI · ${n}`, ar: `نور · ${n}` } : { en: 'Noor Online · AI', ar: 'نور أونلاين · ذكاء اصطناعي' }; }
       if (st.tier === 'cloud' && ready()) return { en: 'Cloud AI · university server', ar: 'ذكاء اصطناعي سحابي · خادم الجامعة' };
       return { en: 'Built-in brain · offline', ar: 'العقل المدمج · دون اتصال' };
     };

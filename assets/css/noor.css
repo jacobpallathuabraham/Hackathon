@@ -242,3 +242,8 @@ html.erly-big body { zoom: 1.12; }
 .cbopt__what { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
 .cbopt--online .btn svg { width: 15px; height: 15px; }
 @media (prefers-reduced-motion: reduce) { .cnudge, .cnudge.is-out { transition: opacity .2s; transform: none; } }
+/* live caption while you talk */
+.ncall__you.is-live { font-style: normal; opacity: 1; background: linear-gradient(90deg, #fff 0%, #C9D2FF 50%, #fff 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: liveCap 1.6s linear infinite; }
+@keyframes liveCap { to { background-position: -200% 0; } }
+.ncall[data-s="listening"] .nblob { transition: transform .08s linear; }
+@media (prefers-reduced-motion: reduce) { .ncall__you.is-live { animation: none; color: #fff; background: none; } }

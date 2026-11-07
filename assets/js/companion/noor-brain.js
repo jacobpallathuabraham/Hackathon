@@ -178,9 +178,18 @@
       }
       if (stopped) { ERLY.emit('noor:turn-end'); return true; }
       if (ai.state().tier === 'online') {
+        const msg = String(e && e.message || '');
+        const secs = +(msg.match(/^busy:(\d+)/) || [])[1] || 0;
+        retryQ = text;
+        const note = secs ? T(`_The free AI service is cooling down for ${secs} s (it allows about one message every 30 seconds), so here’s a quick answer meanwhile. Tap “Ask the AI again” for the full answer._`, `_خدمة الذكاء المجانية تستريح ${secs} ث (تسمح برسالة كل ٣٠ ثانية تقريباً)، لذا إليك إجابة سريعة الآن. اضغط «اسأل الذكاء مجدداً» للإجابة الكاملة._`)
+          : T('_The AI service didn’t answer quickly enough, so here’s a quick answer instead._', '_لم تُجب خدمة الذكاء بسرعة كافية، لذا إليك إجابة سريعة._');
         history.push({ role: 'user', text });
-        if (await wikiAnswer(text, T('_Noor Online didn’t answer just now, so I looked it up instead._', '_لم يُجب نور أونلاين الآن، لذا بحثت عن الإجابة._'))) { ERLY.emit('noor:turn-end'); return true; }
-        history.pop();
+        const quick = K.answer(text, lang(), kctx);
+        if (quick.kind === 'answer') { await mdSay(note, note, { speak: false }); await sayKB(quick); }
+        else if (!(await wikiAnswer(text, note))) { history.pop(); retryChip(secs); ERLY.emit('noor:turn-end'); return true; }
+        retryChip(secs);
+        ERLY.emit('noor:turn-end');
+        return true;
       }
       bubble('ai', T('My AI brain didn’t answer this time, so here’s my built-in answer.', 'لم يُجب عقلي الذكي هذه المرة، لذا إليك إجابتي المدمجة.'), { text: true, cls: 'cmsg--note' });
       return false;
@@ -196,6 +205,11 @@
     ERLY.emit('noor:turn-end');
     if (!C.inCall) offerChips(a.kind === 'self-check' || a.kind === 'reflect' ? (a.chips || []) : followUps(reading));
     return true;
+  }
+  let retryQ = '';
+  function retryChip(secs) {
+    offerChips([{ id: 'fu:retry', en: secs ? `Ask the AI again (in ${secs}s)` : 'Ask the AI again', ar: 'اسأل الذكاء مجدداً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
+    if (secs) setTimeout(() => { const b = document.querySelector('.cchips [data-id="fu:retry"] span'); if (b) b.textContent = pick('Ask the AI again — ready', 'اسأل الذكاء مجدداً — جاهز'); }, secs * 1000);
   }
   function finishReply(m, md, q, stopped) {
     m.classList.remove('is-writing');
@@ -327,6 +341,7 @@
     if (id === 'brain') return U.openBrain();
     if (id === 'fu:timer') { if (ERLY.reader && ERLY.reader.isOpen()) ERLY.reader.act('timer'); return freeText('pomodoro focus timer', { silentUser: true }); }
     if (id === 'fu:cards') return freeText('flashcards', { silentUser: true });
+    if (id === 'fu:retry' && retryQ) return freeText(retryQ, { silentUser: true });
     if (id.startsWith('fu:')) return freeText(pick(c.en, c.ar), { silentUser: true });
     if (id === 'no-thanks') return say('No problem at all. I’m here whenever you want.', 'لا مشكلة إطلاقاً. أنا هنا متى أردت.');
   }

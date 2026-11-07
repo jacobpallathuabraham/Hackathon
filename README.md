@@ -262,3 +262,14 @@ Google has to discover and index the page first, which takes from a day to a few
 1. Open [Google Search Console](https://search.google.com/search-console), add a **URL prefix** property for `https://jacobpallathuabraham.github.io/Hackathon/`.
 2. Choose **HTML tag** verification, copy the `google-site-verification` tag into the commented spot in `index.html`'s `<head>`, push, and click Verify.
 3. Submit the sitemap `https://jacobpallathuabraham.github.io/Hackathon/sitemap.xml`, then use **URL inspection → Request indexing** on the home page.
+
+## Connect Claude as Noor's brain (Claude-level answers, fast)
+
+The free "Noor Online" service allows only about one message every 30 seconds, so Noor answers a second quick question from her built-in knowledge or Wikipedia and offers "Ask the AI again". For answers at the level of Claude, with no waiting, connect a real model through `server/cloudflare-worker.mjs`. The API key stays secret in the worker and is never put in the website.
+
+1. `npm create cloudflare@latest erly-noor -- --type hello-world --lang js`, then `cd erly-noor && npm install @anthropic-ai/sdk`.
+2. Copy `server/cloudflare-worker.mjs` to `src/index.js`, run `npx wrangler secret put ANTHROPIC_API_KEY`, then `npx wrangler deploy`.
+3. In `assets/js/companion/config.js` set `online: { name: 'Claude', site: 'Acubins University', model: 'claude', url: 'https://erly-noor.<your-subdomain>.workers.dev/v1/chat/completions' }`.
+4. In Noor's brain picker the student agrees to "Noor Online", which is now Claude: streamed answers, no 30-second limit.
+
+Voice: recognition now keeps what Safari heard even when it never marks it final, ends the turn after about a second of silence, doesn't fight the microphone on iPad/Safari, and Noor's voice is chosen from the most natural voices on the device (Edge "Natural", Google, Apple Premium/Enhanced/Siri).

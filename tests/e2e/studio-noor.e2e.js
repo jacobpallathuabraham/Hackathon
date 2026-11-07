@@ -121,6 +121,14 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   assert.match(await page.textContent('#cmpLog'), /Spain won the 2010 World Cup/);
   assert.match(await page.textContent('#cmpMode'), /Noor Online/);
   assert.ok(posted && !/sam@uni\.ae/.test(posted) && /\[email\]/.test(posted), 'emails are removed before sending');
+  // a second question right away: the free service needs ~30 s, so Noor answers another way at once
+  await page.route('https://en.wikipedia.org/**', r => r.fulfill({ status: 200, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: r.request().url().includes('/summary/') ? JSON.stringify({ title: 'Photosynthesis', extract: 'Photosynthesis is how plants turn light into chemical energy.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Photosynthesis' } } }) : JSON.stringify({ query: { search: [{ title: 'Photosynthesis' }] } }) }));
+  const t0 = Date.now();
+  await page.fill('#cmpText', 'what is photosynthesis'); await page.press('#cmpText', 'Enter');
+  await page.waitForSelector('.cchips [data-id="fu:retry"]', { timeout: 6000 });
+  assert.ok(Date.now() - t0 < 6000, 'no long wait');
+  assert.match(await page.textContent('#cmpLog'), /plants turn light into chemical energy/);
+  await page.unroute('https://en.wikipedia.org/**');
   await page.unroute('https://text.pollinations.ai/**');
 
   /* ---------- Noor: the AI brain (model mocked) ---------- */

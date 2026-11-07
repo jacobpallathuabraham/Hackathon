@@ -171,3 +171,12 @@ test('llm: with no endpoint configured the adapter is the simulated demo', async
   const a = LLM.create({ endpoint: '', getConsent: () => true });
   assert.equal(a.configured, false); assert.equal(a.active().simulated, true);
 });
+test('voice: what was heard is kept even when the browser never marks it final (Safari)', () => {
+  const { R, made } = fakeRecognition();
+  let got = null;
+  const v = Voice.create({ synth: null, Recognition: R, getConsent: () => true });
+  v.listen({ onend: t => { got = t; } });
+  made[0].onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'what is photosynthesis' }], { isFinal: false })] });
+  made[0].onend();
+  assert.equal(got, 'what is photosynthesis');
+});

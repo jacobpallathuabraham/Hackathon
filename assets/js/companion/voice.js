@@ -32,6 +32,14 @@
     return s;
   };
   const isNatural = v => naturalScore(v) >= 7;
+  // the warmest voices we know of, best first (Edge/Windows, Chrome, Apple)
+  const FAVOURITES = [/Ava.*(Multilingual|Natural)/i, /Emma.*(Multilingual|Natural)/i, /Jenny.*Natural/i, /Aria.*Natural/i, /Sonia.*Natural/i, /Libby.*Natural/i, /Google UK English Female/i, /Google US English/i, /Ava.*(Premium|Enhanced)/i, /Zoe.*(Premium|Enhanced)/i, /Serena.*(Premium|Enhanced)/i, /Samantha.*(Premium|Enhanced)/i, /Kate.*(Premium|Enhanced)/i, /Siri/i, /^Samantha$/i, /^Karen$/i, /^Moira$/i, /^Tessa$/i];
+  const ARABIC = [/Salma|Zariyah|Fatima|Hala|Amina|Laila.*Natural/i, /Maged|Tarik|Hamed/i, /Google.*(عربي|Arabic)/i, /Majed|Laila/i];
+  function rank(v, lang) {
+    const list = lang === 'ar' ? ARABIC : FAVOURITES;
+    const i = list.findIndex(re => re.test(v.name || ''));
+    return (i < 0 ? 0 : 100 - i) + naturalScore(v);
+  }
 
   // Write the way people talk: contractions, no symbols, no abbreviations.
   const CONTRACT = [[/\bI am\b/g, "I'm"], [/\bI will\b/g, "I'll"], [/\bI have\b(?! to)/g, "I've"], [/\bdo not\b/gi, "don't"], [/\bdoes not\b/gi, "doesn't"], [/\bcannot\b/gi, "can't"], [/\bwill not\b/gi, "won't"], [/\bit is\b/g, "it's"], [/\bIt is\b/g, "It's"], [/\bthat is\b/g, "that's"], [/\byou are\b/g, "you're"], [/\bYou are\b/g, "You're"], [/\blet us\b/gi, "let's"], [/\bthere is\b/g, "there's"], [/\bwe are\b/g, "we're"], [/\bis not\b/g, "isn't"], [/\bare not\b/g, "aren't"]];
@@ -77,7 +85,7 @@
     function voices(lang) {
       if (!synth || !synth.getVoices) return [];
       const want = lang === 'ar' ? /^ar/i : /^en/i;
-      return synth.getVoices().filter(v => want.test(v.lang)).sort((a, b) => naturalScore(b) - naturalScore(a));
+      return synth.getVoices().filter(v => want.test(v.lang)).sort((a, b) => rank(b, lang) - rank(a, lang));
     }
     function pickVoice(lang) {
       const vs = voices(lang), name = getVoiceName(lang);
@@ -99,14 +107,19 @@
       // gentle, human-like prosody: a relaxed pace, tiny variation between
       // phrases, a slightly slower phrase end and a small lift on questions
       const nat = v && isNatural(v);
-      const baseRate = opts.rate || (nat ? 1.0 : 0.95), basePitch = opts.pitch || (nat ? 1.0 : 1.02);
-      const jitter = () => (Math.random() - 0.5) * 0.05;
-      u.rate = Math.max(0.6, baseRate + jitter() - (item.last ? 0.03 : 0));
-      u.pitch = Math.max(0.5, basePitch + jitter() + (item.question && item.last ? 0.06 : 0));
+      const baseRate = opts.rate || (nat ? 1.02 : 0.97), basePitch = opts.pitch || 1.0;
+      u.rate = baseRate - (item.last ? 0.02 : 0);
+      u.pitch = basePitch + (item.question && item.last ? 0.05 : 0);
+      u.volume = 1;
+      // some browsers (Safari especially) occasionally never fire onend: move on anyway
+      clearTimeout(state.watch);
+      state.watch = setTimeout(() => { if (my === token && state.speaking && !state.paused) { try { synth.cancel(); } catch (e) { /* ignore */ } u.onend(); } }, 2500 + item.text.split(/\s+/).length * 520 / baseRate);
       u.onstart = () => { if (my === token) { set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); } };
       u.onboundary = e => { if (my === token && opts.onboundary) opts.onboundary(e); };
       u.onend = () => {
         if (my !== token) return;
+        clearTimeout(state.watch);
+        if (u.done) return; u.done = true;
         const next = state.queue[i + 1];
         const gap = !next ? 0 : next.sentence !== item.sentence ? 260 + Math.random() * 140 : 90 + Math.random() * 80;
         const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
@@ -114,6 +127,7 @@
       };
       u.onerror = e => { if (my !== token) return; if (e && (e.error === 'interrupted' || e.error === 'canceled')) return; set('speaking', false); opts.onerror && opts.onerror(e && e.error); };
       synth.speak(u);
+      if (synth.paused && !state.paused && synth.resume) synth.resume();
     }
     let lastOpts = {};
     const api = {
@@ -154,20 +168,34 @@
         api.stop();
         if (state.rec) try { state.rec.abort(); } catch (e) { /* ignore */ }
         const r = new Rec();
-        r.lang = opts.lang === 'ar' ? 'ar-AE' : 'en-GB';
+        const nav = typeof navigator !== 'undefined' ? navigator.language || '' : '';
+        r.lang = opts.lang === 'ar' ? 'ar-AE' : (/^en-/i.test(nav) ? nav : 'en-US');
         r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
-        let final = '';
+        let final = '', interim = '', ended = false, quietT = null, heard = false;
+        const finish = () => { try { r.stop(); } catch (e) { /* ignore */ } };
         r.onresult = e => {
-          let interim = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
+          let fin = '', mid = '';
+          for (let i = 0; i < e.results.length; i++) {
             const t = e.results[i][0].transcript;
-            if (e.results[i].isFinal) final += t; else interim += t;
+            if (e.results[i].isFinal) fin += t; else mid += t;
           }
-          opts.onresult && opts.onresult((final + interim).trim(), !!final && !interim);
+          final = fin; interim = mid; heard = true;
+          const text = (final + ' ' + interim).replace(/\s+/g, ' ').trim();
+          opts.onresult && opts.onresult(text, !interim);
+          // end of turn: ~1.1 s without new words (Safari never decides on its own)
+          clearTimeout(quietT); quietT = setTimeout(finish, interim ? 1300 : 700);
         };
-        r.onerror = e => { opts.onerror && opts.onerror(e && e.error || 'error'); };
-        const guard = setTimeout(() => { try { r.stop(); } catch (e) { /* ignore */ } }, opts.maxMs || 15000); // never listen indefinitely
-        r.onend = () => { clearTimeout(guard); state.rec = null; set('listening', false); opts.onend && opts.onend(final.trim()); };
+        r.onspeechstart = () => { opts.onspeech && opts.onspeech(); };
+        r.onerror = e => { const code = e && e.error || 'error'; if (code === 'aborted') return; opts.onerror && opts.onerror(code); };
+        const guard = setTimeout(finish, opts.maxMs || 20000); // never listen indefinitely
+        const noStart = setTimeout(() => { if (!heard) finish(); }, opts.waitMs || 9000); // nobody spoke
+        r.onend = () => {
+          if (ended) return; ended = true;
+          clearTimeout(guard); clearTimeout(noStart); clearTimeout(quietT);
+          state.rec = null; set('listening', false);
+          // Safari often ends with only "interim" results: they are what was said
+          opts.onend && opts.onend((final + ' ' + interim).replace(/\s+/g, ' ').trim());
+        };
         state.rec = r;
         try { r.start(); set('listening', true); return true; }
         catch (e) { state.rec = null; opts.onerror && opts.onerror('start-failed'); return false; }
