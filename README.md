@@ -316,3 +316,73 @@ Voice: recognition now keeps what Safari heard even when it never marks it final
   - Offline, reconnecting, mic-blocked, no-mic and Siri-off states each have a clear message.
 - **iPad**: the "Allow microphone" tap lets Safari start listening right after the greeting. If Safari then refuses to restart the microphone on its own, Noor switches to "Tap to talk" automatically.
 - Tested by `tests/e2e/noor-tools.e2e.js` (mocked speech: setup, voice choice, speed, lip shapes and rest, interrupt, pause, transcript, iPad fallback) and `tests/unit/lipsync-md.test.js`. **Not yet checked on a real iPad or with real voices by ear.**
+
+## Voice v5: photoreal digital humans, emotional speech, voice library, Companion Studio
+
+### What was there before this round
+Illustrated SVG avatars; text-driven lip-sync anchored to word boundaries; one voice picker listing raw device voices; a single flat delivery (the same pace and pitch for every sentence); three settings tabs.
+
+### Photoreal companions (`assets/js/companion/photoreal.js`)
+- **Yasmin** and **Karim** are built from the two portraits in the ERLY Human Character Reference Pack supplied for this project (`assets/img/companions/`, upscaled ×2 with Lanczos). They are labelled as AI companions, not real people. Replace the two JPGs and their landmark numbers to change them.
+- **How they move**: a WebGL vertex shader moves a dense mesh (about 24,000 vertices, one draw call) like facial muscles:
+  - jaw drop with a lens-shaped lip opening; mesh rows are snapped to the lip line, so the lips part exactly there;
+  - lip width and rounding for each mouth shape;
+  - smile and cheek lift;
+  - eyelids that close by sliding the real upper-lid skin down;
+  - small iris shifts for gaze;
+  - brow raise, inner-brow (concern) and furrow;
+  - head tilt, nod and breathing.
+  A second shader paints the inside of the mouth (shading, upper and lower teeth, tongue) only where the lips have parted.
+- **Driving**: the same rig drives the illustrated avatars: 13 mouth shapes from `lipsync.js`, blinks, saccades, and listening, thinking and speaking states, plus a new emotion layer (15 restrained expressions that ease in and out, and small emphasis nods on stressed words).
+- **Performance**:
+  - No 3D download. Textures are about 100 KB each and only load when that avatar is shown.
+  - Adaptive quality lowers the render resolution if frames are slow.
+  - Without WebGL, the illustrated twin is used (Yasmin → Sara, Karim → Omar).
+  - Reduced-motion settings stop the head and eye movement but keep the lip-sync.
+- **Measured here**, in headless Chromium on software WebGL with no GPU:
+  - the mouth opens a median of **13 ms** after each real word-boundary event from the voice (worst case 81 ms, on words that start with closed lips);
+  - a typed question takes about **0.3 s** to the first spoken word with the built-in brain;
+  - frames take about 67 ms on the software renderer. This is not representative of a real GPU, and real-device frame rates have not been measured yet.
+- **Limits**: this is a 2.5D talking head from a single photo. It moves the face convincingly, but the head can't turn far, the hair doesn't move independently, and the expressions are muscle-like deformations, not separate photographed expressions. A fully rigged 3D digital human (for example a licensed MetaHuman-class model rendered with Three.js, with ARKit blendshapes) would need a commissioned or licensed model, plus a TTS service that returns visemes.
+
+### Emotional speech (`assets/js/companion/prosody.js`)
+- Every sentence is classified into one of 15 tones (enthusiastic, empathetic, reassuring, curious, serious, thoughtful, playful and so on). The tone comes from what the sentence says and from the student's last words; for example, "I'm confused" leads to a calmer, slower explanation. It never comes from their voice, face or accent.
+- Each tone adjusts pace, pitch, volume and the pause afterwards, scaled by an Expressiveness slider (0–150%). The changes are small and intentional, not random. Questions lift at the end.
+- The avatar shows the same tone on its face at the same moment.
+- **Speech formatting**: dates (2026-11-07 → "7 November 2026"; UAE day/month order), ranges, units (km/h, °C, kWh, dirhams…), maths symbols and powers, abbreviations (Dr., vs., Fig., approx.), and a "How to say names" list the student fills in.
+- Limit: browser voices can't do SSML styles, word-level emphasis or emotional timbre. Real emotional voice styles would need a cloud TTS (compared below).
+
+### Voice library (`assets/js/companion/voicelib.js`)
+- 22 original voice profiles: female-sounding and male-sounding voices that are warm, calm, bright, professional, deep, conversational, educational or storytelling, plus Indian English, Australian, Gulf Arabic and Arabic (MSA/Egyptian). The names and descriptions are ERLY's own; nothing is copied from another product.
+- Each profile is played by a real installed voice that fits its accent, with its own pace and pitch.
+  - Two profiles never share a voice.
+  - A profile only appears when the device has a suitable voice; the others are listed as "not on this device", with how to install more.
+  - Each card says which device voice it uses.
+- Categories, search, favourites, and a preview with that profile's real voice that doesn't change your choice.
+
+### Companion Studio (in `call.js`)
+- **Companion tab**: 8 personality presets (Friendly Companion, Professional Assistant, Patient Teacher, Curious Explorer, Calm Guide, Energetic Coach, Concise Expert, Creative Partner). They change style only. You can save multiple named companions (avatar + voice + personality + background) and switch between them.
+- **Avatar tab**: photoreal and illustrated galleries, with a live talking preview.
+- **Voice library tab**: speed, pitch, volume, expressiveness, language, recognition accent (US, UK, India, Australia, UAE, Saudi, Egypt), and name pronunciations.
+- **Conversation tab**: 9 modes (Natural, Study, Focus, Deep explanation, Practice, Reading companion, Research, Creative, Planning), plus explanation style, answer length, tone, end-of-turn pause, hands-free and barge-in. Research mode says plainly that it can't browse the web.
+- **Look tab**: 6 backgrounds (including a light one), captions, caption size, high contrast and keyboard help.
+- **First-time setup**: Avatar → Voice → Companion.
+
+### Conversation
+- **Top bar**: a language toggle (EN/ع) that switches without restarting, and a mode pill.
+- **New voice commands**: "repeat the last sentence", "switch to Arabic/English", "change your voice", "use a male/female voice", "study/focus/practice/… mode".
+- **AI prompt**: follow-ups ("explain that again", "the second point", "shorter", "simpler") are understood from the conversation, and when speech recognition may have misheard, the AI asks one short clarifying question.
+- **Bugs fixed (found by tests)**:
+  - stopping the microphone when Noor began to speak could restart listening and cut her off after one sentence;
+  - a late speech result could flip the state back to "hearing";
+  - personality presets reset the speed slider.
+
+### Provider comparison (for upgrading beyond browser voices)
+| Option | Voices / accents | Emotion control | Visemes for lip-sync | Cost (approx.) | Notes |
+|---|---|---|---|---|---|
+| Browser Web Speech (current) | whatever the device has (Edge: hundreds of neural voices incl. en-IN, en-AU, ar-AE) | rate/pitch/volume per sentence | word boundaries only | free | no key, no backend; quality varies by device |
+| Azure AI Speech | 400+ neural voices, en-IN, ar-AE/SA/EG, Gulf | SSML styles (cheerful, empathetic…) and emphasis | **yes — viseme events with timing** | ~$15 per 1M characters, free tier 0.5M/month | best fit for ERLY: needs a small backend for the key (same pattern as `server/cloudflare-worker.mjs`) |
+| Google Cloud TTS | many WaveNet/Neural2 voices, en-IN, ar | SSML prosody | timepoints via SSML marks | ~$16 per 1M chars | no visemes; marks give word timing |
+| ElevenLabs | very expressive voices, voice design | strong emotional delivery | character timestamps | subscription | no visemes; timestamps can drive our text visemes |
+| OpenAI TTS | a few expressive voices | instruction-controlled style | none | per character | no timing data |
+None of these are connected yet: each needs an API key held on a server. The voice layer is modular (`voice.js` + `voicelib.js`), so a cloud provider can be added as another engine.

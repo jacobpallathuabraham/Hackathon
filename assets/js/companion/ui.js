@@ -45,7 +45,7 @@
     } } }) : null;
   let generating = null; // { stop } while a reply is being written
   let status = 'idle';
-  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getSettings: () => store.prefs().vs || {}, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
+  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
   const lab = { lang: lang(), variant: 'default', ratings: {} };
   const brain = () => ERLY.companion && ERLY.companion.brain;

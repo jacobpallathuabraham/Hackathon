@@ -20,6 +20,10 @@
 
   // skin, lip, hair, eye, cloth, accent
   const LIST = [
+    { id: 'yasmin', name: 'Yasmin', g: 'f', photo: true, fallback: 'sara', thumb: 'assets/img/companions/yasmin.jpg',
+      en: ['Warm & curious', 'A friendly study partner who loves a good question.'], ar: ['دافئة وفضولية', 'زميلة دراسة ودودة تحب الأسئلة الجيدة.'] },
+    { id: 'karim', name: 'Karim', g: 'm', photo: true, fallback: 'omar', thumb: 'assets/img/companions/karim.jpg',
+      en: ['Calm & encouraging', 'Patient, clear and easy to talk to.'], ar: ['هادئ ومشجّع', 'صبور وواضح وسهل الحديث معه.'] },
     { id: 'noor', name: 'Noor', g: 'f', hair: 'hijab', skin: '#D9A585', skinD: '#B97F5F', lip: '#B5605A', hairC: '#6E5A8C', hairC2: '#594873', eye: '#4A3020', cloth: '#E8E1D6', cloth2: '#C9BFB0', brow: '#3B2618',
       en: ['Warm & encouraging', 'Patient, kind and calm. Great for check-ins.'], ar: ['دافئة ومشجّعة', 'صبورة ولطيفة وهادئة. رائعة لجلسات الاطمئنان.'] },
     { id: 'omar', name: 'Omar', g: 'm', hair: 'short', beard: true, skin: '#C98E6A', skinD: '#A2694A', lip: '#9C5446', hairC: '#1F1712', hairC2: '#140E0A', eye: '#3A2416', cloth: '#2F4A6B', cloth2: '#22374F', brow: '#1F1712',
@@ -120,68 +124,55 @@
     return `<div class="avt-aura" aria-hidden="true"><i></i><i></i><i></i><b></b></div>`;
   }
 
+  /* ---------------- emotion → expression ---------------- */
+  // restrained targets: smile, brow raise, inner-brow (concern), furrow, head tilt (deg), energy (movement)
+  const EMO = {
+    neutral: [0.28, 0, 0, 0, 0, 0.5], happy: [0.72, 0.22, 0, 0, 1, 0.7], excited: [0.82, 0.5, 0, 0, 1.5, 1], curious: [0.32, 0.45, 0, 0, 3.5, 0.6],
+    empathetic: [0.16, 0.05, 0.65, 0, 2.5, 0.3], sympathetic: [0.12, 0, 0.7, 0, 2, 0.28], reassuring: [0.42, 0.12, 0.25, 0, 1.5, 0.35], calm: [0.32, 0.05, 0, 0, 0.5, 0.3],
+    confident: [0.36, 0.08, 0, 0, 0, 0.6], surprised: [0.22, 0.95, 0, 0, -1, 0.85], thoughtful: [0.1, 0.1, 0, 0.5, -2.5, 0.3], serious: [0.04, 0, 0, 0.35, 0, 0.4],
+    encouraging: [0.6, 0.3, 0, 0, 1.5, 0.7], enthusiastic: [0.78, 0.45, 0, 0, 1, 0.95], playful: [0.66, 0.32, 0, 0, -3, 0.7],
+    listening: [0.34, 0.28, 0, 0, 3, 0.4], thinking: [0.1, 0.12, 0, 0.45, -2.2, 0.25], paused: [0.2, 0, 0, 0, 0, 0.15]
+  };
+
   /* ---------------- animation ---------------- */
   function mount(host, id, opts) {
     opts = opts || {};
-    const a = get(id), u = 'av' + (++uidN) + '-';
+    let a = get(id);
+    const u = 'av' + (++uidN) + '-';
     host.classList.add('avt'); host.dataset.avatar = a.id;
-    host.innerHTML = a.abstract ? aura() : svg(a, u);
+    host.innerHTML = '';
+    // photoreal companions: WebGL talking head; falls back to an illustrated companion
+    let photo = null;
+    if (a.photo && ERLY.photoHead) {
+      host.classList.add('avt--photo');
+      photo = ERLY.photoHead.create(host, a.id);
+      if (!photo) { host.classList.remove('avt--photo'); a = get(a.fallback); host.dataset.avatar = a.id; host.dataset.fallback = '1'; }
+    }
+    if (!photo) host.innerHTML = a.abstract ? aura() : svg(a, u);
     const q = s => host.querySelector(s), qa = s => host.querySelectorAll(s);
-    const el = {
+    const el = photo ? {} : {
       head: q('.avt-head'), body: q('.avt-body'), irises: qa('.avt-iris'), lids: qa('.avt-lid'), lashes: qa('.avt-lash'),
       browL: q('.avt-browL'), browR: q('.avt-browR'), moIn: qa('.avt-moIn'), lipU: q('.avt-lipU'), lipL: q('.avt-lipL'), lipHi: q('.avt-lipHi'),
       tU: q('.avt-teethU'), tL: q('.avt-teethL'), tongue: q('.avt-tongue'), cheeks: qa('.avt-cheek'), face: q('.avt-face'), auraB: q('.avt-aura b')
     };
     const track = LS.Track();
-    let state = 'idle', raf = 0, alive = true, unhook = null, lastText = '', lastRate = 1, mic = 0;
-    // smoothed values
+    let state = 'idle', emotion = 'neutral', raf = 0, alive = true, unhook = null, lastText = '', lastRate = 1, mic = 0;
     const m = { o: 0, w: 0.5, r: 0, t: 0, g: 0, f: 0 };
     const look = { x: 0, y: 0, tx: 0, ty: 0, next: 0 };
     const blink = { v: 0, at: performance.now() + 1500, phase: 0 };
-    const ex = { smile: 0.35, brow: 0, tilt: 0, nod: 0, nodV: 0 };
-    let t0 = performance.now(), prev = t0;
+    const ex = { smile: 0.3, brow: 0, inner: 0, furrow: 0, tilt: 0, energy: 0.5, nod: 0, nodV: 0, beat: 0 };
+    const t0 = performance.now(); let prev = t0; const perf = { n: 0, ms: 0, dt: 0 };
+    const rig = { rot: 0, tx: 0, ty: 0, scale: 1, open: 0, width: 0, round: 0, smile: 0, blink: 0, gx: 0, gy: 0, brow: 0, innerBrow: 0, furrow: 0, cheek: 0, jaw: 0, teeth: 0, teethLow: 0, tongue: 0, zoom: opts.zoom || 1 };
 
     function mouth(dt) {
       const f = track.frame();
       const target = LS.mixShape(f.key, f.next, f.mix);
-      // mouth muscles: open fast, close a touch slower (feels natural)
-      for (const k in m) { const tgt = target[k]; const rate = k === 'o' ? (tgt > m[k] ? 32 : 22) : 20; m[k] += (tgt - m[k]) * Math.min(1, dt * rate); }
-      if (a.abstract) { if (el.auraB) el.auraB.style.transform = `scale(${(1 + m.o * 0.5 + m.w * 0.06).toFixed(3)})`; host.style.setProperty('--speak', m.o.toFixed(3)); return; }
-      const cx = 200, cy = 286 - ex.smile * 1.5;
-      const smile = ex.smile * (1 - m.r) * 5;
-      const hw = 22 + m.w * 14 - m.r * 13;               // half width
-      const op = m.o * 26;                                 // opening
-      const yt = cy - op * 0.3, yb = cy + op * 0.7;
-      const L = cx - hw, R = cx + hw, cyC = cy - smile;
-      const k = 0.42 - m.r * 0.22;
-      const inner = `M${L} ${cyC} C${L + hw * k} ${yt} ${R - hw * k} ${yt} ${R} ${cyC} C${R - hw * k} ${yb} ${L + hw * k} ${yb} ${L} ${cyC} Z`;
-      el.moIn.forEach(p => p.setAttribute('d', inner));
-      // upper lip (with a cupid's bow), lower lip (fuller)
-      const up = 6.5 + m.r * 2.5, low = 8.5 + m.r * 2 - m.f * 3;
-      const lipU = `M${L - 1} ${cyC} C${L + hw * 0.3} ${yt - up} ${cx - 9} ${yt - up - 2} ${cx} ${yt - up + 1.5} C${cx + 9} ${yt - up - 2} ${R - hw * 0.3} ${yt - up} ${R + 1} ${cyC} C${R - hw * k} ${yt + 1} ${L + hw * k} ${yt + 1} ${L - 1} ${cyC} Z`;
-      const lybot = yb + low + m.f * -4;
-      const lipL = `M${L - 1} ${cyC} C${L + hw * k} ${yb - 1 - m.f * 6} ${R - hw * k} ${yb - 1 - m.f * 6} ${R + 1} ${cyC} C${R - hw * 0.25} ${lybot} ${L + hw * 0.25} ${lybot} ${L - 1} ${cyC} Z`;
-      el.lipU.setAttribute('d', lipU); el.lipL.setAttribute('d', lipL);
-      el.lipHi.setAttribute('d', `M${cx - hw * 0.35} ${yb + low * 0.45} C${cx - 4} ${yb + low * 0.25} ${cx + 4} ${yb + low * 0.25} ${cx + hw * 0.35} ${yb + low * 0.45} C${cx} ${yb + low * 0.7} ${cx} ${yb + low * 0.7} ${cx - hw * 0.35} ${yb + low * 0.45} Z`);
-      el.tU.setAttribute('y', (yt - 9 + m.t * 6.5 + m.f * 2).toFixed(1));
-      el.tU.setAttribute('opacity', Math.min(1, m.t + m.o * 0.4).toFixed(2));
-      el.tL.setAttribute('y', (yb - 4 - m.t * 2).toFixed(1));
-      el.tL.setAttribute('opacity', (m.t * 0.7).toFixed(2));
-      el.tongue.setAttribute('cy', (yb - 2 - m.g * 5).toFixed(1));
-      el.tongue.setAttribute('opacity', Math.min(1, m.o * 1.4).toFixed(2));
-      // the jaw drops a little with the mouth
-      if (el.face) el.face.style.transform = `translateY(${(m.o * 2.5).toFixed(2)}px)`;
+      for (const k in m) { const tgt = target[k]; const rate = k === 'o' ? (tgt > m[k] ? 30 : 20) : 18; m[k] += (tgt - m[k]) * Math.min(1, dt * rate); }
     }
     function eyes(now, dt) {
-      // blinking: quick close, slower open, sometimes a double blink
       if (now > blink.at && !blink.phase) blink.phase = 1;
       if (blink.phase === 1) { blink.v = Math.min(1, blink.v + dt * 16); if (blink.v >= 1) blink.phase = 2; }
       else if (blink.phase === 2) { blink.v = Math.max(0, blink.v - dt * 9); if (blink.v <= 0) { blink.phase = 0; blink.at = now + (Math.random() < 0.12 ? 160 : 2200 + Math.random() * 4200); } }
-      const half = state === 'thinking' ? 0.18 : state === 'paused' ? 0.4 : 0;
-      const lid = Math.max(blink.v, half + ex.smile * 0.08);
-      el.lids.forEach(r => r.setAttribute('height', (22 + lid * 24).toFixed(1)));
-      el.lashes.forEach(p => p.style.transform = `translateY(${(lid * 10).toFixed(2)}px)`);
-      // gaze: small saccades; up and aside while thinking; at the student while listening
       if (now > look.next && !reduce) {
         if (state === 'thinking') { look.tx = (Math.random() < 0.5 ? -1 : 1) * 4; look.ty = -4; }
         else if (state === 'listening') { look.tx = (Math.random() - 0.5) * 2; look.ty = (Math.random() - 0.5) * 1.5; }
@@ -189,55 +180,101 @@
         look.next = now + 700 + Math.random() * (state === 'speaking' ? 1600 : 2600);
       }
       look.x += (look.tx - look.x) * Math.min(1, dt * 18); look.y += (look.ty - look.y) * Math.min(1, dt * 18);
-      el.irises.forEach(g => g.style.transform = `translate(${look.x.toFixed(2)}px, ${look.y.toFixed(2)}px)`);
     }
     function face(now, dt) {
-      const t = (now - t0) / 1000;
-      const want = { idle: [0.35, 0], listening: [0.45, 0.6], thinking: [0.1, 0.35], speaking: [0.4 + m.o * 0.1, 0.2 + m.o * 0.25], paused: [0.2, 0] }[state] || [0.3, 0];
-      ex.smile += (want[0] - ex.smile) * Math.min(1, dt * 3);
-      ex.brow += (want[1] - ex.brow) * Math.min(1, dt * 4);
-      const bl = state === 'thinking' ? ex.brow * 7 : ex.brow * 4, br = ex.brow * 4;
-      if (el.browL) el.browL.style.transform = `translateY(${(-bl).toFixed(2)}px)`;
-      if (el.browR) el.browR.style.transform = `translateY(${(-br).toFixed(2)}px)`;
-      el.cheeks.forEach(c => c.setAttribute('opacity', (0.1 + ex.smile * 0.14).toFixed(3)));
-      if (reduce) return;
-      // head: slow drift, a slight tilt while listening, nods while the student talks
-      ex.tilt += ((state === 'listening' ? 3.2 : state === 'thinking' ? -2.2 : 0) - ex.tilt) * Math.min(1, dt * 2);
+      const key = state === 'listening' ? 'listening' : state === 'thinking' ? 'thinking' : state === 'paused' ? 'paused' : (state === 'speaking' ? emotion : 'neutral');
+      const T = EMO[key] || EMO.neutral;
+      const k = Math.min(1, dt * 2.6); // expressions ease in and out, never snap
+      ex.smile += (T[0] + (state === 'speaking' ? m.o * 0.06 : 0) - ex.smile) * k;
+      ex.brow += (T[1] - ex.brow) * k; ex.inner += (T[2] - ex.inner) * k; ex.furrow += (T[3] - ex.furrow) * k;
+      ex.tilt += (T[4] - ex.tilt) * Math.min(1, dt * 1.8); ex.energy += (T[5] - ex.energy) * k;
       if (state === 'listening' && mic > 0.35 && ex.nodV <= 0) ex.nodV = 1;
       if (ex.nodV > 0) { ex.nodV -= dt * 1.6; ex.nod = Math.sin((1 - Math.max(0, ex.nodV)) * Math.PI) * 3.2; } else ex.nod *= 0.9;
-      const talk = state === 'speaking' ? Math.sin(t * 2.3) * 1.4 + m.o * 1.8 : 0;
-      const rx = Math.sin(t * 0.37) * 1.6 + Math.sin(t * 0.91) * 0.6 + ex.tilt + Math.sin(t * 1.7) * (state === 'speaking' ? 0.9 : 0);
-      const dx = Math.sin(t * 0.23) * 3, dy = Math.sin(t * 0.5) * 1.6 + ex.nod + talk * 0.6;
-      if (el.head) el.head.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${rx.toFixed(2)}deg)`;
-      // breathing
-      if (el.body) el.body.style.transform = `translateY(${(Math.sin(t * 1.55) * 1.8).toFixed(2)}px) scale(1, ${(1 + Math.sin(t * 1.55) * 0.006).toFixed(4)})`;
-      if (a.abstract) host.style.setProperty('--breath', (0.5 + Math.sin(t * 1.55) * 0.5).toFixed(3));
+      ex.beat *= Math.pow(0.02, dt); // a small emphasis nod on stressed words, fading out
+    }
+    function compute(now) {
+      const t = (now - t0) / 1000;
+      const half = state === 'thinking' ? 0.16 : state === 'paused' ? 0.35 : 0;
+      const lid = Math.max(blink.v, half + ex.smile * 0.1);
+      const mv = reduce ? 0 : 1;
+      const talk = state === 'speaking' ? (Math.sin(t * 2.3) * 1.2 + m.o * 1.6) * (0.5 + ex.energy) : 0;
+      const rotDeg = mv * (Math.sin(t * 0.37) * 1.4 + Math.sin(t * 0.91) * 0.5 + ex.tilt + Math.sin(t * 1.7) * (state === 'speaking' ? 0.8 * ex.energy : 0));
+      const dx = mv * Math.sin(t * 0.23) * 3;
+      const dy = mv * (Math.sin(t * 0.5) * 1.4 + ex.nod + talk * 0.5 + ex.beat * 2.4);
+      const breath = Math.sin(t * 1.55);
+      return { t, lid, rotDeg, dx, dy, breath };
+    }
+    function applySvg(c) {
+      if (a.abstract) { if (el.auraB) el.auraB.style.transform = `scale(${(1 + m.o * 0.5 + m.w * 0.06).toFixed(3)})`; host.style.setProperty('--speak', m.o.toFixed(3)); host.style.setProperty('--breath', (0.5 + c.breath * 0.5).toFixed(3)); return; }
+      const cx = 200, cy = 286 - ex.smile * 1.5;
+      const smile = ex.smile * (1 - m.r) * 5;
+      const hw = 22 + m.w * 14 - m.r * 13, op = m.o * 26;
+      const yt = cy - op * 0.3, yb = cy + op * 0.7;
+      const L = cx - hw, R = cx + hw, cyC = cy - smile, k = 0.42 - m.r * 0.22;
+      const inner = `M${L} ${cyC} C${L + hw * k} ${yt} ${R - hw * k} ${yt} ${R} ${cyC} C${R - hw * k} ${yb} ${L + hw * k} ${yb} ${L} ${cyC} Z`;
+      el.moIn.forEach(p => p.setAttribute('d', inner));
+      const up = 6.5 + m.r * 2.5, low = 8.5 + m.r * 2 - m.f * 3;
+      el.lipU.setAttribute('d', `M${L - 1} ${cyC} C${L + hw * 0.3} ${yt - up} ${cx - 9} ${yt - up - 2} ${cx} ${yt - up + 1.5} C${cx + 9} ${yt - up - 2} ${R - hw * 0.3} ${yt - up} ${R + 1} ${cyC} C${R - hw * k} ${yt + 1} ${L + hw * k} ${yt + 1} ${L - 1} ${cyC} Z`);
+      const lybot = yb + low - m.f * 4;
+      el.lipL.setAttribute('d', `M${L - 1} ${cyC} C${L + hw * k} ${yb - 1 - m.f * 6} ${R - hw * k} ${yb - 1 - m.f * 6} ${R + 1} ${cyC} C${R - hw * 0.25} ${lybot} ${L + hw * 0.25} ${lybot} ${L - 1} ${cyC} Z`);
+      el.lipHi.setAttribute('d', `M${cx - hw * 0.35} ${yb + low * 0.45} C${cx - 4} ${yb + low * 0.25} ${cx + 4} ${yb + low * 0.25} ${cx + hw * 0.35} ${yb + low * 0.45} C${cx} ${yb + low * 0.7} ${cx} ${yb + low * 0.7} ${cx - hw * 0.35} ${yb + low * 0.45} Z`);
+      el.tU.setAttribute('y', (yt - 9 + m.t * 6.5 + m.f * 2).toFixed(1)); el.tU.setAttribute('opacity', Math.min(1, m.t + m.o * 0.4).toFixed(2));
+      el.tL.setAttribute('y', (yb - 4 - m.t * 2).toFixed(1)); el.tL.setAttribute('opacity', (m.t * 0.7).toFixed(2));
+      el.tongue.setAttribute('cy', (yb - 2 - m.g * 5).toFixed(1)); el.tongue.setAttribute('opacity', Math.min(1, m.o * 1.4).toFixed(2));
+      if (el.face) el.face.style.transform = `translateY(${(m.o * 2.5).toFixed(2)}px)`;
+      el.lids.forEach(r => r.setAttribute('height', (22 + c.lid * 24).toFixed(1)));
+      el.lashes.forEach(p => { p.style.transform = `translateY(${(c.lid * 10).toFixed(2)}px)`; });
+      el.irises.forEach(g => { g.style.transform = `translate(${look.x.toFixed(2)}px, ${look.y.toFixed(2)}px)`; });
+      const bl = ex.brow * 4 + ex.inner * 2 - ex.furrow * 2, br = ex.brow * 4 + ex.inner * 2 - ex.furrow * 2;
+      if (el.browL) el.browL.style.transform = `translateY(${(-bl).toFixed(2)}px) rotate(${(ex.inner * 6 - ex.furrow * 5).toFixed(1)}deg)`;
+      if (el.browR) el.browR.style.transform = `translateY(${(-br).toFixed(2)}px) rotate(${(-ex.inner * 6 + ex.furrow * 5).toFixed(1)}deg)`;
+      el.cheeks.forEach(ch => ch.setAttribute('opacity', (0.1 + ex.smile * 0.14).toFixed(3)));
+      if (el.head) el.head.style.transform = `translate(${c.dx.toFixed(2)}px, ${c.dy.toFixed(2)}px) rotate(${c.rotDeg.toFixed(2)}deg)`;
+      if (el.body && !reduce) el.body.style.transform = `translateY(${(c.breath * 1.8).toFixed(2)}px) scale(1, ${(1 + c.breath * 0.006).toFixed(4)})`;
+    }
+    function applyPhoto(c) {
+      rig.open = m.o; rig.width = (m.w - 0.5) * 2; rig.round = m.r; rig.teeth = m.t; rig.teethLow = m.t * 0.45; rig.tongue = m.g;
+      rig.smile = Math.max(0, ex.smile - 0.25) * 1.25 * (1 - m.r); rig.cheek = Math.max(0, ex.smile - 0.5) * 0.8;
+      rig.blink = c.lid; rig.gx = look.x * 0.32; rig.gy = look.y * 0.25;
+      rig.brow = ex.brow; rig.innerBrow = ex.inner; rig.furrow = ex.furrow;
+      rig.rot = c.rotDeg * 0.8 * Math.PI / 180; rig.tx = c.dx * 0.5; rig.ty = c.dy * 0.6 - c.breath * 0.6; rig.scale = 1 + c.breath * 0.0025;
+      photo.render(rig);
     }
     function loop(now) {
       if (!alive) return;
       const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
       mouth(dt);
-      if (!a.abstract) { eyes(now, dt); }
+      if (!a.abstract) eyes(now, dt);
       face(now, dt);
+      const c = compute(now);
+      if (photo) {
+        const t1 = performance.now(); applyPhoto(c);
+        // adaptive quality: if frames are slow, render fewer pixels (checked every ~2 s)
+        perf.n++; perf.ms += performance.now() - t1; perf.dt += dt;
+        if (perf.n >= 120) { const frame = perf.dt / perf.n * 1000; if ((frame > 30 || perf.ms / perf.n > 12) && photo.quality() > 0.55) photo.setQuality(photo.quality() - 0.2); perf.n = perf.ms = perf.dt = 0; }
+      } else applySvg(c);
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
 
-    function onPhrase(type, x, rate) {
-      if (type === 'start') { lastText = x; lastRate = rate || 1; track.start(x, lastRate); if (state !== 'speaking') ctrl.setState('speaking'); }
-      else if (type === 'boundary') { if (!track.active && lastText) track.start(lastText, lastRate); track.boundary(x); }
+    function onPhrase(type, x, rate, voice, emo) {
+      if (type === 'start') { lastText = x; lastRate = rate || 1; track.start(x, lastRate); if (emo) emotion = emo; if (state !== 'speaking') ctrl.setState('speaking'); }
+      else if (type === 'boundary') { if (!track.active && lastText) track.start(lastText, lastRate); track.boundary(x); const w = (lastText.slice(x).match(/^\S+/) || [''])[0]; if (/^[A-Z]{2,}|\*|!$/.test(w) || w.length > 9) ex.beat = Math.min(1, ex.beat + 0.6 * ex.energy); }
       else if (type === 'end') track.stop();
     }
     const ctrl = {
-      avatar: a,
+      avatar: a, photo: !!photo,
       setState(s) { state = s; host.dataset.state = s; },
+      emote(e) { if (EMO[e]) emotion = e; },
+      emotion: () => emotion,
       attach(voice) { if (unhook) unhook(); unhook = voice && voice.onPhrase ? voice.onPhrase(onPhrase) : null; return ctrl; },
       level(x) { mic = x; },
-      // drive the mouth for a phrase directly (tests / previews)
       say: onPhrase,
       shape: () => Object.assign({}, m),
+      expression: () => Object.assign({}, ex),
+      quality: () => (photo ? photo.quality() : 1),
       lipsync: track,
-      destroy() { alive = false; cancelAnimationFrame(raf); if (unhook) unhook(); host.innerHTML = ''; }
+      destroy() { alive = false; cancelAnimationFrame(raf); if (unhook) unhook(); if (photo) photo.destroy(); host.innerHTML = ''; host.classList.remove('avt--photo'); }
     };
     ctrl.setState(opts.state || 'idle');
     return ctrl;
@@ -245,5 +282,5 @@
 
   window.ERLY = window.ERLY || {};
   // svg(id, true) = a head-and-shoulders crop for thumbnails
-  ERLY.avatars = { list: LIST, get, mount, svg: (id, crop) => { const x = svg(get(id), 'st' + (++uidN) + '-'); return crop ? x.replace('viewBox="0 0 400 430"', 'viewBox="88 60 224 224"') : x; } };
+  ERLY.avatars = { list: LIST, get, mount, emotions: Object.keys(EMO), svg: (id, crop) => { const x = svg(get(id), 'st' + (++uidN) + '-'); return crop ? x.replace('viewBox="0 0 400 430"', 'viewBox="88 60 224 224"') : x; } };
 })();

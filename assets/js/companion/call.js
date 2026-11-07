@@ -32,7 +32,7 @@
   const SAFARI = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
 
   /* ---------------- settings ---------------- */
-  const DEF = { avatar: 'noor', gender: 'f', rate: 1, pitch: 1, volume: 1, style: 'conversational', tone: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, setup: false };
+  const DEF = { avatar: 'yasmin', gender: 'f', rate: 1, pitch: 1, volume: 1, expr: 1, style: 'conversational', tone: 'friendly', length: 'medium', mode: 'natural', theme: 'studio', preset: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, recLang: '', dict: [], favs: [], profiles: [], prof: {}, setup: false };
   const cfg = () => Object.assign({}, DEF, U.store.prefs().vs || {});
   const save = patch => { U.store.setPref('vs', Object.assign(cfg(), patch)); };
   const QUIET = { short: 750, normal: 1150, long: 1900 };
@@ -53,6 +53,7 @@
     el.setAttribute('aria-label', T('Voice conversation with Noor', 'محادثة صوتية مع نور'));
     el.classList.toggle('is-contrast', !!c.contrast);
     el.dataset.cap = c.capSize;
+    el.dataset.theme = c.theme;
     const brain = U.ai ? pick(U.ai.label().en, U.ai.label().ar) : '';
     const a = AV.get(c.avatar);
     el.innerHTML = `
@@ -64,6 +65,8 @@
           <button type="button" data-m="chat" aria-pressed="${C.callMode === 'chat'}">${ICON('sparkle')} ${T('Ask anything', 'اسأل أي شيء')}</button>
         </div>
         <div class="ncall__tools">
+          <button type="button" class="ncall__pill" id="ncModeBtn" title="${T('Conversation mode', 'وضع المحادثة')}">${ICON((MODES.find(m => m[0] === c.mode) || MODES[0])[3])} <span>${esc(pick(...(MODES.find(m => m[0] === c.mode) || MODES[0]).slice(1, 3)))}</span></button>
+          <button type="button" class="ncall__pill" id="ncLang" aria-label="${T('Switch language', 'تبديل اللغة')}" title="${T('Switch language', 'تبديل اللغة')}">${U.lang() === 'ar' ? 'EN' : 'ع'}</button>
           <button type="button" class="ncall__ic" id="ncLogBtn" aria-label="${T('Transcript', 'النص المكتوب')}" title="${T('Transcript', 'النص المكتوب')}">${ICON('list')}</button>
           <button type="button" class="ncall__ic" id="ncSet" aria-label="${T('Avatar, voice and settings', 'الشخصية والصوت والإعدادات')}" title="${T('Avatar, voice and settings', 'الشخصية والصوت والإعدادات')}">${ICON('more')}</button>
         </div>
@@ -107,7 +110,9 @@
     $('#ncType').onclick = () => toggleType();
     $('#ncForm').onsubmit = e => { e.preventDefault(); const t = $('#ncInput').value.trim(); if (!t) return; $('#ncInput').value = ''; userSaid(t, true); };
     $('#ncLogBtn').onclick = () => toggleLog();
-    $('#ncSet').onclick = () => openStudio('avatar');
+    $('#ncSet').onclick = () => openStudio('companion');
+    $('#ncModeBtn').onclick = () => openStudio('talk');
+    $('#ncLang').onclick = () => switchLang(U.lang() === 'ar' ? 'en' : 'ar');
     $('#ncLog').onclick = logAction;
     $('.ncall__seg').onclick = e => {
       const b = e.target.closest('[data-m]'); if (!b || C.callMode === b.dataset.m) return;
@@ -240,19 +245,32 @@
   ERLY.on('noor:chips', ({ list, pick: choose }) => { if (st.on && !st.ignore) showChips(list, choose); });
   ERLY.on('noor:turn-end', () => { clearTimeout(st.thinkT); if (st.on && !st.speaking && !st.queue.length) afterSpeaking(); });
   function noorLine(text) { U.bubble('ai', text, { text: true }); record('noor', text); enqueue(text); }
+  // each sentence gets its own tone (prosody.js): the voice and the face follow it together
   function enqueue(text) {
-    st.queue.push(String(text).replace(/<[^>]+>/g, ' '));
+    const clean = String(text).replace(/<[^>]+>/g, ' ').trim(); if (!clean) return;
+    const parts = PR ? PR.sentences(clean) : [clean];
+    const expr = cfg().expr;
+    parts.forEach(sn => {
+      const tone = PR ? PR.classify(sn, { user: st.lastUser, first: !st.toned }) : 'neutral';
+      st.toned = true;
+      st.queue.push({ text: sn, chunk: clean, tone, pros: PR ? PR.prosody(tone, expr) : null });
+    });
     clearTimeout(st.idleT); clearTimeout(st.thinkT);
     if (!st.speaking && !st.paused) next();
   }
   function next() {
-    const text = st.queue.shift();
-    if (!text) { st.speaking = false; return afterSpeaking(); }
+    const item = st.queue.shift();
+    if (!item) { st.speaking = false; return afterSpeaking(); }
+    const text = item.text;
     st.speaking = true; setState('speaking');
     if (st.listening) { v.abortListening(); st.listening = false; }
     if (st.avatar) st.avatar.setState('speaking');
-    caption('#ncNoor', text);
-    v.speak(text, { lang: U.lang(), onend: () => { if (st.on) next(); }, onerror: () => { if (st.on) next(); } });
+    if (st.cap !== item.chunk) { st.cap = item.chunk; caption('#ncNoor', item.chunk); } // the whole message stays readable while it's spoken
+    if (st.avatar) st.avatar.emote(item.tone);
+    st.lastSentence = text;
+    const gap = 120 + ((item.pros && item.pros.pause) || 0);
+    const go = () => { if (st.on && !st.paused) setTimeout(() => { if (st.on && !st.speaking) return; if (st.on) next(); }, gap); };
+    v.speak(text, { lang: U.lang(), emotion: item.tone, prosody: item.pros, onend: go, onerror: () => { if (st.on) next(); } });
   }
   function afterSpeaking() {
     clearTimeout(st.idleT);
@@ -269,8 +287,9 @@
     st.queue = []; v.stop(); st.speaking = false;
     if (U.isGenerating && U.isGenerating() && U.stopGenerating) U.stopGenerating();
   }
-  function replay() {
+  function replay(lastOnly) {
     if (!st.lastReply) return;
+    if (lastOnly && st.lastSentence) { hush(); if (st.listening) { v.abortListening(); st.listening = false; } return enqueue(st.lastSentence); }
     hush(); if (st.listening) { v.abortListening(); st.listening = false; }
     enqueue(st.lastReply);
   }
@@ -291,17 +310,17 @@
 
   /* ---------------- Noor listening ---------------- */
   function listen(fromTap) {
-    if (!st.on || st.muted || st.paused || st.listening) return;
+    if (!st.on || st.muted || st.paused || st.listening || st.speaking) return;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return setState('offline');
     if (!v.supported.stt || !U.store.consent('mic')) { setState('idle'); return; }
     st.listening = true; setState('listening'); caption('#ncYou', '');
     let started = false;
     const ok = v.listen({
-      lang: U.lang(),
+      lang: cfg().recLang || U.lang(),
       quietMs: QUIET[cfg().quiet] || QUIET.normal,
       waitMs: 12000,
       onstart: () => { started = true; st.net = 0; },
-      onresult: t => { started = true; if (st.state !== 'hearing') setState('hearing'); const p = $('#ncYou'); if (p) { p.textContent = t; p.classList.add('is-live'); } pulse(0.45 + Math.random() * 0.4); },
+      onresult: t => { if (!st.listening) return; started = true; if (st.state !== 'hearing') setState('hearing'); const p = $('#ncYou'); if (p) { p.textContent = t; p.classList.add('is-live'); } pulse(0.45 + Math.random() * 0.4); },
       onspeech: () => pulse(0.6),
       onerror: code => {
         st.listening = false;
@@ -313,7 +332,8 @@
       },
       onend: final => {
         st.listening = false;
-        if (!st.on || st.blocked || st.paused || st.muted) return;
+        // an abort because Noor started speaking also ends listening: never restart over her
+        if (!st.on || st.blocked || st.paused || st.muted || st.speaking || st.queue.length) return;
         if (final) { st.misses = 0; return userSaid(final); }
         if (SAFARI && !started && !fromTap) { st.tapOnly = true; return setState('idle'); }
         if (SAFARI && st.tapOnly) { setState('idle'); return caption('#ncNoor', T('I didn’t catch that — tap and try again.', 'لم أسمع ذلك جيداً — انقر وحاول مجدداً.')); }
@@ -333,7 +353,7 @@
     hush(); st.ignore = false;
     if (st.listening) { v.abortListening(); st.listening = false; }
     record('you', text);
-    st.turn = null; st.lastReply = '';
+    st.turn = null; st.lastReply = ''; st.lastUser = text; st.toned = false; st.turnId = (st.turnId || 0) + 1;
     caption('#ncYou', text);
     const box = $('#ncChips'); if (box) box.innerHTML = '';
     setState('processing');
@@ -356,11 +376,24 @@
     if (/^(please )?(speed up|speak faster|talk faster|faster)( please)?$|أسرع/.test(s)) { save({ rate: Math.min(1.5, +(c.rate + 0.12).toFixed(2)) }); return say('Okay — a bit faster.', 'حسناً — أسرع قليلاً.'); }
     if (/^(please )?(louder|speak up)( please)?$/.test(s)) { save({ volume: Math.min(1, c.volume + 0.2) }); return say('Is this better?', 'هل هذا أفضل؟'); }
     if (/^(please )?(quieter|softer)( please)?$/.test(s)) { save({ volume: Math.max(0.3, c.volume - 0.2) }); return say('Okay, a little quieter.', 'حسناً، أهدأ قليلاً.'); }
+    if (/^(can you )?(please )?repeat (the )?last (sentence|bit|line)( please)?$/.test(s)) { if (st.lastSentence) { replay(true); return true; } return false; }
     if (/^(can you )?(repeat (that|the last part|it)|say (that|it) again|again|what did you say)( please)?$|أعيدي|كرري/.test(s)) { if (st.lastReply) { replay(); return true; } return false; }
+    if (/^(please )?(switch|change|talk|speak|reply)( to| in)? arabic( please)?$|^تحدث(ي)? بالعربية$/.test(s)) { switchLang('ar'); return true; }
+    if (/^(please )?(switch|change|talk|speak|reply)( to| in)? english( please)?$|^(تحدث(ي)? )?بالإنجليزية$/.test(s)) { switchLang('en'); return true; }
+    if (/^(please )?(change|switch) (your|the) voice( please)?$|^(i want |use )?(a )?different voice$/.test(s)) { openStudio('voice'); return true; }
+    if (/^(please )?(use|switch to|try) a (male|female|man's|woman's|man|woman)('s)? voice( please)?$/.test(s)) { const g = /female|woman/.test(s) ? 'f' : 'm'; const x = library().available.find(y => y.profile.g === g && y.profile.lang === U.lang()); if (x) { applyProfile(x); return say(`Sure — this is ${x.profile.name}. How does this sound?`, `بالتأكيد — هذا صوت ${x.profile.name}. ما رأيك؟`); } return say('I don’t have a voice like that on this device, sorry.', 'لا يوجد صوت كهذا على هذا الجهاز، آسفة.'); }
+    if (/^(please )?(switch to |change to |use )?(study|focus|practice|planning|creative|research|reading|deep explanation|natural) mode( please)?$/.test(s)) { const m = (s.match(/(study|focus|practice|planning|creative|research|reading|deep|natural)/) || [])[1]; save({ mode: m === 'deep' ? 'deep' : m }); render(); return say(`${(MODES.find(x => x[0] === (m === 'deep' ? 'deep' : m)) || MODES[0])[1]} mode — ready when you are.`, 'تم تغيير الوضع — أنا جاهزة.'); }
     if (/^(stop|stop talking|be quiet|that's enough|quiet)( please)?$|توقفي/.test(s)) { hush(); setState('idle'); afterSpeaking(); return true; }
     if (/^(pause|hold on|wait)( please)?$/.test(s)) { togglePause(); return true; }
     if (/^(end|end (the )?(call|conversation)|goodbye|bye( bye)?|bye noor)$|مع السلامة/.test(s)) { noorLine(pick('Bye for now — I’m here whenever you need me.', 'إلى اللقاء — أنا هنا متى احتجتني.')); setTimeout(end, 2600); return true; }
     return false;
+  }
+  // change language without restarting the conversation (manual, never guessed from an accent)
+  function switchLang(l) {
+    hush(); if (st.listening) { v.abortListening(); st.listening = false; }
+    if (window.I18N && I18N.lang !== l) I18N.apply(l);
+    render();
+    noorLine(l === 'ar' ? 'حسناً، سنتحدث بالعربية الآن.' : 'Okay — we’ll talk in English now.');
   }
   function toggleMute() {
     if (!st.on) return;
@@ -435,10 +468,24 @@
     };
   }
 
-  /* ---------------- studio: avatar, voice, conversation (also the first-time setup) ---------------- */
-  let tab = 'avatar', setupMode = false;
+  /* ---------------- Companion Studio: personality, avatar, voice library, conversation, look (also the first-time setup) ---------------- */
+  const VL = window.ERLY_VOICELIB, PR = window.ERLY_PROSODY;
+  const PRESETS = [
+    ['friendly', 'The Friendly Companion', 'الرفيق الودود', 'Warm, natural and easy to talk to.', 'دافئ وطبيعي وسهل الحديث.', { style: 'conversational', tone: 'friendly', expr: 1, length: 'medium', mode: 'natural' }],
+    ['pro', 'The Professional Assistant', 'المساعد المحترف', 'Polished, precise and efficient.', 'مصقول ودقيق وفعّال.', { style: 'concise', tone: 'professional', expr: 0.7, length: 'medium', mode: 'natural' }],
+    ['teacher', 'The Patient Teacher', 'المعلم الصبور', 'Step by step, checks you’re following.', 'خطوة بخطوة، ويتأكد أنك تتابع.', { style: 'steps', tone: 'educational', expr: 0.9, length: 'long', mode: 'study' }],
+    ['explorer', 'The Curious Explorer', 'المستكشف الفضولي', 'Asks good questions, loves “why”.', 'يطرح أسئلة جيدة ويحب «لماذا».', { style: 'conversational', tone: 'warm', expr: 1.2, length: 'medium', mode: 'natural' }],
+    ['calm', 'The Calm Guide', 'المرشد الهادئ', 'Slow, gentle and reassuring.', 'بطيء ولطيف ومطمئن.', { style: 'conversational', tone: 'calm', expr: 0.6, length: 'medium', mode: 'natural', rate: 0.92 }],
+    ['coach', 'The Energetic Coach', 'المدرب النشيط', 'Upbeat, motivating, gets you moving.', 'متحمس ومحفّز ويدفعك للبدء.', { style: 'concise', tone: 'energetic', expr: 1.35, length: 'short', mode: 'planning' }],
+    ['expert', 'The Concise Expert', 'الخبير المختصر', 'Straight to the point.', 'مباشر إلى صلب الموضوع.', { style: 'concise', tone: 'direct', expr: 0.6, length: 'short', mode: 'focus' }],
+    ['creative', 'The Creative Partner', 'الشريك المبدع', 'Brainstorms ideas with you.', 'يعصف معك بالأفكار.', { style: 'conversational', tone: 'warm', expr: 1.25, length: 'medium', mode: 'creative' }]
+  ];
+  const MODES = [['natural', 'Natural conversation', 'محادثة طبيعية', 'sparkle'], ['study', 'Study', 'مذاكرة', 'book'], ['focus', 'Focus', 'تركيز', 'target'], ['deep', 'Deep explanation', 'شرح معمّق', 'layers'], ['practice', 'Practice', 'تدريب', 'pen'], ['reading', 'Reading companion', 'رفيق القراءة', 'bookmark'], ['research', 'Research', 'بحث', 'search'], ['creative', 'Creative', 'إبداع', 'bolt'], ['planning', 'Planning', 'تخطيط', 'calendar']];
+  const THEMES = [['studio', 'Studio', 'استوديو'], ['dusk', 'Dusk', 'غسق'], ['sunrise', 'Sunrise', 'شروق'], ['ocean', 'Ocean', 'محيط'], ['forest', 'Forest', 'غابة'], ['daylight', 'Daylight', 'نهار']];
+  const REC = [['', 'Same as my language', 'نفس لغتي'], ['en-US', 'English (US)', 'الإنجليزية (أمريكا)'], ['en-GB', 'English (UK)', 'الإنجليزية (بريطانيا)'], ['en-IN', 'English (India)', 'الإنجليزية (الهند)'], ['en-AU', 'English (Australia)', 'الإنجليزية (أستراليا)'], ['ar-AE', 'Arabic (UAE)', 'العربية (الإمارات)'], ['ar-SA', 'Arabic (Saudi)', 'العربية (السعودية)'], ['ar-EG', 'Arabic (Egypt)', 'العربية (مصر)']];
+  let tab = 'companion', setupMode = false;
   function openStudio(which, setup) {
-    tab = which || 'avatar'; setupMode = !!setup;
+    tab = which || 'companion'; setupMode = !!setup;
     hush(); if (st.listening) { v.abortListening(); st.listening = false; }
     const box = $('#ncStudio'); box.hidden = false;
     drawStudio();
@@ -447,129 +494,233 @@
   function closeStudio() {
     const box = $('#ncStudio'); if (!box || box.hidden) return;
     if (st.preview) { st.preview.destroy(); st.preview = null; }
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    v.stop();
     box.classList.remove('is-in'); box.hidden = true;
     const wasSetup = setupMode; setupMode = false;
     render();
     if (wasSetup) { save({ setup: true }); gate(); }
     else afterSpeaking();
   }
-  const TABS = [['avatar', 'Avatar', 'الشخصية', 'smile'], ['voice', 'Voice', 'الصوت', 'volume'], ['talk', 'Conversation', 'المحادثة', 'chat']];
+  const ALLTABS = [['companion', 'Companion', 'الرفيق', 'users'], ['avatar', 'Avatar', 'الشخصية', 'smile'], ['voice', 'Voice library', 'مكتبة الأصوات', 'volume'], ['talk', 'Conversation', 'المحادثة', 'chat'], ['look', 'Look & access', 'المظهر', 'eye']];
+  const SETUP = ['avatar', 'voice', 'companion'];
+  const tabsNow = () => setupMode ? SETUP.map(k => ALLTABS.find(t => t[0] === k)) : ALLTABS;
   function drawStudio() {
     const box = $('#ncStudio');
-    const i = TABS.findIndex(t => t[0] === tab);
-    box.innerHTML = `<div class="nstudio__card" role="dialog" aria-label="${T('Avatar and voice', 'الشخصية والصوت')}">
+    const TABS = tabsNow();
+    const i = Math.max(0, TABS.findIndex(t => t[0] === tab));
+    const last = i === TABS.length - 1;
+    box.innerHTML = `<div class="nstudio__card" role="dialog" aria-label="${T('Companion Studio', 'استوديو الرفيق')}">
       <header class="nstudio__h">
-        ${setupMode ? `<div><b>${T('Set up your companion', 'جهّز رفيقك')}</b><small>${T(`Step ${i + 1} of 3`, `الخطوة ${i + 1} من 3`)}</small></div>` : `<b>${T('Your companion', 'رفيقك')}</b>`}
+        ${setupMode ? `<div><b>${T('Set up your companion', 'جهّز رفيقك')}</b><small>${T(`Step ${i + 1} of ${TABS.length}`, `الخطوة ${i + 1} من ${TABS.length}`)}</small></div>` : `<div><b>${T('Companion Studio', 'استوديو الرفيق')}</b><small>${T('Everything is saved on this device', 'كل شيء محفوظ على هذا الجهاز')}</small></div>`}
         ${setupMode ? `<button type="button" class="btn btn--ghost btn--sm" data-setup="skip">${T('Skip — use defaults', 'تخطٍّ — الإعدادات الافتراضية')}</button>` : `<button type="button" class="ncall__ic" data-st="close" aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button>`}
       </header>
+      <div class="nstudio__top"><div class="nstudio__pvav" id="nsPv"></div><div class="nstudio__pvtxt"><b id="nsPvName"></b><p id="nsPvAbout"></p><button type="button" class="btn btn--sm btn--ghost" data-hear>${ICON('play')} ${T('Hear a hello', 'استمع للتحية')}</button></div></div>
       <nav class="nstudio__tabs" role="tablist">${TABS.map(([k, en, ar, ic], n) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === tab}">${setupMode ? `<i>${n + 1}</i>` : ICON(ic)} ${pick(en, ar)}</button>`).join('')}</nav>
       <div class="nstudio__body" id="nsBody"></div>
       <footer class="nstudio__f">
-        ${setupMode ? `${i > 0 ? `<button type="button" class="btn btn--ghost" data-step="-1">${T('Back', 'رجوع')}</button>` : '<span></span>'}<button type="button" class="btn btn--accent" data-step="1">${i < 2 ? T('Next', 'التالي') : T('Start talking', 'ابدأ الحديث')} ${ICON(i < 2 ? 'arrow' : 'headphones')}</button>`
+        ${setupMode ? `${i > 0 ? `<button type="button" class="btn btn--ghost" data-step="-1">${T('Back', 'رجوع')}</button>` : '<span></span>'}<button type="button" class="btn btn--accent" data-step="1">${!last ? T('Next', 'التالي') : T('Start talking', 'ابدأ الحديث')} ${ICON(!last ? 'arrow' : 'headphones')}</button>`
           : `<button type="button" class="btn btn--ghost btn--sm" data-st="reset">${ICON('reset')} ${T('Reset to defaults', 'استعادة الافتراضي')}</button><button type="button" class="btn btn--accent" data-st="close">${T('Done', 'تم')}</button>`}
       </footer>
     </div>`;
     box.onclick = studioClick;
     box.oninput = studioInput;
+    box.onchange = studioChange;
     const body = box.querySelector('#nsBody');
-    if (tab === 'avatar') avatarPane(body); else if (tab === 'voice') voicePane(body); else talkPane(body);
+    ({ companion: companionPane, avatar: avatarPane, voice: voicePane, talk: talkPane, look: lookPane })[tab](body);
+    showPreview(cfg().avatar);
   }
   function studioClick(e) {
     const t = e.target;
     const tb = t.closest('[data-tab]'); if (tb) { tab = tb.dataset.tab; return drawStudio(); }
-    const sp = t.closest('[data-step]'); if (sp) { const i = TABS.findIndex(x => x[0] === tab) + +sp.dataset.step; if (i > 2) return closeStudio(); tab = TABS[Math.max(0, i)][0]; return drawStudio(); }
+    const TABS = tabsNow();
+    const sp = t.closest('[data-step]'); if (sp) { const i = TABS.findIndex(x => x[0] === tab) + +sp.dataset.step; if (i > TABS.length - 1) return closeStudio(); tab = TABS[Math.max(0, i)][0]; return drawStudio(); }
     if (t.closest('[data-setup="skip"]')) return closeStudio();
     const s = t.closest('[data-st]');
     if (s && s.dataset.st === 'close') return closeStudio();
-    if (s && s.dataset.st === 'reset') { U.store.setPref('vs', { setup: true }); const vo = Object.assign({}, U.store.prefs().voices || {}); delete vo[U.lang()]; U.store.setPref('voices', vo); return drawStudio(); }
-    const av = t.closest('[data-av]'); if (av) { pickAvatar(av.dataset.av); return; }
-    const vo = t.closest('[data-voice]'); if (vo) { const name = vo.dataset.voice; const vs = Object.assign({}, U.store.prefs().voices || {}); vs[U.lang()] = name; U.store.setPref('voices', vs); const vv = v.voices(U.lang()).find(x => x.name === name); if (vv && VX.gender(vv)) save({ gender: VX.gender(vv) }); markVoice(); preview(name); return; }
-    const gf = t.closest('[data-gf]'); if (gf) { st.gf = gf.dataset.gf; return drawStudio(); }
-    const opt = t.closest('[data-opt]'); if (opt) { const [k, val] = opt.dataset.opt.split(':'); save({ [k]: val === 'true' ? true : val === 'false' ? false : val }); if (k === 'lang') { if (window.I18N && I18N.lang !== val) I18N.apply(val); } return drawStudio(); }
+    if (s && s.dataset.st === 'reset') { U.store.setPref('vs', { setup: true, profiles: cfg().profiles, favs: cfg().favs }); U.store.setPref('voices', {}); return drawStudio(); }
+    const av = t.closest('[data-av]'); if (av) return pickAvatar(av.dataset.av);
+    const fv = t.closest('[data-fav]'); if (fv) { const f = new Set(cfg().favs); f.has(fv.dataset.fav) ? f.delete(fv.dataset.fav) : f.add(fv.dataset.fav); save({ favs: [...f] }); return drawStudio(); }
+    const vp = t.closest('[data-vp]'); if (vp) { pickVoiceProfile(vp.dataset.vp, !!t.closest('[data-play]')); return; }
+    const vc = t.closest('[data-vcat]'); if (vc) { st.vcat = vc.dataset.vcat; return drawStudio(); }
+    const ps = t.closest('[data-preset]'); if (ps) { const p = PRESETS.find(x => x[0] === ps.dataset.preset); save(Object.assign({ preset: p[0] }, p[5])); drawStudio(); return preview(); }
+    const pf = t.closest('[data-prof]'); if (pf) return profileAction(pf.dataset.prof, +pf.dataset.k);
+    const opt = t.closest('[data-opt]'); if (opt) { const [k, val] = opt.dataset.opt.split(':'); save({ [k]: val === 'true' ? true : val === 'false' ? false : val }); if (k === 'lang') setLang(val); if (k === 'theme') el.dataset.theme = val; return drawStudio(); }
     if (t.closest('[data-hear]')) preview();
   }
   function studioInput(e) {
-    const r = e.target.closest('[data-range]'); if (!r) return;
-    save({ [r.dataset.range]: +r.value });
-    const o = r.parentElement.querySelector('output'); if (o) o.textContent = fmt(r.dataset.range, +r.value);
+    const r = e.target.closest('[data-range]');
+    if (r) { save({ [r.dataset.range]: +r.value }); const o = r.parentElement.querySelector('output'); if (o) o.textContent = fmt(r.dataset.range, +r.value); return; }
+    if (e.target.id === 'nsSearch') { st.vq = e.target.value; const pos = e.target.selectionStart; drawStudio(); const i = $('#nsSearch'); if (i) { i.focus(); i.setSelectionRange(pos, pos); } }
   }
-  const fmt = (k, x) => k === 'volume' ? Math.round(x * 100) + '%' : x.toFixed(2) + '×';
+  function studioChange(e) {
+    if (e.target.id === 'nsRec') save({ recLang: e.target.value });
+    if (e.target.id === 'nsDict') save({ dict: e.target.value.split('\n').map(l => l.split('=')).filter(x => x.length === 2 && x[0].trim() && x[1].trim()).map(([w, s]) => ({ word: w.trim(), say: s.trim() })).slice(0, 40) });
+    if (e.target.id === 'nsProfName') st.profName = e.target.value;
+  }
+  const fmt = (k, x) => k === 'volume' ? Math.round(x * 100) + '%' : k === 'expr' ? Math.round(x * 100) + '%' : x.toFixed(2) + '×';
+  function range(k, en, ar, lim, c) { return `<label class="nstudio__range"><span>${pick(en, ar)}</span><input type="range" min="${lim[0]}" max="${lim[1]}" step="${lim[2]}" value="${c[k]}" data-range="${k}"><output>${fmt(k, c[k])}</output></label>`; }
+  const segOf = (key, items, c) => `<div class="nstudio__seg nstudio__seg--wrap">${items.map(([k, en, ar]) => `<button type="button" data-opt="${key}:${k}" aria-pressed="${String(c[key]) === String(k)}">${pick(en, ar)}</button>`).join('')}</div>`;
+  const swOf = (key, en, ar, hint, c) => `<label class="nstudio__sw"><span><b>${pick(en, ar)}</b>${hint ? `<small>${hint}</small>` : ''}</span><button type="button" role="switch" aria-checked="${!!c[key]}" data-opt="${key}:${!c[key]}"><i></i></button></label>`;
+
+  /* companion: personality presets and saved profiles */
+  function companionPane(body) {
+    const c = cfg();
+    body.innerHTML = `<p class="nstudio__k">${T('Personality', 'الشخصية')}</p>
+      <div class="nstudio__presets">${PRESETS.map(([id, en, ar, den, dar], k) => `<button type="button" class="nstudio__preset ${c.preset === id ? 'is-on' : ''}" data-preset="${id}" style="--i:${k}" aria-pressed="${c.preset === id}"><b>${pick(en, ar)}</b><small>${pick(den, dar)}</small></button>`).join('')}</div>
+      <p class="nstudio__note">${T('Personalities change how your companion talks — never its facts, honesty or safety rules.', 'تغيّر الشخصيات طريقة الحديث فقط — لا الحقائق ولا الصدق ولا قواعد الأمان.')}</p>
+      ${setupMode ? '' : `<p class="nstudio__k">${T('Saved companions', 'الرفاق المحفوظون')}</p>
+      <div class="nstudio__profs">${(c.profiles || []).map((p, k) => `<div class="nstudio__prof"><span class="nstudio__face nstudio__face--sm">${faceThumb(p.avatar)}</span><span><b>${esc(p.name)}</b><small>${esc(AV.get(p.avatar).name)} · ${esc(voiceLabel(p))}</small></span><button type="button" class="btn btn--sm btn--accent" data-prof="use" data-k="${k}">${T('Use', 'استخدم')}</button><button type="button" class="ncall__ic" data-prof="del" data-k="${k}" aria-label="${T('Delete', 'حذف')}">${ICON('trash')}</button></div>`).join('') || `<p class="nstudio__none">${T('Save the current avatar, voice and personality as a companion you can switch back to.', 'احفظ الشخصية والصوت والأسلوب الحاليين كرفيق يمكنك العودة إليه.')}</p>`}</div>
+      <div class="nstudio__save"><input id="nsProfName" maxlength="30" placeholder="${T('Name, e.g. “Exam mode”', 'اسم، مثل «وضع الامتحان»')}" value="${esc(st.profName || '')}"><button type="button" class="btn btn--sm btn--ghost" data-prof="save">${ICON('bookmark')} ${T('Save current', 'احفظ الحالي')}</button></div>`}`;
+  }
+  const KEEP = ['avatar', 'rate', 'pitch', 'volume', 'style', 'tone', 'expr', 'length', 'mode', 'theme', 'preset', 'prof', 'gender'];
+  function voiceLabel(p) { const id = p.prof && p.prof.en && p.prof.en.id; const vp = id && VL.get(id); return vp ? vp.name : T('device voice', 'صوت الجهاز'); }
+  function profileAction(kind, k) {
+    const c = cfg(), list = (c.profiles || []).slice();
+    if (kind === 'save') {
+      const name = (($('#nsProfName') || {}).value || '').trim() || `${AV.get(c.avatar).name} · ${new Date().toLocaleDateString()}`;
+      const snap = { name, voices: Object.assign({}, U.store.prefs().voices || {}) }; KEEP.forEach(x => { snap[x] = c[x]; });
+      list.unshift(snap); st.profName = ''; save({ profiles: list.slice(0, 12) });
+    } else if (kind === 'use' && list[k]) {
+      const p = list[k], patch = {}; KEEP.forEach(x => { if (p[x] !== undefined) patch[x] = p[x]; });
+      save(patch); U.store.setPref('voices', Object.assign({}, p.voices || {}));
+      if (p.theme) el.dataset.theme = p.theme;
+      preview();
+    } else if (kind === 'del') { list.splice(k, 1); save({ profiles: list }); }
+    drawStudio();
+  }
+
+  /* avatar gallery: photoreal and illustrated */
+  function faceThumb(id) {
+    const a = AV.get(id);
+    if (a.photo) return `<img src="${a.thumb}" alt="" loading="lazy" class="nstudio__ph">`;
+    return a.abstract ? '<span class="avt-aura avt-aura--mini"><i></i><i></i><b></b></span>' : AV.svg(a.id, true);
+  }
   function avatarPane(body) {
     const c = cfg();
-    body.innerHTML = `<div class="nstudio__pv"><div class="nstudio__pvav" id="nsPv"></div><div><b id="nsPvName"></b><p id="nsPvAbout"></p><button type="button" class="btn btn--sm btn--ghost" data-hear>${ICON('play')} ${T('Hear a hello', 'استمع للتحية')}</button></div></div>
-      <div class="nstudio__grid">${AV.list.map((a, k) => `<button type="button" class="nstudio__av ${a.id === c.avatar ? 'is-on' : ''}" data-av="${a.id}" style="--i:${k}" aria-pressed="${a.id === c.avatar}"><span class="nstudio__face">${a.abstract ? '<span class="avt-aura avt-aura--mini"><i></i><i></i><b></b></span>' : AV.svg(a.id, true)}</span><b>${esc(a.name)}</b><small>${esc(pick(a.en[0], a.ar[0]))}</small></button>`).join('')}</div>
-      <p class="nstudio__note">${T('All companions are original, AI-generated virtual characters — not real people.', 'جميع الرفاق شخصيات افتراضية أصلية مولّدة بالذكاء الاصطناعي — وليسوا أشخاصاً حقيقيين.')}</p>`;
-    showPreview(c.avatar);
+    const card = (a, k) => `<button type="button" class="nstudio__av ${a.id === c.avatar ? 'is-on' : ''}" data-av="${a.id}" style="--i:${k}" aria-pressed="${a.id === c.avatar}"><span class="nstudio__face">${faceThumb(a.id)}</span><b>${esc(a.name)}</b><small>${esc(pick(a.en[0], a.ar[0]))}</small></button>`;
+    const photos = AV.list.filter(a => a.photo), drawn = AV.list.filter(a => !a.photo);
+    body.innerHTML = `<p class="nstudio__k">${T('Photoreal digital humans', 'بشر رقميون واقعيون')}</p>
+      <div class="nstudio__grid">${photos.map(card).join('')}</div>
+      ${ERLY.photoHead && !ERLY.photoHead.supported() ? `<p class="nstudio__none">${T('This browser can’t draw the photoreal faces (WebGL is off), so their illustrated twins are used instead.', 'لا يستطيع هذا المتصفح عرض الوجوه الواقعية (WebGL متوقف)، لذا تُستخدم نسخ مرسومة.')}</p>` : ''}
+      <p class="nstudio__k">${T('Illustrated', 'مرسومة')}</p>
+      <div class="nstudio__grid">${drawn.map((a, k) => card(a, k + photos.length)).join('')}</div>
+      <p class="nstudio__note">${T('All companions are original virtual characters made for ERLY — AI, not real people or human operators.', 'جميع الرفاق شخصيات افتراضية أصلية صُممت لـ ERLY — ذكاء اصطناعي، وليسوا أشخاصاً حقيقيين أو موظفين.')}</p>`;
   }
   function showPreview(id) {
     const a = AV.get(id);
     if (st.preview) st.preview.destroy();
     const host = $('#nsPv'); if (!host) return;
-    st.preview = AV.mount(host, a.id);
-    $('#nsPvName').textContent = a.name + ' · ' + pick(a.en[0], a.ar[0]);
-    $('#nsPvAbout').textContent = pick(a.en[1], a.ar[1]);
+    st.preview = AV.mount(host, a.id).attach(v);
+    const n = $('#nsPvName'), ab = $('#nsPvAbout');
+    if (n) n.textContent = a.name + ' · ' + pick(a.en[0], a.ar[0]);
+    const vp = currentProfile();
+    if (ab) ab.textContent = pick(a.en[1], a.ar[1]) + (vp ? ' ' + T(`Voice: ${vp.profile.name} (${vp.profile.accent}).`, `الصوت: ${vp.profile.name}.`) : '');
   }
   function pickAvatar(id) {
-    const a = AV.get(id), c = cfg();
-    const vs = U.store.prefs().voices || {};
+    const a = AV.get(id);
     const patch = { avatar: id };
-    // a new face gets a matching voice, unless the student picked a voice themselves
-    const cur = v.voiceFor(U.lang());
-    if (a.g && (!vs[U.lang()] || !cur || VX.gender(cur) !== a.g)) { patch.gender = a.g; const v2 = Object.assign({}, vs); delete v2[U.lang()]; U.store.setPref('voices', v2); }
+    const cur = currentProfile();
+    // a new face gets a matching voice, unless the student picked one themselves
+    if (a.g && (!cur || cur.profile.g !== a.g)) {
+      patch.gender = a.g;
+      const lib = library();
+      const match = lib.available.find(x => x.profile.g === a.g && x.profile.lang === U.lang());
+      if (match) { applyProfile(match, true); } else { const vs = Object.assign({}, U.store.prefs().voices || {}); delete vs[U.lang()]; U.store.setPref('voices', vs); }
+    }
     save(patch);
-    $('#ncStudio').querySelectorAll('[data-av]').forEach(b => { b.classList.toggle('is-on', b.dataset.av === id); b.setAttribute('aria-pressed', b.dataset.av === id); });
-    showPreview(id);
+    drawStudio();
     preview();
   }
-  // say hello with a given voice (or the current one), lips synced on the preview avatar
-  function preview(voiceName) {
-    const a = AV.get(cfg().avatar);
-    const text = pick(`Hi, I’m ${a.name}. ${a.en[1]}`, `أهلاً، أنا ${a.name}. ${a.ar[1]}`);
-    const ctl = st.preview;
-    v.stop();
-    if (ctl) ctl.setState('speaking');
-    if (voiceName) {
-      const vs = Object.assign({}, U.store.prefs().voices || {}); vs[U.lang()] = voiceName; U.store.setPref('voices', vs);
-    }
-    // speaking through the normal voice path keeps the lip-sync hooks identical to the real conversation
-    if (ctl) ctl.attach(v);
-    v.speak(text, { lang: U.lang(), onend: () => { if (ctl) ctl.setState('idle'); } });
+
+  /* voice library */
+  function library() {
+    const all = window.speechSynthesis && speechSynthesis.getVoices ? speechSynthesis.getVoices() : [];
+    return VL.resolve(all, { score: VX.naturalScore, gender: VX.gender });
+  }
+  function currentProfile() {
+    const pr = (cfg().prof || {})[U.lang()];
+    if (!pr) return null;
+    return library().available.find(x => x.profile.id === pr.id) || null;
+  }
+  function applyProfile(x, quiet) {
+    const p = x.profile;
+    const vs = Object.assign({}, U.store.prefs().voices || {}); vs[p.lang] = x.voice.name; U.store.setPref('voices', vs);
+    const prof = Object.assign({}, cfg().prof || {}); prof[p.lang] = { id: p.id, rate: p.rate, pitch: p.pitch };
+    save({ prof, gender: p.g, expr: quiet ? cfg().expr : p.expr });
+  }
+  function pickVoiceProfile(id, playOnly) {
+    const x = library().available.find(y => y.profile.id === id); if (!x) return;
+    if (!playOnly) applyProfile(x);
+    // the sample is generated by the real voice, with this profile's own pace and pitch
+    const p = x.profile;
+    const sample = p.lang === 'ar' ? `مرحباً، أنا ${AV.get(cfg().avatar).name}. ${p.ar} لنتعلم معاً اليوم!` : `Hi, I’m ${AV.get(cfg().avatar).name}. ${p.en} Shall we learn something new today?`;
+    sayPreview(sample, p.lang, playOnly ? { voice: x.voice.name, rate: p.rate, pitch: p.pitch } : null);
+    if (!playOnly) drawStudio();
   }
   function voicePane(body) {
-    const c = cfg(), lang = U.lang();
-    const all = v.voices(lang), cur = v.voiceFor(lang);
-    const gf = st.gf || 'all';
-    const list = all.filter(x => gf === 'all' || VX.gender(x) === gf);
-    const g = x => ({ f: T('Female', 'أنثى'), m: T('Male', 'ذكر') })[VX.gender(x)] || '';
+    const c = cfg(), lib = library(), cat = st.vcat || 'all', qy = (st.vq || '').toLowerCase();
+    const cur = currentProfile();
+    const favs = new Set(c.favs || []);
+    const CATS = [['all', 'All', 'الكل'], ['fav', '★ Favourites', '★ المفضلة'], ['f', 'Female', 'أنثى'], ['m', 'Male', 'ذكر'], ['American', 'American', 'أمريكية'], ['British', 'British', 'بريطانية'], ['Indian English', 'Indian', 'هندية'], ['Australian', 'Australian', 'أسترالية'], ['arabic', 'Arabic', 'عربية']];
+    const ok = x => { const p = x.profile; if (cat === 'fav' && !favs.has(p.id)) return false; if ((cat === 'f' || cat === 'm') && p.g !== cat) return false; if (cat === 'arabic' && p.lang !== 'ar') return false; if (/^[A-Z]/.test(cat) && p.accent !== cat) return false; if (qy && !(p.name + ' ' + p.en + ' ' + p.accent + ' ' + x.voice.name).toLowerCase().includes(qy)) return false; return true; };
+    const list = lib.available.filter(ok);
     body.innerHTML = `
-      <div class="nstudio__row"><span class="nstudio__k">${T('Language', 'اللغة')}</span><div class="nstudio__seg">${[['en', 'English'], ['ar', 'العربية']].map(([k, n]) => `<button type="button" data-opt="lang:${k}" aria-pressed="${lang === k}">${n}</button>`).join('')}</div></div>
-      <div class="nstudio__row"><span class="nstudio__k">${T('Voice', 'الصوت')}</span><div class="nstudio__seg">${[['all', 'All', 'الكل'], ['f', 'Female', 'أنثى'], ['m', 'Male', 'ذكر']].map(([k, en, ar]) => `<button type="button" data-gf="${k}" aria-pressed="${gf === k}">${pick(en, ar)}</button>`).join('')}</div></div>
-      <ul class="nstudio__voices">${list.length ? list.slice(0, 40).map(x => `<li><button type="button" data-voice="${esc(x.name)}" class="${cur && cur.name === x.name ? 'is-on' : ''}"><span class="nstudio__play">${ICON('play')}</span><span><b>${VX.isNatural(x) ? '★ ' : ''}${esc(x.name.replace(/Microsoft |Google |\(Natural\)| Online/g, '').replace(/\s+-\s+.*$/, '').trim())}</b><small>${esc(x.lang)}${g(x) ? ' · ' + g(x) : ''}${VX.isNatural(x) ? ' · ' + T('natural', 'طبيعي') : ''}</small></span>${cur && cur.name === x.name ? `<em>${ICON('check')}</em>` : ''}</button></li>`).join('') : `<li class="nstudio__none">${all.length ? T('No voices of that kind on this device — try “All”.', 'لا توجد أصوات من هذا النوع على هذا الجهاز — جرّب «الكل».') : T('This device has no voices for this language yet. On iPad: Settings → Accessibility → Spoken Content → Voices.', 'لا توجد أصوات لهذه اللغة على هذا الجهاز. على الآيباد: الإعدادات ← تسهيلات الاستخدام ← المحتوى المنطوق ← الأصوات.')}</li>`}</ul>
-      <p class="nstudio__note">${T('These are the real voices installed in your browser and device; ★ marks the most natural ones. Edge’s “Natural” voices and Apple’s “Premium/Enhanced” voices sound the most human.', 'هذه هي الأصوات الحقيقية المثبتة في متصفحك وجهازك؛ ★ تشير إلى الأكثر طبيعية.')}</p>
-      ${['rate', 'pitch', 'volume'].map(k => { const lim = { rate: [0.6, 1.5, 0.05], pitch: [0.7, 1.3, 0.05], volume: [0.2, 1, 0.05] }[k]; return `<label class="nstudio__range"><span>${pick(...{ rate: ['Speed', 'السرعة'], pitch: ['Pitch', 'طبقة الصوت'], volume: ['Volume', 'مستوى الصوت'] }[k])}</span><input type="range" min="${lim[0]}" max="${lim[1]}" step="${lim[2]}" value="${c[k]}" data-range="${k}"><output>${fmt(k, c[k])}</output></label>`; }).join('')}
-      <div class="nstudio__row"><button type="button" class="btn btn--sm btn--ghost" data-hear>${ICON('play')} ${T('Test this voice', 'جرّب هذا الصوت')}</button></div>`;
+      <div class="nstudio__vtools"><input id="nsSearch" type="search" placeholder="${T('Search voices — “calm”, “British”, “Arabic”…', 'ابحث عن صوت — «هادئ»، «عربي»…')}" value="${esc(st.vq || '')}" aria-label="${T('Search voices', 'البحث عن الأصوات')}"></div>
+      <div class="nstudio__cats">${CATS.map(([k, en, ar]) => `<button type="button" data-vcat="${k}" aria-pressed="${cat === k}">${pick(en, ar)}</button>`).join('')}</div>
+      <div class="nstudio__vlib">${list.map(x => { const p = x.profile, on = cur && cur.profile.id === p.id; return `<div class="nstudio__vc ${on ? 'is-on' : ''}">
+        <button type="button" class="nstudio__vmain" data-vp="${p.id}" aria-pressed="${!!on}"><span class="nstudio__vav ${p.g === 'm' ? 'is-m' : ''}">${esc(p.name[0])}</span><span><b>${esc(p.name)}</b><small>${esc(p.accent)} · ${p.g === 'f' ? T('female-sounding', 'صوت أنثوي') : T('male-sounding', 'صوت ذكوري')}</small><em>${esc(pick(p.en, p.ar))}</em><i class="nstudio__uses">${T('Uses', 'يستخدم')}: ${esc(x.voice.name.replace(/\s+-\s+.*$/, '').replace(/^Microsoft /, ''))} · ${esc(x.voice.lang)}</i></span></button>
+        <div class="nstudio__vact"><button type="button" class="ncall__ic" data-vp="${p.id}" data-play aria-label="${T('Preview', 'معاينة')} ${esc(p.name)}">${ICON('play')}</button><button type="button" class="ncall__ic ${favs.has(p.id) ? 'is-fav' : ''}" data-fav="${p.id}" aria-pressed="${favs.has(p.id)}" aria-label="${T('Favourite', 'مفضلة')}">${ICON('star')}</button></div></div>`; }).join('') || `<p class="nstudio__none">${lib.available.length ? T('No voices match.', 'لا توجد أصوات مطابقة.') : T('This browser hasn’t loaded any voices yet. Try Microsoft Edge (the widest choice of natural voices) or, on iPad, Settings → Accessibility → Spoken Content → Voices.', 'لم يحمّل هذا المتصفح أي أصوات بعد. جرّب مايكروسوفت إيدج أو، على الآيباد، الإعدادات ← تسهيلات الاستخدام ← المحتوى المنطوق ← الأصوات.')}</p>`}</div>
+      ${lib.missing.length ? `<details class="nstudio__missing"><summary>${T(`${lib.missing.length} more voices aren’t on this device`, `${lib.missing.length} أصوات أخرى غير متوفرة على هذا الجهاز`)}</summary><p>${lib.missing.map(p => `<span>${esc(p.name)} · ${esc(p.accent)}</span>`).join('')}</p><p class="nstudio__note">${T('They appear automatically when a matching voice is installed: Microsoft Edge includes Indian, British, Australian and Gulf Arabic neural voices; on iPad and Mac, download Premium/Enhanced voices in Settings → Accessibility → Spoken Content → Voices.', 'تظهر تلقائياً عند تثبيت صوت مناسب.')}</p></details>` : ''}
+      ${range('rate', 'Speed', 'السرعة', [0.6, 1.5, 0.05], c)}${range('pitch', 'Pitch', 'طبقة الصوت', [0.7, 1.3, 0.05], c)}${range('volume', 'Volume', 'مستوى الصوت', [0.2, 1, 0.05], c)}${range('expr', 'Expressiveness', 'التعبير', [0, 1.5, 0.05], c)}
+      <p class="nstudio__note">${T('Expressiveness lets the voice brighten when something is exciting and soften when reassuring — by changing pace, pitch and pauses sentence by sentence.', 'يجعل التعبير الصوت أكثر إشراقاً عند الحماس وأهدأ عند الطمأنة — بتغيير السرعة والنبرة والتوقفات جملة بجملة.')}</p>
+      <div class="nstudio__row"><span class="nstudio__k">${T('Language', 'اللغة')}</span>${segOf('lang', [['en', 'English', 'English'], ['ar', 'العربية', 'العربية']], { lang: U.lang() })}</div>
+      <label class="nstudio__field"><span>${T('I speak (for recognition)', 'أتحدث بـ (للتعرف على الكلام)')}</span><select id="nsRec">${REC.map(([k, en, ar]) => `<option value="${k}" ${c.recLang === k ? 'selected' : ''}>${pick(en, ar)}</option>`).join('')}</select></label>
+      <label class="nstudio__field"><span>${T('How to say names (one per line: Word = say it like)', 'طريقة نطق الأسماء (سطر لكل اسم: الكلمة = طريقة النطق)')}</span><textarea id="nsDict" rows="2" placeholder="Siobhan = shiv-awn">${esc((c.dict || []).map(d => d.word + ' = ' + d.say).join('\n'))}</textarea></label>`;
   }
-  function markVoice() {
-    const cur = v.voiceFor(U.lang());
-    $('#ncStudio').querySelectorAll('[data-voice]').forEach(b => { const on = cur && b.dataset.voice === cur.name; b.classList.toggle('is-on', on); const em = b.querySelector('em'); if (on && !em) b.insertAdjacentHTML('beforeend', `<em>${ICON('check')}</em>`); if (!on && em) em.remove(); });
+  // a preview through the real voice path, so the lips move exactly as they will in the conversation
+  function sayPreview(text, lang, once) {
+    v.stop();
+    const ctl = st.preview; if (ctl) { ctl.attach(v); ctl.setState('speaking'); }
+    const tone = PR ? PR.classify(text, {}) : 'neutral';
+    // "once" plays one profile without choosing it (its own voice, pace and pitch)
+    v.speak(text, Object.assign({ lang, emotion: tone, prosody: PR ? PR.prosody(tone, cfg().expr) : null, onend: () => { if (ctl) ctl.setState('idle'); } }, once ? { voiceName: once.voice, baseRate: once.rate, basePitch: once.pitch } : {}));
   }
+  function preview() {
+    const a = AV.get(cfg().avatar);
+    sayPreview(pick(`Hi, I’m ${a.name}! ${a.en[1]} What would you like to learn today?`, `أهلاً، أنا ${a.name}! ${a.ar[1]} ماذا تحب أن تتعلم اليوم؟`), U.lang());
+  }
+
+  /* conversation */
   function talkPane(body) {
     const c = cfg();
-    const seg = (key, items) => `<div class="nstudio__seg nstudio__seg--wrap">${items.map(([k, en, ar]) => `<button type="button" data-opt="${key}:${k}" aria-pressed="${String(c[key]) === String(k)}">${pick(en, ar)}</button>`).join('')}</div>`;
-    const sw = (key, en, ar, hint) => `<label class="nstudio__sw"><span><b>${pick(en, ar)}</b>${hint ? `<small>${hint}</small>` : ''}</span><button type="button" role="switch" aria-checked="${!!c[key]}" data-opt="${key}:${!c[key]}"><i></i></button></label>`;
     body.innerHTML = `
-      <p class="nstudio__k">${T('How should Noor explain things?', 'كيف تشرح نور الأشياء؟')}</p>${seg('style', STYLES)}
-      <p class="nstudio__k">${T('Personality', 'الشخصية')}</p>${seg('tone', TONES)}
-      <p class="nstudio__k">${T('Pause before Noor answers', 'المهلة قبل أن تجيب نور')}</p>${seg('quiet', [['short', 'Short', 'قصيرة'], ['normal', 'Normal', 'عادية'], ['long', 'Long — I think while I talk', 'طويلة — أفكر وأنا أتكلم']])}
-      ${sw('handsFree', 'Hands-free', 'بدون استخدام اليدين', T('Noor listens again by herself after she answers', 'تعود نور للاستماع تلقائياً بعد الإجابة'))}
-      ${SAFARI ? '' : sw('barge', 'Interrupt by talking', 'المقاطعة بالكلام', T('Start talking to stop Noor — best with headphones', 'ابدأ الكلام لإيقاف نور — الأفضل مع سماعات'))}
-      ${sw('captions', 'Captions', 'الترجمة النصية', '')}
-      <p class="nstudio__k">${T('Caption size', 'حجم النص')}</p>${seg('capSize', [['s', 'Small', 'صغير'], ['m', 'Medium', 'متوسط'], ['l', 'Large', 'كبير']])}
-      ${sw('contrast', 'High contrast', 'تباين عالٍ', '')}
-      <p class="nstudio__note">${T('Your style and personality choices change how Noor talks, never her facts or safety rules. Settings stay on this device.', 'تغيّر اختياراتك أسلوب حديث نور فقط، لا الحقائق ولا قواعد الأمان. تبقى الإعدادات على هذا الجهاز.')}</p>`;
+      <p class="nstudio__k">${T('Mode', 'الوضع')}</p>
+      <div class="nstudio__modes">${MODES.map(([k, en, ar, ic]) => `<button type="button" data-opt="mode:${k}" aria-pressed="${c.mode === k}">${ICON(ic)} ${pick(en, ar)}</button>`).join('')}</div>
+      <p class="nstudio__note">${modeHint(c.mode)}</p>
+      <p class="nstudio__k">${T('Explanations', 'الشرح')}</p>${segOf('style', STYLES, c)}
+      <p class="nstudio__k">${T('Answer length', 'طول الإجابة')}</p>${segOf('length', [['short', 'Short', 'قصيرة'], ['medium', 'Medium', 'متوسطة'], ['long', 'Long', 'طويلة']], c)}
+      <p class="nstudio__k">${T('Tone', 'النبرة')}</p>${segOf('tone', TONES, c)}
+      <p class="nstudio__k">${T('Pause before your companion answers', 'المهلة قبل الإجابة')}</p>${segOf('quiet', [['short', 'Short', 'قصيرة'], ['normal', 'Normal', 'عادية'], ['long', 'Long — I think while I talk', 'طويلة — أفكر وأنا أتكلم']], c)}
+      ${swOf('handsFree', 'Hands-free', 'بدون استخدام اليدين', T('Listens again by itself after answering', 'يعود للاستماع تلقائياً بعد الإجابة'), c)}
+      ${SAFARI ? '' : swOf('barge', 'Interrupt by talking', 'المقاطعة بالكلام', T('Start talking to stop it — best with headphones', 'ابدأ الكلام لإيقافه — الأفضل مع سماعات'), c)}`;
   }
-  if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', () => { if (st.on && tab === 'voice' && !$('#ncStudio').hidden) drawStudio(); });
+  function modeHint(m) {
+    return ({ natural: T('Speak normally — everyday back-and-forth.', 'تحدث بشكل طبيعي.'), study: T('Explains, then checks you understood with a quick question.', 'يشرح ثم يتأكد من فهمك بسؤال سريع.'), focus: T('Short answers, no small talk.', 'إجابات قصيرة بلا أحاديث جانبية.'), deep: T('Detailed explanations with examples.', 'شرح مفصّل مع أمثلة.'), practice: T('Quizzes you one question at a time and gives feedback.', 'يختبرك بسؤال واحد في كل مرة ويعطيك ملاحظات.'), reading: T('Reads and explains the open reading — paragraph by paragraph.', 'يقرأ ويشرح القراءة المفتوحة فقرة بفقرة.'), research: T('Helps you investigate a topic; says what it isn’t sure of and points to sources to check. It doesn’t browse the web by itself.', 'يساعدك في البحث؛ يوضح ما لا يتأكد منه ويقترح مصادر. لا يتصفح الإنترنت بنفسه.'), creative: T('Brainstorms ideas, stories and presentations with you.', 'يعصف معك بالأفكار والقصص والعروض.'), planning: T('Breaks goals into small, practical steps.', 'يقسّم الأهداف إلى خطوات صغيرة عملية.') })[m] || '';
+  }
+  /* look & accessibility */
+  function lookPane(body) {
+    const c = cfg();
+    body.innerHTML = `<p class="nstudio__k">${T('Background', 'الخلفية')}</p>
+      <div class="nstudio__themes">${THEMES.map(([k, en, ar]) => `<button type="button" class="nstudio__theme t-${k}" data-opt="theme:${k}" aria-pressed="${c.theme === k}"><i></i>${pick(en, ar)}</button>`).join('')}</div>
+      ${swOf('captions', 'Captions', 'الترجمة النصية', '', c)}
+      <p class="nstudio__k">${T('Caption size', 'حجم النص')}</p>${segOf('capSize', [['s', 'Small', 'صغير'], ['m', 'Medium', 'متوسط'], ['l', 'Large', 'كبير']], c)}
+      ${swOf('contrast', 'High contrast', 'تباين عالٍ', '', c)}
+      <p class="nstudio__note">${T('Keyboard: Space interrupts or sends, M mutes, P pauses, Esc closes. Reduced-motion settings on your device keep the avatar still.', 'لوحة المفاتيح: المسافة للمقاطعة أو الإرسال، M للكتم، P للإيقاف المؤقت، Esc للإغلاق.')}</p>`;
+  }
+  function setLang(l) {
+    if (window.I18N && I18N.lang !== l) I18N.apply(l);
+  }
+  if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', () => { if (st.on && tab === 'voice' && !$('#ncStudio').hidden && !(document.activeElement && document.activeElement.id === 'nsSearch')) drawStudio(); });
 
   /* ---------------- the microphone level (visualiser, nodding and barge-in) ---------------- */
   let pulseT = null;

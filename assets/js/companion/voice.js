@@ -37,7 +37,7 @@
   const ARABIC = [/Salma|Zariyah|Fatima|Hala|Amina|Laila.*Natural/i, /Maged|Tarik|Hamed/i, /Google.*(عربي|Arabic)/i, /Majed|Laila/i];
   // Voices don't report gender, so it is guessed from well-known voice names.
   const FEMALE = /female|woman|\b(ava|emma|jenny|aria|sonia|libby|michelle|samantha|karen|moira|tessa|serena|zoe|allison|susan|victoria|fiona|kate|catherine|hazel|heera|zira|ana|clara|natasha|nancy|sara|sarah|elsa|isabella|olivia|amy|joanna|kimberly|salli|ivy|kendra|nicole|veena|lekha|rishi?a|salma|zariyah|fatima|hala|amina|laila|mariam|layla|nora|noura|yara|maryam|shakira|jane|joan|kathy|vicki|princess|agnes|alice|amelie|anna|ellen|ioana|joana|kyoko|lana|laura|luciana|mei-?jia|melina|milena|monica|nora|paulina|satu|sin-?ji|ting-?ting|yelda|yuna|zuzana|flo|grandma|sandy|shelley|aoife|neerja|molly|maisie|abbi|bella|hollie|elizabeth|jacqueline|ashley|cora|elena|jessa|sonia)\b/i;
-  const MALE = /\bmale\b|\bman\b|\b(guy|ryan|davis|andrew|brian|christopher|eric|roger|steffan|thomas|daniel|alex|fred|arthur|oliver|aaron|evan|nathan|tom|rishi|hamed|maged|tarik|majed|shakir|omar|george|james|david|mark|matthew|justin|joey|russell|lee|gordon|rocko|reed|eddy|grandpa|ralph|albert|junior|diego|jorge|juan|luca|thomas|xander|yuri|aditya|prabhat|liam|william|jason|tony|ethan|noah|elliot|alfie|ollie|connor|duncan|kenny|kai|brandon|steffan|tariq)\b/i;
+  const MALE = /\bmale\b|\bman\b|\b(guy|ryan|davis|andrew|brian|christopher|eric|roger|steffan|thomas|daniel|alex|fred|arthur|oliver|aaron|evan|nathan|tom|rishi|hamed|maged|tarik|majed|shakir|omar|george|james|david|mark|matthew|justin|joey|russell|lee|gordon|rocko|reed|eddy|grandpa|ralph|albert|junior|diego|jorge|juan|luca|thomas|xander|yuri|aditya|prabhat|liam|william|jason|tony|ethan|noah|elliot|alfie|ollie|connor|duncan|kenny|kai|brandon|steffan|tariq|hamdan|prabhat|ravi|kumar|fahed|bassel|moaz|jamal|abdullah|ali|youssef|taim|rami|omar|zayd|karim|wayne|neil|tim|ken|duncan|darren)\b/i;
   function gender(v) {
     const n = (v && v.name) || '';
     if (/\bfemale\b/i.test(n)) return 'f';
@@ -67,9 +67,11 @@
   }
   // Break text into sentences with a short breath between them. Very long
   // single utterances sound flat (and Chrome cuts them off after ~15 s).
-  function phrases(text, lang) {
+  const SP = () => (typeof self !== 'undefined' && self.ERLY_PROSODY) || null;
+  function phrases(text, lang, dict) {
     const out = [];
-    const sents = humanize(text, lang).match(/[^.!?؟]+[.!?؟]*/g) || [];
+    const sp = SP();
+    const sents = humanize(sp ? sp.speechify(text, lang, dict) : text, lang).match(/[^.!?؟]+[.!?؟]*/g) || [];
     sents.forEach((sent, si) => {
       sent = sent.trim(); if (!sent) return;
       // Good voices phrase a whole sentence naturally, so only very long
@@ -101,8 +103,8 @@
       const want = lang === 'ar' ? /^ar/i : /^en/i;
       return synth.getVoices().filter(v => want.test(v.lang)).sort((a, b) => rank(b, lang) - rank(a, lang));
     }
-    function pickVoice(lang) {
-      const vs = voices(lang), name = getVoiceName(lang), g = getSettings().gender;
+    function pickVoice(lang, override) {
+      const vs = voices(lang), name = override || getVoiceName(lang), g = getSettings().gender;
       return (name && vs.find(v => v.name === name)) || (g && vs.find(v => gender(v) === g)) || vs[0] || null;
     }
     let token = 0, gapT = null;
@@ -115,21 +117,25 @@
       if (i >= state.queue.length) { set('speaking', false); opts.onend && opts.onend(); return; }
       const item = state.queue[i];
       const u = new Utter(item.text);
-      const v = pickVoice(state.lang);
+      const v = pickVoice(state.lang, opts.voiceName);
       if (v) u.voice = v;
       u.lang = v ? v.lang : (state.lang === 'ar' ? 'ar-SA' : 'en-GB');
       // gentle, human-like prosody: a relaxed pace, tiny variation between
       // phrases, a slightly slower phrase end and a small lift on questions
       const nat = v && isNatural(v);
       const cfg = getSettings();
-      const baseRate = (opts.rate || (nat ? 1.02 : 0.97)) * (cfg.rate || 1), basePitch = (opts.pitch || 1.0) * (cfg.pitch || 1);
+      // emotion: each sentence's tone nudges pace, pitch and volume (prosody.js)
+      const pr = opts.prosody || {};
+      const baseRate = (opts.rate || (nat ? 1.02 : 0.97)) * (cfg.rate || 1) * (opts.baseRate || cfg.baseRate || 1) * (pr.rate || 1);
+      const basePitch = (opts.pitch || 1.0) * (cfg.pitch || 1) * (opts.basePitch || cfg.basePitch || 1) * (pr.pitch || 1);
       u.rate = baseRate - (item.last ? 0.02 : 0);
       u.pitch = basePitch + (item.question && item.last ? 0.05 : 0);
-      u.volume = cfg.volume != null ? Math.max(0, Math.min(1, cfg.volume)) : 1;
+      u.volume = Math.max(0, Math.min(1, (cfg.volume != null ? cfg.volume : 1) * (pr.volume || 1)));
+      u.rate = Math.max(0.5, Math.min(2, u.rate)); u.pitch = Math.max(0.5, Math.min(2, u.pitch));
       // some browsers (Safari especially) occasionally never fire onend: move on anyway
       clearTimeout(state.watch);
       state.watch = setTimeout(() => { if (my === token && state.speaking && !state.paused) { try { synth.cancel(); } catch (e) { /* ignore */ } u.onend(); } }, 2500 + item.text.split(/\s+/).length * 520 / baseRate);
-      u.onstart = () => { if (my === token) { set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); phraseHook('start', item.text, u.rate, v); } };
+      u.onstart = () => { if (my === token) { set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); phraseHook('start', item.text, u.rate, v, opts.emotion); } };
       u.onboundary = e => { if (my !== token) return; if (opts.onboundary) opts.onboundary(e); if (!e || e.name === 'word' || e.name == null) phraseHook('boundary', e ? e.charIndex : 0); };
       u.onend = () => {
         if (my !== token) return;
@@ -137,7 +143,8 @@
         if (u.done) return; u.done = true;
         phraseHook('end');
         const next = state.queue[i + 1];
-        const gap = !next ? 0 : next.sentence !== item.sentence ? 260 + Math.random() * 140 : 90 + Math.random() * 80;
+        // natural pauses: a breath between phrases, longer between sentences, plus the tone's own pause
+        const gap = !next ? 0 : next.sentence !== item.sentence ? 300 + (item.question ? 80 : 0) + ((opts.prosody && opts.prosody.pause) || 0) : 110;
         const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
         if (gap) gapT = setTimeout(go, gap); else go();
       };
@@ -155,7 +162,7 @@
       speak(text, opts) {
         opts = opts || {};
         if (!synth || !Utter) { opts.onend && opts.onend(); return false; }
-        state.lastText = text; state.lang = opts.lang || 'en'; state.queue = phrases(text, state.lang); state.paused = false; state.resumeAt = null;
+        state.lastText = text; state.lang = opts.lang || 'en'; state.queue = phrases(text, state.lang, getSettings().dict); state.paused = false; state.resumeAt = null;
         lastOpts = opts;
         set('speaking', true);
         speakFrom(0, opts);

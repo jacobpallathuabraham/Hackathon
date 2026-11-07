@@ -37,13 +37,17 @@
   // the student's chosen explanation style and personality (Voice settings) — style only, never facts or safety
   const STYLE_P = { concise: 'Keep answers short and to the point.', conversational: 'Be natural and conversational.', detailed: 'Give thorough, detailed explanations with examples.', steps: 'Explain things step by step, one numbered step at a time.' };
   const TONE_P = { friendly: 'friendly and natural', calm: 'calm and reassuring', professional: 'professional', energetic: 'upbeat and energetic', educational: 'clear and educational, like a great tutor', warm: 'warm and chatty', direct: 'concise and direct' };
+  const MODE_P = { study: 'Study mode: explain clearly, then check understanding with one short question.', focus: 'Focus mode: be brief and to the point; no small talk.', deep: 'Deep explanation mode: give thorough explanations with examples and intuition.', practice: 'Practice mode: quiz the student one question at a time, wait for their answer, then give kind, specific feedback.', reading: 'Reading companion mode: read and explain the open reading paragraph by paragraph when asked.', research: 'Research mode: help investigate the topic; separate what is well established from what is uncertain, say when information may be out of date, and suggest reliable sources to check. You cannot browse the web yourself.', creative: 'Creative mode: brainstorm freely with several varied ideas, then help develop the best one.', planning: 'Planning mode: break goals into small, practical, time-boxed steps.' };
+  const LEN_P = { short: 'Keep answers short (1–2 sentences when spoken).', medium: '', long: 'Longer, fuller answers are welcome.' };
   function stylePrompt() {
     const vs = (U.store.prefs && U.store.prefs().vs) || {};
     const bits = [];
     if (vs.style && STYLE_P[vs.style]) bits.push(STYLE_P[vs.style]);
     if (vs.tone && TONE_P[vs.tone]) bits.push(`Your tone: ${TONE_P[vs.tone]}.`);
-    if (C.inCall) bits.push('Speak naturally, as in a real conversation: vary your phrasing, no formatting, numbers and formulas in words. If the student corrects you or says you misunderstood, acknowledge it briefly and fix it. If you are not sure, say so.' + (vs.style === 'detailed' || vs.style === 'steps' ? ' Up to 5 short sentences is fine.' : ''));
-    if (vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}" — answer to that name too (you are still the same AI).`); }
+    if (vs.mode && MODE_P[vs.mode]) bits.push(MODE_P[vs.mode]);
+    if (vs.length && LEN_P[vs.length]) bits.push(LEN_P[vs.length]);
+    if (C.inCall) bits.push('Speak naturally, as in a real conversation: vary your phrasing, no formatting, numbers and formulas in words. If the student corrects you or says you misunderstood, acknowledge it briefly and fix it. If you are not sure, say so. If what they said is unclear or ambiguous (speech recognition can mishear), ask one short clarifying question instead of guessing. Understand follow-ups like “explain that again”, “the second point”, “another example”, “shorter”, “simpler” from the conversation so far.' + (vs.style === 'detailed' || vs.style === 'steps' ? ' Up to 5 short sentences is fine.' : ''));
+    if (C.inCall && vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}" — answer to that name too (you are still the same AI).`); }
     return bits.length ? `Student's chosen style: ${bits.join(' ')}` : '';
   }
   function memoryPrompt() {

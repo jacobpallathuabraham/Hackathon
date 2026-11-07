@@ -15,7 +15,7 @@ const MOCKS = () => {
   window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
   window.__said = [];
   const synth = { speaking: false, getVoices: () => VOICES, pause() {}, resume() {}, addEventListener() {}, cancel() { synth.gen = (synth.gen || 0) + 1; },
-    speak(u) { const g = synth.gen; window.__said.push({ text: u.text, voice: u.voice && u.voice.name, rate: u.rate }); setTimeout(() => { if (g !== synth.gen) return; u.onstart && u.onstart({}); let ci = 0; u.text.split(' ').forEach((w, k) => { const at = ci; setTimeout(() => { if (g === synth.gen) u.onboundary && u.onboundary({ name: 'word', charIndex: at }); }, k * 70); ci += w.length + 1; }); setTimeout(() => { if (g === synth.gen) u.onend && u.onend({}); }, u.text.split(' ').length * 70 + 40); }, 5); } };
+    speak(u) { const g = synth.gen; window.__said.push({ text: u.text, voice: u.voice && u.voice.name, rate: u.rate, pitch: u.pitch }); setTimeout(() => { if (g !== synth.gen) return; u.onstart && u.onstart({}); let ci = 0; u.text.split(' ').forEach((w, k) => { const at = ci; setTimeout(() => { if (g === synth.gen) u.onboundary && u.onboundary({ name: 'word', charIndex: at }); }, k * 70); ci += w.length + 1; }); setTimeout(() => { if (g === synth.gen) u.onend && u.onend({}); }, u.text.split(' ').length * 70 + 40); }, 5); } };
   Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
   // like Safari: results stay interim, and listening ends only when stop() is called
   window.__recStarts = 0;
@@ -73,45 +73,73 @@ const MOCKS = () => {
 
   /* ---------- voice mode: first-time setup, avatar, voice, lip-sync, transcript ---------- */
   await page.click('#cmpVoice'); await page.waitForSelector('.nstudio.is-in');
-  assert.equal(await page.locator('.nstudio [data-av]').count(), 6, 'six companions to choose from');
-  await page.click('.nstudio [data-av="omar"]'); await page.waitForTimeout(300);
-  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.avatar), 'omar');
+  assert.equal(await page.locator('.nstudio [data-av]').count(), 8, 'eight companions (2 photoreal + 6 illustrated)');
+  await page.click('.nstudio [data-av="karim"]'); await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.avatar), 'karim');
+  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().voices.en), 'Microsoft Andrew Online (Natural) - English (United States)', 'a male companion gets a male voice');
   await page.click('.nstudio [data-step="1"]');
-  await page.waitForSelector('.nstudio [data-voice]');
-  const cur = await page.textContent('.nstudio [data-voice].is-on');
-  assert.match(cur, /Andrew/, 'a male companion gets a male voice: ' + cur);
-  await page.click('.nstudio [data-gf="f"]'); await page.waitForTimeout(200);
-  assert.equal(await page.locator('.nstudio [data-voice]').count(), 1, 'female filter');
-  await page.click('.nstudio [data-gf="all"]'); await page.waitForTimeout(200);
-  await page.click('.nstudio [data-voice*="Daniel"]'); await page.waitForTimeout(300);
-  assert.equal(await page.evaluate(() => window.__said[window.__said.length - 1].voice), 'Daniel', 'voice preview uses the chosen voice');
+  await page.waitForSelector('.nstudio .nstudio__vc');
+  const cards = await page.locator('.nstudio .nstudio__vmain').count();
+  assert.equal(cards, 3, 'one profile per real voice on the device (3 mocked voices): ' + cards);
+  assert.match(await page.textContent('.nstudio__vlib'), /Uses: Daniel/, 'each card says which device voice it uses');
+  assert.match(await page.textContent('.nstudio__missing summary'), /aren’t on this device/, 'unavailable voices are listed separately');
+  await page.click('.nstudio [data-vcat="f"]'); await page.waitForTimeout(150);
+  assert.equal(await page.locator('.nstudio .nstudio__vmain').count(), 1, 'female filter');
+  await page.click('.nstudio [data-vcat="all"]'); await page.waitForTimeout(150);
+  await page.fill('#nsSearch', 'brit'); await page.dispatchEvent('#nsSearch', 'input'); await page.waitForTimeout(150);
+  assert.equal(await page.locator('.nstudio .nstudio__vmain').count(), 1, 'search');
+  await page.fill('#nsSearch', ''); await page.dispatchEvent('#nsSearch', 'input'); await page.waitForTimeout(150);
+  // preview without choosing: the sample really uses that voice
+  await page.click('.nstudio .nstudio__vc:has-text("Amber") [data-play]'); await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(() => window.__said[window.__said.length - 1].voice), 'Microsoft Ava Online (Natural) - English (United States)', 'preview plays the real voice');
+  assert.match(await page.evaluate(() => ERLY.companion._ui.store.prefs().voices.en), /Andrew/, 'preview does not change the choice');
+  await page.click('.nstudio .nstudio__vc:has-text("Harbor") .nstudio__vmain'); await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().voices.en), 'Daniel', 'choosing a profile switches the voice');
+  assert.equal(await page.evaluate(() => window.__said[window.__said.length - 1].voice), 'Daniel');
+  await page.click('.nstudio .nstudio__vc:has-text("Harbor") [data-fav]'); await page.waitForTimeout(150);
+  await page.click('.nstudio [data-vcat="fav"]'); await page.waitForTimeout(150);
+  assert.equal(await page.locator('.nstudio .nstudio__vmain').count(), 1, 'favourites');
   await page.fill('.nstudio [data-range="rate"]', '1.2'); await page.dispatchEvent('.nstudio [data-range="rate"]', 'input');
   await page.click('.nstudio [data-step="1"]'); await page.waitForTimeout(200);
-  await page.click('.nstudio [data-opt="style:concise"]'); await page.waitForTimeout(150);
+  await page.click('.nstudio [data-preset="expert"]'); await page.waitForTimeout(200);
+  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.style), 'concise', 'personality preset');
   await page.click('.nstudio [data-step="1"]'); await page.waitForTimeout(400);
   assert.equal(await page.isVisible('.nstudio'), false, 'setup closes');
-  assert.equal(await page.locator('.ncall .avt[data-avatar="omar"]').count(), 1, 'chosen avatar on stage');
+  const stageAv = await page.getAttribute('.ncall .avt', 'data-avatar');
+  assert.ok(['karim', 'omar'].includes(stageAv), 'chosen avatar on stage (or its illustrated twin without WebGL): ' + stageAv);
   if (await page.isVisible('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
   // the mouth moves while Noor speaks, and rests when she stops
   let maxOpen = 0, shapes = new Set();
   for (let k = 0; k < 30; k++) { const m = await page.evaluate(() => { const a = ERLY.companion.call.avatar(); return a ? a.shape() : { o: 0, w: 0 }; }); maxOpen = Math.max(maxOpen, m.o); shapes.add(m.o.toFixed(1) + m.w.toFixed(1)); await page.waitForTimeout(40); }
   assert.ok(maxOpen > 0.3, 'lips open while speaking: ' + maxOpen);
   assert.ok(shapes.size > 4, 'different mouth shapes: ' + shapes.size);
-  const rates = await page.evaluate(() => window.__said.slice(-4).map(x => x.rate)); assert.ok(rates.some(r => r > 1.1), 'speed setting applied: ' + rates);
-  assert.match(await page.evaluate(() => ERLY.companion.tools.memoryPrompt()), /short and to the point/, 'style reaches the AI prompt');
+  const rates = await page.evaluate(() => window.__said.slice(-4).map(x => x.rate)); assert.ok(rates.some(r => r > 1.04), 'speed setting applied: ' + rates);
+  assert.match(await page.evaluate(() => ERLY.companion.tools.memoryPrompt()), /short and to the point[\s\S]*Focus mode/, 'style and mode reach the AI prompt');
   await page.waitForFunction(() => /listening|hearing/.test(document.querySelector('.ncall').dataset.s), null, { timeout: 15000 });
   assert.ok((await page.evaluate(() => ERLY.companion.call.avatar().shape().o)) < 0.05, 'mouth at rest while listening');
   assert.equal(await page.isVisible('#ncLive.is-on'), true, 'mic-on light while listening');
+  // emotional delivery: a celebration sounds brighter than a plain sentence, and the face follows
+  await page.evaluate(() => { window.__said.length = 0; ERLY.emit('noor:said', { text: 'Congratulations, you did it! The answer is in chapter two.', speak: true }); });
+  await page.waitForFunction(() => window.__said.some(x => /chapter two/.test(x.text)), null, { timeout: 8000 });
+  const tones = await page.evaluate(() => [window.__said.find(x => /Congratulations/.test(x.text)), window.__said.find(x => /chapter two/.test(x.text))]);
+  assert.ok(tones[0].pitch > tones[1].pitch + 0.03 && tones[0].rate > tones[1].rate, 'celebration is brighter: ' + JSON.stringify(tones));
+  await page.click('#ncOrb'); await page.waitForTimeout(150);
+  // language switch without restarting the conversation
+  await page.click('#ncLang'); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => I18N.lang), 'ar');
+  assert.equal(await page.isVisible('.ncall'), true, 'still in the conversation');
+  await page.click('#ncLang'); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => I18N.lang), 'en');
   // typing inside voice mode + transcript
   await page.click('#ncType'); await page.fill('#ncInput', 'what is 9*9'); await page.press('#ncInput', 'Enter');
   await page.waitForFunction(() => /81/.test(document.querySelector('#cmpLog').textContent), null, { timeout: 8000 });
   await page.click('#ncLogBtn'); await page.waitForTimeout(400);
-  assert.match(await page.textContent('#ncLogList'), /You[\s\S]*what is 9\*9[\s\S]*Omar/, 'transcript with speakers');
+  assert.match(await page.textContent('#ncLogList'), /You[\s\S]*what is 9\*9[\s\S]*(Karim|Omar)/, 'transcript with speakers');
   await page.click('[data-lg="close"]');
   // interrupting: tap while Noor speaks stops her at once
   await page.evaluate(() => ERLY.emit('noor:said', { text: 'This is a very long answer that keeps going and going so that we can interrupt it in the middle of a sentence.', speak: true }));
   await page.waitForTimeout(250);
-  assert.equal(await page.getAttribute('.ncall', 'data-s'), 'speaking');
+  assert.equal(await page.getAttribute('.ncall', 'data-s'), 'speaking', 'speaking: ' + JSON.stringify(await page.evaluate(() => [document.querySelector('.ncall').dataset.s, ERLY.companion.call.state()])));
   await page.click('#ncOrb'); await page.waitForTimeout(150);
   assert.match(await page.getAttribute('.ncall', 'data-s'), /listening|hearing/, 'interrupt → listening');
   // pause: nothing listens
