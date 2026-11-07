@@ -349,3 +349,18 @@ html.erly-big body { zoom: 1.12; }
 .cmem .btn svg { width: 13px; height: 13px; }
 .cmem-ask b svg { width: 16px; height: 16px; vertical-align: -3px; color: #6366F1; }
 @media (prefers-reduced-motion: reduce) { .cwel *, .ccoach__list li { animation: none !important; } }
+
+/* ---------- maths in answers ---------- */
+.md .mth { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", Cambria, "Times New Roman", serif; font-size: 1.06em; white-space: normal; }
+.md .mth--d, .md .mth-b { display: block; margin: 8px 0; padding: 10px 14px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 6%, var(--surface)); border: 1px solid var(--line); overflow-x: auto; text-align: center; line-height: 2; }
+.md .mth-b .mth--d { margin: 0; padding: 0; border: 0; background: none; }
+.md .mf { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 2px; line-height: 1.15; font-size: .92em; }
+.md .mf > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px 1px; }
+.md .mf > span:last-child { padding: 1px 3px 0; }
+.md .mf--b > span:first-child { border-bottom: 0; }
+.md .msq { border-top: 1px solid currentColor; padding: 0 2px; }
+.md .mfn { font-style: normal; }
+.md .mbox { border: 1px solid currentColor; padding: 2px 6px; border-radius: 4px; }
+.md .mover { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1; }
+.md .mover small { font-size: .65em; }
+.md .mth sup, .md .mth sub { font-size: .72em; }

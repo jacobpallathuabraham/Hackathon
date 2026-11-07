@@ -10,12 +10,17 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 
 const MOCKS = () => {
   sessionStorage.setItem('acubins-role', 'student');
-  const synth = { speaking: false, getVoices: () => [], cancel() {}, pause() {}, resume() {}, speak(u) { setTimeout(() => { u.onstart && u.onstart({}); setTimeout(() => u.onend && u.onend({}), 15); }, 5); }, addEventListener() {} };
+  // a voice that reports word boundaries like Chrome/Edge/Safari do (70 ms a word)
+  const VOICES = [['Microsoft Ava Online (Natural) - English (United States)', 'en-US'], ['Microsoft Andrew Online (Natural) - English (United States)', 'en-US'], ['Daniel', 'en-GB']].map(([name, lang]) => ({ name, lang, localService: false, voiceURI: name }));
+  window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+  window.__said = [];
+  const synth = { speaking: false, getVoices: () => VOICES, pause() {}, resume() {}, addEventListener() {}, cancel() { synth.gen = (synth.gen || 0) + 1; },
+    speak(u) { const g = synth.gen; window.__said.push({ text: u.text, voice: u.voice && u.voice.name, rate: u.rate }); setTimeout(() => { if (g !== synth.gen) return; u.onstart && u.onstart({}); let ci = 0; u.text.split(' ').forEach((w, k) => { const at = ci; setTimeout(() => { if (g === synth.gen) u.onboundary && u.onboundary({ name: 'word', charIndex: at }); }, k * 70); ci += w.length + 1; }); setTimeout(() => { if (g === synth.gen) u.onend && u.onend({}); }, u.text.split(' ').length * 70 + 40); }, 5); } };
   Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
   // like Safari: results stay interim, and listening ends only when stop() is called
   window.__recStarts = 0;
   class Rec {
-    start() { window.__recStarts++; setTimeout(() => this.onresult && this.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'what is 6*7' }], { isFinal: false })] }), 60); }
+    start() { window.__recStarts++; if (window.__recDead) return; setTimeout(() => this.onstart && this.onstart(), 10); setTimeout(() => this.onresult && this.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: 'what is 6*7' }], { isFinal: false })] }), 60); }
     stop() { setTimeout(() => this.onend && this.onend(), 20); }
     abort() { this.onend && this.onend(); }
   }
@@ -66,6 +71,56 @@ const MOCKS = () => {
   await page.fill('#cmpText', 'resume where I stopped'); await page.press('#cmpText', 'Enter'); await page.waitForTimeout(1200);
   assert.match(await page.textContent('#cmpLog'), /lab report|enzymes|step/i, 'resume finds the coach plan');
 
+  /* ---------- voice mode: first-time setup, avatar, voice, lip-sync, transcript ---------- */
+  await page.click('#cmpVoice'); await page.waitForSelector('.nstudio.is-in');
+  assert.equal(await page.locator('.nstudio [data-av]').count(), 6, 'six companions to choose from');
+  await page.click('.nstudio [data-av="omar"]'); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.avatar), 'omar');
+  await page.click('.nstudio [data-step="1"]');
+  await page.waitForSelector('.nstudio [data-voice]');
+  const cur = await page.textContent('.nstudio [data-voice].is-on');
+  assert.match(cur, /Andrew/, 'a male companion gets a male voice: ' + cur);
+  await page.click('.nstudio [data-gf="f"]'); await page.waitForTimeout(200);
+  assert.equal(await page.locator('.nstudio [data-voice]').count(), 1, 'female filter');
+  await page.click('.nstudio [data-gf="all"]'); await page.waitForTimeout(200);
+  await page.click('.nstudio [data-voice*="Daniel"]'); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => window.__said[window.__said.length - 1].voice), 'Daniel', 'voice preview uses the chosen voice');
+  await page.fill('.nstudio [data-range="rate"]', '1.2'); await page.dispatchEvent('.nstudio [data-range="rate"]', 'input');
+  await page.click('.nstudio [data-step="1"]'); await page.waitForTimeout(200);
+  await page.click('.nstudio [data-opt="style:concise"]'); await page.waitForTimeout(150);
+  await page.click('.nstudio [data-step="1"]'); await page.waitForTimeout(400);
+  assert.equal(await page.isVisible('.nstudio'), false, 'setup closes');
+  assert.equal(await page.locator('.ncall .avt[data-avatar="omar"]').count(), 1, 'chosen avatar on stage');
+  if (await page.isVisible('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
+  // the mouth moves while Noor speaks, and rests when she stops
+  let maxOpen = 0, shapes = new Set();
+  for (let k = 0; k < 30; k++) { const m = await page.evaluate(() => { const a = ERLY.companion.call.avatar(); return a ? a.shape() : { o: 0, w: 0 }; }); maxOpen = Math.max(maxOpen, m.o); shapes.add(m.o.toFixed(1) + m.w.toFixed(1)); await page.waitForTimeout(40); }
+  assert.ok(maxOpen > 0.3, 'lips open while speaking: ' + maxOpen);
+  assert.ok(shapes.size > 4, 'different mouth shapes: ' + shapes.size);
+  const rates = await page.evaluate(() => window.__said.slice(-4).map(x => x.rate)); assert.ok(rates.some(r => r > 1.1), 'speed setting applied: ' + rates);
+  assert.match(await page.evaluate(() => ERLY.companion.tools.memoryPrompt()), /short and to the point/, 'style reaches the AI prompt');
+  await page.waitForFunction(() => /listening|hearing/.test(document.querySelector('.ncall').dataset.s), null, { timeout: 15000 });
+  assert.ok((await page.evaluate(() => ERLY.companion.call.avatar().shape().o)) < 0.05, 'mouth at rest while listening');
+  assert.equal(await page.isVisible('#ncLive.is-on'), true, 'mic-on light while listening');
+  // typing inside voice mode + transcript
+  await page.click('#ncType'); await page.fill('#ncInput', 'what is 9*9'); await page.press('#ncInput', 'Enter');
+  await page.waitForFunction(() => /81/.test(document.querySelector('#cmpLog').textContent), null, { timeout: 8000 });
+  await page.click('#ncLogBtn'); await page.waitForTimeout(400);
+  assert.match(await page.textContent('#ncLogList'), /You[\s\S]*what is 9\*9[\s\S]*Omar/, 'transcript with speakers');
+  await page.click('[data-lg="close"]');
+  // interrupting: tap while Noor speaks stops her at once
+  await page.evaluate(() => ERLY.emit('noor:said', { text: 'This is a very long answer that keeps going and going so that we can interrupt it in the middle of a sentence.', speak: true }));
+  await page.waitForTimeout(250);
+  assert.equal(await page.getAttribute('.ncall', 'data-s'), 'speaking');
+  await page.click('#ncOrb'); await page.waitForTimeout(150);
+  assert.match(await page.getAttribute('.ncall', 'data-s'), /listening|hearing/, 'interrupt → listening');
+  // pause: nothing listens
+  await page.click('#ncPause'); await page.waitForTimeout(150);
+  assert.equal(await page.getAttribute('.ncall', 'data-s'), 'paused');
+  assert.equal(await page.isVisible('#ncLive.is-on'), false, 'mic light off when paused');
+  await page.click('#ncPause'); await page.waitForTimeout(150);
+  await page.click('#ncEnd'); await page.waitForTimeout(500);
+
   // navigation tool
   await page.fill('#cmpText', 'take me to the daily quest'); await page.press('#cmpText', 'Enter');
   await page.waitForURL(/checkins\.html/, { timeout: 8000 });
@@ -78,16 +133,22 @@ const MOCKS = () => {
   await ipad.goto(BASE + 'student.html'); await ipad.waitForTimeout(600);
   await ipad.click('.cmp-launch'); await ipad.waitForTimeout(1200);
   await ipad.click('.cwel__grid [data-q="voice"]'); await ipad.waitForTimeout(400);
+  if (await ipad.isVisible('[data-setup="skip"]')) await ipad.click('[data-setup="skip"]');
   if (await ipad.isVisible('#ncConsent [data-c="yes"]')) await ipad.click('#ncConsent [data-c="yes"]');
-  await ipad.waitForTimeout(1500);
-  assert.equal(await ipad.getAttribute('.ncall', 'data-s'), 'idle', 'waits for a tap instead of auto-listening');
-  assert.equal(await ipad.evaluate(() => window.__recStarts), 0, 'microphone not started without a tap');
-  assert.match(await ipad.textContent('#ncState'), /Tap Noor to talk/);
-  await ipad.click('#ncOrb'); await ipad.waitForTimeout(300);
-  assert.equal(await ipad.getAttribute('.ncall', 'data-s'), 'listening');
+  await ipad.waitForTimeout(1800);
+  // the "Allow" tap lets Safari start the microphone straight after the greeting — no extra tap
+  await ipad.waitForFunction(() => /listening|hearing/.test(document.querySelector('.ncall').dataset.s), null, { timeout: 10000 }); // hands-free after the Allow tap
+  await ipad.waitForTimeout(200);
   assert.match(await ipad.textContent('#ncYou'), /what is 6\*7/, 'live transcript');
   await ipad.click('#ncOrb'); await ipad.waitForTimeout(1500);
-  assert.match(await ipad.textContent('#cmpLog'), /= 42/, 'second tap sends what was heard');
+  assert.match(await ipad.textContent('#cmpLog'), /= 42/, 'tap sends what was heard');
+  // if Safari refuses to start the mic without a tap, Noor falls back to tap-to-talk
+  await ipad.evaluate(() => { window.__recDead = true; });
+  await ipad.waitForFunction(() => document.querySelector('.ncall').dataset.s === 'idle', null, { timeout: 12000 });
+  assert.match(await ipad.textContent('#ncState'), /Tap to talk/);
+  await ipad.evaluate(() => { window.__recDead = false; });
+  await ipad.click('#ncOrb'); await ipad.waitForTimeout(300);
+  assert.match(await ipad.getAttribute('.ncall', 'data-s'), /listening|hearing/, 'tap starts listening');
 
   await browser.close();
   assert.deepEqual(errors, [], 'no page errors');

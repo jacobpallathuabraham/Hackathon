@@ -288,3 +288,31 @@ Voice: recognition now keeps what Safari heard even when it never marks it final
 - **No unnecessary disclaimers**: Noor no longer says she's "not a doctor" or suggests tests unless the student asks. She still never diagnoses, and the safety filter and crisis card are unchanged.
 - **iPad / Safari voice**: iOS only starts the microphone from a tap, so voice mode there is tap-to-talk. Tap Noor to talk, then tap her again to send. The live transcript shows while you speak. If Siri and Dictation are switched off, Noor says how to turn them on. On other browsers it stays hands-free, and tapping while listening sends early.
 - Tested in `tests/e2e/noor-tools.e2e.js` (with an iPad user agent and Safari-like speech recognition mocked). It has not yet been checked on a real iPad.
+
+## Voice v4: avatars, lip-sync, voice studio, continuous conversation
+
+- **Maths in answers** (`md.js`): LaTeX from the AI (`\( \)`, `\[ \]`, `$ $`, `$$ $$`, including `\frac`, `\sqrt`, powers, subscripts, arrows, Greek letters and `\ce{}` chemistry) now renders as readable, escaped HTML, and is read aloud in words ("x squared"). Numbered lists keep their numbers across blank lines and formulas. Before this, it showed as raw `\text{…}`, and every item was numbered "1."
+- **Avatars** (`assets/js/companion/avatar.js`): six original companions, all illustrated as SVG: Noor, Omar, Layla, Adam, Sara, and Aura (an abstract light). They are labelled on screen as AI and virtual, not real people. Each one breathes, blinks (sometimes twice), makes small eye movements and head motions, tilts its head and nods while you talk, looks up while thinking, and changes expression. Reduced-motion settings turn off the head and eye movement.
+- **Lip-sync** (`assets/js/companion/lipsync.js`): browser voices don't give their audio or phonemes to the page, so:
+  - each word becomes a sequence of mouth shapes (13 shapes, using letter-to-sound rules for English and Arabic);
+  - each word is re-anchored to the voice's own word-boundary events (Chrome, Edge, Safari), so the mouth doesn't drift, whatever the speed, voice or pauses;
+  - word length is calibrated continuously from the real timing;
+  - the mouth rests at commas and full stops, and when speech ends or is interrupted;
+  - voices without boundary events are timed from the speech rate. This is less exact.
+  It is close word-level sync, not phoneme-perfect. That would need a TTS service that returns visemes (for example Azure Speech), which needs a key and a backend.
+- **Voice studio and first-time setup** (in `call.js`): setup has three steps: avatar (preview with a spoken hello), voice, and conversation. You can change everything later from the ⋯ button.
+  - Voices are the real voices on the device, with female/male filters and a preview for each. ★ marks natural voices. Choosing a male avatar picks a male voice.
+  - Speed, pitch and volume sliders, and English or Arabic.
+  - Explanation style (concise, conversational, detailed, step by step) and personality (7 tones). These go into the AI prompt and change style only, never facts or safety rules.
+  - End-of-turn pause, hands-free, interrupt by talking, captions, caption size, high contrast, and reset.
+- **Conversation**:
+  - Hands-free turn-taking: Noor listens again after she answers.
+  - A red "Mic on" light while listening. Mute, pause, end, replay and type are always on screen.
+  - Live partial transcript, then "Got it…" and "Thinking…". If an answer takes more than 40 s, Noor says so instead of waiting forever.
+  - Interrupt by tapping, pressing Space, or talking. Talking is detected from the mic level against the echo of Noor's voice. The half-written answer is cancelled and old audio never overlaps new audio.
+  - Voice commands: "slow down", "speed up", "louder", "repeat that", "stop", "pause", "bye".
+  - A transcript with speakers and times: copy, download (.txt), clear, and edit-and-resend.
+  - Typing works inside voice mode.
+  - Offline, reconnecting, mic-blocked, no-mic and Siri-off states each have a clear message.
+- **iPad**: the "Allow microphone" tap lets Safari start listening right after the greeting. If Safari then refuses to restart the microphone on its own, Noor switches to "Tap to talk" automatically.
+- Tested by `tests/e2e/noor-tools.e2e.js` (mocked speech: setup, voice choice, speed, lip shapes and rest, interrupt, pause, transcript, iPad fallback) and `tests/unit/lipsync-md.test.js`. **Not yet checked on a real iPad or with real voices by ear.**

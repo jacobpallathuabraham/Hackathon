@@ -48,6 +48,7 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 
   // two-way voice: Noor speaks, listens, answers what was heard
   await page.click('#cmpCall'); await page.waitForTimeout(600);
+  if (await page.$('[data-setup="skip"]')) await page.click('[data-setup="skip"]');
   if (await page.$('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
   await page.waitForTimeout(4000);
   assert.match(await page.textContent('#cmpLog'), /I always have to re-read things/);

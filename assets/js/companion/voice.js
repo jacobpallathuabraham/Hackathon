@@ -35,6 +35,18 @@
   // the warmest voices we know of, best first (Edge/Windows, Chrome, Apple)
   const FAVOURITES = [/Ava.*(Multilingual|Natural)/i, /Emma.*(Multilingual|Natural)/i, /Jenny.*Natural/i, /Aria.*Natural/i, /Sonia.*Natural/i, /Libby.*Natural/i, /Google UK English Female/i, /Google US English/i, /Ava.*(Premium|Enhanced)/i, /Zoe.*(Premium|Enhanced)/i, /Serena.*(Premium|Enhanced)/i, /Samantha.*(Premium|Enhanced)/i, /Kate.*(Premium|Enhanced)/i, /Siri/i, /^Samantha$/i, /^Karen$/i, /^Moira$/i, /^Tessa$/i];
   const ARABIC = [/Salma|Zariyah|Fatima|Hala|Amina|Laila.*Natural/i, /Maged|Tarik|Hamed/i, /Google.*(عربي|Arabic)/i, /Majed|Laila/i];
+  // Voices don't report gender, so it is guessed from well-known voice names.
+  const FEMALE = /female|woman|\b(ava|emma|jenny|aria|sonia|libby|michelle|samantha|karen|moira|tessa|serena|zoe|allison|susan|victoria|fiona|kate|catherine|hazel|heera|zira|ana|clara|natasha|nancy|sara|sarah|elsa|isabella|olivia|amy|joanna|kimberly|salli|ivy|kendra|nicole|veena|lekha|rishi?a|salma|zariyah|fatima|hala|amina|laila|mariam|layla|nora|noura|yara|maryam|shakira|jane|joan|kathy|vicki|princess|agnes|alice|amelie|anna|ellen|ioana|joana|kyoko|lana|laura|luciana|mei-?jia|melina|milena|monica|nora|paulina|satu|sin-?ji|ting-?ting|yelda|yuna|zuzana|flo|grandma|sandy|shelley|aoife|neerja|molly|maisie|abbi|bella|hollie|elizabeth|jacqueline|ashley|cora|elena|jessa|sonia)\b/i;
+  const MALE = /\bmale\b|\bman\b|\b(guy|ryan|davis|andrew|brian|christopher|eric|roger|steffan|thomas|daniel|alex|fred|arthur|oliver|aaron|evan|nathan|tom|rishi|hamed|maged|tarik|majed|shakir|omar|george|james|david|mark|matthew|justin|joey|russell|lee|gordon|rocko|reed|eddy|grandpa|ralph|albert|junior|diego|jorge|juan|luca|thomas|xander|yuri|aditya|prabhat|liam|william|jason|tony|ethan|noah|elliot|alfie|ollie|connor|duncan|kenny|kai|brandon|steffan|tariq)\b/i;
+  function gender(v) {
+    const n = (v && v.name) || '';
+    if (/\bfemale\b/i.test(n)) return 'f';
+    if (/\bmale\b/i.test(n)) return 'm';
+    if (FEMALE.test(n)) return 'f';
+    if (MALE.test(n)) return 'm';
+    if (/Google (US|UK) English/i.test(n)) return 'f';
+    return '';
+  }
   function rank(v, lang) {
     const list = lang === 'ar' ? ARABIC : FAVOURITES;
     const i = list.findIndex(re => re.test(v.name || ''));
@@ -78,6 +90,8 @@
     const Rec = env.Recognition !== undefined ? env.Recognition : (typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition || null) : null);
     const getConsent = env.getConsent || (() => false);
     const getVoiceName = env.getVoiceName || (() => '');
+    // the student's voice settings: speed, pitch, volume, preferred gender
+    const getSettings = env.getSettings || (() => ({}));
     const state = { queue: [], idx: 0, speaking: false, paused: false, lastText: '', lang: 'en', rec: null, listening: false, onState: env.onState || (() => {}) };
     const set = (k, v) => { state[k] = v; state.onState(snapshot()); };
     const snapshot = () => ({ speaking: state.speaking, paused: state.paused, listening: state.listening });
@@ -88,8 +102,8 @@
       return synth.getVoices().filter(v => want.test(v.lang)).sort((a, b) => rank(b, lang) - rank(a, lang));
     }
     function pickVoice(lang) {
-      const vs = voices(lang), name = getVoiceName(lang);
-      return (name && vs.find(v => v.name === name)) || vs[0] || null;
+      const vs = voices(lang), name = getVoiceName(lang), g = getSettings().gender;
+      return (name && vs.find(v => v.name === name)) || (g && vs.find(v => gender(v) === g)) || vs[0] || null;
     }
     let token = 0, gapT = null;
     function speakFrom(i, opts) {
@@ -107,19 +121,21 @@
       // gentle, human-like prosody: a relaxed pace, tiny variation between
       // phrases, a slightly slower phrase end and a small lift on questions
       const nat = v && isNatural(v);
-      const baseRate = opts.rate || (nat ? 1.02 : 0.97), basePitch = opts.pitch || 1.0;
+      const cfg = getSettings();
+      const baseRate = (opts.rate || (nat ? 1.02 : 0.97)) * (cfg.rate || 1), basePitch = (opts.pitch || 1.0) * (cfg.pitch || 1);
       u.rate = baseRate - (item.last ? 0.02 : 0);
       u.pitch = basePitch + (item.question && item.last ? 0.05 : 0);
-      u.volume = 1;
+      u.volume = cfg.volume != null ? Math.max(0, Math.min(1, cfg.volume)) : 1;
       // some browsers (Safari especially) occasionally never fire onend: move on anyway
       clearTimeout(state.watch);
       state.watch = setTimeout(() => { if (my === token && state.speaking && !state.paused) { try { synth.cancel(); } catch (e) { /* ignore */ } u.onend(); } }, 2500 + item.text.split(/\s+/).length * 520 / baseRate);
-      u.onstart = () => { if (my === token) { set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); } };
-      u.onboundary = e => { if (my === token && opts.onboundary) opts.onboundary(e); };
+      u.onstart = () => { if (my === token) { set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); phraseHook('start', item.text, u.rate, v); } };
+      u.onboundary = e => { if (my !== token) return; if (opts.onboundary) opts.onboundary(e); if (!e || e.name === 'word' || e.name == null) phraseHook('boundary', e ? e.charIndex : 0); };
       u.onend = () => {
         if (my !== token) return;
         clearTimeout(state.watch);
         if (u.done) return; u.done = true;
+        phraseHook('end');
         const next = state.queue[i + 1];
         const gap = !next ? 0 : next.sentence !== item.sentence ? 260 + Math.random() * 140 : 90 + Math.random() * 80;
         const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
@@ -129,6 +145,9 @@
       synth.speak(u);
       if (synth.paused && !state.paused && synth.resume) synth.resume();
     }
+    // lets an avatar follow each spoken phrase (lip-sync)
+    const hooks = new Set();
+    function phraseHook(type, a, b, c) { hooks.forEach(f => { try { f(type, a, b, c); } catch (e) { /* ignore */ } }); }
     let lastOpts = {};
     const api = {
       supported: { tts: !!(synth && Utter), stt: !!Rec },
@@ -144,8 +163,9 @@
       },
       voices,
       voiceFor: lang => pickVoice(lang),
-      stop() { token++; clearTimeout(gapT); state.queue = []; state.paused = false; if (synth) synth.cancel(); set('speaking', false); },
-      pause() { if (!state.speaking) return; state.paused = true; if (synth && synth.pause) synth.pause(); set('paused', true); },
+      onPhrase(f) { hooks.add(f); return () => hooks.delete(f); },
+      stop() { token++; clearTimeout(gapT); clearTimeout(state.watch); state.queue = []; state.paused = false; if (synth) synth.cancel(); phraseHook('end'); set('speaking', false); },
+      pause() { if (!state.speaking) return; state.paused = true; if (synth && synth.pause) synth.pause(); phraseHook('end'); set('paused', true); },
       resume() {
         if (!state.paused) return;
         state.paused = false;
@@ -183,9 +203,11 @@
           const text = (final + ' ' + interim).replace(/\s+/g, ' ').trim();
           opts.onresult && opts.onresult(text, !interim);
           // end of turn: ~1.1 s without new words (Safari never decides on its own)
-          clearTimeout(quietT); quietT = setTimeout(finish, interim ? 1300 : 700);
+          const q = opts.quietMs || 1100;
+          clearTimeout(quietT); quietT = setTimeout(finish, interim ? q + 200 : Math.max(500, q - 400));
         };
         r.onspeechstart = () => { opts.onspeech && opts.onspeech(); };
+        r.onstart = r.onaudiostart = () => { if (!r.began) { r.began = true; opts.onstart && opts.onstart(); } };
         r.onerror = e => { const code = e && e.error || 'error'; if (code === 'aborted') return; opts.onerror && opts.onerror(code); };
         const guard = setTimeout(finish, opts.maxMs || 20000); // never listen indefinitely
         const noStart = setTimeout(() => { if (!heard) finish(); }, opts.waitMs || 9000); // nobody spoke
@@ -205,5 +227,5 @@
     };
     return api;
   }
-  return { create, naturalScore, isNatural, humanize, phrases };
+  return { create, naturalScore, isNatural, humanize, phrases, gender };
 });

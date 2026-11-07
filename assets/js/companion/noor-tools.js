@@ -34,12 +34,25 @@
   const saveMem = () => { mem.at = Date.now(); try { localStorage.setItem(MKEY, JSON.stringify(mem)); } catch (e) { /* ignore */ } };
   const LEVEL = { simple: ['simple, step-by-step explanations with everyday examples', 'شرح بسيط خطوة بخطوة مع أمثلة يومية'], standard: ['clear, balanced explanations', 'شرح واضح ومتوازن'], detailed: ['detailed, in-depth explanations', 'شرح مفصّل ومعمّق'] };
   const LIKE_NAME = { tts: ['read-aloud', 'القراءة الصوتية'], focus: ['line focus', 'تركيز السطر'], spacing: ['extra spacing', 'تباعد إضافي'], bigger: ['bigger text', 'نص أكبر'], calm: ['calm reading layout', 'تنسيق قراءة هادئ'], summary: ['short summaries', 'ملخصات قصيرة'], terms: ['key-word meanings', 'معاني الكلمات'], quiz: ['quick quizzes', 'اختبارات سريعة'], break: ['short breaks', 'استراحات قصيرة'], tint: ['a tinted page', 'صفحة ملونة'], font: ['a reading-friendly font', 'خط مريح'], diagram: ['diagram walk-throughs', 'شرح الرسوم'] };
+  // the student's chosen explanation style and personality (Voice settings) — style only, never facts or safety
+  const STYLE_P = { concise: 'Keep answers short and to the point.', conversational: 'Be natural and conversational.', detailed: 'Give thorough, detailed explanations with examples.', steps: 'Explain things step by step, one numbered step at a time.' };
+  const TONE_P = { friendly: 'friendly and natural', calm: 'calm and reassuring', professional: 'professional', energetic: 'upbeat and energetic', educational: 'clear and educational, like a great tutor', warm: 'warm and chatty', direct: 'concise and direct' };
+  function stylePrompt() {
+    const vs = (U.store.prefs && U.store.prefs().vs) || {};
+    const bits = [];
+    if (vs.style && STYLE_P[vs.style]) bits.push(STYLE_P[vs.style]);
+    if (vs.tone && TONE_P[vs.tone]) bits.push(`Your tone: ${TONE_P[vs.tone]}.`);
+    if (C.inCall) bits.push('Speak naturally, as in a real conversation: vary your phrasing, no formatting, numbers and formulas in words. If the student corrects you or says you misunderstood, acknowledge it briefly and fix it. If you are not sure, say so.' + (vs.style === 'detailed' || vs.style === 'steps' ? ' Up to 5 short sentences is fine.' : ''));
+    if (vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}" — answer to that name too (you are still the same AI).`); }
+    return bits.length ? `Student's chosen style: ${bits.join(' ')}` : '';
+  }
   function memoryPrompt() {
-    if (mem.consent !== true) return '';
+    const sp = stylePrompt();
+    if (mem.consent !== true) return sp;
     const bits = [`prefers ${LEVEL[mem.level][0]}`];
     const likes = mem.likes.map(k => (LIKE_NAME[k] || [k])[0]);
     if (likes.length) bits.push(`finds these helpful: ${likes.join(', ')}`);
-    return `Remembered with the student's consent: ${bits.join('; ')}. Adapt to this without mentioning it unless asked.`;
+    return `Remembered with the student's consent: ${bits.join('; ')}. Adapt to this without mentioning it unless asked.` + (sp ? '\n' + sp : '');
   }
   let pendingMem = null;
   function remember(kind, value) {
