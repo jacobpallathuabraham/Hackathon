@@ -242,7 +242,7 @@ Noor is now available on the whole student site, not only in the Reading Studio.
   - Events are kept in memory for about a minute and never stored or sent. Check-ins stop if the student says no to noticing or taps "Turn these off".
   - There is at most one every 45 seconds, and each kind at most every 3 minutes. "I'm fine" silences that kind for the session.
 
-Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{studio-noor,companion,noor,realtrack,handwriting,growth,quest}.e2e.js`. The AI model is mocked in `studio-noor.e2e.js` (no GPU in CI); the real WebLLM download needs a WebGPU browser.
+Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{studio-noor,companion,noor,noor-tools,realtrack,handwriting,growth,quest}.e2e.js`. The AI model is mocked in `studio-noor.e2e.js` (no GPU in CI); the real WebLLM download needs a WebGPU browser.
 
 Honest limits: no website can identify a condition with clinical accuracy. These features look for converging evidence and support a referral. Only a qualified assessment can confirm a learning difference. The reference ranges in the check-ins are demo values.
 
@@ -273,3 +273,18 @@ The free "Noor Online" service allows only about one message every 30 seconds, s
 4. In Noor's brain picker the student agrees to "Noor Online", which is now Claude: streamed answers, no 30-second limit.
 
 Voice: recognition now keeps what Safari heard even when it never marks it final, ends the turn after about a second of silence, doesn't fight the microphone on iPad/Safari, and Noor's voice is chosen from the most natural voices on the device (Edge "Natural", Google, Apple Premium/Enhanced/Siri).
+
+## Noor v3: tools, study coach, memory and iPad voice
+
+- **Bigger panel and a new welcome screen** (`ui.js`, `noor.css`): the panel is wider, opens with a spring animation, and the chat starts with "Hi, I’m Noor" and six quick actions (live voice, ask your PDF, study coach, resume, explain anything, exam plan).
+- **No more flicker**: streamed answers are repainted at most every 80 ms, list animations are paused while Noor writes, and the chat only follows the answer when you're already at the bottom.
+- **Tools** (`assets/js/companion/noor-tools.js`). A small "Used: …" line shows which tool ran.
+  - **Calculator**: exact maths, so the model never guesses a number.
+  - **Ask your PDF**: when a reading is open, "explain this paragraph", "summarise this chapter", "define the difficult words" or "make it simpler" uses that paragraph or the whole reading, which only goes to the AI brain the student already agreed to.
+  - **Study coach**: "break down my lab report into steps" makes an interactive checklist with minutes per step, a progress bar and a timer for the next step. With an AI brain the steps are written for that assignment; without one, they come from a template for the task type.
+  - **Resume**: "resume where I stopped" brings back the last reading position and the unfinished coach plan.
+  - **Navigation**: "take me to the daily quest", "open my profile", and so on.
+- **Memory, with consent**: the first time Noor notices a preference ("simpler please", "more detail") she asks before keeping it. Only the explanation level and the tools that helped are kept, on this device (`erly-noor-memory-v1`). Students can see, change or delete them under Profile → Noor's memory.
+- **No unnecessary disclaimers**: Noor no longer says she's "not a doctor" or suggests tests unless the student asks. She still never diagnoses, and the safety filter and crisis card are unchanged.
+- **iPad / Safari voice**: iOS only starts the microphone from a tap, so voice mode there is tap-to-talk. Tap Noor to talk, then tap her again to send. The live transcript shows while you speak. If Siri and Dictation are switched off, Noor says how to turn them on. On other browsers it stays hands-free, and tapping while listening sends early.
+- Tested in `tests/e2e/noor-tools.e2e.js` (with an iPad user agent and Safari-like speech recognition mocked). It has not yet been checked on a real iPad.

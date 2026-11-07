@@ -52,7 +52,7 @@
     const asp = ASP_N[a.aspect] || ['', ''];
     const tp = a.topic && K.topicById(a.topic);
     const head = tp && asp[0] ? `<span class="kb-tag">${ICON('book')} ${esc(pick(...tp.title).split(' (')[0])}${a.compared ? ' · ' + esc(pick(...K.topicById(a.compared[1]).title).split(' (')[0]) : ''} <i>${esc(pick(...asp))}</i></span>` : '';
-    const foot = a.kind === 'answer' && tp ? `<div class="kb-foot"><small>${ICON('shield')} ${T('From ERLY’s guide · general information, not a diagnosis', 'من دليل إيرلي · معلومات عامة لا تشخيص')}</small><span class="kb-fb" data-kb="${esc(a.topic)}:${esc(a.aspect)}"><button data-fb="up" aria-label="${T('Helpful', 'مفيد')}">${ICON('thumbUp')}</button><button data-fb="down" aria-label="${T('Not helpful', 'غير مفيد')}">${ICON('thumbDown')}</button><button data-fb="copy" aria-label="${T('Copy', 'نسخ')}">${ICON('copy')}</button></span></div>` : '';
+    const foot = a.kind === 'answer' && tp ? `<div class="kb-foot"><small>${ICON('shield')} ${T('From ERLY’s guide', 'من دليل إيرلي')}</small><span class="kb-fb" data-kb="${esc(a.topic)}:${esc(a.aspect)}"><button data-fb="up" aria-label="${T('Helpful', 'مفيد')}">${ICON('thumbUp')}</button><button data-fb="down" aria-label="${T('Not helpful', 'غير مفيد')}">${ICON('thumbDown')}</button><button data-fb="copy" aria-label="${T('Copy', 'نسخ')}">${ICON('copy')}</button></span></div>` : '';
     return aiSays(a.en, a.ar, { html: head + richHTML(pick(a.en, a.ar)) + foot, stream: true });
   }
   document.addEventListener('click', e => {
@@ -81,7 +81,17 @@
     clearChips();
     const a = K.answer(text, lang(), kctx);
     if (a.kind === 'crisis') { history.push({ role: 'user', text }); return crisis(); }
-    if (U.ai && U.ai.ready() && MD && AIX) { if (await aiReply(text, a)) return; }
+    // tools first: navigation, resume, study coach, exact maths, the open PDF
+    const tr = C.tools ? await C.tools.route(text) : null;
+    if (tr && tr.done) { history.push({ role: 'user', text }); return; }
+    if (tr && tr.math) {
+      C.tools.trace(['Calculator']);
+      history.push({ role: 'user', text });
+      await mdSay(`**${tr.math.show} = ${tr.math.value}**`, `**${tr.math.show} = ${tr.math.value}**`, { tag: T('Calculator', 'الآلة الحاسبة') });
+      history.push({ role: 'assistant', text: tr.math.value }); ERLY.emit('noor:turn-end'); return;
+    }
+    if (U.ai && U.ai.ready() && MD && AIX) { if (await aiReply(text, a, tr)) return; }
+    if (tr && tr.pdf) { history.push({ role: 'user', text }); await C.tools.pdfLocal(tr); return offerChips([{ id: 'brain', en: 'Explain it with AI', ar: 'اشرحيها بالذكاء الاصطناعي' }, { id: 'fu:quiz', en: 'Quiz me on this page', ar: 'اختبريني في هذه الصفحة' }]); }
     history.push({ role: 'user', text });
     if (await skill(text)) return;
     remember(a);
@@ -132,12 +142,13 @@
 
   // stream an answer from the AI brain into a new chat bubble
   const READING_Q = /\b(this|the) (page|paragraph|passage|reading|section|text|chapter|diagram|figure|pdf|article)\b|هذه الصفحة|هذا النص|هذه القراءة|هذا المقطع/i;
-  async function aiReply(text, a) {
+  async function aiReply(text, a, tr) {
     const ai = U.ai, voiceMode = !!C.inCall;
     const R = ERLY.reader;
-    const reading = U.attached() || (R && R.isOpen() && READING_Q.test(text) ? R.contextFor() : null);
-    const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) ? K.context(text, lang()) : '';
-    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb });
+    const reading = (tr && tr.reading) || U.attached() || (R && R.isOpen() && READING_Q.test(text) ? R.contextFor() : null);
+    const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) || /\b(erly|noor|sas|support pact|reading studio|growth plan|check-?ins?|daily quest|start-?ramp|insight|signals?)\b/i.test(text) ? K.context(text, lang()) : '';
+    if (tr && tr.tools) C.tools.trace(tr.tools);
+    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '' });
     history.push({ role: 'user', text });
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';
@@ -147,7 +158,16 @@
     U.setStatus('thinking'); U.setBusy(true);
     let stopped = false, spoken = 0, raf = 0, latest = '', busyT = null;
     U.setGenerating({ stop: () => { stopped = true; ai.stop(); } });
-    const paint = () => { raf = 0; body.innerHTML = MD.render(latest) + '<span class="ccaret" aria-hidden="true"></span>'; U.scrollLog(); };
+    // repaint at most ~12 times a second; animations are off while writing, so nothing blinks
+    let lastPaint = 0;
+    const paint = () => {
+      raf = 0;
+      const now = performance.now();
+      if (now - lastPaint < 80) { raf = requestAnimationFrame(paint); return; }
+      lastPaint = now;
+      body.innerHTML = MD.render(latest) + '<span class="ccaret" aria-hidden="true"></span>';
+      U.scrollLog(true);
+    };
     const speakPart = t => {
       if (!C.inCall) return;
       const sub = t.slice(spoken), r = AIX.takeSentences(sub);
@@ -360,7 +380,7 @@
     iv = IV.create(area, { objective: objectiveFor(area) });
     U.renderConvBar();
     const s = IV.start(iv);
-    await say(s.intro[0], s.intro[1], { html: `<span class="civ-badge">${ICON('stetho')} ${T('Talk-it-through', 'لنتحدث عنه')} · ${esc(pick(...IV.MODULES[area].name).split(' (')[0])}</span><p>${esc(pick(...s.intro))}</p><small class="muted">${T('I’m not a doctor and this isn’t a test you can fail — it just helps work out whether a proper assessment would be worth it. Say “skip” or “stop” any time.', 'لست طبيبة وهذا ليس اختباراً ترسب فيه — إنه يساعد فقط على معرفة إن كان التقييم الحقيقي يستحق. قل «تخطٍّ» أو «توقف» في أي وقت.')}</small>`, sayText: pick(...s.intro) });
+    await say(s.intro[0], s.intro[1], { html: `<span class="civ-badge">${ICON('stetho')} ${T('Talk-it-through', 'لنتحدث عنه')} · ${esc(pick(...IV.MODULES[area].name).split(' (')[0])}</span><p>${esc(pick(...s.intro))}</p><small class="muted">${T('There are no right or wrong answers. Say “skip” or “stop” any time.', 'لا توجد إجابات صحيحة أو خاطئة. قل «تخطٍّ» أو «توقف» في أي وقت.')}</small>`, sayText: pick(...s.intro) });
     ask(s.question);
   }
   async function ask(q, prefix) {

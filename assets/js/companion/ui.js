@@ -49,6 +49,7 @@
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
   const lab = { lang: lang(), variant: 'default', ratings: {} };
   const brain = () => ERLY.companion && ERLY.companion.brain;
+  const C = () => ERLY.companion || {};
   const avail = () => Object.assign({}, R.availability);
 
   /* ---------------- DOM ---------------- */
@@ -85,7 +86,7 @@
     panel.innerHTML = `
       <header class="cmp__head">
         ${orb('cmp-orb--lg')}
-        <div class="cmp__title"><b>Noor</b><small>${T('AI study companion · not a doctor', 'رفيقة دراسة ذكية · ليست طبيبة')}</small><button type="button" class="cmp__mode" id="cmpMode" aria-haspopup="dialog" title="${T('Choose Noor’s brain', 'اختر عقل نور')}">${modeHTML()}</button></div>
+        <div class="cmp__title"><b>Noor</b><small>${T('Your AI study companion', 'رفيقتك الذكية في الدراسة')}</small><button type="button" class="cmp__mode" id="cmpMode" aria-haspopup="dialog" title="${T('Choose Noor’s brain', 'اختر عقل نور')}">${modeHTML()}</button></div>
         <span class="cmp__status" id="cmpStatus" data-s="idle"><i></i><span></span></span>
         <button class="icon-btn cmp__x cmp__wide" id="cmpWide" type="button" aria-pressed="false" aria-label="${T('Expand chat', 'توسيع المحادثة')}" title="${T('Expand', 'توسيع')}">${ICON('expand')}</button>
         <button class="icon-btn cmp__x cmp__call" id="cmpCall" type="button" aria-label="${T('Talk to Noor by voice', 'تحدث مع نور بالصوت')}" title="${T('Talk to Noor by voice', 'تحدث مع نور بالصوت')}">${ICON('headphones')}</button>
@@ -270,7 +271,7 @@
       panel.hidden = false;
       launch.setAttribute('aria-expanded', 'true');
       document.documentElement.classList.add('cmp-on');
-      requestAnimationFrame(() => panel.classList.add('is-in'));
+      panel.classList.remove('is-out'); requestAnimationFrame(() => panel.classList.add('is-in'));
       if (!$('#cmpLog').children.length) greeting = greet();
       if (ai && !ai.ready() && ai.state().status === 'idle' && !openPanel.resumed) { openPanel.resumed = true; ai.resume(); }
     }
@@ -280,10 +281,10 @@
   function closePanel() {
     if (panel.hidden) return;
     voice.abortListening();
-    panel.classList.remove('is-in');
+    panel.classList.remove('is-in'); panel.classList.add('is-out');
     launch.setAttribute('aria-expanded', 'false');
     document.documentElement.classList.remove('cmp-on');
-    setTimeout(() => { if (!panel.classList.contains('is-in')) panel.hidden = true; }, reduce ? 0 : 260);
+    setTimeout(() => { panel.classList.remove('is-out'); if (!panel.classList.contains('is-in')) panel.hidden = true; }, reduce ? 0 : 300);
     launch.focus({ preventScroll: true });
   }
   function setTab(t) {
@@ -295,7 +296,7 @@
     if (t === 'signals') renderSignals();
     if (t === 'lab') renderLab();
     if (t === 'summary') renderSummary();
-    if (t === 'profile' && brain()) brain().renderProfile($('#cmpP-profile'));
+    if (t === 'profile' && brain()) { brain().renderProfile($('#cmpP-profile')); C().tools && C().tools.renderMemory($('#cmpP-profile')); }
   }
 
   function bindShell() {
@@ -428,7 +429,12 @@
     scrollLog();
     return m;
   }
-  function scrollLog() { const l = $('#cmpLog'); l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' }); }
+  // follow new content only while the reader is at the bottom; jump (not glide) while text streams in
+  function scrollLog(instant) {
+    const l = $('#cmpLog'); if (!l) return;
+    if (instant) { if (l.scrollHeight - l.scrollTop - l.clientHeight < 140) l.scrollTop = l.scrollHeight; return; }
+    l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
+  }
   async function aiSays(en, ar, o = {}) {
     const typing = document.createElement('div');
     typing.className = 'cmsg cmsg--ai cmsg--typing';
@@ -482,14 +488,32 @@
   }
   function clearChips() { $$('#cmpLog .cchips').forEach(x => x.remove()); }
 
+  // the welcome screen: who Noor is and six starting points
+  const QA = [
+    ['voice', 'wave', 'Live voice conversation', 'محادثة صوتية مباشرة', 'Talk naturally — interrupt any time', 'تحدث بطبيعية — قاطع متى شئت'],
+    ['pdf', 'book', 'Ask your PDF', 'اسأل ملفك', 'Explain, summarise, define, simplify', 'اشرح، لخّص، عرّف، بسّط'],
+    ['coach', 'target', 'Study coach', 'مدرب المذاكرة', 'Turn an assignment into small steps', 'حوّل الواجب إلى خطوات صغيرة'],
+    ['resume', 'reset', 'Resume where I stopped', 'أكمل من حيث توقفت', 'Your last reading and plan', 'آخر قراءة وخطة'],
+    ['explain', 'sparkle', 'Explain anything', 'اشرح أي شيء', 'Any subject, step by step', 'أي مادة، خطوة بخطوة'],
+    ['plan', 'calendar', 'Exam study plan', 'خطة مذاكرة للامتحان', 'A day-by-day plan', 'خطة يوماً بيوم']
+  ];
   function greet() {
     const first = !store.asked('monitoring');
     const smart = ai && ai.ready();
-    return aiSays(
-      'Hi, I’m Noor — your AI study companion. Ask me anything: explain a topic, plan your revision, quiz you on a reading, help with an email, or just talk about what feels hard. Tap the wave button to talk to me by voice. I’m not a doctor, so I never diagnose — but I can help you work out what support might help.',
-      'أهلاً، أنا نور — رفيقتك الذكية في الدراسة. اسألني أي شيء: شرح موضوع، أو خطة مراجعة، أو اختبار على قراءة، أو مساعدة في بريد، أو تحدث فقط عما يبدو صعباً. اضغط زر الموجة للتحدث معي بالصوت. لست طبيبة فلا أشخّص أبداً — لكن يمكنني مساعدتك في معرفة الدعم المناسب.',
-      { speak: false, tag: ai ? pick(ai.label().en, ai.label().ar) : null }
-    ).then(() => { if (!smart && ai) brainCard(); if (first) consentCard(); else if (!helpCtx) idleChips(); });
+    const w = document.createElement('div');
+    w.className = 'cwel';
+    w.innerHTML = `<div class="cwel__orb" aria-hidden="true">${orb('cmp-orb--xl')}<i></i><i></i><i></i></div>
+      <h3>${T('Hi, I’m Noor', 'أهلاً، أنا نور')}</h3>
+      <p>${T('Ask me anything — any subject, any task. Or start here:', 'اسألني أي شيء — أي مادة، أي مهمة. أو ابدأ من هنا:')}</p>
+      <div class="cwel__grid">${QA.map((q, i) => `<button type="button" data-q="${q[0]}" style="--i:${i}"><span>${ICON(q[1])}</span><b>${pick(q[2], q[3])}</b><small>${pick(q[4], q[5])}</small></button>`).join('')}</div>`;
+    w.addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b && C().tools) { clearChips(); C().tools.quick(b.dataset.q); } });
+    $('#cmpLog').appendChild(w);
+    return new Promise(r => setTimeout(r, reduce ? 0 : 250)).then(() => {
+      if (!smart && ai) brainCard(); if (first) consentCard();
+      // keep the welcome in view: the cards below can wait for a scroll
+      const top = () => { const l = $('#cmpLog'); if (l && w.isConnected && l.scrollTop > w.offsetTop) l.scrollTo({ top: Math.max(0, w.offsetTop - 8), behavior: 'instant' }); };
+      requestAnimationFrame(top); setTimeout(top, 450);
+    });
   }
   // a gentle prompt to switch on a real AI model (only shown while Noor uses her built-in brain)
   function brainCard() {
@@ -504,19 +528,13 @@
     chipRow([
       ...(reading ? [{ id: 'page', en: 'Explain this page', ar: 'اشرحي هذه الصفحة', icon: 'sparkle' }, { id: 'help', en: 'Help with this paragraph', ar: 'ساعديني في هذه الفقرة', icon: 'book' }] : [{ id: 'plan', en: 'Make me an exam study plan', ar: 'اصنعي لي خطة مذاكرة للامتحانات', icon: 'calendar' }]),
       { id: 'call', en: 'Talk to me by voice', ar: 'تحدثي معي بالصوت', icon: 'headphones' },
-      { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً', icon: 'chat' },
-      ...(reading ? [] : [{ id: 'talk', en: 'Talk about my reading', ar: 'لنتحدث عن قراءتي', icon: 'book' }]),
-      { id: 'ask', en: 'What is dyslexia?', ar: 'ما هو عسر القراءة؟', icon: 'search' },
-      { id: 'profile', en: 'How am I doing?', ar: 'كيف حالي؟', icon: 'chart' }
+      { id: 'coach', en: 'Break down an assignment', ar: 'قسّمي واجباً إلى خطوات', icon: 'target' },
+      { id: 'resume', en: 'Resume where I stopped', ar: 'أكمل من حيث توقفت', icon: 'reset' }
     ], c => {
-      if (c.id === 'talk') startConversation({ type: 'student' });
       if (c.id === 'help') helpMenu({ para: R.currentPara() });
-      if (c.id === 'lab') setTab('lab');
-      if (c.id === 'profile') setTab('profile');
       if (c.id === 'call') ERLY.emit && ERLY.emit('noor:call');
-      if (c.id === 'hard' && brain()) { bubble('you', pick(c.en, c.ar), { text: true }); brain().freeText('I feel like something is hard for me', { silentUser: true }); }
-      if (c.id === 'ask' && brain()) brain().freeText(pick(c.en, c.ar));
       if (c.id === 'plan' && brain()) brain().freeText(pick(c.en, c.ar));
+      if ((c.id === 'coach' || c.id === 'resume') && C().tools) C().tools.quick(c.id);
       if (c.id === 'page' && brain()) { attach(R.contextFor()); brain().freeText(pick('Explain this page simply, then give me the 3 key ideas.', 'اشرحي هذه الصفحة ببساطة، ثم أعطيني أهم ٣ أفكار.')); }
     });
   }
@@ -1254,6 +1272,6 @@
     _nudge: kind => showNudge(kind),
     _nudgeReset: () => { nud.lastAny = 0; nud.last = {}; nud.muted.clear(); ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { nud[k].length = 0; }); hideNudge(); },
     // internals shared with noor-brain.js and call.js (same feature, split for size)
-    _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done), ai, setGenerating, isGenerating: () => !!generating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
+    _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
 })();

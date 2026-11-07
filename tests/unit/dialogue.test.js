@@ -23,7 +23,7 @@ test('classify understands free text in English and Arabic', () => {
 test('scroll regression opens with a non-leading “why did you go back” question and shows the observation', () => {
   const { c, first } = conv('regression');
   assert.equal(first.qid, 'why_return');
-  assert.match(first.en, /not a doctor/);
+  assert.doesNotMatch(first.en, /not a doctor/);
   assert.match(first.en, /returned to page 1, paragraph 2 3 times/);
   assert.equal(c.entries[0].type, 'observation');
 });

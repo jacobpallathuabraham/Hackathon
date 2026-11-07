@@ -1397,6 +1397,7 @@
     docs: () => LIB.map(d => ({ id: d.id, title: d.title, course: d.course, uploaded: !!d.uploaded })),
     openDoc(id) { const d = LIB.find(x => x.id === id); if (d) { docChosen = true; if (root.hidden) open(null, { doc: id }); else loadDoc(d); } },
     openLibrary: () => (root.hidden ? open(null, { library: true }) : showLibrary()),
+    close: () => close(),
     isOpen: () => !root.hidden,
     isReading: () => !!reading,
     currentPara: () => focusedPara(),

@@ -67,7 +67,7 @@
           <button type="button" class="ncall__btn" id="ncType" aria-label="${T('Switch to typing', 'التحول إلى الكتابة')}">${ICON('text')}</button>
         </div>
         <label class="ncall__barge"><input type="checkbox" id="ncBarge" ${st.bargeIn ? 'checked' : ''}><span>${T('Interrupt by talking (best with headphones)', 'المقاطعة بالكلام (الأفضل مع سماعات)')}</span></label>
-        <p class="ncall__fine">${T('Turn-by-turn voice: what you say becomes text, Noor answers, then reads it aloud. Not a real-time voice model, and not a diagnosis. No audio is recorded.', 'صوت بالتناوب: يتحول كلامك إلى نص، تجيب نور ثم تقرأ الإجابة. ليس نموذجاً صوتياً فورياً، وليس تشخيصاً. لا يُسجَّل أي صوت.')}</p>
+        <p class="ncall__fine">${T('Turn-by-turn voice: what you say becomes text, Noor answers, then reads it aloud. No audio is recorded.', 'صوت بالتناوب: يتحول كلامك إلى نص، تجيب نور ثم تقرأ الإجابة. ليس نموذجاً صوتياً فورياً، وليس تشخيصاً. لا يُسجَّل أي صوت.')}</p>
       </footer>`;
     el.querySelector('#ncOrb').onclick = interrupt;
     el.querySelector('#ncEnd').onclick = end;
@@ -89,7 +89,7 @@
   const $ = s => el.querySelector(s);
   function setState(s) {
     el.dataset.s = s;
-    const txt = { speaking: T('Noor is talking — tap her to interrupt', 'نور تتحدث — انقر عليها للمقاطعة'), listening: T('Listening… go ahead', 'أستمع… تفضل'), thinking: T('Thinking…', 'أفكر…'), idle: T('Tap Noor when you’re ready to talk', 'انقر على نور عندما تكون مستعداً للتحدث'), muted: T('Listening paused', 'الاستماع متوقف مؤقتاً') }[s] || '';
+    const txt = { speaking: T('Noor is talking — tap her to interrupt', 'نور تتحدث — انقر عليها للمقاطعة'), listening: SAFARI ? T('Listening… tap Noor when you’ve finished', 'أستمع… انقر على نور عند الانتهاء') : T('Listening… go ahead', 'أستمع… تفضل'), thinking: T('Thinking…', 'أفكر…'), idle: SAFARI ? T('Tap Noor to talk', 'انقر على نور للتحدث') : T('Tap Noor when you’re ready to talk', 'انقر على نور عندما تكون مستعداً للتحدث'), muted: T('Listening paused', 'الاستماع متوقف مؤقتاً') }[s] || '';
     const p = $('#ncState'); if (p) p.textContent = txt;
   }
 
@@ -168,6 +168,8 @@
   }
   function afterSpeaking() {
     clearTimeout(st.idleT);
+    // Safari / iPad only starts the microphone from a tap, so wait for one there
+    if (SAFARI) { if (st.on && !st.speaking && !st.queue.length && !st.listening) setState(st.muted ? 'muted' : 'idle'); return; }
     // give the chat a moment to add any follow-up line, then listen
     st.idleT = setTimeout(() => { if (st.on && !st.speaking && !st.queue.length && !U.isBusy()) listen(); }, SAFARI ? 650 : 350);
   }
@@ -178,6 +180,8 @@
   function interrupt() {
     if (!st.on) return;
     st.misses = 0; st.blocked = false;
+    // tap-to-talk: a second tap while listening sends what was heard
+    if (st.listening) { v.stopListening(); return; }
     if (st.speaking) { st.queue = []; v.stop(); st.speaking = false; }
     if (st.muted) toggleMute();
     listen();
@@ -194,6 +198,7 @@
       onspeech: () => pulse(.6),
       onerror: code => {
         st.listening = false;
+        if (code === 'service-not-allowed' && SAFARI) { st.blocked = true; setState('idle'); caption('#ncNoor', T('Speech recognition is off on this device. Turn on Siri and Dictation in Settings (General → Keyboard → Enable Dictation), then tap me again — or tap answers and type.', 'التعرف على الكلام متوقف على هذا الجهاز. فعّل Siri والإملاء من الإعدادات (عام ← لوحة المفاتيح ← تفعيل الإملاء)، ثم انقر عليّ مجدداً — أو انقر على الإجابات واكتب.')); return; }
         if (code === 'not-allowed' || code === 'service-not-allowed') { st.blocked = true; setState('idle'); caption('#ncNoor', T('I can’t use the microphone — it’s blocked in your browser settings. You can tap answers or type instead.', 'لا أستطيع استخدام الميكروفون — إنه محظور في إعدادات المتصفح. يمكنك النقر على الإجابات أو الكتابة بدلاً من ذلك.')); }
         if (code === 'network') caption('#ncNoor', T('Voice recognition needs an internet connection in this browser.', 'يحتاج التعرف على الصوت إلى اتصال بالإنترنت في هذا المتصفح.'));
       },
@@ -201,7 +206,8 @@
         st.listening = false;
         if (!st.on || st.blocked) return;
         if (final) { st.misses = 0; setState('thinking'); caption('#ncYou', final); C.submitText(final); return; }
-        if (++st.misses <= 2 && !st.muted) setTimeout(listen, 250); else { setState('idle'); caption('#ncNoor', T('I didn’t hear anything — tap me when you’re ready to talk.', 'لم أسمع شيئاً — انقر عليّ عندما تكون مستعداً للتحدث.')); }
+        if (SAFARI) { setState('idle'); caption('#ncNoor', T('I didn’t catch that — tap me and try again.', 'لم أسمع ذلك جيداً — انقر عليّ وحاول مجدداً.')); }
+        else if (++st.misses <= 2 && !st.muted) setTimeout(listen, 250); else { setState('idle'); caption('#ncNoor', T('I didn’t hear anything — tap me when you’re ready to talk.', 'لم أسمع شيئاً — انقر عليّ عندما تكون مستعداً للتحدث.')); }
       }
     });
     if (!ok) { st.listening = false; setState('idle'); }
@@ -209,7 +215,7 @@
   function toggleMute() {
     st.muted = !st.muted;
     const b = $('#ncMute'); if (b) { b.setAttribute('aria-pressed', st.muted); b.classList.toggle('is-off', st.muted); }
-    if (st.muted) { v.abortListening(); st.listening = false; setState('muted'); } else if (!st.speaking) { st.misses = 0; listen(); }
+    if (st.muted) { v.abortListening(); st.listening = false; setState('muted'); } else if (!st.speaking) { st.misses = 0; if (SAFARI) setState('idle'); else listen(); }
   }
 
   /* ---------------- quick answers on screen ---------------- */

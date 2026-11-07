@@ -181,8 +181,8 @@
   function start(c) {
     c.observations.forEach(o => { const [en, ar] = observationText(o); entry(c, 'observation', en, ar, o); });
     const intro = c.trigger.type === 'invite'
-      ? ['Thanks for talking with me. Quick reminder: I’m an AI reading companion, not a doctor — I can’t diagnose anything, and you can skip any question or stop at any time.', 'شكراً للتحدث معي. تذكير سريع: أنا رفيقة قراءة بالذكاء الاصطناعي، ولست طبيبة — لا أستطيع تشخيص أي شيء، ويمكنك تخطي أي سؤال أو التوقف في أي وقت.']
-      : ['Hi! I’m an AI reading companion, not a doctor — I can’t diagnose anything. You can skip any question or stop whenever you like.', 'أهلاً! أنا رفيقة قراءة بالذكاء الاصطناعي، ولست طبيبة — لا أستطيع تشخيص أي شيء. يمكنك تخطي أي سؤال أو التوقف متى شئت.'];
+      ? ['Thanks for talking with me. You can skip any question or stop at any time.', 'شكراً للتحدث معي. يمكنك تخطي أي سؤال أو التوقف في أي وقت.']
+      : ['Hi! Let’s talk it through. You can skip any question or stop whenever you like.', 'أهلاً! لنتحدث عن الأمر. يمكنك تخطي أي سؤال أو التوقف متى شئت.'];
     const sig = c.trigger.signal;
     const first = sig === 'regression' ? 'why_return' : (sig === 'zoom' || sig === 'pan' || sig === 'format') ? 'zoom_why' : sig === 'tts' ? 'tts_why' : 'open_general';
     const t = ask(c, first);

@@ -247,3 +247,105 @@ html.erly-big body { zoom: 1.12; }
 @keyframes liveCap { to { background-position: -200% 0; } }
 .ncall[data-s="listening"] .nblob { transition: transform .08s linear; }
 @media (prefers-reduced-motion: reduce) { .ncall__you.is-live { animation: none; color: #fff; background: none; } }
+/* while Noor writes, nothing inside the reply animates (no blinking); the finished reply fades in once */
+.cmsg.is-writing .md *, .cmsg.is-writing .md li { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+.cmsg--md:not(.is-writing) .cmsg__b { animation: replyDone .35s ease-out; }
+@keyframes replyDone { from { filter: saturate(.8); } }
+.cmp__log { overflow-anchor: auto; scroll-behavior: auto; }
+
+/* ---------- v3: a roomier panel with a proper entrance ---------- */
+.cmp { width: min(580px, calc(100% - 24px)); max-height: none; top: 14px; bottom: 14px; border-radius: 26px; transition: none; transform: none; opacity: 0; }
+.cmp.is-in { opacity: 1; animation: cmpOpen .7s cubic-bezier(.18, 1.25, .32, 1) both; }
+@keyframes cmpOpen {
+  0% { opacity: 0; transform: translate(40px, 60px) scale(.55); filter: blur(10px); clip-path: circle(8% at 92% 96%); }
+  55% { opacity: 1; filter: blur(0); clip-path: circle(140% at 92% 96%); }
+  100% { opacity: 1; transform: none; clip-path: circle(150% at 92% 96%); }
+}
+[dir="rtl"] .cmp.is-in { animation-name: cmpOpenRtl; }
+@keyframes cmpOpenRtl { 0% { opacity: 0; transform: translate(-40px, 60px) scale(.55); filter: blur(10px); clip-path: circle(8% at 8% 96%); } 55% { opacity: 1; filter: blur(0); clip-path: circle(140% at 8% 96%); } 100% { opacity: 1; transform: none; clip-path: circle(150% at 8% 96%); } }
+.cmp.is-in .cmp__head, .cmp.is-in .cmp__tabs, .cmp.is-in .cmp__log > *, .cmp.is-in .cmp__dock { animation: cmpRise .6s cubic-bezier(.2, .9, .3, 1) both; }
+.cmp.is-in .cmp__head { animation-delay: .12s; } .cmp.is-in .cmp__tabs { animation-delay: .18s; } .cmp.is-in .cmp__log > * { animation-delay: .24s; } .cmp.is-in .cmp__dock { animation-delay: .3s; }
+@keyframes cmpRise { from { opacity: 0; transform: translateY(14px); } }
+.cmp::before { content: ""; position: absolute; inset: -40% -20% auto; height: 70%; pointer-events: none; z-index: 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), transparent), radial-gradient(closest-side at 70% 40%, color-mix(in srgb, #7B5CFF 18%, transparent), transparent); filter: blur(30px); opacity: 0; }
+.cmp.is-in::before { animation: cmpAura 1.6s ease-out .1s both; }
+@keyframes cmpAura { 0% { opacity: 0; transform: scale(.6); } 40% { opacity: 1; } 100% { opacity: .35; transform: none; } }
+.cmp > * { position: relative; z-index: 1; }
+.cmp.is-in .cmp__head .cmp-orb { animation: orbPop .8s cubic-bezier(.3, 1.6, .5, 1) .15s both; }
+@keyframes orbPop { from { transform: scale(0) rotate(-90deg); } }
+.cmp .cmsg__b { font-size: 15.5px; line-height: 1.65; }
+.cmp .cmsg--md .cmsg__b { font-size: 16px; }
+.cmp.is-wide { width: min(1040px, calc(100% - 32px)); }
+@media (max-width: 760px) { .cmp, .cmp.is-wide { inset: 8px 0 0 0; top: 8px; width: 100%; border-radius: 22px 22px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .cmp.is-in, .cmp.is-in * { animation: none !important; } }
+.cmp.is-out { opacity: 1; animation: cmpClose .3s cubic-bezier(.5, 0, .75, 0) forwards; }
+@keyframes cmpClose { to { opacity: 0; transform: translate(30px, 40px) scale(.7); filter: blur(6px); } }
+
+/* ---------- welcome screen ---------- */
+.cwel { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 18px 4px 8px; }
+.cwel__orb { position: relative; width: 84px; height: 84px; display: grid; place-items: center; margin-bottom: 8px; }
+.cmp-orb--xl { width: 72px; height: 72px; --eye: 7px; animation: welOrb 4s ease-in-out infinite; }
+.cmp-orb--xl::after { border-width: 3px; }
+@keyframes welOrb { 50% { transform: translateY(-5px) scale(1.04); } }
+.cwel__orb > i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--accent) 45%, transparent); animation: welRing 3s ease-out infinite; }
+.cwel__orb > i:nth-of-type(2) { animation-delay: 1s; } .cwel__orb > i:nth-of-type(3) { animation-delay: 2s; }
+@keyframes welRing { from { transform: scale(.85); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
+.cwel h3 { margin: 0; font: 500 26px/1.1 var(--f-display); background: linear-gradient(90deg, var(--ink), var(--accent), #7B5CFF, var(--ink)); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: welShine 6s linear infinite; }
+@keyframes welShine { to { background-position: -300% 0; } }
+.cwel > p { margin: 0 0 12px; color: var(--muted); font-size: 14.5px; }
+.cwel__grid { width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.cwel__grid button { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; min-height: 104px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); text-align: start; cursor: pointer; font: inherit; animation: welCard .55s cubic-bezier(.2, .9, .3, 1.2) both; animation-delay: calc(.25s + var(--i) * 60ms); transition: transform .3s cubic-bezier(.3, 1.4, .5, 1), border-color .2s, box-shadow .3s; }
+@keyframes welCard { from { opacity: 0; transform: translateY(16px) scale(.94); } }
+.cwel__grid button:hover, .cwel__grid button:focus-visible { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); box-shadow: 0 16px 30px -20px color-mix(in srgb, var(--accent) 70%, transparent); }
+.cwel__grid span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: var(--accent-soft); color: var(--accent); margin-bottom: 4px; }
+.cwel__grid span svg { width: 18px; height: 18px; }
+.cwel__grid button:first-child span { background: linear-gradient(135deg, #3B82F6, #6366F1); color: #fff; }
+.cwel__grid b { font-size: 14px; line-height: 1.25; }
+.cwel__grid small { font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+/* ---------- tools trace ---------- */
+.ctrace { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, #6366F1 10%, var(--bg)); border: 1px solid color-mix(in srgb, #6366F1 25%, var(--line)); color: color-mix(in srgb, #6366F1 70%, var(--ink)); font: 600 11.5px var(--f-mono); animation: msgIn .35s var(--ease); }
+.ctrace svg { width: 13px; height: 13px; }
+
+/* ---------- study coach ---------- */
+.ccoach { margin-top: 10px; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+.ccoach__h { display: flex; gap: 10px; align-items: center; }
+.ccoach__h > div { display: flex; flex-direction: column; min-width: 0; }
+.ccoach__h b { font-size: 15px; }
+.ccoach__h small { font-size: 12px; color: var(--muted); }
+.ccoach__ic { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--accent); color: var(--accent-ink); }
+.ccoach__ic svg { width: 18px; height: 18px; }
+.ccoach__bar { height: 6px; margin: 12px 0 8px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.ccoach__bar i { display: block; height: 100%; width: calc(var(--p) * 100%); background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width .5s var(--ease); }
+.ccoach__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ccoach__list li { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 12px; font-size: 14px; animation: liIn .35s var(--ease) both; animation-delay: calc(var(--i) * 45ms); }
+.ccoach__list li.is-next { background: var(--accent-soft); }
+.ccoach__list li span { flex: 1; }
+.ccoach__list li em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.ccoach__list li button { flex: none; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--line-2); background: var(--bg); color: transparent; cursor: pointer; transition: all .25s; }
+.ccoach__list li button svg { width: 14px; height: 14px; }
+.ccoach__list li.is-done button { background: var(--good, #2E7D4F); border-color: transparent; color: #fff; animation: okPop .4s; }
+.ccoach__list li.is-done span { text-decoration: line-through; color: var(--muted); }
+.ccoach__acts { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.ccoach__acts .btn svg { width: 14px; height: 14px; }
+.ccoach__timer { font-size: 18px; color: var(--accent); }
+.ccoach__win { margin: 10px 0 0 !important; display: flex; gap: 6px; align-items: center; font-weight: 600; color: var(--good, #2E7D4F); }
+.ccoach__win svg { width: 16px; height: 16px; }
+@keyframes okPop { 40% { transform: scale(1.2); } }
+
+/* ---------- memory card (Profile tab) ---------- */
+.cmem { margin-bottom: 14px; padding: 14px; border-radius: 16px; border: 1px solid color-mix(in srgb, #6366F1 30%, var(--line)); background: linear-gradient(160deg, color-mix(in srgb, #6366F1 8%, var(--surface)), var(--surface)); display: grid; gap: 8px; }
+.cmem__h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cmem__h b { display: inline-flex; gap: 6px; align-items: center; font-size: 15px; }
+.cmem__h b svg { width: 16px; height: 16px; color: #6366F1; }
+.cmem__h .switch-row { padding: 0; border: 0; }
+.cmem__k { margin: 4px 0 0 !important; font: 700 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.cmem__lv { display: flex; gap: 6px; }
+.cmem__lv button { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); font: 600 12.5px var(--f-body); cursor: pointer; }
+.cmem__lv button.is-on { background: #6366F1; color: #fff; border-color: #6366F1; }
+.cmem__likes { display: flex; flex-wrap: wrap; gap: 6px; }
+.cmem__likes span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 12.5px; }
+.cmem__likes button { width: 20px; height: 20px; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--ink); cursor: pointer; }
+.cmem .btn { justify-self: start; }
+.cmem .btn svg { width: 13px; height: 13px; }
+.cmem-ask b svg { width: 16px; height: 16px; vertical-align: -3px; color: #6366F1; }
+@media (prefers-reduced-motion: reduce) { .cwel *, .ccoach__list li { animation: none !important; } }
