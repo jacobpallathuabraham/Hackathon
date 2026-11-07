@@ -64,3 +64,91 @@ html.tfx-lang-in body { animation: tfxBodyIn .6s cubic-bezier(.15, .85, .25, 1);
   html.vt-lang::view-transition-old(root), html.vt-lang::view-transition-new(root) { animation: none; }
   .tfx-badge, #themeToggle.tfx-spin svg { animation: none; display: none; }
 }
+
+/* =====================================================================
+   LIGHT MODE: nothing stays dark. Sections and cards that were always
+   dark now get a proper light version (dark mode keeps the originals).
+   ===================================================================== */
+/* ---------- student site: the three "ink" sections ---------- */
+:root:not([data-theme="dark"]) .section--ink {
+  background: radial-gradient(1000px 520px at 85% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%), linear-gradient(180deg, #EFE7DA, #E9E0D1);
+  color: #1B1915;
+  --ink-bg: #FBF8F2; --ink-fg: #1B1915; --ink-muted: #6E675B; --ink-line: #DDD2C1; --ink-surface: #FFFDF8;
+  --surface: #FFFDF8; --surface-2: #F3ECE0; --line: #DDD2C1; --line-2: #CFC3AF; --muted: #6E675B;
+}
+:root:not([data-theme="dark"]) .section--ink .btn--ghost { color: #1B1915; border-color: #CFC3AF; }
+:root:not([data-theme="dark"]) .section--ink .btn--ghost:hover { background: #fff; border-color: #1B1915; }
+:root:not([data-theme="dark"]) .section--ink .btn--quiet:hover { color: #1B1915; }
+:root:not([data-theme="dark"]) :is(.pact__doc, .contract__doc) { background: #FFFDF8; color: #1B1915; border: 1px solid #DDD2C1; box-shadow: 0 24px 50px -30px rgba(27, 25, 21, .35); }
+:root:not([data-theme="dark"]) :is(.sigc, .rej) { box-shadow: 0 14px 34px -24px rgba(27, 25, 21, .3); }
+/* highlight panels: warm, accent-lit cards instead of black boxes */
+:root:not([data-theme="dark"]) :is(.gap__stat--hot, .tile--ink, .flow__col--device, .calc__out, .phase--gate, .ins-hero__stat) {
+  background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 62%), linear-gradient(160deg, #FFF8F1, #F6E9DC);
+  color: #1B1915;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, #E2D3C3);
+  box-shadow: 0 26px 56px -34px color-mix(in srgb, var(--accent) 65%, transparent);
+  --muted: #6E675B; --ink-2: #3B372F; --line: #E6D6C5;
+}
+:root:not([data-theme="dark"]) .gap__stat--hot .bar { background: rgba(27, 25, 21, .08); }
+
+/* ---------- university home ---------- */
+/* hero: a bright daytime sky instead of night */
+:root:not([data-theme="dark"]) .acu-hero { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-hero__sky { background: linear-gradient(180deg, #7FC0EE 0%, #B6DDF6 38%, #EAF2F4 62%, #FFE2BA 84%, #FFC98A 100%); background-size: 100% 130%; }
+:root:not([data-theme="dark"]) .acu-hero__sky canvas { opacity: 0; }
+:root:not([data-theme="dark"]) .acu-hero__sky .sun { bottom: 34%; background: radial-gradient(circle, #FFFBE8, #FFE08A 45%, rgba(255, 200, 90, .35) 62%, transparent 70%); filter: none; }
+:root:not([data-theme="dark"]) .acu-hero__sky .cloud { background: rgba(255, 255, 255, .85); filter: blur(4px); }
+:root:not([data-theme="dark"]) .sk-far path { fill: #A9C3DB; opacity: .85; }
+:root:not([data-theme="dark"]) :is(.sk-near path, .sk-near .dome, .sk-near .mast) { fill: #3C5878; }
+:root:not([data-theme="dark"]) .sk-win rect { fill: #DCEBF7; animation: none; opacity: .35; }
+:root:not([data-theme="dark"]) .acu-lead { color: #2C3A55; }
+:root:not([data-theme="dark"]) .acu-rot { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-eyebrow { background: rgba(255, 255, 255, .6); border-color: rgba(14, 27, 44, .14); }
+:root:not([data-theme="dark"]) .acu-btn--glass { background: rgba(255, 255, 255, .6); color: var(--navy); border-color: rgba(14, 27, 44, .2); }
+:root:not([data-theme="dark"]) .acu-btn--glass:hover { background: #fff; }
+:root:not([data-theme="dark"]) .acu-play { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-play span, :root:not([data-theme="dark"]) .acu-play span::after { background: rgba(255, 255, 255, .6); border-color: rgba(14, 27, 44, .25); }
+:root:not([data-theme="dark"]) .acu-scroll { border-color: rgba(14, 27, 44, .45); }
+:root:not([data-theme="dark"]) .acu-scroll i { background: var(--navy); }
+:root:not([data-theme="dark"]) .acu-nav:not(.is-solid) { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-nav:not(.is-solid) .acu-brand > svg > path:first-child { fill: var(--navy); }
+:root:not([data-theme="dark"]) .acu-nav:not(.is-solid) :is(.acu-icon, .acu-burger) { background: rgba(255, 255, 255, .6); border-color: rgba(14, 27, 44, .16); color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-nav:not(.is-solid) .acu-burger i { background: var(--navy); }
+:root:not([data-theme="dark"]) .acu-util { background: #E7EEF7; color: #44506A; }
+:root:not([data-theme="dark"]) .acu-util b { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-util a:hover { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-kick--light { color: #A9720F; }
+/* admissions */
+:root:not([data-theme="dark"]) .acu-adm { background: radial-gradient(900px 500px at 90% 0%, rgba(226, 184, 81, .25), transparent 60%), linear-gradient(160deg, #EEF3FA, #E2EAF5); color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-adm .acu-h2 { color: var(--navy); }
+:root:not([data-theme="dark"]) :is(.acu-countdown > span, .acu-countdown small, .acu-steps p) { color: #44506A; }
+:root:not([data-theme="dark"]) .acu-countdown div { background: #fff; border-color: #D3DDEA; box-shadow: 0 12px 26px -18px rgba(14, 27, 44, .35); }
+:root:not([data-theme="dark"]) .acu-countdown b { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-steps i { background: #fff; color: #A9720F; border-color: #D9AE4A; }
+:root:not([data-theme="dark"]) .acu-steps li:hover i { background: var(--gold-2); color: var(--navy); }
+/* research */
+:root:not([data-theme="dark"]) .acu-research { background: linear-gradient(180deg, #F2F5FA, #E7EDF6); color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-research .acu-h2 { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-research .acu-sub { color: #44506A; }
+:root:not([data-theme="dark"]) .acu-rgrid article { background: linear-gradient(160deg, hsl(var(--h) 70% 60% / .2), #FFFFFF 75%); border-color: hsl(var(--h) 45% 50% / .22); box-shadow: 0 18px 40px -28px hsl(var(--h) 50% 30% / .5); }
+:root:not([data-theme="dark"]) .acu-rgrid article::before { border-color: hsl(var(--h) 55% 50% / .3); box-shadow: 0 0 0 30px hsl(var(--h) 60% 55% / .07), 0 0 0 60px hsl(var(--h) 60% 55% / .04); }
+:root:not([data-theme="dark"]) .acu-rgrid span { color: hsl(var(--h) 60% 36%); }
+:root:not([data-theme="dark"]) .acu-rgrid p { color: #44506A; }
+/* events, calendar, service icons */
+:root:not([data-theme="dark"]) .acu-ev__d { background: #EEF3FA; color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-ev__d b { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-cal { background: linear-gradient(160deg, #F1F5FB, #E3EBF6); color: var(--navy); border: 1px solid #D3DDEA; }
+:root:not([data-theme="dark"]) .acu-cal li { border-bottom-color: rgba(14, 27, 44, .1); }
+:root:not([data-theme="dark"]) .acu-cal li b { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-cal li span { color: #2C3A55; }
+:root:not([data-theme="dark"]) :is(.acu-sv > span, .acu-mh > span) { background: #EEF3FA; color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-mega__card { background: linear-gradient(140deg, #EEF3FA, #E2EAF5); color: var(--navy); }
+/* footer */
+:root:not([data-theme="dark"]) .acu-foot { background: linear-gradient(180deg, #EEF2F8, #E4EAF3); color: #44506A; }
+:root:not([data-theme="dark"]) .acu-brand--light { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-brand--light svg > path:first-child { fill: var(--navy); }
+:root:not([data-theme="dark"]) .acu-foot .mono { color: #A9720F; }
+:root:not([data-theme="dark"]) .acu-foot__in > div > a:not(.acu-brand):hover { color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-news-sub input { border-color: #C9D4E3; background: #fff; color: var(--navy); }
+:root:not([data-theme="dark"]) .acu-foot__bar { border-top-color: rgba(14, 27, 44, .1); }
+:root:not([data-theme="dark"]) .acu-top { background: #fff; color: #A9720F; box-shadow: 0 12px 30px rgba(14, 27, 44, .18); }
