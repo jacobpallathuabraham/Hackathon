@@ -32,7 +32,7 @@
   const SAFARI = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
 
   /* ---------------- settings ---------------- */
-  const DEF = { avatar: 'yasmin', gender: 'f', rate: 1, pitch: 1, volume: 1, expr: 1, style: 'conversational', tone: 'friendly', length: 'medium', mode: 'natural', theme: 'studio', preset: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, recLang: '', dict: [], favs: [], profiles: [], prof: {}, setup: false };
+  const DEF = { avatar: 'karim', env: 'classroom', gender: 'f', rate: 1, pitch: 1, volume: 1, expr: 1, style: 'conversational', tone: 'friendly', length: 'medium', mode: 'natural', theme: 'studio', preset: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, recLang: '', dict: [], favs: [], profiles: [], prof: {}, setup: false };
   const cfg = () => Object.assign({}, DEF, U.store.prefs().vs || {});
   const save = patch => { U.store.setPref('vs', Object.assign(cfg(), patch)); };
   const QUIET = { short: 750, normal: 1150, long: 1900 };
@@ -67,6 +67,8 @@
         <div class="ncall__tools">
           <button type="button" class="ncall__pill" id="ncModeBtn" title="${T('Conversation mode', 'وضع المحادثة')}">${ICON((MODES.find(m => m[0] === c.mode) || MODES[0])[3])} <span>${esc(pick(...(MODES.find(m => m[0] === c.mode) || MODES[0]).slice(1, 3)))}</span></button>
           <button type="button" class="ncall__pill" id="ncLang" aria-label="${T('Switch language', 'تبديل اللغة')}" title="${T('Switch language', 'تبديل اللغة')}">${U.lang() === 'ar' ? 'EN' : 'ع'}</button>
+          <button type="button" class="ncall__ic" id="ncAvBtn" aria-label="${T('Choose your companion', 'اختر رفيقك')}" title="${T('Choose your companion', 'اختر رفيقك')}">${ICON('users')}</button>
+          <button type="button" class="ncall__ic" id="ncFull" aria-label="${T('Full screen', 'ملء الشاشة')}" title="${T('Full screen', 'ملء الشاشة')}">${ICON('fullscreen')}</button>
           <button type="button" class="ncall__ic" id="ncLogBtn" aria-label="${T('Transcript', 'النص المكتوب')}" title="${T('Transcript', 'النص المكتوب')}">${ICON('list')}</button>
           <button type="button" class="ncall__ic" id="ncSet" aria-label="${T('Avatar, voice and settings', 'الشخصية والصوت والإعدادات')}" title="${T('Avatar, voice and settings', 'الشخصية والصوت والإعدادات')}">${ICON('more')}</button>
         </div>
@@ -93,6 +95,7 @@
           <button type="button" class="ncall__btn" id="ncPause" aria-pressed="false" aria-label="${T('Pause conversation', 'إيقاف المحادثة مؤقتاً')}" title="${T('Pause (P)', 'إيقاف مؤقت (P)')}">${ICON('pause')}</button>
           <button type="button" class="ncall__btn ncall__btn--end" id="ncEnd" aria-label="${T('End the conversation', 'إنهاء المحادثة')}">${ICON('x')}</button>
           <button type="button" class="ncall__btn" id="ncReplay" aria-label="${T('Replay the last answer', 'إعادة آخر إجابة')}" title="${T('Replay', 'إعادة')}">${ICON('reset')}</button>
+          <button type="button" class="ncall__btn" id="ncCC" aria-pressed="${!!c.captions}" aria-label="${T('Captions', 'الترجمة النصية')}" title="${T('Captions', 'الترجمة النصية')}"><b class="ncall__cc">CC</b></button>
           <button type="button" class="ncall__btn" id="ncType" aria-pressed="false" aria-label="${T('Type instead', 'الكتابة بدلاً من ذلك')}" title="${T('Type', 'كتابة')}">${ICON('keyboard')}</button>
         </div>
         <p class="ncall__fine">${T(`${esc(a.name)} is an AI companion with a virtual face — not a real person. The microphone listens only while this screen is open and the mic light is on. No audio is recorded.`, 'نور رفيقة ذكاء اصطناعي بوجه افتراضي. تستمع فقط أثناء فتح هذه الشاشة وإضاءة مؤشر الميكروفون. لا يُسجَّل أي صوت.')}</p>
@@ -112,6 +115,9 @@
     $('#ncLogBtn').onclick = () => toggleLog();
     $('#ncSet').onclick = () => openStudio('companion');
     $('#ncModeBtn').onclick = () => openStudio('talk');
+    $('#ncCC').onclick = () => { save({ captions: !cfg().captions }); const on = cfg().captions; $('#ncCC').setAttribute('aria-pressed', on); const cp = el.querySelector('.ncall__caps'); if (cp) cp.hidden = !on; };
+    $('#ncFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); };
+    $('#ncAvBtn').onclick = () => openStudio('avatar');
     $('#ncLang').onclick = () => switchLang(U.lang() === 'ar' ? 'en' : 'ar');
     $('#ncLog').onclick = logAction;
     $('.ncall__seg').onclick = e => {
@@ -131,8 +137,12 @@
   function mountAvatar() {
     if (st.avatar) st.avatar.destroy();
     const host = $('#ncAvatar'); if (!host) return;
-    st.avatar = AV.mount(host, cfg().avatar).attach(v);
+    const a = AV.get(cfg().avatar);
+    el.classList.toggle('is-3d', !!a.three);
+    st.avatar = AV.mount(host, a.id, { env: cfg().env }).attach(v);
     st.avatar.setState(avState(st.state));
+    // if the 3D person can't load here, the screen switches to the 2D layout
+    if (st.avatar.ready) st.avatar.ready.then(() => { if (st.avatar && st.avatar.fallback) el.classList.remove('is-3d'); });
   }
   const avState = s => ({ listening: 'listening', hearing: 'listening', processing: 'thinking', thinking: 'thinking', speaking: 'speaking', paused: 'paused', muted: 'paused' })[s] || 'idle';
 
@@ -203,6 +213,7 @@
   function begin(gesture) {
     if (v.supported.stt && U.store.consent('mic') && !SAFARI) meter();
     loop();
+    if (st.avatar && st.avatar.greet) st.avatar.greet(); // a friendly wave
     const name = AV.get(cfg().avatar).name;
     const hello = C.callMode === 'chat'
       ? pick(`Hi, I’m ${name}. I’m listening — ask me anything.`, `أهلاً، أنا ${name}. أنا أستمع — اسألني أي شيء.`)
@@ -481,6 +492,7 @@
     ['creative', 'The Creative Partner', 'الشريك المبدع', 'Brainstorms ideas with you.', 'يعصف معك بالأفكار.', { style: 'conversational', tone: 'warm', expr: 1.25, length: 'medium', mode: 'creative' }]
   ];
   const MODES = [['natural', 'Natural conversation', 'محادثة طبيعية', 'sparkle'], ['study', 'Study', 'مذاكرة', 'book'], ['focus', 'Focus', 'تركيز', 'target'], ['deep', 'Deep explanation', 'شرح معمّق', 'layers'], ['practice', 'Practice', 'تدريب', 'pen'], ['reading', 'Reading companion', 'رفيق القراءة', 'bookmark'], ['research', 'Research', 'بحث', 'search'], ['creative', 'Creative', 'إبداع', 'bolt'], ['planning', 'Planning', 'تخطيط', 'calendar']];
+  const ENVS = [['classroom', 'Classroom', 'فصل دراسي'], ['lecture', 'Lecture hall', 'قاعة محاضرات'], ['study', 'Study room', 'غرفة مذاكرة'], ['lab', 'Science lab', 'مختبر علوم'], ['clinic', 'Consultation room', 'غرفة استشارة'], ['library', 'Library', 'مكتبة'], ['studio', 'ERLY studio', 'استوديو إيرلي'], ['minimal', 'Minimal', 'بسيط']];
   const THEMES = [['studio', 'Studio', 'استوديو'], ['dusk', 'Dusk', 'غسق'], ['sunrise', 'Sunrise', 'شروق'], ['ocean', 'Ocean', 'محيط'], ['forest', 'Forest', 'غابة'], ['daylight', 'Daylight', 'نهار']];
   const REC = [['', 'Same as my language', 'نفس لغتي'], ['en-US', 'English (US)', 'الإنجليزية (أمريكا)'], ['en-GB', 'English (UK)', 'الإنجليزية (بريطانيا)'], ['en-IN', 'English (India)', 'الإنجليزية (الهند)'], ['en-AU', 'English (Australia)', 'الإنجليزية (أستراليا)'], ['ar-AE', 'Arabic (UAE)', 'العربية (الإمارات)'], ['ar-SA', 'Arabic (Saudi)', 'العربية (السعودية)'], ['ar-EG', 'Arabic (Egypt)', 'العربية (مصر)']];
   let tab = 'companion', setupMode = false;
@@ -493,7 +505,7 @@
   }
   function closeStudio() {
     const box = $('#ncStudio'); if (!box || box.hidden) return;
-    if (st.preview) { st.preview.destroy(); st.preview = null; }
+    if (st.preview) { st.preview.destroy(); st.preview = null; st.previewId = null; st.previewHost = null; }
     v.stop();
     box.classList.remove('is-in'); box.hidden = true;
     const wasSetup = setupMode; setupMode = false;
@@ -544,7 +556,7 @@
     const vc = t.closest('[data-vcat]'); if (vc) { st.vcat = vc.dataset.vcat; return drawStudio(); }
     const ps = t.closest('[data-preset]'); if (ps) { const p = PRESETS.find(x => x[0] === ps.dataset.preset); save(Object.assign({ preset: p[0] }, p[5])); drawStudio(); return preview(); }
     const pf = t.closest('[data-prof]'); if (pf) return profileAction(pf.dataset.prof, +pf.dataset.k);
-    const opt = t.closest('[data-opt]'); if (opt) { const [k, val] = opt.dataset.opt.split(':'); save({ [k]: val === 'true' ? true : val === 'false' ? false : val }); if (k === 'lang') setLang(val); if (k === 'theme') el.dataset.theme = val; return drawStudio(); }
+    const opt = t.closest('[data-opt]'); if (opt) { const [k, val] = opt.dataset.opt.split(':'); save({ [k]: val === 'true' ? true : val === 'false' ? false : val }); if (k === 'lang') setLang(val); if (k === 'theme') el.dataset.theme = val; if (k === 'env') { if (st.avatar && st.avatar.setEnv) st.avatar.setEnv(val); if (st.preview && st.preview.setEnv) st.preview.setEnv(val); } return drawStudio(); }
     if (t.closest('[data-hear]')) preview();
   }
   function studioInput(e) {
@@ -598,8 +610,15 @@
   function avatarPane(body) {
     const c = cfg();
     const card = (a, k) => `<button type="button" class="nstudio__av ${a.id === c.avatar ? 'is-on' : ''}" data-av="${a.id}" style="--i:${k}" aria-pressed="${a.id === c.avatar}"><span class="nstudio__face">${faceThumb(a.id)}</span><b>${esc(a.name)}</b><small>${esc(pick(a.en[0], a.ar[0]))}</small></button>`;
-    const photos = AV.list.filter(a => a.photo), drawn = AV.list.filter(a => !a.photo);
-    body.innerHTML = `<p class="nstudio__k">${T('Photoreal digital humans', 'بشر رقميون واقعيون')}</p>
+    const photos = AV.list.filter(a => a.photo), drawn = AV.list.filter(a => !a.photo && !a.three);
+    const big = (a, k) => `<button type="button" class="nstudio__h3 ${a.id === c.avatar ? 'is-on' : ''}" data-av="${a.id}" style="--i:${k}" aria-pressed="${a.id === c.avatar}"><span class="nstudio__h3img"><img src="${a.thumb}" alt="" loading="lazy"></span><span class="nstudio__h3txt"><b>${esc(a.name)}</b><small>${esc(pick(a.role[0], a.role[1]))}</small><em>${esc(pick(a.en[1], a.ar[1]))}</em><i>${a.g === 'f' ? T('Pairs with female-sounding voices', 'يناسب الأصوات الأنثوية') : T('Pairs with male-sounding voices', 'يناسب الأصوات الذكورية')} · ${T('all environments', 'كل البيئات')}</i></span></button>`;
+    const h3 = cat => AV.list.filter(a => a.three && a.cat === cat);
+    body.innerHTML = `${AV.has3d() ? '' : `<p class="nstudio__none">${T('This device can’t run the 3D companions (WebGL 2 is off), so a 2D companion with the same voice is used instead.', 'لا يستطيع هذا الجهاز تشغيل الرفاق ثلاثيي الأبعاد، لذا يُستخدم رفيق ثنائي الأبعاد بنفس الصوت.')}</p>`}
+      <p class="nstudio__k">${T('3D digital humans — educational', 'بشر رقميون ثلاثيو الأبعاد — تعليميون')}</p>
+      <div class="nstudio__h3s">${h3('edu').map(big).join('')}</div>
+      <p class="nstudio__k">${T('3D digital humans — professional', 'بشر رقميون ثلاثيو الأبعاد — مهنيون')}</p>
+      <div class="nstudio__h3s">${h3('pro').map(big).join('')}</div>
+      <p class="nstudio__k">${T('Photo portraits (face only)', 'صور واقعية (الوجه فقط)')}</p>
       <div class="nstudio__grid">${photos.map(card).join('')}</div>
       ${ERLY.photoHead && !ERLY.photoHead.supported() ? `<p class="nstudio__none">${T('This browser can’t draw the photoreal faces (WebGL is off), so their illustrated twins are used instead.', 'لا يستطيع هذا المتصفح عرض الوجوه الواقعية (WebGL متوقف)، لذا تُستخدم نسخ مرسومة.')}</p>` : ''}
       <p class="nstudio__k">${T('Illustrated', 'مرسومة')}</p>
@@ -608,9 +627,14 @@
   }
   function showPreview(id) {
     const a = AV.get(id);
-    if (st.preview) st.preview.destroy();
-    const host = $('#nsPv'); if (!host) return;
-    st.preview = AV.mount(host, a.id).attach(v);
+    const slot = $('#nsPv'); if (!slot) return;
+    // keep the live preview (a 3D person takes a moment to load) while the same companion is selected
+    if (st.preview && st.previewId === a.id && st.previewHost) { slot.replaceWith(st.previewHost); }
+    else {
+      if (st.preview) st.preview.destroy();
+      st.preview = AV.mount(slot, a.id, { env: cfg().env }).attach(v);
+      st.previewId = a.id; st.previewHost = slot;
+    }
     const n = $('#nsPvName'), ab = $('#nsPvAbout');
     if (n) n.textContent = a.name + ' · ' + pick(a.en[0], a.ar[0]);
     const vp = currentProfile();
@@ -710,7 +734,10 @@
   /* look & accessibility */
   function lookPane(body) {
     const c = cfg();
-    body.innerHTML = `<p class="nstudio__k">${T('Background', 'الخلفية')}</p>
+    const is3d = AV.get(c.avatar).three;
+    body.innerHTML = `${is3d ? `<p class="nstudio__k">${T('Environment', 'البيئة')}</p>
+      <div class="nstudio__themes nstudio__envs">${ENVS.map(([k, en, ar]) => `<button type="button" class="nstudio__theme e-${k}" data-opt="env:${k}" aria-pressed="${c.env === k}"><i></i>${pick(en, ar)}</button>`).join('')}</div>` : ''}
+      <p class="nstudio__k">${is3d ? T('Screen colour (2D companions)', 'لون الشاشة (الرفاق ثنائيو الأبعاد)') : T('Background', 'الخلفية')}</p>
       <div class="nstudio__themes">${THEMES.map(([k, en, ar]) => `<button type="button" class="nstudio__theme t-${k}" data-opt="theme:${k}" aria-pressed="${c.theme === k}"><i></i>${pick(en, ar)}</button>`).join('')}</div>
       ${swOf('captions', 'Captions', 'الترجمة النصية', '', c)}
       <p class="nstudio__k">${T('Caption size', 'حجم النص')}</p>${segOf('capSize', [['s', 'Small', 'صغير'], ['m', 'Medium', 'متوسط'], ['l', 'Large', 'كبير']], c)}

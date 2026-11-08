@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ERLY 3D human test</title>
+<script type="importmap">{ "imports": { "three": "../../assets/vendor/three/build/three.module.min.js", "three/addons/": "../../assets/vendor/three/examples/jsm/" } }</script>
+<style>html,body{margin:0;height:100%;background:#111} #host{position:fixed;inset:0} .h3d,.h3d canvas{position:absolute;inset:0;width:100%;height:100%} .h3d__env{filter:blur(5px) brightness(.85);transform:scale(1.04)}</style>
+</head><body><div id="host"></div>
+<script src="../../assets/js/companion/lipsync.js"></script>
+<script src="../../assets/js/companion/avatar.js"></script>
+<script type="module">
+import { create } from '../../assets/js/companion/human3d.js';
+const q = new URLSearchParams(location.search);
+window.ctrl = await create(document.getElementById('host'), { meta: { model: (q.get('m') || 'karim') + '.glb', g: q.get('g') || 'm' }, env: q.get('env') || 'study', zoom: +(q.get('z') || 1), offsetY: +(q.get('oy') || 0) }).catch(e => { window.err = String(e); });
+window.ready = true;
+</script></body></html>

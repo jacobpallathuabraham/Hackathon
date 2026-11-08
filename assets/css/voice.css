@@ -275,3 +275,89 @@
 .nstudio__vtools input { width: 100%; }
 .nstudio__body { grid-template-columns: minmax(0, 1fr); } .nstudio__body > * { min-width: 0; }
 @media (max-width: 600px) { .nstudio__vlib { grid-template-columns: minmax(0, 1fr); } } .nstudio__vc { min-width: 0; }
+
+/* ================= v6: immersive 3D digital human ================= */
+.avt--3d { position: relative; }
+.h3d { position: absolute; inset: 0; overflow: hidden; }
+.h3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.h3d__env { filter: blur(7px) saturate(1.05) brightness(.92); transform: scale(1.08); }
+.h3d__av { opacity: 0; animation: h3dIn 1s .1s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes h3dIn { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+.avt3d__load { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; color: rgba(255,255,255,.8); font: 600 14px var(--f-body); background: radial-gradient(60% 60% at 50% 45%, #2a2438, #0d0b14); }
+.avt3d__load i { width: 46px; height: 46px; border-radius: 50%; border: 3px solid rgba(255,255,255,.15); border-top-color: #a78bfa; animation: spin3 1s linear infinite; }
+@keyframes spin3 { to { transform: rotate(360deg); } }
+
+.ncall.is-3d { background: #07060c; }
+.ncall.is-3d .ncall__bg, .ncall.is-3d .ncall__glow { display: none; }
+.ncall.is-3d .ncall__main { position: absolute; inset: 0; padding: 0; display: block; overflow: hidden; }
+.ncall.is-3d .ncall__stage { position: absolute; inset: 0; width: auto; aspect-ratio: auto; container-type: normal; }
+.ncall.is-3d .ncall__orb { position: absolute; inset: 0; border-radius: 0; cursor: default; }
+.ncall.is-3d .ncall__orb:focus-visible { outline-offset: -6px; }
+.ncall.is-3d .ncall__avatar { width: 100%; height: 100%; margin: 0; -webkit-mask: none; mask: none; border-radius: 0; box-shadow: none; animation: none; }
+.ncall.is-3d .ncall__top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; padding: 14px 18px 40px; background: linear-gradient(to bottom, rgba(5,4,10,.55), transparent); }
+.ncall.is-3d .ncall__who { position: absolute; z-index: 3; top: 72px; left: 20px; margin: 0; padding: 8px 14px; border-radius: 16px; background: rgba(12,10,20,.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.12); justify-content: flex-start; }
+.ncall.is-3d .ncall__who b { font-size: 19px; }
+.ncall.is-3d .ncall__state { position: absolute; z-index: 3; left: 50%; bottom: 190px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(12,10,20,.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; font-size: 13px; }
+.ncall.is-3d .ncall__caps { position: absolute; z-index: 3; left: 24px; bottom: 150px; width: min(460px, calc(100% - 48px)); min-height: 0; display: grid; gap: 8px; }
+.ncall.is-3d .ncall__noor:not(:empty) { margin: 0; padding: 14px 18px; border-radius: 20px 20px 20px 6px; background: rgba(14,12,26,.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(160,170,255,.28); box-shadow: 0 0 24px -6px rgba(110,130,255,.45); font: 500 17px/1.45 var(--f-body); text-align: start; max-height: 32vh; overflow-y: auto; }
+.ncall.is-3d[data-cap="l"] .ncall__noor:not(:empty) { font-size: 21px; }
+.ncall.is-3d[data-cap="s"] .ncall__noor:not(:empty) { font-size: 15px; }
+.ncall.is-3d .ncall__you:not(:empty) { margin: 0; justify-self: start; padding: 8px 14px; border-radius: 16px; background: rgba(255,255,255,.12); backdrop-filter: blur(10px); font-size: 15px; text-align: start; }
+.ncall.is-3d .ncall__chips { position: absolute; z-index: 3; left: 50%; bottom: 210px; transform: translateX(-50%); width: min(760px, 92%); }
+.ncall.is-3d .ncall__consent { position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92%); background: rgba(14,12,26,.82); backdrop-filter: blur(18px); border-radius: 22px; padding: 20px; }
+.ncall.is-3d .ncall__type { position: absolute; z-index: 4; left: 50%; transform: translateX(-50%); bottom: 112px; margin: 0; background: rgba(14,12,26,.7); backdrop-filter: blur(16px); }
+.ncall.is-3d .ncall__bar { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; padding: 30px 16px 12px; background: linear-gradient(to top, rgba(5,4,10,.6), transparent); }
+.ncall.is-3d .ncall__btns { width: max-content; margin: 0 auto; padding: 8px 10px; border-radius: 999px; background: rgba(14,12,26,.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.12); }
+.ncall.is-3d .ncall__fine { opacity: .6; font-size: 11px; margin-top: 6px; }
+.ncall.is-3d .ncall__viz { position: absolute; z-index: 2; left: 50%; top: auto; bottom: 140px; width: min(560px, 84vw); height: 44px; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 4px; pointer-events: none; }
+.ncall.is-3d .ncall__viz i { position: static; width: 3px; height: calc(4px + (var(--lvl) + var(--spk) * .9) * var(--h, 1) * 30px); transform: none; border-radius: 2px; opacity: calc(.35 + (var(--lvl) + var(--spk)) * .65); background: linear-gradient(to top, #6d8bff, #c084fc); transition: height .08s linear; }
+.ncall.is-3d[data-s="listening"] .ncall__viz i, .ncall.is-3d[data-s="hearing"] .ncall__viz i { background: linear-gradient(to top, #2dd4bf, #93c5fd); }
+.ncall__cc { font: 800 12px var(--f-mono); letter-spacing: .04em; }
+.ncall__btn#ncCC[aria-pressed="false"] { opacity: .6; }
+@media (max-width: 700px) {
+  .ncall.is-3d .ncall__who { top: 112px; left: 12px; padding: 6px 10px; }
+  .ncall.is-3d .ncall__caps { left: 12px; right: 12px; width: auto; bottom: 108px; }
+  .ncall.is-3d .ncall__noor:not(:empty) { font-size: 15px; max-height: 22vh; padding: 10px 14px; }
+  .ncall.is-3d .ncall__state { bottom: auto; top: 160px; }
+  .ncall.is-3d .ncall__viz { bottom: 88px; height: 30px; }
+  .ncall.is-3d .ncall__fine { display: none; }
+}
+
+/* 3D gallery cards */
+.nstudio__h3s { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+.nstudio__h3 { display: flex; gap: 12px; align-items: stretch; padding: 8px; border-radius: 18px; border: 1.5px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #fff; text-align: start; cursor: pointer; animation: welCard .45s cubic-bezier(.2, .9, .3, 1.2) both; animation-delay: calc(var(--i) * 35ms); transition: transform .25s, border-color .2s, background .2s; min-width: 0; }
+.nstudio__h3:hover { transform: translateY(-2px); background: rgba(255,255,255,.08); }
+.nstudio__h3.is-on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.nstudio__h3img { flex: none; width: 86px; height: 112px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 50% 30%, #3a3150, #15121e); }
+.nstudio__h3img img { width: 100%; height: 100%; object-fit: cover; }
+.nstudio__h3txt { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.nstudio__h3txt b { font-size: 15px; }
+.nstudio__h3txt small { font-size: 12px; color: #c4b5fd; font-weight: 600; }
+.nstudio__h3txt em { font-style: normal; font-size: 12.5px; opacity: .8; line-height: 1.35; }
+.nstudio__h3txt i { font-style: normal; font-size: 11px; opacity: .5; margin-top: auto; }
+.nstudio__envs .nstudio__theme i { background-size: cover; }
+.nstudio__theme.e-classroom i { background: linear-gradient(160deg, #e8e2d6, #b08b62); }
+.nstudio__theme.e-lecture i { background: linear-gradient(160deg, #2b4c7e, #3a3f4a 60%, #7a2e3a); }
+.nstudio__theme.e-study i { background: linear-gradient(160deg, #f6c27a, #6b5847 50%, #5a3e2b); }
+.nstudio__theme.e-lab i { background: linear-gradient(160deg, #eaf6ff, #dfe7ea 50%, #2f3b45); }
+.nstudio__theme.e-clinic i { background: linear-gradient(160deg, #ffffff, #eef3f6 50%, #5d8aa8); }
+.nstudio__theme.e-library i { background: linear-gradient(160deg, #ffd8a8, #4e3b2c 50%, #3f2d1f); }
+.nstudio__theme.e-studio i { background: linear-gradient(160deg, #6c5cff, #15121f 50%, #ff7a4d); }
+.nstudio__theme.e-minimal i { background: linear-gradient(160deg, #f6f2ea, #cfc9bf); }
+.nstudio__top .avt--3d { border-radius: 22px; overflow: hidden; -webkit-mask: none; mask: none; }
+@media (max-width: 700px) {
+  .ncall.is-3d .ncall__top { flex-wrap: nowrap; gap: 6px; padding: 10px 10px 30px; }
+  .ncall.is-3d .ncall__top .ncall__seg { position: absolute; top: 58px; left: 10px; right: 10px; width: auto; order: 0; transform: scale(.92); transform-origin: left top; }
+  .ncall.is-3d .ncall__tools { gap: 4px; margin-inline-start: auto; }
+  .ncall.is-3d .ncall__tools .ncall__ic, .ncall.is-3d .ncall__tools .ncall__pill { width: 34px; height: 34px; min-width: 34px; padding: 0; justify-content: center; border-radius: 10px; }
+  .ncall.is-3d #ncModeBtn, .ncall.is-3d #ncFull { display: none; }
+  .ncall.is-3d .ncall__live span { display: none; }
+  .ncall.is-3d .ncall__who { display: none; }
+  .ncall.is-3d .ncall__state { top: auto; bottom: 120px; font-size: 12px; }
+  .ncall.is-3d .ncall__caps { bottom: 152px; }
+  .ncall.is-3d .ncall__noor:not(:empty) { max-height: 19vh; }
+  .ncall.is-3d .ncall__viz { bottom: 92px; height: 22px; width: 70vw; }
+  .ncall.is-3d .ncall__btns { gap: 6px; padding: 6px 8px; }
+  .ncall.is-3d .ncall__btn { width: 46px; height: 46px; }
+  .ncall.is-3d .ncall__chips { bottom: 240px; }
+}

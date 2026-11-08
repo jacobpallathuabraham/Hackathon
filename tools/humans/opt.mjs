@@ -1,0 +1,16 @@
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { sparse, quantize, dedup, prune, resample, meshopt } from '@gltf-transform/functions';
+import { MeshoptEncoder } from 'meshoptimizer';
+const [inp, out, kind] = process.argv.slice(2);
+await MeshoptEncoder.ready;
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder });
+const doc = await io.read(inp);
+const steps = [dedup(), prune()];
+if (kind === 'anim') steps.push(resample({ tolerance: 0.0005 }));
+steps.push(sparse({ ratio: 0.3 }));
+steps.push(meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
+await doc.transform(...steps);
+const tex = doc.getRoot().listTextures().map(t => [t.getMimeType(), t.getImage().byteLength]);
+await io.write(out, doc);
+console.log('textures', JSON.stringify(tex));

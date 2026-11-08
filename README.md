@@ -242,7 +242,7 @@ Noor is now available on the whole student site, not only in the Reading Studio.
   - Events are kept in memory for about a minute and never stored or sent. Check-ins stop if the student says no to noticing or taps "Turn these off".
   - There is at most one every 45 seconds, and each kind at most every 3 minutes. "I'm fine" silences that kind for the session.
 
-Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{studio-noor,companion,noor,noor-tools,realtrack,handwriting,growth,quest}.e2e.js`. The AI model is mocked in `studio-noor.e2e.js` (no GPU in CI); the real WebLLM download needs a WebGPU browser.
+Tests: `npm test` (unit). Optional browser checks: `tests/e2e/{studio-noor,companion,noor,noor-tools,human3d,realtrack,handwriting,growth,quest}.e2e.js`. The AI model is mocked in `studio-noor.e2e.js` (no GPU in CI); the real WebLLM download needs a WebGPU browser.
 
 Honest limits: no website can identify a condition with clinical accuracy. These features look for converging evidence and support a referral. Only a qualified assessment can confirm a learning difference. The reference ranges in the check-ins are demo values.
 
@@ -386,3 +386,51 @@ Illustrated SVG avatars; text-driven lip-sync anchored to word boundaries; one v
 | ElevenLabs | very expressive voices, voice design | strong emotional delivery | character timestamps | subscription | no visemes; timestamps can drive our text visemes |
 | OpenAI TTS | a few expressive voices | instruction-controlled style | none | per character | no timing data |
 None of these are connected yet: each needs an API key held on a server. The voice layer is modular (`voice.js` + `voicelib.js`), so a cloud provider can be added as another engine.
+
+## Voice v6: full-screen 3D digital humans
+
+### Audit: why the previous Karim looked artificial
+- **A single photo bent in 2D.** The eyes "closed" by stretching the upper-lid skin down, the teeth and tongue were painted in, and the head could only tilt a few degrees. With no eyeballs, no real eyelids and no jaw, close-ups looked uncanny.
+- **Small portrait card, no body.** There were no hands, so no gestures.
+- **Mouth shapes from 13 hand-tuned deformations,** not a facial rig.
+- **The reference packs supplied for this round** (two PDFs and the mockup) are concept images. As the PDFs themselves say, they contain no 3D geometry, skeletons or rigs. They were used for direction (framing, gestures, expressions, environments, UI), not as assets.
+
+### What ERLY uses now
+- **14 rigged 3D adults** from the Microsoft Rocketbox Avatar Library (MIT licence; see `tools/humans/README.md` for the full table and citation):
+  - **Educational:** Karim, Layla (university tutor), Mr. Hart and Ms. Grace (experienced teachers), Kwame (science), Kenji (maths), Noura (study coach), Sofia (writing).
+  - **Professional:** Dr. Sami and Dr. Amira (white coats; general health information, never a diagnosis), Zara (counsellor), Omar (academic advisor), Mei (careers), Faisal (mentor).
+  - Each has a complete body with a Biped skeleton and fingers, and a face rig with **15 viseme blendshapes + 41 ARKit/FACS expression shapes**.
+- **`assets/js/companion/human3d.js`** (three.js r170, vendored in `assets/vendor/three/`, MIT):
+  - **Framing**: waist-up, filling the screen with room for both hands. On phones the person sits higher, so the captions and controls don't cover the face.
+  - **Body language**: a state machine over 15 motion-captured clips per gender:
+    - greeting wave, breathing idle;
+    - attentive listening, with nods while the student talks;
+    - a thoughtful pose (gaze up and aside) while thinking;
+    - talking gestures chosen from each sentence's tone: excited, neutral, relaxed, or "presenting" for steps and explanations;
+    - a shrug for "it depends" and a soft laugh for humour.
+    Clips cross-fade at sentence starts, with random start offsets so they don't repeat. Speaking cuts a thinking pose short.
+  - **Face**:
+    - lip-sync drives the viseme shapes and the jaw from real word-boundary timing (`lipsync.js`), and returns to rest at pauses and when interrupted;
+    - blinks are irregular (sometimes double);
+    - the head turns towards the camera for eye contact (limited to 28°), with eye saccades;
+    - expressions (smile and cheeks, brows, inner-brow concern, furrow, squint, wide eyes) follow the emotion of what is being said and ease in and out. They never come from the student's face or voice.
+  - **Lighting**: a warm key light, cool fill and a rim light, image-based lighting from a studio environment, ACES tone mapping and soft shadows.
+  - **Environments**: 8 rooms built in 3D (classroom, lecture hall, study room, science lab, consultation room, library, ERLY studio, minimal). They're rendered behind the person and blurred like a camera's depth of field, and can be switched live in Companion Studio → Look.
+  - **Performance**:
+    - the model loads only when chosen (1.6–4.8 MB each, plus a 2.1 MB motion pack per gender);
+    - render resolution adapts to the frame rate;
+    - the room is rendered once (not every frame);
+    - reduced-motion settings stop head movement.
+    - Without WebGL 2, a 2D companion with the same voice is used automatically.
+- **Screen**: full-screen environment and person, glass name tag, caption bubble, horizontal audio waveform and floating controls (mic, pause, end, replay, captions, keyboard). The top bar has mode, language, companion picker, full screen, transcript and settings. Companion Studio has an avatar gallery with large portraits, role, voice pairing and a live 3D preview.
+
+### Measured (headless Chromium, software WebGL, no GPU, `tests/e2e/human3d.e2e.js`)
+- All 14 people load with the full face rig. The state machine plays the expected clip in every state, tone changes the gestures, and the mouth returns to rest.
+- Lip-sync: the lips visibly move a median of **118–140 ms** (worst 164 ms, two runs) after each word-boundary event. This software renderer runs at only about 8 fps, so the delay is mostly frame time. Real devices with a GPU should be much lower, but haven't been measured yet.
+
+### Honest limits and what would take it further
+- **Realism**: Rocketbox characters are realistic, game-quality humans (about 22–27k vertices, 2K face textures). They aren't film-quality digital humans like MetaHumans: no strand hair, no subsurface skin.
+- **Karim's face**: the 3D Karim is the closest library match to the reference portraits, not the same face. To build *that* Karim in 3D, you'd need a commissioned head sculpt or scan with ARKit blendshapes fitted onto a compatible rig. Reallusion Character Creator (with Headshot) or MetaHuman are options, but both need licences, and MetaHuman's licence limits use to Unreal Engine.
+- **Lip-sync**: it follows text timing from the browser voice, not the audio phonemes. Exact phoneme visemes need a cloud TTS with viseme events (for example Azure Speech, via a backend that holds the key).
+- **Clothing**: each person's clothing is part of their model. Changing outfits would need separate garment meshes.
+- **Diversity**: it reflects what the library contains. Some regions, including South Asia, are under-represented. More characters can be added with the pipeline in `tools/humans/`.

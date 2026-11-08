@@ -73,7 +73,7 @@ const MOCKS = () => {
 
   /* ---------- voice mode: first-time setup, avatar, voice, lip-sync, transcript ---------- */
   await page.click('#cmpVoice'); await page.waitForSelector('.nstudio.is-in');
-  assert.equal(await page.locator('.nstudio [data-av]').count(), 8, 'eight companions (2 photoreal + 6 illustrated)');
+  assert.equal(await page.locator('.nstudio [data-av]').count(), 22, '14 3D digital humans + 2 photo portraits + 6 illustrated');
   await page.click('.nstudio [data-av="karim"]'); await page.waitForTimeout(400);
   assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.avatar), 'karim');
   assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().voices.en), 'Microsoft Andrew Online (Natural) - English (United States)', 'a male companion gets a male voice');
@@ -106,7 +106,7 @@ const MOCKS = () => {
   await page.click('.nstudio [data-step="1"]'); await page.waitForTimeout(400);
   assert.equal(await page.isVisible('.nstudio'), false, 'setup closes');
   const stageAv = await page.getAttribute('.ncall .avt', 'data-avatar');
-  assert.ok(['karim', 'omar'].includes(stageAv), 'chosen avatar on stage (or its illustrated twin without WebGL): ' + stageAv);
+  assert.ok(['karim', 'karim2d', 'omar'].includes(stageAv), 'chosen avatar on stage (or its 2D fallback without WebGL 2): ' + stageAv);
   if (await page.isVisible('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
   // the mouth moves while Noor speaks, and rests when she stops
   let maxOpen = 0, shapes = new Set();

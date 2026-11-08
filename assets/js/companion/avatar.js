@@ -19,10 +19,28 @@
   let uidN = 0;
 
   // skin, lip, hair, eye, cloth, accent
+  // 3D digital humans (Microsoft Rocketbox, MIT) — role, voice gender, model file
+  const H3 = [
+    ['karim', 'Karim', 'm', 'Friendly study companion', 'رفيق دراسة ودود', 'Warm, patient and easy to talk to — explains anything step by step.', 'دافئ وصبور وسهل الحديث — يشرح أي شيء خطوة بخطوة.', 'edu'],
+    ['layla', 'Layla', 'f', 'University tutor', 'مدرّسة جامعية', 'Clear, encouraging and great at exam preparation.', 'واضحة ومشجّعة وممتازة في التحضير للامتحانات.', 'edu'],
+    ['hart', 'Mr. Hart', 'm', 'Experienced teacher', 'معلم ذو خبرة', 'Calm and thorough, with decades of classroom experience.', 'هادئ ودقيق، بخبرة طويلة في التدريس.', 'edu'],
+    ['grace', 'Ms. Grace', 'f', 'Experienced teacher', 'معلمة ذات خبرة', 'Kind and structured — loves a good plan.', 'لطيفة ومنظمة — تحب الخطط الجيدة.', 'edu'],
+    ['kwame', 'Kwame', 'm', 'Science instructor', 'مدرّس علوم', 'Makes physics, chemistry and biology click with real examples.', 'يجعل الفيزياء والكيمياء والأحياء واضحة بأمثلة حقيقية.', 'edu'],
+    ['kenji', 'Kenji', 'm', 'Mathematics tutor', 'مدرّس رياضيات', 'Breaks maths into small, logical steps.', 'يقسّم الرياضيات إلى خطوات منطقية صغيرة.', 'edu'],
+    ['drsami', 'Dr. Sami', 'm', 'Doctor (health & wellbeing)', 'طبيب (الصحة والعافية)', 'Explains health topics clearly — general information, never a diagnosis.', 'يشرح المواضيع الصحية بوضوح — معلومات عامة وليس تشخيصاً.', 'pro'],
+    ['dramira', 'Dr. Amira', 'f', 'Doctor (health & wellbeing)', 'طبيبة (الصحة والعافية)', 'Calm, reassuring health explanations — general information only.', 'شرح صحي هادئ ومطمئن — معلومات عامة فقط.', 'pro'],
+    ['zara', 'Zara', 'f', 'Student support counsellor', 'مرشدة دعم الطلاب', 'A good listener for stress, focus and study habits.', 'مستمعة جيدة للتوتر والتركيز وعادات الدراسة.', 'pro'],
+    ['omar', 'Omar', 'm', 'Academic advisor', 'مرشد أكاديمي', 'Helps you plan courses, deadlines and next steps.', 'يساعدك في تخطيط المواد والمواعيد والخطوات القادمة.', 'pro'],
+    ['mei', 'Mei', 'f', 'Career guidance advisor', 'مرشدة مهنية', 'CVs, interviews, internships and career ideas.', 'السيرة الذاتية والمقابلات والتدريب وأفكار المهن.', 'pro'],
+    ['noura', 'Noura', 'f', 'Study coach', 'مدربة دراسة', 'Motivating, organised, and good at getting you started.', 'محفّزة ومنظمة وتساعدك على البدء.', 'edu'],
+    ['faisal', 'Faisal', 'm', 'Mentor', 'مرشد', 'Thoughtful advice on goals, balance and university life.', 'نصائح مدروسة عن الأهداف والتوازن والحياة الجامعية.', 'pro'],
+    ['sofia', 'Sofia', 'f', 'Writing tutor', 'مدرّسة كتابة', 'Essays, reports and clear academic English.', 'المقالات والتقارير والإنجليزية الأكاديمية الواضحة.', 'edu']
+  ].map(([id, name, g, role, roleAr, about, aboutAr, cat]) => ({ id, name, g, three: true, model: id + '.glb', thumb: 'assets/img/humans/' + id + '.jpg', cat, role: [role, roleAr], fallback: g === 'f' ? 'yasmin' : 'karim2d', en: [role, about], ar: [roleAr, aboutAr] }));
   const LIST = [
+    ...H3,
     { id: 'yasmin', name: 'Yasmin', g: 'f', photo: true, fallback: 'sara', thumb: 'assets/img/companions/yasmin.jpg',
       en: ['Warm & curious', 'A friendly study partner who loves a good question.'], ar: ['دافئة وفضولية', 'زميلة دراسة ودودة تحب الأسئلة الجيدة.'] },
-    { id: 'karim', name: 'Karim', g: 'm', photo: true, fallback: 'omar', thumb: 'assets/img/companions/karim.jpg',
+    { id: 'karim2d', face: 'karim', name: 'Karim (portrait)', g: 'm', photo: true, fallback: 'omar', thumb: 'assets/img/companions/karim.jpg',
       en: ['Calm & encouraging', 'Patient, clear and easy to talk to.'], ar: ['هادئ ومشجّع', 'صبور وواضح وسهل الحديث معه.'] },
     { id: 'noor', name: 'Noor', g: 'f', hair: 'hijab', skin: '#D9A585', skinD: '#B97F5F', lip: '#B5605A', hairC: '#6E5A8C', hairC2: '#594873', eye: '#4A3020', cloth: '#E8E1D6', cloth2: '#C9BFB0', brow: '#3B2618',
       en: ['Warm & encouraging', 'Patient, kind and calm. Great for check-ins.'], ar: ['دافئة ومشجّعة', 'صبورة ولطيفة وهادئة. رائعة لجلسات الاطمئنان.'] },
@@ -134,10 +152,62 @@
     listening: [0.34, 0.28, 0, 0, 3, 0.4], thinking: [0.1, 0.12, 0, 0.45, -2.2, 0.25], paused: [0.2, 0, 0, 0, 0, 0.15]
   };
 
+  /* ---------------- 3D digital humans: async load behind a proxy ---------------- */
+  function whenH3() {
+    if (ERLY.human3d) return Promise.resolve(ERLY.human3d);
+    return new Promise((ok, bad) => { const t = setTimeout(() => bad(new Error('3d-not-loaded')), 15000); window.addEventListener('erly:human3d', () => { clearTimeout(t); ok(ERLY.human3d); }, { once: true }); });
+  }
+  function mount3d(host, a, opts) {
+    host.classList.add('avt', 'avt--3d'); host.dataset.avatar = a.id; host.innerHTML = '<div class="avt3d__load" role="status"><i></i><span>' + (document.documentElement.lang === 'ar' ? 'جارٍ تحميل ' : 'Loading ') + a.name + '…</span></div>';
+    let inner = null, dead = false, voice = null, st = opts.state || 'idle', emo = null, greet = false;
+    const q = { level: 0 };
+    const proxy = {
+      avatar: a, three: true, photo: false,
+      ready: null,
+      setState(s) { st = s; host.dataset.state = s; if (inner) inner.setState(s); },
+      emote(e) { emo = e; if (inner) inner.emote(e); },
+      emotion: () => (inner ? inner.emotion() : emo || 'neutral'),
+      greet() { if (inner) inner.greet(); else greet = true; },
+      attach(v) { voice = v; if (inner) inner.attach(v); return proxy; },
+      level(x) { q.level = x; if (inner) inner.level(x); },
+      say(...args) { if (inner) inner.say(...args); },
+      shape: () => (inner ? inner.shape() : { o: 0, w: 0.5, r: 0, t: 0, g: 0, f: 0 }),
+      expression: () => (inner ? inner.expression() : {}),
+      weights: () => (inner ? inner.weights() : {}),
+      clip: () => (inner ? inner.clip() : null),
+      history: () => (inner && inner.history ? inner.history() : []),
+      setEnv(e) { opts.env = e; if (inner) inner.setEnv(e); },
+      quality: () => (inner ? inner.quality() : 1),
+      get lipsync() { return inner ? inner.lipsync : null; },
+      destroy() { dead = true; if (inner) inner.destroy(); host.innerHTML = ''; host.classList.remove('avt--3d'); }
+    };
+    const supported = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } })();
+    proxy.ready = (supported ? whenH3() : Promise.reject(new Error('no-webgl2')))
+      .then(H => H.create(host, { meta: a, env: opts.env || 'classroom', zoom: opts.zoom, lowPower: opts.lowPower }))
+      .then(c => {
+        if (dead) { c.destroy(); return; }
+        inner = c; const l = host.querySelector('.avt3d__load'); if (l) l.remove();
+        host.classList.add('is-ready');
+        if (voice) c.attach(voice); c.setState(st); if (emo) c.emote(emo); if (greet) c.greet();
+        return c;
+      })
+      .catch(err => {
+        if (dead) return;
+        // no WebGL2 or the model couldn't load: fall back to a 2D companion of the same voice
+        console.warn('3D companion unavailable:', err && err.message);
+        host.classList.remove('avt--3d'); host.dataset.fallback = '1';
+        const f = mount(host, a.fallback, opts);
+        inner = f; if (voice) f.attach(voice); f.setState(st);
+        proxy.fallback = true;
+      });
+    return proxy;
+  }
+
   /* ---------------- animation ---------------- */
   function mount(host, id, opts) {
     opts = opts || {};
     let a = get(id);
+    if (a.three) return mount3d(host, a, opts);
     const u = 'av' + (++uidN) + '-';
     host.classList.add('avt'); host.dataset.avatar = a.id;
     host.innerHTML = '';
@@ -145,7 +215,7 @@
     let photo = null;
     if (a.photo && ERLY.photoHead) {
       host.classList.add('avt--photo');
-      photo = ERLY.photoHead.create(host, a.id);
+      photo = ERLY.photoHead.create(host, a.face || a.id);
       if (!photo) { host.classList.remove('avt--photo'); a = get(a.fallback); host.dataset.avatar = a.id; host.dataset.fallback = '1'; }
     }
     if (!photo) host.innerHTML = a.abstract ? aura() : svg(a, u);
@@ -282,5 +352,5 @@
 
   window.ERLY = window.ERLY || {};
   // svg(id, true) = a head-and-shoulders crop for thumbnails
-  ERLY.avatars = { list: LIST, get, mount, emotions: Object.keys(EMO), svg: (id, crop) => { const x = svg(get(id), 'st' + (++uidN) + '-'); return crop ? x.replace('viewBox="0 0 400 430"', 'viewBox="88 60 224 224"') : x; } };
+  ERLY.avatars = { list: LIST, get, mount, EMO, has3d: () => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } }, emotions: Object.keys(EMO), svg: (id, crop) => { const x = svg(get(id), 'st' + (++uidN) + '-'); return crop ? x.replace('viewBox="0 0 400 430"', 'viewBox="88 60 224 224"') : x; } };
 })();

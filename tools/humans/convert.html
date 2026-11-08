@@ -1,0 +1,84 @@
+<!doctype html><html><head><script type="importmap">{"imports":{"three":"../../node_modules/three/build/three.module.js","three/addons/":"../../node_modules/three/examples/jsm/"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+const FACE = /(Eye|MJaw|Lip|Tongue|Mouth|Masseter|Caninus|Cheek|Eyebrow|MNose|Upperlip)/;
+const KEEP = ['VI_00_Sil', 'VI_01_PP', 'VI_02_FF', 'VI_03_TH', 'VI_04_DD', 'VI_05_KK', 'VI_06_CH', 'VI_07_SS', 'VI_08_nn', 'VI_09_RR', 'VI_10_aa', 'VI_11_E', 'VI_12_I', 'VI_13_O', 'VI_14_U',
+  'AK_01_BrowDownLeft', 'AK_02_BrowDownRight', 'AK_03_BrowInnerUp', 'AK_04_BrowOuterUpLeft', 'AK_05_BrowOuterUpRight', 'AK_07_CheekSquintLeft', 'AK_08_CheekSquintRight',
+  'AK_09_EyeBlinkLeft', 'AK_10_EyeBlinkRight', 'AK_11_EyeLookDownLeft', 'AK_12_EyeLookDownRight', 'AK_13_EyeLookInLeft', 'AK_14_EyeLookInRight', 'AK_15_EyeLookOutLeft', 'AK_16_EyeLookOutRight', 'AK_17_EyeLookUpLeft', 'AK_18_EyeLookUpRight',
+  'AK_19_EyeSquintLeft', 'AK_20_EyeSquintRight', 'AK_21_EyeWideLeft', 'AK_22_EyeWideRight', 'AK_25_JawOpen', 'AK_27_MouthClose', 'AK_28_MouthDimpleLeft', 'AK_29_MouthDimpleRight',
+  'AK_30_MouthFrownLeft', 'AK_31_MouthFrownRight', 'AK_32_MouthFunnel', 'AK_34_MouthLowerDownLeft', 'AK_35_MouthLowerDownRight', 'AK_36_MouthPressLeft', 'AK_37_MouthPressRight', 'AK_38_MouthPucker',
+  'AK_42_MouthShrugLower', 'AK_43_MouthShrugUpper', 'AK_44_MouthSmileLeft', 'AK_45_MouthSmileRight', 'AK_46_MouthStretchLeft', 'AK_47_MouthStretchRight', 'AK_48_MouthUpperUpLeft', 'AK_49_MouthUpperUpRight'];
+const rename = k => { const m = k.replace(/^.*?\./, '').replace(/^AA_/, ''); if (m.startsWith('VI_')) return 'viseme_' + m.slice(6); return m.slice(6, 7).toLowerCase() + m.slice(7); };
+const toB64 = buf => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); };
+const loadTex = (url, srgb) => new Promise((ok, bad) => new THREE.TextureLoader().load(url, t => { t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.flipY = true; t.userData.mimeType = /\.png$/.test(url) ? 'image/png' : 'image/jpeg'; ok(t); }, undefined, bad));
+const exportGLB = (obj, animations) => new Promise((ok, bad) => new GLTFExporter().parse(obj, r => ok(r), bad, { binary: true, animations: animations || [], maxTextureSize: 2048 }));
+
+window.convertAvatar = async (dir, file) => {
+  const mgr = new THREE.LoadingManager(); mgr.setURLModifier(u => /\.tga$/i.test(u) ? 'data:,' : u);
+  const obj = await new FBXLoader(mgr).loadAsync(dir + '/' + file);
+  const report = {};
+  for (const o of [...obj.children]) { if (o.isMesh && !o.isSkinnedMesh) obj.remove(o); }
+  const meshes = []; obj.traverse(o => { if (o.isSkinnedMesh) meshes.push(o); });
+  for (const mesh of meshes) {
+    const g = mesh.geometry;
+    // keep only the blendshapes we use, renamed to ARKit / viseme names; drop morph normals (size)
+    const dict = mesh.morphTargetDictionary || {}, pos = g.morphAttributes.position || [];
+    const keys = Object.keys(dict).filter(k => KEEP.includes(k.replace(/^.*?\./, '').replace(/^AA_/, '')));
+    g.morphAttributes.position = keys.map(k => { const a = pos[dict[k]]; a.name = rename(k); return a; });
+    delete g.morphAttributes.normal; g.morphTargetsRelative = g.morphTargetsRelative;
+    mesh.morphTargetDictionary = {}; keys.forEach((k, i) => { mesh.morphTargetDictionary[rename(k)] = i; });
+    mesh.morphTargetInfluences = keys.map(() => 0);
+    report.morphs = Object.keys(mesh.morphTargetDictionary).length;
+    // physically based materials from our converted textures
+    const mats = [].concat(mesh.material);
+    const out = [];
+    for (const m of mats) {
+      const base = m.name; // e.g. m013_head
+      const kind = /opacity/.test(base) ? 'opacity' : /head/.test(base) ? 'head' : 'body';
+      const nm = new THREE.MeshStandardMaterial({ name: kind, roughness: kind === 'opacity' ? 0.7 : kind === 'head' ? 0.55 : 0.85, metalness: 0 });
+      if (kind === 'opacity') { nm.map = await loadTex(`${dir}/${base}_color.png`, true); nm.transparent = true; nm.alphaTest = 0.35; nm.side = THREE.DoubleSide; }
+      else {
+        try { nm.map = await loadTex(`${dir}/${base}_color.jpg`, true); }
+        catch (e) { nm.map = await loadTex(`${dir}/${base}_opacity_color.png`, true); nm.transparent = true; nm.alphaTest = 0.3; nm.name = 'opacity'; nm.roughness = 0.2; }
+        try { nm.normalMap = await loadTex(`${dir}/${base}_normal.jpg`, false); } catch (e) {}
+      }
+      out.push(nm);
+    }
+    mesh.material = out.length === 1 ? out[0] : out;
+    report.mats = out.map(m => m.name);
+    report.verts = g.attributes.position.count;
+  }
+  obj.animations = [];
+  const glb = await exportGLB(obj);
+  report.bytes = glb.byteLength;
+  return { report, b64: toB64(glb) };
+};
+
+window.convertAnims = async (dir, files) => {
+  let skel = null; const clips = [];
+  for (const f of files) {
+    const o = await new FBXLoader().loadAsync(dir + '/' + f);
+    if (!skel) skel = o;
+    const c = o.animations[0];
+    c.name = f.replace(/^[mf]_/, '').replace(/\.max\.fbx$/, '').replace(/^gestic_/, '');
+    c.tracks = c.tracks.filter(t => {
+      const [bone, prop] = t.name.split('.');
+      if (FACE.test(bone)) return false;
+      if (prop === 'scale') return false;
+      if (prop === 'position' && bone !== 'Bip01_Pelvis') return false;
+      return true;
+    });
+    // keep the body in place: remove sideways/forward drift of the pelvis
+    const pt = c.tracks.find(t => t.name === 'Bip01_Pelvis.position');
+    if (pt) { const v = pt.values, x0 = v[0], z0 = v[2]; for (let i = 0; i < v.length; i += 3) { v[i] = x0 + (v[i] - x0) * 0.25; v[i + 2] = z0 + (v[i + 2] - z0) * 0.25; } }
+    clips.push(c);
+  }
+  skel.traverse(o => { if (o.isMesh) o.visible = false; });
+  for (const o of [...skel.children]) if (o.isMesh) skel.remove(o);
+  const glb = await exportGLB(skel, clips);
+  return { report: { clips: clips.map(c => [c.name, +c.duration.toFixed(2), c.tracks.length]), bytes: glb.byteLength }, b64: toB64(glb) };
+};
+window.__ready = true;
+</script></body></html>

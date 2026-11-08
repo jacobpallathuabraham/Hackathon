@@ -47,7 +47,8 @@
     if (vs.mode && MODE_P[vs.mode]) bits.push(MODE_P[vs.mode]);
     if (vs.length && LEN_P[vs.length]) bits.push(LEN_P[vs.length]);
     if (C.inCall) bits.push('Speak naturally, as in a real conversation: vary your phrasing, no formatting, numbers and formulas in words. If the student corrects you or says you misunderstood, acknowledge it briefly and fix it. If you are not sure, say so. If what they said is unclear or ambiguous (speech recognition can mishear), ask one short clarifying question instead of guessing. Understand follow-ups like “explain that again”, “the second point”, “another example”, “shorter”, “simpler” from the conversation so far.' + (vs.style === 'detailed' || vs.style === 'steps' ? ' Up to 5 short sentences is fine.' : ''));
-    if (C.inCall && vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}" — answer to that name too (you are still the same AI).`); }
+    if (C.inCall && vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}"${a.role ? ` (shown as: ${a.role[0]})` : ''} — answer to that name too (you are still the same AI, and you never claim to be a human).`);
+      if (a && a.role && /Doctor/.test(a.role[0])) bits.push('This avatar looks like a doctor, but you are an AI: give general health and wellbeing information only. Never diagnose or prescribe; for a personal medical concern, suggest the university health centre or a doctor — only when it is actually relevant, without routine disclaimers.'); }
     return bits.length ? `Student's chosen style: ${bits.join(' ')}` : '';
   }
   function memoryPrompt() {
