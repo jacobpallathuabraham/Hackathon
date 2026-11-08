@@ -50,7 +50,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.click('#cmpCall'); await page.waitForTimeout(600);
   if (await page.$('[data-setup="skip"]')) await page.click('[data-setup="skip"]');
   if (await page.$('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
-  await page.waitForTimeout(4000);
+  // (the companion's greeting is spoken first; wait for the heard answer rather than a fixed time)
+  await page.waitForFunction(() => /I always have to re-read things/.test(document.querySelector('#cmpLog').textContent), null, { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => /frustrating|Lots of things/.test((document.querySelector('#ncNoor') || {}).textContent || ''), null, { timeout: 10000 }).catch(() => {});
   assert.match(await page.textContent('#cmpLog'), /I always have to re-read things/);
   assert.match(await page.textContent('#ncNoor'), /frustrating|Lots of things/);
   await page.click('#ncEnd');

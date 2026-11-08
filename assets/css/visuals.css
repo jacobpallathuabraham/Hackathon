@@ -125,3 +125,31 @@
 .alx__play { width: 58px; background: #8b5cf6 !important; border-color: #8b5cf6 !important; }
 @media (prefers-reduced-motion: reduce) { .alx__host.is-on .alx__eq em { animation: none; height: 12px; } }
 .alx__ch { flex: none; padding: 6px 20px 12px; } .alx__ch button { line-height: 1.2; }
+
+/* ---------- v8: dynamic visuals (visual-spec.js) ---------- */
+.vz-3d { position: absolute; inset: 0; }
+.vz-3d canvas { width: 100% !important; height: 100% !important; display: block; touch-action: none; }
+.vz__stage > .vz-canvas { position: absolute; inset: 0; }
+.vs-diagram .vs-node rect { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2; transition: fill .25s, stroke-width .25s; }
+.vs-diagram .vs-node { cursor: pointer; outline: none; }
+.vs-diagram .vs-node:focus-visible rect { stroke-width: 4; }
+.vs-diagram .vs-ntxt { display: grid; place-items: center; height: 100%; text-align: center; font: 600 13px/1.25 var(--f-body, system-ui); color: #1f1640; padding: 2px; }
+.vs-diagram .vs-elab { font: 600 11px var(--f-body, system-ui); fill: #5b4a8a; }
+.vs-diagram .is-hi rect { fill: #ede9fe; stroke-width: 3.5; }
+.vs-diagram .is-dim { opacity: .35; }
+.vs-diagram g { transition: opacity .3s; }
+/* the consent offer */
+.cvoffer { margin: 8px 0 10px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(124,58,237,.35); background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(14,165,233,.08)); }
+.cvoffer p { margin: 0 0 8px; display: grid; gap: 3px; }
+.cvoffer p small { color: var(--ink-3, #6b7280); }
+.cvoffer__b { display: flex; flex-wrap: wrap; gap: 8px; }
+.cvoffer__b button { border: 1px solid #7c3aed; background: #fff; color: #4c1d95; border-radius: 999px; padding: 7px 13px; font: 600 13px var(--f-body, system-ui); cursor: pointer; }
+.cvoffer__b button[data-vo="yes"] { background: #7c3aed; color: #fff; }
+.cvoffer__b button:focus-visible { outline: 3px solid #0ea5e9; outline-offset: 2px; }
+.cvoffer.is-done .cvoffer__b { display: none; }
+.cvoffer--call { position: absolute; left: 50%; bottom: 128px; transform: translateX(-50%); z-index: 30; width: min(560px, calc(100% - 32px)); background: rgba(10,16,32,.86); color: #e6f6ff; border-color: rgba(34,211,238,.55); backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(34,211,238,.15); }
+.cvoffer--call p small { color: #9fb6c9; }
+.cvoffer--call .cvoffer__b button { background: transparent; color: #a5f3fc; border-color: #22d3ee; }
+.cvoffer--call .cvoffer__b button[data-vo="yes"] { background: #22d3ee; color: #04131c; }
+.cvoffer--call.is-done { display: none; }
+@media (prefers-color-scheme: dark) { .cvoffer__b button { background: transparent; color: #ddd6fe; } }

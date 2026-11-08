@@ -32,8 +32,18 @@
   const SAFARI = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(ua);
 
   /* ---------------- settings ---------------- */
-  const DEF = { avatar: 'karim', env: 'classroom', gender: 'f', rate: 1, pitch: 1, volume: 1, expr: 1, style: 'conversational', tone: 'friendly', length: 'medium', mode: 'natural', theme: 'studio', preset: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, recLang: '', dict: [], favs: [], profiles: [], prof: {}, setup: false };
+  const DEF = { avatar: 'aisha', env: 'portrait', gender: 'f', rate: 1, pitch: 1, volume: 1, expr: 1, style: 'conversational', tone: 'friendly', length: 'medium', mode: 'natural', theme: 'studio', preset: 'friendly', quiet: 'normal', handsFree: true, barge: !SAFARI, captions: true, capSize: 'm', contrast: false, recLang: '', dict: [], favs: [], profiles: [], prof: {}, setup: false };
   const cfg = () => Object.assign({}, DEF, U.store.prefs().vs || {});
+  // v8: the old Rocketbox people were replaced as the default by the new digital human — move existing users over once
+  (function migrateV8() {
+    try {
+      const vs = Object.assign({}, U.store.prefs().vs || {});
+      if (vs.v8) return;
+      vs.v8 = true;
+      if (!vs.avatar || /^(karim|layla|hart|grace|kwame|kenji|drsami|dramira|zara|omar|mei|noura|faisal|sofia)$/.test(vs.avatar)) { vs.avatar = 'aisha'; vs.env = 'portrait'; }
+      U.store.setPref('vs', vs);
+    } catch (e) { console.warn('ERLY: could not update the companion preference', e); }
+  })();
   const save = patch => { U.store.setPref('vs', Object.assign(cfg(), patch)); };
   const QUIET = { short: 750, normal: 1150, long: 1900 };
   const STYLES = [['concise', 'Concise', 'مختصر'], ['conversational', 'Conversational', 'حواري'], ['detailed', 'Detailed', 'مفصّل'], ['steps', 'Step by step', 'خطوة بخطوة']];
@@ -556,7 +566,7 @@
     ['creative', 'The Creative Partner', 'الشريك المبدع', 'Brainstorms ideas with you.', 'يعصف معك بالأفكار.', { style: 'conversational', tone: 'warm', expr: 1.25, length: 'medium', mode: 'creative' }]
   ];
   const MODES = [['natural', 'Natural conversation', 'محادثة طبيعية', 'sparkle'], ['study', 'Study', 'مذاكرة', 'book'], ['focus', 'Focus', 'تركيز', 'target'], ['deep', 'Deep explanation', 'شرح معمّق', 'layers'], ['practice', 'Practice', 'تدريب', 'pen'], ['reading', 'Reading companion', 'رفيق القراءة', 'bookmark'], ['research', 'Research', 'بحث', 'search'], ['creative', 'Creative', 'إبداع', 'bolt'], ['planning', 'Planning', 'تخطيط', 'calendar']];
-  const ENVS = [['classroom', 'Classroom', 'فصل دراسي'], ['lecture', 'Lecture hall', 'قاعة محاضرات'], ['study', 'Study room', 'غرفة مذاكرة'], ['lab', 'Science lab', 'مختبر علوم'], ['clinic', 'Consultation room', 'غرفة استشارة'], ['library', 'Library', 'مكتبة'], ['studio', 'ERLY studio', 'استوديو إيرلي'], ['minimal', 'Minimal', 'بسيط']];
+  const ENVS = [['portrait', 'Portrait studio', 'استوديو احترافي'], ['campus', 'Modern campus', 'حرم جامعي حديث'], ['classroom', 'Classroom', 'فصل دراسي'], ['lecture', 'Lecture hall', 'قاعة محاضرات'], ['study', 'Study room', 'غرفة مذاكرة'], ['lab', 'Science lab', 'مختبر علوم'], ['clinic', 'Consultation room', 'غرفة استشارة'], ['library', 'Library', 'مكتبة'], ['studio', 'ERLY studio', 'استوديو إيرلي'], ['minimal', 'Minimal', 'بسيط']];
   const THEMES = [['studio', 'Studio', 'استوديو'], ['dusk', 'Dusk', 'غسق'], ['sunrise', 'Sunrise', 'شروق'], ['ocean', 'Ocean', 'محيط'], ['forest', 'Forest', 'غابة'], ['daylight', 'Daylight', 'نهار']];
   const REC = [['', 'Same as my language', 'نفس لغتي'], ['en-US', 'English (US)', 'الإنجليزية (أمريكا)'], ['en-GB', 'English (UK)', 'الإنجليزية (بريطانيا)'], ['en-IN', 'English (India)', 'الإنجليزية (الهند)'], ['en-AU', 'English (Australia)', 'الإنجليزية (أستراليا)'], ['ar-AE', 'Arabic (UAE)', 'العربية (الإمارات)'], ['ar-SA', 'Arabic (Saudi)', 'العربية (السعودية)'], ['ar-EG', 'Arabic (Egypt)', 'العربية (مصر)']];
   let tab = 'companion', setupMode = false;
@@ -678,9 +688,11 @@
     const big = (a, k) => `<button type="button" class="nstudio__h3 ${a.id === c.avatar ? 'is-on' : ''}" data-av="${a.id}" style="--i:${k}" aria-pressed="${a.id === c.avatar}"><span class="nstudio__h3img"><img src="${a.thumb}" alt="" loading="lazy"></span><span class="nstudio__h3txt"><b>${esc(a.name)}</b><small>${esc(pick(a.role[0], a.role[1]))}</small><em>${esc(pick(a.en[1], a.ar[1]))}</em><i>${a.g === 'f' ? T('Pairs with female-sounding voices', 'يناسب الأصوات الأنثوية') : T('Pairs with male-sounding voices', 'يناسب الأصوات الذكورية')} · ${T('all environments', 'كل البيئات')}</i></span></button>`;
     const h3 = cat => AV.list.filter(a => a.three && a.cat === cat);
     body.innerHTML = `${AV.has3d() ? '' : `<p class="nstudio__none">${T('This device can’t run the 3D companions (WebGL 2 is off), so a 2D companion with the same voice is used instead.', 'لا يستطيع هذا الجهاز تشغيل الرفاق ثلاثيي الأبعاد، لذا يُستخدم رفيق ثنائي الأبعاد بنفس الصوت.')}</p>`}
-      <p class="nstudio__k">${T('3D digital humans — educational', 'بشر رقميون ثلاثيو الأبعاد — تعليميون')}</p>
+      <p class="nstudio__k">${T('Next-generation digital human (recommended)', 'إنسان رقمي من الجيل الجديد (موصى به)')}</p>
+      <div class="nstudio__h3s">${h3('next').map(big).join('')}</div>
+      <p class="nstudio__k">${T('Classic 3D people — educational (older, lower-detail models)', 'شخصيات ثلاثية الأبعاد كلاسيكية — تعليمية (نماذج أقدم وأقل تفصيلاً)')}</p>
       <div class="nstudio__h3s">${h3('edu').map(big).join('')}</div>
-      <p class="nstudio__k">${T('3D digital humans — professional', 'بشر رقميون ثلاثيو الأبعاد — مهنيون')}</p>
+      <p class="nstudio__k">${T('Classic 3D people — professional (older, lower-detail models)', 'شخصيات ثلاثية الأبعاد كلاسيكية — مهنية (نماذج أقدم)')}</p>
       <div class="nstudio__h3s">${h3('pro').map(big).join('')}</div>
       <p class="nstudio__k">${T('Photo portraits (face only)', 'صور واقعية (الوجه فقط)')}</p>
       <div class="nstudio__grid">${photos.map(card).join('')}</div>
@@ -787,6 +799,7 @@
       <div class="nstudio__modes">${MODES.map(([k, en, ar, ic]) => `<button type="button" data-opt="mode:${k}" aria-pressed="${c.mode === k}">${ICON(ic)} ${pick(en, ar)}</button>`).join('')}</div>
       <p class="nstudio__note">${modeHint(c.mode)}</p>
       ${ERLY.realtime && ERLY.realtime.available() ? `<p class="nstudio__k">${T('Voice engine', 'محرك الصوت')}</p>${segOf('engine', [['browser', 'Browser voice (free, on this device)', 'صوت المتصفح (مجاني)'], ['realtime', 'Real-time voice (OpenAI, fastest)', 'الصوت الفوري (OpenAI، الأسرع)']], Object.assign({ engine: 'browser' }, c))}<p class="nstudio__note">${T('Real-time voice streams your microphone audio to OpenAI while the session is open (through ERLY’s server, which holds the key). Takes effect next time you start a conversation.', 'يرسل الصوت الفوري صوت الميكروفون إلى OpenAI أثناء الجلسة. يسري من المحادثة التالية.')}</p>` : ''}
+      <p class="nstudio__k">${T('Explanation level', 'مستوى الشرح')}</p>${segOf('level', [['quick', 'Quick overview', 'نظرة سريعة'], ['ug', 'Undergraduate', 'جامعي'], ['adv', 'Advanced undergraduate', 'جامعي متقدم'], ['pg', 'Postgraduate', 'دراسات عليا'], ['research', 'Research-oriented', 'بحثي']], Object.assign({ level: 'ug' }, c))}
       <p class="nstudio__k">${T('Explanations', 'الشرح')}</p>${segOf('style', STYLES, c)}
       <p class="nstudio__k">${T('Answer length', 'طول الإجابة')}</p>${segOf('length', [['short', 'Short', 'قصيرة'], ['medium', 'Medium', 'متوسطة'], ['long', 'Long', 'طويلة']], c)}
       <p class="nstudio__k">${T('Tone', 'النبرة')}</p>${segOf('tone', TONES, c)}

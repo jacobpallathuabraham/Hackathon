@@ -73,7 +73,7 @@ const MOCKS = () => {
 
   /* ---------- voice mode: first-time setup, avatar, voice, lip-sync, transcript ---------- */
   await page.click('#cmpVoice'); await page.waitForSelector('.nstudio.is-in');
-  assert.equal(await page.locator('.nstudio [data-av]').count(), 22, '14 3D digital humans + 2 photo portraits + 6 illustrated');
+  assert.equal(await page.locator('.nstudio [data-av]').count(), 23, '1 next-generation digital human + 14 classic 3D people + 2 photo portraits + 6 illustrated');
   await page.click('.nstudio [data-av="karim"]'); await page.waitForTimeout(400);
   assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().vs.avatar), 'karim');
   assert.equal(await page.evaluate(() => ERLY.companion._ui.store.prefs().voices.en), 'Microsoft Andrew Online (Natural) - English (United States)', 'a male companion gets a male voice');

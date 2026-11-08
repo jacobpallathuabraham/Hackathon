@@ -36,7 +36,13 @@
     ['faisal', 'Faisal', 'm', 'Mentor', 'مرشد', 'Thoughtful advice on goals, balance and university life.', 'نصائح مدروسة عن الأهداف والتوازن والحياة الجامعية.', 'pro'],
     ['sofia', 'Sofia', 'f', 'Writing tutor', 'مدرّسة كتابة', 'Essays, reports and clear academic English.', 'المقالات والتقارير والإنجليزية الأكاديمية الواضحة.', 'edu']
   ].map(([id, name, g, role, roleAr, about, aboutAr, cat]) => ({ id, name, g, three: true, model: id + '.glb', thumb: 'assets/img/humans/' + id + '.jpg', cat, role: [role, roleAr], fallback: g === 'f' ? 'yasmin' : 'karim2d', en: [role, about], ar: [roleAr, aboutAr] }));
+  // v8 next-generation digital humans: CC0 MPFB/MakeHuman characters animated by TalkingHead (see digital-human.js)
+  const DH = [
+    { id: 'aisha', name: 'Aisha', g: 'f', three: true, engine: 'dh', model: 'aisha.glb', thumb: 'assets/img/humans/aisha.jpg', cat: 'next', role: ['University learning companion', 'رفيقة تعلّم جامعية'], fallback: 'yasmin',
+      en: ['University learning companion', 'Clear, curious and patient — explains university topics step by step and builds interactive visuals with you.'], ar: ['رفيقة تعلّم جامعية', 'واضحة وفضولية وصبورة — تشرح المواضيع الجامعية خطوة بخطوة وتبني معك شروحاً مرئية تفاعلية.'] }
+  ];
   const LIST = [
+    ...DH,
     ...H3,
     { id: 'yasmin', name: 'Yasmin', g: 'f', photo: true, fallback: 'sara', thumb: 'assets/img/companions/yasmin.jpg',
       en: ['Warm & curious', 'A friendly study partner who loves a good question.'], ar: ['دافئة وفضولية', 'زميلة دراسة ودودة تحب الأسئلة الجيدة.'] },
@@ -171,22 +177,24 @@
       attach(v) { voice = v; if (inner) inner.attach(v); return proxy; },
       level(x) { q.level = x; if (inner) inner.level(x); },
       say(...args) { if (inner) inner.say(...args); },
-      shape: () => (inner ? inner.shape() : { o: 0, w: 0.5, r: 0, t: 0, g: 0, f: 0 }),
-      expression: () => (inner ? inner.expression() : {}),
-      weights: () => (inner ? inner.weights() : {}),
-      clip: () => (inner ? inner.clip() : null),
+      shape: () => (inner && inner.shape ? inner.shape() : { o: 0, w: 0.5, r: 0, t: 0, g: 0, f: 0 }),
+      expression: () => (inner && inner.expression ? inner.expression() : {}),
+      weights: () => (inner && inner.weights ? inner.weights() : {}),
+      clip: () => (inner && inner.clip ? inner.clip() : null),
       history: () => (inner && inner.history ? inner.history() : []),
       setEnv(e) { opts.env = e; if (inner) inner.setEnv(e); },
       setShift(x) { opts.shift = x; if (inner && inner.setShift) inner.setShift(x); },
       point() { if (inner && inner.point) inner.point(); },
       mouthLevel(x) { if (inner && inner.mouthLevel) inner.mouthLevel(x); },
       quality: () => (inner ? inner.quality() : 1),
+      fps: () => (inner && inner.fps ? inner.fps() : 0),
+      engine: () => (inner && inner.engine) || (a.engine === 'dh' ? 'digital-human' : 'rocketbox'),
       get lipsync() { return inner ? inner.lipsync : null; },
       destroy() { dead = true; if (inner) inner.destroy(); host.innerHTML = ''; host.classList.remove('avt--3d'); }
     };
     const supported = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } })();
     proxy.ready = (supported ? whenH3() : Promise.reject(new Error('no-webgl2')))
-      .then(H => H.create(host, { meta: a, env: opts.env || 'classroom', zoom: opts.zoom, lowPower: opts.lowPower }))
+      .then(H => H.create(host, { meta: a, env: opts.env || (a.engine === 'dh' ? 'portrait' : 'classroom'), zoom: opts.zoom, lowPower: opts.lowPower }))
       .then(c => {
         if (dead) { c.destroy(); return; }
         inner = c; const l = host.querySelector('.avt3d__load'); if (l) l.remove();

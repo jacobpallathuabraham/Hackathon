@@ -1,0 +1,16 @@
+{
+  "name": "Priya",
+  "role": "Indian university educator (virtual — not a real person)",
+  "phenotype": { "gender": 0.0, "age": 0.6, "muscle": 0.45, "weight": 0.5, "height": 0.45, "proportions": 0.6, "race": { "caucasian": 0.45, "asian": 0.35, "african": 0.2 } },
+  "rig": "custom.talkinghead",
+  "assets": {
+    "skin": ["middleage", "female", "asian"],
+    "eyes": ["brown"],
+    "eyebrows": ["eyebrow", "010"],
+    "eyelashes": ["eyelashes", "02"],
+    "teeth": ["teeth", "base"],
+    "tongue": ["tongue", "01"],
+    "hair": ["bob", "02"],
+    "clothes": [["female", "casual"], ["shoes"]]
+  }
+}

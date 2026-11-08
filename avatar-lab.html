@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERLY Avatar Lab — lip-sync &amp; visual-engine diagnostics</title>
+<meta name="description" content="Developer diagnostics for ERLY's digital human: live visemes, blendshape weights, lip-sync timing, expressions, gestures, frame rate and memory.">
+<script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
+<link rel="stylesheet" href="assets/css/visuals.css">
+<style>
+  :root { --bg: #050b18; --panel: rgba(12, 22, 44, .78); --line: rgba(56, 189, 248, .22); --ink: #e2f3ff; --ink2: #8fb3cc; --cyan: #22d3ee; --blue: #3b82f6; --violet: #8b5cf6; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(1200px 700px at 30% 20%, #0d1e3d 0%, var(--bg) 60%); color: var(--ink); font: 14px/1.45 Inter, system-ui, -apple-system, Segoe UI, sans-serif; }
+  a { color: var(--cyan); }
+  .lab { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 16px; min-height: 100%; }
+  .lab > *, .row > * { min-width: 0; }
+  .row input[type=text] { flex: 1 1 200px; width: auto; }
+  input[type=range] { width: 120px; max-width: 40vw; }
+  .stage { position: relative; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); min-height: 560px; background: #0b1324; box-shadow: 0 0 0 1px rgba(34,211,238,.06), 0 30px 80px rgba(0,0,0,.45); }
+  .stage .h3d, .stage .h3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stage .h3d__env { filter: blur(1.5px) brightness(.96); transform: scale(1.02); }
+  .hud { position: absolute; left: 14px; top: 14px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 5; }
+  .pill { padding: 5px 10px; border-radius: 999px; background: rgba(5, 12, 26, .72); border: 1px solid var(--line); font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); backdrop-filter: blur(8px); }
+  .pill b { color: var(--cyan); }
+  .caption { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: 80%; padding: 10px 16px; border-radius: 14px; background: rgba(5, 12, 26, .78); border: 1px solid var(--line); font-size: 16px; z-index: 5; }
+  .caption mark { background: rgba(34, 211, 238, .25); color: #fff; border-radius: 4px; padding: 0 2px; }
+  aside { display: grid; gap: 12px; align-content: start; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 14px; backdrop-filter: blur(14px); }
+  .card h2 { margin: 0 0 10px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+  textarea, select, input[type=text] { width: 100%; background: rgba(2, 8, 20, .7); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  button { background: rgba(34, 211, 238, .1); color: var(--ink); border: 1px solid rgba(34, 211, 238, .45); border-radius: 999px; padding: 6px 12px; font: 600 12.5px Inter, system-ui; cursor: pointer; }
+  button:hover { background: rgba(34, 211, 238, .2); }
+  button.primary { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #02101c; border: 0; }
+  button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+  .bars { display: grid; grid-template-columns: 88px 1fr 44px; gap: 3px 8px; font: 11.5px ui-monospace, Menlo, monospace; align-items: center; }
+  .bar { height: 7px; border-radius: 4px; background: rgba(148, 163, 184, .15); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); width: 0; transition: width 60ms linear; }
+  .bar.on i { background: linear-gradient(90deg, #fbbf24, #f97316); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font: 12px ui-monospace, Menlo, monospace; }
+  .kv span:nth-child(odd) { color: var(--ink2); }
+  table { width: 100%; border-collapse: collapse; font: 12px ui-monospace, Menlo, monospace; }
+  td, th { padding: 4px 6px; border-bottom: 1px solid rgba(148,163,184,.15); text-align: left; }
+  .ok { color: #34d399; } .bad { color: #f87171; }
+  .vzhost { position: relative; height: 420px; border-radius: 16px; overflow: hidden; }
+  .vzhost .vz { position: absolute; inset: 0; }
+  small.note { color: var(--ink2); display: block; margin-top: 6px; }
+  @media (max-width: 980px) { .lab { grid-template-columns: 1fr; } .stage { min-height: 70vh; } }
+  @media (max-width: 520px) { .lab { padding: 10px; gap: 10px; } .hud { right: 10px; } .pill { font-size: 11px; } }
+  html, body { overflow-x: hidden; }
+</style>
+</head>
+<body>
+<main class="lab">
+  <section>
+    <div class="stage" id="stage" aria-label="Digital human preview">
+      <div class="hud" aria-live="off"><span class="pill">engine <b id="hEngine">loading…</b></span><span class="pill">fps <b id="hFps">–</b></span><span class="pill">viseme <b id="hVis">sil</b></span><span class="pill">lip mode <b id="hMode">–</b></span><span class="pill">state <b id="hState">idle</b></span></div>
+      <div class="caption" id="cap" aria-live="polite">Type a sentence and press Speak.</div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Visual engine — try any university question</h2>
+      <div class="row"><input type="text" id="vq" value="How does a Pratt truss bridge carry load?" aria-label="Question"><button id="vgo" class="primary">Plan &amp; render</button></div>
+      <small class="note" id="vinfo">The planner turns the question into a validated JSON spec; only tested components render it. (In the companion the student is asked first.)</small>
+      <div class="vzhost" id="vhost"></div>
+    </div>
+  </section>
+  <aside>
+    <div class="card">
+      <h2>Speech &amp; lip-sync</h2>
+      <textarea id="txt" aria-label="Sentence to speak">Photosynthesis turns light, water and carbon dioxide into glucose and oxygen. First, notice the chloroplasts.</textarea>
+      <div class="row"><label>Rate <input type="range" id="rate" min="0.6" max="1.6" step="0.05" value="1" aria-label="Speaking rate"></label><span id="rateV">1.00×</span>
+        <select id="voice" aria-label="Voice"></select></div>
+      <div class="row"><button class="primary" id="speak">Speak</button><button id="stop">Interrupt</button><button id="sim">Simulate word events</button><button id="auto">Run lip-sync test</button></div>
+      <small class="note">Lips are driven by the voice's real word-boundary events (or estimated timing when a voice reports none). Browser voices don't expose phonemes, so visemes come from TalkingHead's English phoneme rules for each word.</small>
+    </div>
+    <div class="card">
+      <h2>Expression (assistant's own tone) &amp; gesture</h2>
+      <div class="row" id="tones"></div>
+      <div class="row" id="gest"></div>
+      <div class="row" id="states"></div>
+      <div class="row"><select id="env" aria-label="Environment"></select></div>
+    </div>
+    <div class="card">
+      <h2>Live face weights</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="card">
+      <h2>Diagnostics</h2>
+      <div class="kv" id="kv"></div>
+    </div>
+    <div class="card">
+      <h2>Lip-sync test results</h2>
+      <table id="res"><thead><tr><th>case</th><th>rate</th><th>words</th><th>lips scheduled</th><th>peak after word (ms)</th><th>seen moving / frame ms</th><th>closed</th></tr></thead><tbody></tbody></table>
+    </div>
+  </aside>
+</main>
+<script src="assets/js/companion/visuals.js"></script>
+<script src="assets/js/companion/visual-spec.js"></script>
+<script type="module">
+import { create, ENVIRONMENTS } from './assets/js/companion/human3d.js';
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+const VISEMES = ['viseme_sil', 'viseme_PP', 'viseme_FF', 'viseme_TH', 'viseme_DD', 'viseme_kk', 'viseme_CH', 'viseme_SS', 'viseme_nn', 'viseme_RR', 'viseme_aa', 'viseme_E', 'viseme_I', 'viseme_O', 'viseme_U'];
+const FACE = ['jawOpen', 'mouthClose', 'eyeBlinkLeft', 'eyeBlinkRight', 'mouthSmileLeft', 'browInnerUp', 'browOuterUpLeft', 'browDownLeft', 'eyeWideLeft', 'eyeLookOutLeft', 'eyeLookUpLeft'];
+const diag = { boundaries: 0, lastBoundary: 0, lat: [], words: 0, start: 0, word: '', speaking: false };
+const t0 = performance.now();
+const ctrl = window.ctrl = await create($('#stage'), { meta: { engine: 'dh', model: 'aisha.glb', g: 'f' }, env: params.get('env') || 'portrait' });
+window.labReady = true;
+$('#hEngine').textContent = ctrl.engine + ' · Aisha';
+// controls
+const bars = $('#bars');
+[...VISEMES, ...FACE].forEach(n => { bars.insertAdjacentHTML('beforeend', `<span>${n.replace('viseme_', 'v_')}</span><span class="bar" data-b="${n}"><i></i></span><span data-v="${n}">0</span>`); });
+['neutral', 'enthusiastic', 'curious', 'thoughtful', 'serious', 'reassuring', 'empathetic', 'encouraging', 'surprised', 'focused'].forEach(e => $('#tones').insertAdjacentHTML('beforeend', `<button data-tone="${e}">${e}</button>`));
+['handup', 'index', 'side', 'shrug', 'thumbup', 'ok', 'namaste'].forEach(g => $('#gest').insertAdjacentHTML('beforeend', `<button data-g="${g}">✋ ${g}</button>`));
+['idle', 'listening', 'thinking', 'speaking'].forEach(s => $('#states').insertAdjacentHTML('beforeend', `<button data-st="${s}">${s}</button>`));
+Object.entries(ENVIRONMENTS).forEach(([k, n]) => $('#env').insertAdjacentHTML('beforeend', `<option value="${k}" ${k === ctrl.env() ? 'selected' : ''}>${n[0]}</option>`));
+document.body.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.tone) { ctrl.emote(b.dataset.tone); ctrl.setState('speaking'); setTimeout(() => !diag.speaking && ctrl.setState('idle'), 2500); }
+  if (b.dataset.g) ctrl.head.playGesture(b.dataset.g, 2.5, false, 700);
+  if (b.dataset.st) { ctrl.setState(b.dataset.st); $('#hState').textContent = b.dataset.st; }
+});
+$('#env').onchange = e => ctrl.setEnv(e.target.value);
+$('#rate').oninput = e => { $('#rateV').textContent = (+e.target.value).toFixed(2) + '×'; };
+// voices
+const synth = window.speechSynthesis;
+function fillVoices() { if (!synth) return; const vs = synth.getVoices().filter(v => /^en/i.test(v.lang)); $('#voice').innerHTML = vs.map((v, i) => `<option value="${i}">${v.name}</option>`).join('') || '<option>no voices</option>'; $('#voice')._v = vs; }
+if (synth) { fillVoices(); synth.onvoiceschanged = fillVoices; }
+// caption highlighting
+function caption(text, ci) { if (ci == null) { $('#cap').textContent = text; return; } const end = text.slice(ci).search(/\s|$/) + ci; $('#cap').innerHTML = esc(text.slice(0, ci)) + '<mark>' + esc(text.slice(ci, end)) + '</mark>' + esc(text.slice(end)); diag.word = text.slice(ci, end); }
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+// measure: boundary → visible lip movement
+function watchMove() { const t = performance.now(); let k = 0; const f = () => { const w = ctrl.weights(); const v = Math.max(...VISEMES.slice(1).map(n => w[n] || 0)); if (v > 0.25) { diag.lat.push(performance.now() - t); return; } if (++k < 40) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+function speakReal(text, rate) {
+  return new Promise(res => {
+    if (!synth || !window.SpeechSynthesisUtterance) return res(false);
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.rate = rate; const v = ($('#voice')._v || [])[+$('#voice').value]; if (v) u.voice = v;
+    u.onstart = () => { diag.speaking = true; diag.start = performance.now(); ctrl.say('start', text, rate); $('#hState').textContent = 'speaking'; };
+    u.onboundary = e => { if (e.name && e.name !== 'word') return; diag.boundaries++; diag.words++; caption(text, e.charIndex); schedProbe(() => ctrl.say('boundary', e.charIndex)); watchMove(); };
+    u.onend = u.onerror = () => { diag.speaking = false; ctrl.say('end'); ctrl.setState('idle'); $('#hState').textContent = 'idle'; caption(text); res(true); };
+    synth.speak(u);
+  });
+}
+let simT = [], simDone = null;
+// how the lips were scheduled for each word event: number of visemes and when the first one peaks (ms after the event)
+function schedProbe(fn) {
+  const h = ctrl.head, q = () => h.animQueue.filter(x => x.template && x.template.name === 'viseme');
+  const before = new Set(q()); fn();
+  const added = q().filter(x => !before.has(x));
+  diag.sched.push({ n: added.length, peak: added.length ? Math.min(...added.map(x => x.ts[1])) - h.animClock : null });
+}
+diag.sched = [];
+function simCancel() { simT.forEach(clearTimeout); simT = []; if (simDone) { const d = simDone; simDone = null; d(); } }
+// a simulated voice: word events at a realistic pace — for testing where no TTS voice exists
+function speakSim(text, rate) {
+  return new Promise(res => {
+    diag.speaking = true; diag.start = performance.now(); ctrl.say('start', text, rate);
+    simCancel(); let ci = 0, t = 0; const ws = text.split(' ');
+    ws.forEach(w => { const at = ci; simT.push(setTimeout(() => { diag.boundaries++; diag.words++; caption(text, at); schedProbe(() => ctrl.say('boundary', at)); watchMove(); }, t)); t += (w.length * 62 + 90) / rate; ci += w.length + 1; });
+    simT.push(setTimeout(() => { simT = []; diag.speaking = false; ctrl.say('end'); ctrl.setState('idle'); caption(text); res(true); }, t + 120));
+    simDone = () => res(false);
+  });
+}
+window.speakSim = speakSim;
+$('#speak').onclick = () => speakReal($('#txt').value, +$('#rate').value).then(ok => { if (!ok) speakSim($('#txt').value, +$('#rate').value); });
+$('#sim').onclick = () => speakSim($('#txt').value, +$('#rate').value);
+$('#stop').onclick = () => { if (synth) synth.cancel(); simCancel(); ctrl.say('end'); ctrl.setState('listening'); diag.speaking = false; $('#hState').textContent = 'interrupted → listening'; };
+// automated test: phonetically varied sentences at three speeds; reports how many words moved the lips,
+// the boundary→lip latency and whether the mouth closed after speech
+const CASES = [['bilabials', 'Please bring the big blue map.'], ['labiodentals', 'Five fine violins.'], ['vowels', 'Who saw each owl?'], ['long', 'Electrons flow from the negative terminal through the circuit to the positive terminal.']];
+async function runTest() {
+  const rows = [];
+  for (const [name, text] of CASES) for (const rate of [0.8, 1, 1.3]) {
+    diag.lat = []; diag.words = 0; diag.sched = [];
+    const c0 = ctrl.head.animClock, p0 = performance.now();
+    await speakSim(text, rate);
+    const clockMs = ctrl.head.animClock - c0, realMs = performance.now() - p0, clockRatio = clockMs / realMs;
+    await new Promise(r => setTimeout(r, 450));
+    const w = ctrl.weights(); const rest = Math.max(...VISEMES.slice(1).map(n => w[n] || 0), w.jawOpen || 0);
+    const med = diag.lat.length ? diag.lat.slice().sort((a, b) => a - b)[Math.floor(diag.lat.length / 2)] : null;
+    const peaks = diag.sched.filter(x => x.peak != null).map(x => x.peak).sort((a, b) => a - b);
+    rows.push({ name, rate, words: text.split(' ').length, scheduled: diag.sched.filter(x => x.n > 0).length, peak: peaks.length ? peaks[Math.floor(peaks.length / 2)] : null, moved: diag.lat.length, med, closed: rest < 0.08, clockRatio, clockMs, realMs });
+  }
+  $('#res tbody').innerHTML = rows.map(r => `<tr><td>${r.name}</td><td>${r.rate}</td><td>${r.words}</td><td class="${r.scheduled >= r.words ? 'ok' : 'bad'}">${r.scheduled}</td><td>${r.peak == null ? '–' : r.peak.toFixed(0)}</td><td>${r.moved} / ${r.med == null ? '–' : r.med.toFixed(0)}</td><td class="${r.closed ? 'ok' : 'bad'}">${r.closed ? 'yes' : 'no'}</td></tr>`).join('');
+  window.labResults = rows; return rows;
+}
+window.runLipTest = runTest;
+$('#auto').onclick = runTest;
+// GPU / memory info
+const gl = document.createElement('canvas').getContext('webgl2'); let gpu = 'unknown';
+try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) { gpu = 'n/a'; }
+let frames = 0, last = performance.now(), upd = 0, lastVis = '';
+function tick(now) {
+  frames++;
+  const w = ctrl.weights();
+  let best = 'viseme_sil', bv = 0.05; VISEMES.slice(1).forEach(n => { if ((w[n] || 0) > bv) { bv = w[n]; best = n; } });
+  if (best !== lastVis) { upd++; lastVis = best; }
+  $('#hVis').textContent = best.replace('viseme_', '');
+  [...VISEMES, ...FACE].forEach(n => { const v = Math.max(0, Math.min(1, w[n] || 0)); const b = bars.querySelector(`[data-b="${n}"]`); b.firstChild.style.width = (v * 100).toFixed(0) + '%'; b.classList.toggle('on', n === best); bars.querySelector(`[data-v="${n}"]`).textContent = v.toFixed(2); });
+  if (now - last > 500) {
+    const fps = ctrl.fps ? ctrl.fps() : 0; $('#hFps').textContent = fps ? fps.toFixed(0) : '…'; $('#hMode').textContent = ctrl.lipMode();
+    const med = diag.lat.length ? diag.lat.slice().sort((a, b) => a - b)[Math.floor(diag.lat.length / 2)].toFixed(0) + ' ms' : '–';
+    const mem = performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(0) + ' MB' : 'n/a (Chrome only)';
+    $('#kv').innerHTML = [['playback', diag.speaking ? ((performance.now() - diag.start) / 1000).toFixed(2) + ' s' : 'stopped'], ['current word', diag.word || '–'], ['word events', diag.boundaries], ['viseme changes/s', (upd / ((now - last) / 1000)).toFixed(1)], ['boundary→lips (median)', med], ['queued visemes', ctrl.pendingVisemes()], ['render fps', fps ? fps.toFixed(1) : '…'], ['render scale', ctrl.quality().toFixed(2)], ['model load', (ctrl.loadMs / 1000).toFixed(2) + ' s'], ['page→ready', ((performance.now() - t0) / 1000 | 0) + ' s ago'], ['JS heap', mem], ['GPU', gpu], ['gestures', ctrl.history().slice(-4).join(', ') || '–']].map(([k, v]) => `<span>${k}</span><span>${esc(String(v))}</span>`).join('');
+    upd = 0; last = now;
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+// visual engine
+let vz = null;
+$('#vgo').onclick = () => { const q = $('#vq').value; const spec = ERLY.vspec.plan(q); if (vz) vz.close(); if (!spec) { $('#vinfo').textContent = 'No reliable built-in visual for that question — with an AI brain connected, the AI designs a spec (validated the same way).'; return; } $('#vinfo').textContent = `Spec: ${spec.kind} · “${spec.title}” · ${spec.steps.length} steps · ${spec.vars.length} sliders`; vz = ERLY.visuals.open($('#vhost'), ERLY.vspec.toScene(spec), { docked: true }); };
+</script>
+</body>
+</html>

@@ -55,7 +55,7 @@ function bookshelf(x, z, w, h, seed, rotY) {
   const back = box(w, h, 0.03, 0x3e2a1d); back.position.set(0, h / 2, -0.15); g.add(back);
   [-w / 2, w / 2].forEach(x => { const side = box(0.04, h, 0.35, wood); side.position.set(x, h / 2, 0); g.add(side); });
   const top = box(w, 0.04, 0.35, wood); top.position.y = h; g.add(top);
-  const cols = [0x8c2f39, 0x2f5d8c, 0xd9a441, 0x3e7d5a, 0xe8e0d0, 0x6b4c9a, 0xb5651d, 0x1f3b4d, 0xc94f4f, 0x4a7c8c];
+  const cols = [0x6e3b3b, 0x3b4f63, 0x9c8358, 0x4a5e4c, 0xcfc6b4, 0x5a4d5e, 0x8a6a4a, 0x2d3a44, 0x7d5a50, 0x56686a]; // muted, real-library palette
   const shelves = Math.max(3, Math.round(h / 0.4));
   for (let s = 0; s < shelves; s++) {
     const y = 0.08 + s * (h - 0.1) / shelves;
@@ -96,6 +96,24 @@ function board(x, y, z, w, h, draw, rotY, frameCol) {
 }
 const write = (c, lines, font, col) => { c.fillStyle = col; c.font = font; lines.forEach(([t, x, y]) => c.fillText(t, x, y)); };
 const ENVS = {
+  portrait: { name: ['Portrait studio', 'استوديو احترافي'], wall: 0x2b2f36, floor: 0x24272d, light: 0xfff4ea, build(s) {
+    // seamless photographic backdrop with a soft light pool behind the person and a gentle vignette
+    s.background = canvasTex(512, 512, (c, W, H) => { const g = c.createRadialGradient(W * 0.52, H * 0.42, 10, W * 0.5, H * 0.5, W * 0.75); g.addColorStop(0, '#6d717a'); g.addColorStop(0.45, '#454951'); g.addColorStop(1, '#1d2025'); c.fillStyle = g; c.fillRect(0, 0, W, H); const im = c.getImageData(0, 0, W, H), d = im.data; for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - 0.5) * 6; d[i] += n; d[i + 1] += n; d[i + 2] += n; } c.putImageData(im, 0, 0); });
+    s.children.filter(o => o.isMesh).forEach(o => { o.visible = false; });
+  } },
+  campus: { name: ['Modern campus', 'حرم جامعي حديث'], wall: 0xd8d4cd, floor: 0x8f8a83, light: 0xfdf7ee, build(s) {
+    // floor-to-ceiling glazing with slim mullions and soft daylight, light-oak slat wall, polished concrete
+    const sky = canvasTex(512, 256, (c, W, H) => { const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#cfe0ee'); g.addColorStop(0.7, '#eef2f2'); g.addColorStop(1, '#c9cfc4'); c.fillStyle = g; c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(120,140,120,.35)'; for (let i = 0; i < 14; i++) { c.beginPath(); c.ellipse(i * 40, H * 0.82, 34, 22 + (i % 3) * 8, 0, 0, 7); c.fill(); } c.fillStyle = 'rgba(160,170,180,.5)'; c.fillRect(W * 0.6, H * 0.45, W * 0.25, H * 0.32); });
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(7.4, 3.4), new THREE.MeshBasicMaterial({ map: sky, toneMapped: false })); glass.position.set(0.6, 1.7, -3.98); s.add(glass);
+    const mull = new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: 0.4, metalness: 0.6 });
+    for (let i = -3; i <= 4; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.05, 3.4, 0.06), mull); m.position.set(i * 1.05 + 0.1, 1.7, -3.95); s.add(m); }
+    const tr = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.05, 0.06), mull); tr.position.set(0.6, 2.6, -3.95); s.add(tr);
+    const oak = new THREE.MeshStandardMaterial({ color: 0xc8a57e, roughness: 0.6 });
+    for (let i = 0; i < 26; i++) { const sl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 3.5, 0.05), oak); sl.position.set(-3.75, 1.75, -3.6 + i * 0.13); s.add(sl); }
+    const bench = box(2.4, 0.08, 0.5, 0xb89470); bench.position.set(1.8, 0.45, -3.2); s.add(bench);
+    s.add(plant(-2.6, -3.2, 1.3)); s.add(plant(3.2, -3.4, 1.1));
+    const sun = new THREE.DirectionalLight(0xfff6e6, 1.4); sun.position.set(0, 3, -6); s.add(sun);
+  } },
   classroom: { name: ['Classroom', 'الفصل الدراسي'], wall: 0xe8e2d6, floor: 0xb08b62, light: 0xfff4e0, build(s) {
     s.add(board(0.2, 1.75, -3.9, 3.4, 1.4, (c, W, H) => { c.fillStyle = '#fbfbf8'; c.fillRect(0, 0, W, H); write(c, [['E = mc²', 60, 120], ['F = ma', 60, 230], ['a² + b² = c²', 520, 140], ['∫ x dx = x²/2 + C', 470, 260], ['photosynthesis →', 60, 360]], '600 64px Georgia', '#1d3b8c'); c.strokeStyle = '#c0392b'; c.lineWidth = 6; c.beginPath(); c.moveTo(560, 380); c.quadraticCurveTo(700, 300, 900, 360); c.stroke(); }, 0, 0xb8bec4));
     s.add(windowPanel(3.4, 1.7, -1.6, 2.2, 1.6, ['#bfe3ff', '#e9f6ff', '#fff6dc'], -Math.PI / 2));
@@ -163,6 +181,8 @@ function buildEnvScene(id) {
 export async function create(host, opts) {
   opts = opts || {};
   const meta = opts.meta || {};
+  // v8 digital humans (MPFB/CC0 + TalkingHead animation) use their own engine
+  if (meta.engine === 'dh') { const dh = await import('./digital-human.js'); return dh.create(host, opts, { ENVS, buildEnvScene }); }
   const wrap = document.createElement('div'); wrap.className = 'h3d';
   const bg = document.createElement('canvas'); bg.className = 'h3d__env';
   const cv = document.createElement('canvas'); cv.className = 'h3d__av';

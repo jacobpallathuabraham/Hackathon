@@ -63,6 +63,10 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await app.goto(BASE + 'student.html'); await app.waitForTimeout(700);
   await app.click('.cmp-launch'); await app.waitForTimeout(900);
   await app.fill('#cmpText', 'How does an electric circuit work?'); await app.press('#cmpText', 'Enter');
+  // v8: visuals are offered first and open only with the student's consent
+  await app.waitForSelector('.cvoffer [data-vo="yes"]', { timeout: 10000 });
+  assert.equal(await app.locator('.vz').count(), 0, 'nothing opens before the student agrees');
+  await app.click('.cvoffer [data-vo="yes"]');
   await app.waitForSelector('.vz.is-touring', { timeout: 10000 });
   await app.waitForFunction(() => ERLY.companion.tools.visual.current().stageIndex >= 2, null, { timeout: 15000 });
   assert.ok(await app.evaluate(() => window.__said.some(s => /switch/i.test(s.t))), 'the tour is narrated');

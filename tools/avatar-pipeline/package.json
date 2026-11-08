@@ -1,0 +1,14 @@
+{
+  "name": "erly-avatar-pipeline",
+  "private": true,
+  "description": "Validate and optimise digital-human GLBs for ERLY (TalkingHead-compatible rig + ARKit/Oculus face shapes).",
+  "type": "module",
+  "scripts": { "check": "node optimize.mjs --check-only", "optimize": "node optimize.mjs" },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "0.21.0",
+    "sharp": "0.35.5"
+  }
+}

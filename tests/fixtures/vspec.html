@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ERLY dynamic visuals test</title>
+<script type="importmap">{ "imports": { "three": "../../assets/vendor/three/build/three.module.min.js", "three/addons/": "../../assets/vendor/three/examples/jsm/" } }</script>
+<link rel="stylesheet" href="../../assets/css/visuals.css">
+<style>body{margin:0;background:#1b1626;font-family:system-ui} #host{position:fixed;inset:0}</style>
+</head><body><div id="host"></div>
+<script src="../../assets/js/companion/visuals.js"></script>
+<script src="../../assets/js/companion/visual-spec.js"></script>
+<script>
+// open a spec planned from ?q=… (or a JSON spec in ?spec=…) — same path the companion uses after the student says yes
+window.openQ = (question, specJson) => {
+  if (window.v) window.v.close();
+  const spec = specJson ? ERLY.vspec.validate(specJson).spec : ERLY.vspec.plan(question);
+  if (!spec) { window.v = null; return null; }
+  window.v = ERLY.visuals.open(document.getElementById('host'), ERLY.vspec.toScene(spec), {});
+  return window.v.ready.then(() => spec.kind);
+};
+window.fixtureReady = true;
+</script></body></html>

@@ -1,0 +1,16 @@
+{
+  "name": "Karim",
+  "role": "University learning companion (virtual — not a real person)",
+  "phenotype": { "gender": 1.0, "age": 0.56, "muscle": 0.55, "weight": 0.5, "height": 0.55, "proportions": 0.6, "race": { "caucasian": 0.6, "asian": 0.25, "african": 0.15 } },
+  "rig": "custom.talkinghead",
+  "assets": {
+    "skin": ["middleage", "male", "caucasian"],
+    "eyes": ["brown"],
+    "eyebrows": ["eyebrow", "001"],
+    "eyelashes": ["eyelashes", "01"],
+    "teeth": ["teeth", "base"],
+    "tongue": ["tongue", "01"],
+    "hair": ["short", "02"],
+    "clothes": [["shirt", "male"], ["pants", "male"], ["shoes"]]
+  }
+}

@@ -508,3 +508,103 @@ I checked each official option before choosing one. Here is what each needs and 
 - **Laughter**: only the ElevenLabs v3 voice can laugh.
 - **Real-time voice**: needs the worker deployed with `OPENAI_API_KEY`. Without it, the existing browser speech loop is used.
 - **Gemini Live**: not wired yet.
+
+## v8: a new digital human, consent-first dynamic visuals, and a workstation pipeline
+
+### Audit: root causes found in the code
+- **"Old video-game character".** The Rocketbox people are 2010-era game models: photo-textured, low-poly heads (~22k vertices for the whole body), no separate eyes, teeth or tongue, and a Biped skeleton. `tools/avatar-pipeline/optimize.mjs --check-only` measured the old Karim at **0/54** required animation bones, 41/52 ARKit face shapes and 13/14 visemes. More CSS or lighting could not fix that, so the model and its animation engine were **replaced** as the default.
+- **The mouth.**
+  - Rocketbox lip-sync mixed 12 hand-mapped shapes.
+  - The new engine schedules real visemes per word.
+  - Two timing bugs were found and fixed while testing it:
+    1. the animation clock was capped per frame, so lips could drift behind the audio on slow devices;
+    2. interrupted visemes could stay frozen half-open.
+- **Blur.** The room was blurred by 3.5 px to hide low-detail environments. It is now 1.5 px of depth of field, and the new default background is a clean portrait studio.
+- **Visuals.** Before v8, visuals were limited to 8 hand-built scenes that opened automatically, without asking. Now any question that a visual would help with gets an offer first.
+
+### The new digital human: Aisha (`assets/js/companion/digital-human.js`)
+- **Model.**
+  - Made with Blender + MPFB/MakeHuman. **CC0**, from the TalkingHead repository.
+  - 53k vertices; separate high-poly eyes, eyelashes, eyebrows, teeth, tongue and hair cards.
+  - 52 ARKit shapes + 14 visemes; a Mixamo-compatible skeleton with all finger bones.
+  - ERLY re-dressed her in a plain teal top (the MakeHuman logo was removed), fixed the iris colour, added a skin-detail normal map and compressed her from 35.1 MB to 5.4 MB.
+- **Animation: TalkingHead v1.8.2 (MIT), vendored.**
+  - Breathing and posture shifts; irregular blinks; saccades and eye contact.
+  - IK hand movement while talking.
+  - Gestures chosen by meaning: greeting → raised hand, "first / the key idea" → index finger, comparison → open hand to the side, "it depends" → shrug, genuine praise → thumbs-up. Cooldowns stop the hands from moving constantly.
+  - Subtle expressions from the assistant's **own** tone (curious, serious, reassuring, surprised, etc.). Never from the student's face or voice.
+- **Lip-sync.**
+  - English phoneme rules → Oculus visemes for each word, started by the voice's real word-boundary events (or the cloud voice's character timestamps).
+  - Voices without word events fall back to estimated timing.
+  - The mouth closes immediately at the end of speech or on interruption.
+- **Avatar choice.** Aisha is now the default; existing users are switched over once. The 14 Rocketbox people stay available as "Classic 3D (older, lower-detail)".
+- **No male model yet.** No freely licensed male character of this quality was available. The two photo-based samples (Avaturn, AvatarSDK) are **non-commercial** and derived from real people, so they were rejected. `tools/avatar-pipeline` builds original characters (Karim, Priya, a lecturer) with Blender + MPFB on a workstation. That step could not run in the build container, because the MakeHuman asset servers are blocked there.
+- **New environments.** Portrait studio (the default) and Modern campus. The book colours in the older rooms are muted.
+
+### Dynamic, consent-first visual learning (`assets/js/companion/visual-spec.js`)
+- **Pipeline:** question → **visual spec** (JSON) → strict **validation** → rendered by tested **primitives**. The model's code is never run.
+- **Expression compiler.** Expressions are compiled by a small compiler that accepts only numbers, declared variables and maths functions. The tests confirm it rejects 13 kinds of code injection.
+- **Primitives** (each with steps, play/pause, speed, sliders, and readouts that are actually computed):
+
+  | Primitive | What it shows | Real computation |
+  |---|---|---|
+  | `plot2d` | Functions | Roots and intersections (e.g. market equilibrium), tangent slope, definite integral |
+  | `surface3d` | Rotatable 3D surface | Gradient-descent ball |
+  | `field2d` | Electric fields of point charges, or any vector field | — |
+  | `waves` | Two-source interference, superposition, standing waves | — |
+  | `network` | A neural network | **Trained by back-propagation in the browser** |
+  | `algorithm` | Bubble, insertion, selection, merge and quick sort; binary search; recursion call tree | — |
+  | `diagram` | Labelled process / cycle / hub diagrams | — |
+  | `truss3d` | A 3D bridge truss | Method of joints + Gaussian elimination; members coloured by tension or compression |
+  | `beam` | A loaded beam | Reactions, shear, moment, deflection, bending stress |
+  | `matrix2d` | A matrix acting on the plane | Determinant, eigenvectors |
+  | (scene) | The 8 hand-built scenes | — |
+
+- **Where specs come from.**
+  - **The local planner** covers calculus, statistics, economics, finance, multivariable maths, machine learning, algorithms, structural engineering, linear algebra, electromagnetism, waves, and curated diagrams for:
+    - cellular respiration, protein synthesis, DNA replication, the action potential;
+    - SQL query evaluation, the TCP handshake, stack vs heap memory;
+    - the research process.
+  - It reuses details from the question: the function to plot, the array to sort, the matrix to apply.
+  - **With an AI brain connected**, the model designs a spec for topics with no built-in visual, validated the same way.
+- **Consent.**
+  - "Would you like me to create an interactive visual to help explain this?" with three answers: **Yes, create a visual** / **No, explain in text** / **Explain first, then create a visual**.
+  - Works by tap, keyboard, or voice ("yes", "no", "explain first"). Each question is only asked once.
+  - In a voice call, the companion asks out loud after its answer.
+- **Explanation level.** Quick overview / undergraduate / advanced undergraduate / postgraduate / research-oriented. Set it in Companion Studio → Talk, or by saying "explain at postgraduate level". It is added to the AI's instructions.
+
+### Avatar Lab (`avatar-lab.html`): diagnostics
+- Shows live viseme and face blendshape weights, the current viseme and word, playback time, word-event count, viseme changes per second, word→lip timing, queued visemes, FPS, render scale, model load time, JS heap and GPU name.
+- Buttons for expressions, gestures, states and environments, plus an automated lip-sync test (4 phonetic cases × 3 speeds).
+- A box to plan and render a visual for any question.
+
+### Workstation (ASUS ProArt P16 H7607BA)
+- `docs/workstation/README.md`:
+  - a hardware compatibility report for the NVIDIA N1X (an **Arm64** chip with unified memory);
+  - ARM64-checked tools: Blender ARM64 ✅, MPFB ✅, Node ✅, **Audio2Face ❌** (x86 only), CUDA/PyTorch-CUDA ❌;
+  - install commands, storage budget, and what runs locally vs in the browser vs on a backend.
+- `tools/workstation/check-hardware.ps1` reports *your* exact CPU architecture, GPU, driver/CUDA, RAM, disks and tool builds.
+- `tools/avatar-pipeline/`: `build_character.py` (Blender + MPFB → GLB + GPU Cycles portrait) and `optimize.mjs` (validate + compress).
+
+### Tests (headless Chromium, **software** WebGL ≈ 4 fps; not representative of real GPUs)
+- `tests/e2e/vspec.e2e.js`:
+  - compiler safety and validation;
+  - truss reactions (96 / 96 kN), beam (R_A 12, R_B 8, M_max 48 kN·m), cantilever;
+  - 20 planner questions across subjects, each rendered;
+  - equilibrium (Q = 50, then 60 after a demand shift), tangent slope 3.75, normal-distribution area 0.683;
+  - the network trains (the loss falls), bubble sort ends sorted;
+  - an AI spec for an unseen topic (heat pump) is accepted, and a malicious one is rejected;
+  - **the consent flow inside the real companion**.
+- `tests/e2e/avatar-lab.e2e.js`:
+  - rig (52 ARKit, 14 visemes);
+  - visemes scheduled for every word, first viseme peaking 25 ms after the word event, animation clock in real time;
+  - mouth closed after speech and within 400 ms of an interruption;
+  - P/B/M close the lips; expressions; meaning-driven gestures; blinks and saccades; all environments; phone layout.
+
+### Honest limits
+- Aisha is a clean, modern real-time character, but **not photoreal**: no strand hair, no true subsurface scattering, MakeHuman skin textures. Photoreal faces need a paid streaming-avatar service or licensed scans.
+- With browser voices, lip-sync is based on the text (English phoneme rules timed by word events), not on audio phonemes. The optional ElevenLabs voice (`cloudVoice`) gives character-level timing.
+- Not built yet:
+  - Silero VAD, Whisper (Transformers.js) and Kokoro TTS. Their hosts were blocked in the build container, so they couldn't be tested.
+  - A male model: see the workstation pipeline.
+- Real-time voice and the cloud voice still need the worker deployed with keys.

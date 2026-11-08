@@ -171,7 +171,7 @@
     // the AI can ask for a visual with [[visual:…]]; the tag is never shown or spoken
     const VZ = ERLY.visuals; let visAsked = false;
     const clean = t => (VZ ? VZ.stripTags(t) : t);
-    const askVisual = t => { if (visAsked || !VZ || !C.tools || !C.tools.visual) return; const v = VZ.fromTag(t); if (v) { visAsked = true; C.tools.visual.open(v); } };
+    const askVisual = t => { if (visAsked || !VZ || !C.tools || !C.tools.visual) return; const v = VZ.fromTag(t); if (v) { visAsked = true; if (!C.tools.visual.pending()) C.tools.visual.offerTag(v, text); } }; // offered, never auto-opened
     const speakPart = t => {
       if (!C.inCall) return;
       const sub = t.slice(spoken), r = AIX.takeSentences(sub);

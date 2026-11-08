@@ -80,7 +80,7 @@ const PEOPLE = 'karim m,layla f,hart m,grace f,kwame m,kenji m,drsami m,dramira 
   const app = await browser.newPage({ viewport: { width: 1280, height: 800 } }); watch(app);
   await app.addInitScript(() => {
     sessionStorage.setItem('acubins-role', 'student');
-    localStorage.setItem('erly-companion-v1', JSON.stringify({ consent: { mic: true }, prefs: { vs: { setup: true, avatar: 'layla', env: 'library', handsFree: false } } }));
+    localStorage.setItem('erly-companion-v1', JSON.stringify({ consent: { mic: true }, prefs: { vs: { setup: true, avatar: 'layla', env: 'library', handsFree: false, v8: true } } }));
     window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
     const synth = { getVoices: () => [], cancel() {}, pause() {}, resume() {}, addEventListener() {}, speak(u) { setTimeout(() => { u.onstart && u.onstart({}); setTimeout(() => u.onend && u.onend({}), 300); }, 5); } };
     Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });

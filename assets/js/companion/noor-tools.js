@@ -38,6 +38,8 @@
   const STYLE_P = { concise: 'Keep answers short and to the point.', conversational: 'Be natural and conversational.', detailed: 'Give thorough, detailed explanations with examples.', steps: 'Explain things step by step, one numbered step at a time.' };
   const TONE_P = { friendly: 'friendly and natural', calm: 'calm and reassuring', professional: 'professional', energetic: 'upbeat and energetic', educational: 'clear and educational, like a great tutor', warm: 'warm and chatty', direct: 'concise and direct' };
   const MODE_P = { study: 'Study mode: explain clearly, then check understanding with one short question.', focus: 'Focus mode: be brief and to the point; no small talk.', deep: 'Deep explanation mode: give thorough explanations with examples and intuition.', practice: 'Practice mode: quiz the student one question at a time, wait for their answer, then give kind, specific feedback.', reading: 'Reading companion mode: read and explain the open reading paragraph by paragraph when asked.', research: 'Research mode: help investigate the topic; separate what is well established from what is uncertain, say when information may be out of date, and suggest reliable sources to check. You cannot browse the web yourself.', creative: 'Creative mode: brainstorm freely with several varied ideas, then help develop the best one.', planning: 'Planning mode: break goals into small, practical, time-boxed steps.' };
+  // explanation level chosen by the student (Companion Studio → Talk, or “explain at postgraduate level”)
+  const LEVEL_P = { quick: 'Explanation level: a quick overview — the key idea in plain language, a few sentences.', ug: 'Explanation level: undergraduate — define terms, explain the mechanism, one worked example.', adv: 'Explanation level: advanced undergraduate — use the field\'s terminology and notation, derive key results, mention assumptions and limitations.', pg: 'Explanation level: postgraduate — rigorous and concise; assumptions, edge cases, current approaches and open questions.', research: 'Explanation level: research-oriented — state the formal framing, competing models and evidence, what is uncertain, and what to read (name well-known sources; never invent references).' };
   const LEN_P = { short: 'Keep answers short (1–2 sentences when spoken).', medium: '', long: 'Longer, fuller answers are welcome.' };
   function stylePrompt() {
     const vs = (U.store.prefs && U.store.prefs().vs) || {};
@@ -46,6 +48,7 @@
     if (vs.tone && TONE_P[vs.tone]) bits.push(`Your tone: ${TONE_P[vs.tone]}.`);
     if (vs.mode && MODE_P[vs.mode]) bits.push(MODE_P[vs.mode]);
     if (vs.length && LEN_P[vs.length]) bits.push(LEN_P[vs.length]);
+    if (vs.level && LEVEL_P[vs.level]) bits.push(LEVEL_P[vs.level]);
     if (C.inCall) bits.push('Speak naturally, as in a real conversation: vary your phrasing, no formatting, numbers and formulas in words. If the student corrects you or says you misunderstood, acknowledge it briefly and fix it. If you are not sure, say so. If what they said is unclear or ambiguous (speech recognition can mishear), ask one short clarifying question instead of guessing. Understand follow-ups like “explain that again”, “the second point”, “another example”, “shorter”, “simpler” from the conversation so far.' + (vs.style === 'detailed' || vs.style === 'steps' ? ' Up to 5 short sentences is fine.' : ''));
     if (C.inCall && vs.avatar && ERLY.avatars) { const a = ERLY.avatars.get(vs.avatar); if (a && a.name !== 'Noor') bits.push(`In this conversation the student chose the companion "${a.name}"${a.role ? ` (shown as: ${a.role[0]})` : ''} — answer to that name too (you are still the same AI, and you never claim to be a human).`);
       if (a && a.role && /Doctor/.test(a.role[0])) bits.push('This avatar looks like a doctor, but you are an AI: give general health and wellbeing information only. Never diagnose or prescribe; for a personal medical concern, suggest the university health centre or a doctor — only when it is actually relevant, without routine disclaimers.'); }
@@ -264,7 +267,7 @@
   function openVisual(pick, o) {
     if (!ERLY.visuals || !pick) return null;
     o = o || {};
-    if (vis && vis.id === pick.id && pick.id !== 'flow') return vis;
+    if (vis && vis.id === pick.id && pick.id !== 'flow' && !/^spec:/.test(pick.id)) return vis;
     if (vis) vis.close();
     const call = C.inCall && C.call && C.call.active();
     const host = call ? (document.querySelector('.ncall') || document.body) : document.body;
@@ -287,6 +290,63 @@
     if (o.tour) vis.ready.then(() => vis && vis.tour());
     return vis;
   }
+  /* ---------------- consent-first dynamic visuals (visual-spec.js) ----------------
+     A visual is never opened on its own: when one would help, the student is
+     asked first — “Yes, create a visual” / “No, explain in text” / “Explain
+     first, then create a visual” — by tap, keyboard or voice. The answer is
+     remembered for that question so it is not asked twice. */
+  let offer = null, afterTurn = null; const answered = new Set();
+  const OFFER_Q = ['Would you like me to create an interactive visual to help explain this?', 'هل تريد أن أنشئ شرحاً مرئياً تفاعلياً يساعد في توضيح هذا؟'];
+  const qKey = q => String(q || '').toLowerCase().replace(/[^a-z0-9؀-ۿ]+/g, ' ').trim().slice(0, 120);
+  function offerHost() { return (C.inCall && document.querySelector('.ncall')) || document.querySelector('#cmpLog'); }
+  function showOffer(question, source, tagPick) {
+    const k = qKey(question);
+    if (!ERLY.vspec || answered.has(k) || (offer && offer.key === k)) return null;
+    if (offer) dismissOffer();
+    const host = offerHost(); if (!host) return null;
+    const el = document.createElement('div');
+    el.className = 'cvoffer' + (C.inCall ? ' cvoffer--call' : ''); el.setAttribute('role', 'group'); el.setAttribute('aria-label', T('Visual explanation offer', 'عرض شرح مرئي'));
+    el.innerHTML = `<p><b>${esc(T(OFFER_Q[0], OFFER_Q[1]))}</b><small>${esc(T('Built for your question from tested, safe visual components. Nothing opens unless you choose it.', 'يُبنى لسؤالك من مكوّنات مرئية مختبرة وآمنة. لا يُفتح شيء إلا باختيارك.'))}</small></p>
+      <div class="cvoffer__b"><button type="button" data-vo="yes">${esc(T('Yes, create a visual', 'نعم، أنشئ شرحاً مرئياً'))}</button><button type="button" data-vo="no">${esc(T('No, explain in text', 'لا، اشرح نصياً'))}</button><button type="button" data-vo="after">${esc(T('Explain first, then create a visual', 'اشرح أولاً ثم أنشئ الشرح المرئي'))}</button></div>`;
+    host.appendChild(el); if (!C.inCall && U.scrollLog) U.scrollLog(true);
+    offer = { key: k, question, source, tagPick, el, after: false, spoken: false };
+    el.addEventListener('click', e => { const b = e.target.closest('[data-vo]'); if (b) answerOffer(b.dataset.vo); });
+    ERLY.emit('noor:visual-offer', { question, source });
+    return offer;
+  }
+  function dismissOffer() { if (!offer) return; const el = offer.el; el.classList.add('is-done'); el.querySelectorAll('button').forEach(b => { b.disabled = true; }); offer = null; }
+  async function answerOffer(choice) {
+    const o = offer; if (!o) return;
+    answered.add(o.key);
+    const label = { yes: T('Yes, create a visual', 'نعم، أنشئ شرحاً مرئياً'), no: T('No, explain in text', 'لا، اشرح نصياً'), after: T('Explain first, then create a visual', 'اشرح أولاً ثم أنشئ الشرح المرئي') }[choice];
+    o.el.querySelector('p small').textContent = '✓ ' + label;
+    dismissOffer();
+    ERLY.emit('noor:visual-choice', { choice, question: o.question });
+    if (choice === 'no') return;
+    if (choice === 'after' && (U.isGenerating && U.isGenerating())) { afterTurn = o; return; } // built when the explanation finishes
+    return buildVisual(o);
+  }
+  async function buildVisual(o) {
+    const VS = ERLY.vspec; let spec = null, pickV = null;
+    if (o.tagPick) pickV = o.tagPick;
+    else {
+      spec = VS.plan(o.question);
+      if (!spec && U.ai && U.ai.ready()) {
+        const note = U.bubble('ai', T('Designing a visual for your question…', 'أصمم شرحاً مرئياً لسؤالك…'), { text: true, cls: 'cmsg--note' });
+        const lvl = ((U.store.prefs().vs || {}).level) || 'ug';
+        const r = await VS.aiPlan(o.question, lvl);
+        if (note && note.remove) note.remove();
+        if (r && !r.declined) spec = r;
+      }
+      if (spec) pickV = VS.toScene(spec);
+    }
+    if (!pickV) { await U.aiSays('I couldn’t build a reliable interactive visual for this question, so I’ll keep to a clear step-by-step explanation instead. Ask me to “show it as a diagram” with the steps if that would help.', 'لم أستطع بناء شرح مرئي موثوق لهذا السؤال، لذا سأكتفي بشرح واضح خطوة بخطوة.', { speak: !C.inCall }); return null; }
+    const v = openVisual(pickV, { tour: !(U.ai && U.ai.ready()) });
+    return v;
+  }
+  // in a voice conversation the companion also asks out loud, after it finishes its answer
+  if (ERLY.on) ERLY.on('noor:turn-end', () => { if (offer && !C.inCall && offer.el.isConnected) { offer.el.parentNode.appendChild(offer.el); if (U.scrollLog) U.scrollLog(); } if (afterTurn) { const o = afterTurn; afterTurn = null; setTimeout(() => buildVisual(o), 300); } if (offer && C.inCall && !offer.spoken) { offer.spoken = true; ERLY.emit('noor:said', { text: T(OFFER_Q[0], OFFER_Q[1]), speak: true }); } });
+
   // every sentence the companion starts saying can move the visual to the matching step
   if (U.voice && U.voice.onPhrase) U.voice.onPhrase((type, text) => { if (type === 'start' && vis && !vis.touring()) vis.sync(text); });
 
@@ -299,19 +359,26 @@
       await ERLY.audioLesson.start(t.replace(/.*\b(about|on|of)\b/i, '').trim() || t);
       return { done: true };
     }
-    // a question that a picture explains better: open the interactive visual alongside the answer
-    const want = ERLY.visuals && ERLY.visuals.detect(t);
-    const visualOnly = /\b(show|visuali[sz]e|animate|demonstrat|draw|simulat)/i.test(t);
-    if (want && !/^(what is|calculate)\s+[\d(]/i.test(t)) {
-      openVisual(want);
-      if (!(U.ai && U.ai.ready())) {
-        // no AI brain: teach it with the narrated visual itself (accurate, built-in content)
-        await U.aiSays(`Here’s an interactive visual of ${ERLY.visuals.scenes[want.id].title[0].toLowerCase()}. I’ll walk you through it step by step — you can pause, go back, or change the variables at any time.`, `إليك شرحاً مرئياً تفاعلياً عن ${ERLY.visuals.scenes[want.id].title[1]}. سأشرحه لك خطوة بخطوة — يمكنك الإيقاف أو الرجوع أو تغيير المتغيرات في أي وقت.`, { speak: false });
-        if (vis) vis.ready.then(() => setTimeout(() => vis && vis.tour(), 400));
-        return { done: true };
-      }
-      if (visualOnly) { /* the AI will still explain it */ }
+    // a reply to the visual offer ("yes" / "no" / "explain first") — by voice or typed
+    if (offer) {
+      if (/^(yes|yeah|yep|yup|sure|ok(ay)?|please|go ahead|do it|create (it|one|a visual)|show (me|it)|نعم|أجل|حسنا|طيب)\b/i.test(t) && t.length < 60) { await answerOffer('yes'); return { done: true }; }
+      if (/^(no|nope|not now|no thanks|no thank you|explain (it )?(in text|normally)|just (text|explain)|لا)\b/i.test(t) && t.length < 60) { await answerOffer('no'); await U.aiSays('No problem — I’ll explain it in words.', 'لا مشكلة — سأشرحه بالكلمات.', { speak: !C.inCall }); return { done: true }; }
+      if (/\b(explain (it )?first|after(wards)?|later)\b/i.test(t) && t.length < 60) { await answerOffer('after'); return { done: true }; }
+      if (qKey(t) !== offer.key) dismissOffer(); // a new question: the old offer lapses
     }
+    // explanation level ("explain at postgraduate level", "quick overview please")
+    const lv = t.match(/\b(quick overview|undergraduate|advanced undergraduate|postgraduate|graduate|research(-| )(level|oriented))\b.{0,12}\b(level|please|mode)?/i);
+    if (lv && /\b(level|explain|answer|switch|use|set)\b/i.test(t) && t.length < 90) {
+      const w = lv[1].toLowerCase(); const level = /advanced/.test(w) ? 'adv' : /post|^graduate/.test(w) ? 'pg' : /research/.test(w) ? 'research' : /quick/.test(w) ? 'quick' : 'ug';
+      const vs = Object.assign({}, U.store.prefs().vs || {}); vs.level = level; U.store.setPref('vs', vs);
+      const names = { quick: 'a quick overview', ug: 'undergraduate', adv: 'advanced undergraduate', pg: 'postgraduate', research: 'research-oriented' };
+      if (t.length < 50 && !/\?/.test(t)) { await U.aiSays(`Got it — I’ll explain things at ${names[level]} level from now on. You can change this any time in Companion Studio → Talk.`, `حسناً — سأشرح بمستوى ${names[level]} من الآن.`, { speak: !C.inCall }); return { done: true }; }
+    }
+    // a question that a picture would genuinely help with: ASK first (never auto-open)
+    const VS = ERLY.vspec;
+    const kind = VS && !/^(what is|calculate)\s+[\d(]/i.test(t) ? VS.offerable(t, U.ai && U.ai.ready()) : null;
+    // (the normal answer still follows — from the AI brain, or the built-in brain when no AI is connected)
+    if (kind) showOffer(t, kind);
     // exact maths
     const math = C.brain && C.brain._math && C.brain._math(t);
     if (math) return { done: false, math };
@@ -380,5 +447,5 @@
     if (id === 'plan') { U.bubble('you', T('Make me a 7-day exam study plan', 'اصنعي لي خطة مذاكرة للامتحانات ٧ أيام'), { text: true }); return B.freeText('Make me a 7-day exam study plan', { silentUser: true }); }
   }
 
-  C.tools = { route, pdfLocal, trace, visual: { open: openVisual, current: () => vis, close: () => vis && vis.close() }, memoryPrompt, renderMemory, quick, resume, coach, memory: () => Object.assign({}, mem), _parse: parseSteps };
+  C.tools = { route, pdfLocal, trace, visual: { open: openVisual, current: () => vis, close: () => vis && vis.close(), offer: showOffer, offerTag: (pickV, q) => showOffer(q || (pickV && pickV.scene && pickV.scene.title[0]) || 'visual', 'tag', pickV), pending: () => offer, answer: answerOffer, build: buildVisual }, memoryPrompt, renderMemory, quick, resume, coach, memory: () => Object.assign({}, mem), _parse: parseSteps };
 })();

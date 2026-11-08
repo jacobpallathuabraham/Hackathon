@@ -182,7 +182,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.click('#cmpVoice'); await page.waitForTimeout(400);
   if (await page.$('[data-setup="skip"]')) await page.click('[data-setup="skip"]');
   if (await page.$('#ncConsent [data-c="yes"]')) await page.click('#ncConsent [data-c="yes"]');
-  await page.waitForTimeout(3500);
+  // the companion loads and greets first; wait for its AI request rather than a fixed time
+  await page.waitForFunction(() => window.__msgs && /caring specialist/.test(window.__msgs[0].content), null, { timeout: 20000 }).catch(() => {});
+  await page.waitForFunction(() => window.__spoken.join(' ').includes('four'), null, { timeout: 15000 }).catch(() => {});
   assert.equal(await page.locator('.ncall .avt').count(), 1, 'avatar on stage');
   assert.equal(await page.getAttribute('.ncall__seg [data-m="care"]', 'aria-pressed'), 'true', 'check-in style by default');
   assert.match(await page.evaluate(() => window.__msgs[0].content), /caring specialist/);

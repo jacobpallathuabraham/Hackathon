@@ -1,0 +1,16 @@
+{
+  "name": "Dr. Lewis",
+  "role": "University lecturer (virtual — not a real person or a real doctor)",
+  "phenotype": { "gender": 1.0, "age": 0.78, "muscle": 0.45, "weight": 0.58, "height": 0.6, "proportions": 0.55, "race": { "caucasian": 0.2, "asian": 0.1, "african": 0.7 } },
+  "rig": "custom.talkinghead",
+  "assets": {
+    "skin": ["old", "male", "african"],
+    "eyes": ["brown"],
+    "eyebrows": ["eyebrow", "002"],
+    "eyelashes": ["eyelashes", "01"],
+    "teeth": ["teeth", "base"],
+    "tongue": ["tongue", "01"],
+    "hair": ["short", "04"],
+    "clothes": [["suit"], ["shoes"]]
+  }
+}
