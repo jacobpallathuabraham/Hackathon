@@ -177,6 +177,9 @@
       clip: () => (inner ? inner.clip() : null),
       history: () => (inner && inner.history ? inner.history() : []),
       setEnv(e) { opts.env = e; if (inner) inner.setEnv(e); },
+      setShift(x) { opts.shift = x; if (inner && inner.setShift) inner.setShift(x); },
+      point() { if (inner && inner.point) inner.point(); },
+      mouthLevel(x) { if (inner && inner.mouthLevel) inner.mouthLevel(x); },
       quality: () => (inner ? inner.quality() : 1),
       get lipsync() { return inner ? inner.lipsync : null; },
       destroy() { dead = true; if (inner) inner.destroy(); host.innerHTML = ''; host.classList.remove('avt--3d'); }
@@ -188,7 +191,7 @@
         if (dead) { c.destroy(); return; }
         inner = c; const l = host.querySelector('.avt3d__load'); if (l) l.remove();
         host.classList.add('is-ready');
-        if (voice) c.attach(voice); c.setState(st); if (emo) c.emote(emo); if (greet) c.greet();
+        if (voice) c.attach(voice); c.setState(st); if (emo) c.emote(emo); if (greet) c.greet(); if (opts.shift) c.setShift(opts.shift);
         return c;
       })
       .catch(err => {

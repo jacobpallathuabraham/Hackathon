@@ -45,7 +45,7 @@
     } } }) : null;
   let generating = null; // { stop } while a reply is being written
   let status = 'idle';
-  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
+  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getCloud: () => { const c = (window.ERLY_AI_CONFIG || {}).cloudVoice; const vs = store.prefs().vs || {}; return c && c.url && vs.cloudVoice === true ? c : null; /* explicit opt-in only */ }, getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
   const lab = { lang: lang(), variant: 'default', ratings: {} };
   const brain = () => ERLY.companion && ERLY.companion.brain;
@@ -495,7 +495,9 @@
     ['coach', 'target', 'Study coach', 'مدرب المذاكرة', 'Turn an assignment into small steps', 'حوّل الواجب إلى خطوات صغيرة'],
     ['resume', 'reset', 'Resume where I stopped', 'أكمل من حيث توقفت', 'Your last reading and plan', 'آخر قراءة وخطة'],
     ['explain', 'sparkle', 'Explain anything', 'اشرح أي شيء', 'Any subject, step by step', 'أي مادة، خطوة بخطوة'],
-    ['plan', 'calendar', 'Exam study plan', 'خطة مذاكرة للامتحان', 'A day-by-day plan', 'خطة يوماً بيوم']
+    ['plan', 'calendar', 'Exam study plan', 'خطة مذاكرة للامتحان', 'A day-by-day plan', 'خطة يوماً بيوم'],
+    ['visual', 'layers', 'Interactive visuals', 'شروحات مرئية تفاعلية', 'See science & maths come alive', 'شاهد العلوم والرياضيات حيّة'],
+    ['audio', 'headphones', 'Audio lesson', 'درس صوتي', 'Two hosts talk your topic through', 'مقدمان يشرحان موضوعك']
   ];
   function greet() {
     const first = !store.asked('monitoring');

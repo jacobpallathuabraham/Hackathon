@@ -168,6 +168,10 @@
       body.innerHTML = MD.render(latest) + '<span class="ccaret" aria-hidden="true"></span>';
       U.scrollLog(true);
     };
+    // the AI can ask for a visual with [[visual:…]]; the tag is never shown or spoken
+    const VZ = ERLY.visuals; let visAsked = false;
+    const clean = t => (VZ ? VZ.stripTags(t) : t);
+    const askVisual = t => { if (visAsked || !VZ || !C.tools || !C.tools.visual) return; const v = VZ.fromTag(t); if (v) { visAsked = true; C.tools.visual.open(v); } };
     const speakPart = t => {
       if (!C.inCall) return;
       const sub = t.slice(spoken), r = AIX.takeSentences(sub);
@@ -181,7 +185,7 @@
         let left = st.busy; clearInterval(busyT);
         const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T(`Noor Online is busy (free service, one message at a time) — trying again in ${left}s…`, `نور أونلاين مشغول (خدمة مجانية، رسالة واحدة في كل مرة) — سأحاول مجدداً بعد ${left} ث…`)}</p>`; };
         show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>'; } else show(); }, 1000);
-      }, onToken: t => { clearInterval(busyT); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
+      }, onToken: t => { clearInterval(busyT); if (!latest) ERLY.emit('noor:first-token'); askVisual(t); t = clean(t); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
       clearInterval(busyT);
     } catch (e) {
       cancelAnimationFrame(raf); clearInterval(busyT);
@@ -215,6 +219,7 @@
       return false;
     }
     cancelAnimationFrame(raf);
+    askVisual(out); out = clean(out).trim();
     if (C.inCall) { const rest = out.slice(spoken).trim(); if (rest) ERLY.emit('noor:said', { text: MD.toText(rest), speak: true }); }
     finishReply(m, out, text, false);
     history.push({ role: 'assistant', text: out });

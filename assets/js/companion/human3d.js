@@ -191,6 +191,16 @@ export async function create(host, opts) {
   const rim = new THREE.DirectionalLight(0xffffff, 1.6); rim.position.set(0.6, 2.4, -2.2); scene.add(rim);
   scene.add(new THREE.HemisphereLight(0xfaf3ea, 0x3a3029, 0.35));
 
+  const hemi = scene.children.find(c => c.isHemisphereLight);
+  function lightFor(id) {
+    const E = ENVS[id] || ENVS.classroom;
+    const L = new THREE.Color(E.light);
+    key.color.copy(L).lerp(new THREE.Color(0xffffff), 0.35); key.intensity = E.dark ? 1.9 : E.warm ? 2.3 : 2.5;
+    rim.color.copy(L); rim.intensity = E.dark ? 2.4 : 1.5;
+    fill.color.copy(new THREE.Color(E.warm ? 0xffe4c8 : 0xdfe8ff)); fill.intensity = E.dark ? 0.45 : 0.7;
+    if (hemi) { hemi.color.copy(L); hemi.groundColor.set(E.floor); hemi.intensity = E.dark ? 0.25 : 0.38; }
+    renderer.toneMappingExposure = E.dark ? 1.0 : 1.05;
+  }
   // load the person and their gender's motion clips
   const [gl, anims] = await Promise.all([loadModel(MODELS + meta.model), loadGLB(MODELS + (meta.g === 'f' ? 'anims_f.glb' : 'anims_m.glb'))]);
   const model = gl.scene; // each create() gets its own scene graph (no sharing across viewers)
@@ -203,7 +213,12 @@ export async function create(host, opts) {
       [].concat(o.material).forEach(m => {
         m.envMapIntensity = 0.6;
         if (m.name === 'opacity') { m.transparent = false; m.alphaTest = 0.45; m.alphaToCoverage = true; m.side = THREE.DoubleSide; m.depthWrite = true; }
-        if (m.name === 'head') { m.roughness = 0.52; if (m.normalScale) m.normalScale.set(0.7, 0.7); }
+        if (m.name === 'head' && !m.isMeshPhysicalMaterial) {
+          // skin: soft sheen at grazing angles and a faint oily clearcoat read as skin rather than plastic
+          const p = new THREE.MeshPhysicalMaterial({ name: 'head', map: m.map, normalMap: m.normalMap, roughness: 0.56, metalness: 0, sheen: 0.35, sheenRoughness: 0.55, sheenColor: new THREE.Color(0xffd2c2), clearcoat: 0.06, clearcoatRoughness: 0.45, specularIntensity: 0.45, envMapIntensity: 0.55 });
+          if (p.normalMap) p.normalScale = new THREE.Vector2(0.75, 0.75);
+          if (Array.isArray(o.material)) o.material[o.material.indexOf(m)] = p; else o.material = p;
+        }
         if (m.name === 'body') { m.roughness = 0.82; }
       });
       if (o.morphTargetDictionary && o.morphTargetDictionary.jawOpen !== undefined) face = o;
@@ -236,7 +251,8 @@ export async function create(host, opts) {
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   function baseFor(m) { return m === 'listening' ? 'listen_neutral_01' : m === 'speaking' ? pick(TALK[talkKind] || TALK.neutral) : 'idle_neutral_01'; }
 
-  // camera framing: waist up, room for both hands
+  // camera framing: waist up, room for both hands; 'shift' slides the person aside for a visual
+  const cam0 = { y: 1.2, dist: 3 }, shift = { x: 0, to: 0 };
   play('idle_neutral_01', { randomStart: false, fade: 0 }); mixer.update(0.01); model.updateMatrixWorld(true);
   const headPos = new THREE.Vector3(); head.getWorldPosition(headPos);
   const pelvis = new THREE.Vector3(); B('Bip01_Pelvis').getWorldPosition(pelvis);
@@ -244,7 +260,7 @@ export async function create(host, opts) {
     const r = cv.getBoundingClientRect(); const w = Math.max(64, r.width), h = Math.max(64, r.height);
     const px = Math.min(quality, 2);
     renderer.setPixelRatio(px); renderer.setSize(w, h, false);
-    envR.setPixelRatio(0.6); envR.setSize(w, h, false);
+    envR.setPixelRatio(0.9); envR.setSize(w, h, false);
     camera.aspect = w / h; envCam.aspect = w / h;
     const top = headPos.y + 0.3, bottom = pelvis.y - 0.32; // hands stay in view even with arms at rest           // just below the waist
     const tall = w / h < 0.8;
@@ -259,7 +275,8 @@ export async function create(host, opts) {
     } else {
       dist = Math.max(needH / 2 / t2, needW / 2 / (t2 * camera.aspect)) * (opts.zoom || 1);
     }
-    camera.position.set(0, midY + 0.05, dist); camera.lookAt(0, midY, 0);
+    cam0.y = midY; cam0.dist = dist;
+    camera.position.set(shift.x, midY + 0.05, dist); camera.lookAt(shift.x, midY, 0);
     camera.updateProjectionMatrix();
     envCam.position.set(0, 1.35, 3.2); envCam.lookAt(0, 1.3, -3); envCam.updateProjectionMatrix();
     renderEnv();
@@ -267,8 +284,8 @@ export async function create(host, opts) {
   // environment: rendered rarely, blurred by CSS (depth of field)
   let envScene = buildEnvScene(opts.env || 'classroom'), envId = opts.env || 'classroom';
   function renderEnv() { envR.render(envScene, envCam); }
-  function setEnv(id) { if (!ENVS[id]) return; envId = id; envScene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }); envScene = buildEnvScene(id); renderEnv(); wrap.dataset.env = id; }
-  wrap.dataset.env = envId;
+  function setEnv(id) { if (!ENVS[id]) return; envId = id; lightFor(id); envScene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }); envScene = buildEnvScene(id); renderEnv(); wrap.dataset.env = id; }
+  wrap.dataset.env = envId; lightFor(envId);
 
   // face rig
   const dict = face ? face.morphTargetDictionary : {}, inf = face ? face.morphTargetInfluences : [];
@@ -284,7 +301,7 @@ export async function create(host, opts) {
   const blink = { v: 0, at: performance.now() + 1200, phase: 0 };
   const gaze = { x: 0, y: 0, tx: 0, ty: 0, next: 0 };
   const vis = {}; VIS_NAMES.forEach(n => { vis[n] = 0; });
-  let jaw = 0;
+  let jaw = 0; const ext = { level: 0, at: 0 };
 
   // eye contact: the head turns (partly) towards the camera, with small natural drift
   const headFwdLocal = new THREE.Vector3();
@@ -313,13 +330,17 @@ export async function create(host, opts) {
     ex.smile += (T[0] - ex.smile) * k; ex.brow += (T[1] - ex.brow) * k; ex.inner += (T[2] - ex.inner) * k; ex.furrow += (T[3] - ex.furrow) * k; ex.tilt += (T[4] - ex.tilt) * k; ex.energy += (T[5] - ex.energy) * k;
     ex.wide += ((emotion === 'surprised' && state === 'speaking' ? 0.6 : 0) - ex.wide) * k;
     // lips: visemes from real word timing
-    const f = track.frame();
+    let f = track.frame();
     const tv = {}; VIS_NAMES.forEach(n => { tv[n] = 0; });
+    // streamed audio (real-time engine): the mouth follows the voice's loudness, cycling natural open shapes
+    if (now - ext.at < 250 && ext.level > 0.04) { const ph = Math.floor(now / 110) % 4; f = { key: ['A', 'E', 'O', 'A'][ph], next: ['E', 'O', 'A', 'I'][ph], mix: (now % 110) / 110 }; }
     const a = VMAP[f.key], b = VMAP[f.next];
     if (a) tv[a] += (1 - f.mix) * 0.85; if (b) tv[b] += f.mix * 0.85;
     const shape = LS.mixShape(f.key, f.next, f.mix);
     VIS_NAMES.forEach(n => { const t = tv[n]; vis[n] += (t - vis[n]) * Math.min(1, dt * (t > vis[n] ? 28 : 18)); setW(n, vis[n]); });
-    jaw += (shape.o * 0.32 - jaw) * Math.min(1, dt * 22);
+    const extOn = now - ext.at < 250;
+    jaw += ((extOn ? Math.min(0.45, ext.level * 0.6) : shape.o * 0.32) - jaw) * Math.min(1, dt * 22);
+    if (extOn) VIS_NAMES.forEach(n => { vis[n] *= Math.min(1, 0.4 + ext.level); });
     setW('jawOpen', jaw);
     // blinks: quick close, slower open, irregular gaps, sometimes double
     if (now > blink.at && !blink.phase) blink.phase = 1;
@@ -366,6 +387,10 @@ export async function create(host, opts) {
     if (!alive) return;
     const dt = Math.min(0.1, (now - last) / 1000); last = now; // keep real-time speed even on slow devices
     update(dt, now);
+    if (Math.abs(shift.to - shift.x) > 0.001) shift.x += (shift.to - shift.x) * Math.min(1, dt * 3);
+    const dr = reduce ? 0 : 1, tt = now / 1000;
+    camera.position.x = shift.x + dr * Math.sin(tt * 0.21) * 0.012; camera.position.y = cam0.y + 0.05 + dr * Math.sin(tt * 0.17 + 1) * 0.008;
+    camera.lookAt(shift.x, cam0.y, 0);
     renderer.render(scene, camera);
     // adaptive quality
     perf.n++; perf.t += dt;
@@ -406,10 +431,15 @@ export async function create(host, opts) {
       else if (s === 'speaking' && (endPose(), !oneShot) && (!base || !/talk|presentation/.test(base.getClip().name))) play(pick(TALK[talkKind] || TALK.neutral), { randomStart: true, fade: 0.7 });
     },
     greet() { if (clips.wave_01) play('wave_01', { once: true, fade: 0.4 }); },
+    // slide the person to the left of the frame (metres) so a visual can sit on the right
+    setShift(x) { shift.to = x || 0; },
+    // a presenting gesture towards the visual (on the student's right)
+    point() { const n = 'presentation_left_01'; if (clips[n] && performance.now() - lastSwitch > 2500 && (!oneShot || !/presentation/.test(oneShot.getClip().name))) play(n, { once: true, fade: 0.5, speed: 1.15 }); },
     emote(e) { if (EMO[e]) emotion = e; },
     emotion: () => emotion,
     attach(voice) { if (unhook) unhook(); unhook = voice && voice.onPhrase ? voice.onPhrase(onPhrase) : null; return ctrl; },
     level(x) { mic = x; },
+    mouthLevel(x) { ext.level = x; ext.at = performance.now(); },
     say: onPhrase,
     shape: () => { const s = LS.mixShape(track.frame().key, 'X', 0); return { o: jaw / 0.32, w: s.w, r: s.r, t: s.t, g: s.g, f: s.f }; },
     weights: () => { const o = {}; Object.keys(M).forEach(n => { if (M[n] >= 0) o[n] = +inf[M[n]].toFixed(3); }); return o; },

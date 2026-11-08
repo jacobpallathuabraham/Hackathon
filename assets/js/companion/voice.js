@@ -108,9 +108,66 @@
       return (name && vs.find(v => v.name === name)) || (g && vs.find(v => gender(v) === g)) || vs[0] || null;
     }
     let token = 0, gapT = null;
+    /* ---- optional expressive cloud voice (ElevenLabs via ERLY's server) ---- */
+    const getCloud = env.getCloud || (() => null);
+    let cloudDown = 0, timers = [];
+    const ttsCache = new Map();
+    // emotion → a gentle eleven_v3 audio tag; real "haha" becomes a natural laugh from the voice model itself
+    function tagify(text, emo) {
+      let t = String(text).replace(/\b(haha|ha ha|hehe)\b[!.]*/gi, '[laughs]');
+      const pre = { enthusiastic: '[excited] ', excited: '[excited] ', happy: '[cheerfully] ', empathetic: '[gently] ', sympathetic: '[gently] ', reassuring: '[warmly] ', thoughtful: '[thoughtfully] ', curious: '[curious] ', serious: '[seriously] ', playful: '[playfully] ' }[emo] || '';
+      return pre + t;
+    }
+    function fetchTTS(cloud, text, emo, g) {
+      const key = g + '|' + emo + '|' + text;
+      if (ttsCache.has(key)) return ttsCache.get(key);
+      const p = fetch(cloud.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: cloud.tags === false ? text : tagify(text, emo), voice: (cloud.voices || {})[g] || (cloud.voices || {}).f, model: cloud.model }) })
+        .then(r => (r.ok ? r.json() : Promise.reject(new Error('tts-' + r.status))));
+      ttsCache.set(key, p); if (ttsCache.size > 40) ttsCache.delete(ttsCache.keys().next().value);
+      p.catch(() => ttsCache.delete(key));
+      return p;
+    }
+    function advance(i, item, opts, my) {
+      phraseHook('end');
+      const next = state.queue[i + 1];
+      const gap = !next ? 0 : next.sentence !== item.sentence ? 300 + (item.question ? 80 : 0) + ((opts.prosody && opts.prosody.pause) || 0) : 110;
+      const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
+      if (gap) gapT = setTimeout(go, gap); else go();
+    }
+    function cloudSpeak(i, opts, my, cloud) {
+      const item = state.queue[i], cfg = getSettings(), g = cfg.gender || 'f';
+      fetchTTS(cloud, item.text, opts.emotion, g).then(j => {
+        if (my !== token) return;
+        const audio = new Audio('data:audio/mpeg;base64,' + j.audio);
+        state.audio = audio;
+        audio.volume = Math.max(0, Math.min(1, (cfg.volume != null ? cfg.volume : 1)));
+        audio.playbackRate = Math.max(0.7, Math.min(1.5, cfg.rate || 1));
+        // word starts from the voice's own character timestamps (tags are skipped)
+        const words = []; const re = /\S+/g; let m; while ((m = re.exec(item.text))) words.push(m.index);
+        let starts = [];
+        const al = j.alignment;
+        if (al && al.characters) { let inW = false, inTag = false; al.characters.forEach((ch, k) => { if (ch === '[') inTag = true; if (inTag) { if (ch === ']') inTag = false; return; } if (/\S/.test(ch) && !inW) { starts.push(al.character_start_times_seconds[k]); inW = true; } else if (/\s/.test(ch)) inW = false; }); }
+        if (starts.length > words.length) starts = starts.slice(starts.length - words.length);
+        audio.onplaying = () => {
+          if (my !== token) return;
+          set('speaking', true); opts.onstart && opts.onstart(item.sentence, i);
+          phraseHook('start', item.text, 1, null, opts.emotion);
+          timers.forEach(clearTimeout);
+          timers = words.map((ci, k) => setTimeout(() => { if (my === token) phraseHook('boundary', ci); }, ((starts[k] != null ? starts[k] : k * 0.3) * 1000) / audio.playbackRate));
+        };
+        audio.onended = () => { timers.forEach(clearTimeout); if (my === token) advance(i, item, opts, my); };
+        audio.onerror = () => { cloudDown = Date.now(); if (my === token) speakFrom(i, opts); };
+        if (state.queue[i + 1]) fetchTTS(cloud, state.queue[i + 1].text, opts.emotion, g); // prefetch: no gap waiting for audio
+        audio.play().catch(() => { cloudDown = Date.now(); if (my === token) speakFrom(i, opts); });
+      }).catch(() => { cloudDown = Date.now(); if (my === token) speakFrom(i, opts); });
+    }
+
     function speakFrom(i, opts) {
       const my = ++token;
       clearTimeout(gapT);
+      if (state.audio) { try { state.audio.pause(); } catch (e) { /* ignore */ } state.audio = null; }
+      const cloud = getCloud();
+      if (cloud && cloud.url && Date.now() - cloudDown > 60000 && i < state.queue.length && !opts.voiceName) { if (synth) synth.cancel(); state.idx = i; return cloudSpeak(i, opts, my, cloud); }
       if (!synth || !Utter) return;
       synth.cancel();
       state.idx = i;
@@ -141,12 +198,8 @@
         if (my !== token) return;
         clearTimeout(state.watch);
         if (u.done) return; u.done = true;
-        phraseHook('end');
-        const next = state.queue[i + 1];
         // natural pauses: a breath between phrases, longer between sentences, plus the tone's own pause
-        const gap = !next ? 0 : next.sentence !== item.sentence ? 300 + (item.question ? 80 : 0) + ((opts.prosody && opts.prosody.pause) || 0) : 110;
-        const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
-        if (gap) gapT = setTimeout(go, gap); else go();
+        advance(i, item, opts, my);
       };
       u.onerror = e => { if (my !== token) return; if (e && (e.error === 'interrupted' || e.error === 'canceled')) return; set('speaking', false); opts.onerror && opts.onerror(e && e.error); };
       synth.speak(u);
@@ -171,12 +224,12 @@
       voices,
       voiceFor: lang => pickVoice(lang),
       onPhrase(f) { hooks.add(f); return () => hooks.delete(f); },
-      stop() { token++; clearTimeout(gapT); clearTimeout(state.watch); state.queue = []; state.paused = false; if (synth) synth.cancel(); phraseHook('end'); set('speaking', false); },
-      pause() { if (!state.speaking) return; state.paused = true; if (synth && synth.pause) synth.pause(); phraseHook('end'); set('paused', true); },
+      stop() { token++; clearTimeout(gapT); clearTimeout(state.watch); timers.forEach(clearTimeout); if (state.audio) { try { state.audio.pause(); } catch (e) { /* ignore */ } state.audio = null; } state.queue = []; state.paused = false; if (synth) synth.cancel(); phraseHook('end'); set('speaking', false); },
+      pause() { if (!state.speaking) return; state.paused = true; if (state.audio) state.audio.pause(); else if (synth && synth.pause) synth.pause(); phraseHook('end'); set('paused', true); },
       resume() {
         if (!state.paused) return;
         state.paused = false;
-        if (state.resumeAt != null) { const i = state.resumeAt; state.resumeAt = null; speakFrom(i, lastOpts); } else if (synth && synth.resume) synth.resume();
+        if (state.resumeAt != null) { const i = state.resumeAt; state.resumeAt = null; speakFrom(i, lastOpts); } else if (state.audio) state.audio.play().catch(() => {}); else if (synth && synth.resume) synth.resume();
         set('paused', false);
       },
       repeat() { if (state.lastText) api.speak(state.lastText, lastOpts); },

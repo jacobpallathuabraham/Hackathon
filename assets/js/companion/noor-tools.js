@@ -253,9 +253,65 @@
 
   /* ---------------- the router ---------------- */
   const has = (re, t) => re.test(t);
+  /* ---------------- interactive visuals (visuals.js) ---------------- */
+  let vis = null;
+  function sayVisual(text, done) {
+    if (C.inCall && C.call && C.call.say) return C.call.say(text, done);
+    const st = U.store.prefs();
+    if (U.voice && U.voice.supported.tts && st.voiceReplies !== false && !st.muted) return U.voice.speak(text, { lang: U.lang(), onend: done, onerror: done });
+    setTimeout(done, 2400 + text.length * 40);
+  }
+  function openVisual(pick, o) {
+    if (!ERLY.visuals || !pick) return null;
+    o = o || {};
+    if (vis && vis.id === pick.id && pick.id !== 'flow') return vis;
+    if (vis) vis.close();
+    const call = C.inCall && C.call && C.call.active();
+    const host = call ? (document.querySelector('.ncall') || document.body) : document.body;
+    const wide = innerWidth >= 1100;
+    vis = ERLY.visuals.open(host, pick, {
+      docked: !!call,
+      say: sayVisual,
+      onStage: (i, stg, from) => {
+        // the companion turns to the visual and gestures at it when the lesson moves on
+        if (from !== 'open' && C.call && C.call.avatar) { const a = C.call.avatar(); if (a && a.point) a.point(); }
+      },
+      onClose: () => { vis = null; if (C.call && C.call.avatar) { const a = C.call.avatar(); if (a && a.setShift) a.setShift(0); } document.documentElement.classList.remove('has-vz'); }
+    });
+    if (!vis) return null;
+    if (!call) { vis.el.classList.remove('vz--modal'); vis.el.classList.add(wide ? 'vz--side' : 'vz--modal'); }
+    if (call && C.call.avatar) { const a = C.call.avatar(); if (a && a.setShift && innerWidth > 760) a.setShift(0.34); }
+    document.documentElement.classList.add('has-vz');
+    trace([T('Interactive visual', 'شرح مرئي تفاعلي')]);
+    ERLY.emit('noor:visual', { id: pick.id });
+    if (o.tour) vis.ready.then(() => vis && vis.tour());
+    return vis;
+  }
+  // every sentence the companion starts saying can move the visual to the matching step
+  if (U.voice && U.voice.onPhrase) U.voice.onPhrase((type, text) => { if (type === 'start' && vis && !vis.touring()) vis.sync(text); });
+
   async function route(text) {
     const t = text.trim();
     learn(t);
+    // two-host audio lesson ("make a podcast / audio lesson about …")
+    if (ERLY.audioLesson && /\b(audio (lesson|overview|explanation)|podcast|two hosts|listen to (a|an) (lesson|explanation))\b|درس صوتي|بودكاست/i.test(t)) {
+      trace([T('Audio lesson', 'درس صوتي')]);
+      await ERLY.audioLesson.start(t.replace(/.*\b(about|on|of)\b/i, '').trim() || t);
+      return { done: true };
+    }
+    // a question that a picture explains better: open the interactive visual alongside the answer
+    const want = ERLY.visuals && ERLY.visuals.detect(t);
+    const visualOnly = /\b(show|visuali[sz]e|animate|demonstrat|draw|simulat)/i.test(t);
+    if (want && !/^(what is|calculate)\s+[\d(]/i.test(t)) {
+      openVisual(want);
+      if (!(U.ai && U.ai.ready())) {
+        // no AI brain: teach it with the narrated visual itself (accurate, built-in content)
+        await U.aiSays(`Here’s an interactive visual of ${ERLY.visuals.scenes[want.id].title[0].toLowerCase()}. I’ll walk you through it step by step — you can pause, go back, or change the variables at any time.`, `إليك شرحاً مرئياً تفاعلياً عن ${ERLY.visuals.scenes[want.id].title[1]}. سأشرحه لك خطوة بخطوة — يمكنك الإيقاف أو الرجوع أو تغيير المتغيرات في أي وقت.`, { speak: false });
+        if (vis) vis.ready.then(() => setTimeout(() => vis && vis.tour(), 400));
+        return { done: true };
+      }
+      if (visualOnly) { /* the AI will still explain it */ }
+    }
     // exact maths
     const math = C.brain && C.brain._math && C.brain._math(t);
     if (math) return { done: false, math };
@@ -314,9 +370,15 @@
       const f = U.$('#cmpText'); f.value = T('Break down my ', 'قسّمي '); f.focus(); U.composer(); return;
     }
     if (id === 'resume') { U.bubble('you', T('Resume where I stopped', 'أكمل من حيث توقفت'), { text: true }); trace(['Resume']); return resume(); }
+    if (id === 'visual' && ERLY.visuals) {
+      const SC = ERLY.visuals.scenes;
+      await U.aiSays('Pick a lesson — or just ask me something like “how does the heart work?” and I’ll open the right visual myself.', 'اختر درساً — أو اسألني مثلاً «كيف يعمل القلب؟» وسأفتح الشرح المناسب بنفسي.', { speak: false });
+      return U.chipRow(Object.keys(SC).map(k => ({ id: 'vz:' + k, en: SC[k].title[0], ar: SC[k].title[1], icon: 'layers' })), c => { const k = c.id.slice(3); U.bubble('you', pick(SC[k].title[0], SC[k].title[1]), { text: true }); openVisual({ id: k, scene: SC[k] }, { tour: true }); });
+    }
+    if (id === 'audio' && ERLY.audioLesson) { U.bubble('you', T('Make me an audio lesson', 'أعدّ لي درساً صوتياً'), { text: true }); return ERLY.audioLesson.start(''); }
     if (id === 'explain') { const f = U.$('#cmpText'); f.value = T('Explain ', 'اشرحي '); f.focus(); U.composer(); return; }
     if (id === 'plan') { U.bubble('you', T('Make me a 7-day exam study plan', 'اصنعي لي خطة مذاكرة للامتحانات ٧ أيام'), { text: true }); return B.freeText('Make me a 7-day exam study plan', { silentUser: true }); }
   }
 
-  C.tools = { route, pdfLocal, trace, memoryPrompt, renderMemory, quick, resume, coach, memory: () => Object.assign({}, mem), _parse: parseSteps };
+  C.tools = { route, pdfLocal, trace, visual: { open: openVisual, current: () => vis, close: () => vis && vis.close() }, memoryPrompt, renderMemory, quick, resume, coach, memory: () => Object.assign({}, mem), _parse: parseSteps };
 })();

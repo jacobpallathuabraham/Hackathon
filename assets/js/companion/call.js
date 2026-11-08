@@ -210,7 +210,34 @@
       if (b.dataset.c === 'yes') { U.store.setConsent('mic', true); begin(true); } else { toggleType(true); begin(); }
     };
   }
-  function begin(gesture) {
+  // premium real-time engine (OpenAI Realtime via ERLY's server), when configured and chosen
+  async function startRealtime() {
+    setState('reconnecting'); caption('#ncNoor', T('Connecting the real-time voice… (audio is processed by OpenAI while this session is open)', 'جارٍ توصيل الصوت الفوري… (تتم معالجة الصوت لدى OpenAI أثناء الجلسة)'));
+    st.rtText = '';
+    try {
+      const a = AV.get(cfg().avatar);
+      st.rt = await ERLY.realtime.connect({
+        instructions: (C.tools && C.tools.memoryPrompt ? C.tools.memoryPrompt() : '') + `\nYour name in this conversation is ${a.name}.`,
+        voice: a.g === 'm' ? 'cedar' : 'marin',
+        onState: s2 => { if (!st.on) return; if (s2 === 'speaking') st.speaking = true; if (s2 === 'listening' || s2 === 'hearing') st.speaking = false; setState(st.muted ? 'muted' : s2); },
+        onBargeIn: () => { if (C.tools && C.tools.visual) { const vz = C.tools.visual.current(); if (vz && vz.touring()) vz.stopTour(); } },
+        onUserText: t => { if (!t) return; record('you', t); st.turn = null; caption('#ncYou', t); st.lastUser = t; },
+        onAssistantDelta: full => { caption('#ncNoor', full); },
+        onAssistantDone: t => { record('noor', t); st.turn = null; const vz = ERLY.visuals && ERLY.visuals.detect(st.lastUser || ''); if (vz && C.tools && C.tools.visual) C.tools.visual.open(vz); },
+        onAudioLevel: x => { st.rtLevel = x; },
+        onLatency: ms => { metrics.push({ brain: 'realtime', audio: ms, text: null, done: null }); if (st.log.length) { st.log[st.log.length - 1].lat = (ms / 1000).toFixed(1); renderLog(); } },
+        onError: msg => { caption('#ncNoor', T('The real-time voice reported a problem: ', 'أبلغ الصوت الفوري عن مشكلة: ') + msg); }
+      });
+      if (!st.on) { st.rt.close(); st.rt = null; return; }
+      loop();
+    } catch (e) {
+      st.rt = null;
+      caption('#ncNoor', T('The real-time voice isn’t reachable right now, so I’ll use the browser voice instead.', 'الصوت الفوري غير متاح الآن، لذا سأستخدم صوت المتصفح.'));
+      setTimeout(() => { if (st.on) begin(true, true); }, 1200);
+    }
+  }
+  function begin(gesture, noRealtime) {
+    if (!noRealtime && cfg().engine === 'realtime' && ERLY.realtime && ERLY.realtime.available()) return startRealtime();
     if (v.supported.stt && U.store.consent('mic') && !SAFARI) meter();
     loop();
     if (st.avatar && st.avatar.greet) st.avatar.greet(); // a friendly wave
@@ -225,6 +252,7 @@
   function end() {
     if (!st.on) return;
     st.on = false; C.inCall = false;
+    if (st.rt) { st.rt.close(); st.rt = null; }
     clearTimeout(st.idleT); clearTimeout(st.thinkT);
     v.stop(); v.abortListening();
     stopMeter(); cancelAnimationFrame(st.vizRaf);
@@ -271,7 +299,7 @@
   }
   function next() {
     const item = st.queue.shift();
-    if (!item) { st.speaking = false; return afterSpeaking(); }
+    if (!item) { st.speaking = false; markTurn('done'); return afterSpeaking(); }
     const text = item.text;
     st.speaking = true; setState('speaking');
     if (st.listening) { v.abortListening(); st.listening = false; }
@@ -305,10 +333,43 @@
     enqueue(st.lastReply);
   }
 
+  // speak a line for another part of ERLY (e.g. a narrated visual tour), then carry on
+  function sayExternal(text, done) {
+    if (!st.on) { if (done) setTimeout(done, 0); return; }
+    st.queue = []; v.stop();
+    if (st.listening) { v.abortListening(); st.listening = false; }
+    st.speaking = true; setState('speaking'); caption('#ncNoor', text); record('noor', text);
+    const tone = PR ? PR.classify(text, {}) : 'neutral';
+    if (st.avatar) st.avatar.emote(tone);
+    const fin = () => { st.speaking = false; if (done) done(); setTimeout(() => { if (st.on && !st.speaking && !st.queue.length) afterSpeaking(); }, 700); };
+    v.speak(text, { lang: U.lang(), emotion: tone, prosody: PR ? PR.prosody(tone, cfg().expr) : null, onend: fin, onerror: fin });
+  }
+
+  /* ---------------- latency metrics (measured, never estimated) ---------------- */
+  const metrics = [];
+  let turnM = null;
+  function markTurn(kind) {
+    const now = performance.now();
+    if (kind === 'user') { turnM = { t0: now, text: null, audio: null, done: null }; return; }
+    if (!turnM) return;
+    if (kind === 'text' && turnM.text == null) turnM.text = now - turnM.t0;
+    if (kind === 'audio' && turnM.audio == null) { turnM.audio = now - turnM.t0; showLatency(); }
+    if (kind === 'done' && turnM.done == null && turnM.audio != null) { turnM.done = now - turnM.t0; metrics.push(Object.assign({ brain: U.ai ? U.ai.label().en : 'built-in' }, turnM)); if (metrics.length > 50) metrics.shift(); turnM = null; }
+  }
+  function showLatency() {
+    const s = turnM && turnM.audio != null ? (turnM.audio / 1000).toFixed(1) : null; if (!s) return;
+    if (st.turn && st.turn.who === 'noor') st.turn.lat = s; else if (st.log.length) st.log[st.log.length - 1].lat = s;
+    renderLog();
+  }
+  ERLY.on('noor:first-token', () => markTurn('text'));
+  if (v.onPhrase) v.onPhrase(type => { if (type === 'start' && st.on) markTurn('audio'); });
+
   /* ---------------- interrupting ---------------- */
   function interrupt() {
     if (!st.on) return;
     st.misses = 0; st.blocked = false;
+    if (C.tools && C.tools.visual) { const vz = C.tools.visual.current(); if (vz && vz.touring()) vz.stopTour(); }
+    if (st.rt) { st.rt.cancel(); st.speaking = false; setState('listening'); return; }
     if (st.paused) return togglePause();
     if (st.listening) { v.stopListening(); return; } // tap while listening = "I've finished"
     if (st.speaking || st.queue.length || U.isGenerating && U.isGenerating()) {
@@ -361,6 +422,7 @@
   function userSaid(text, typed) {
     text = String(text || '').trim(); if (!text) return;
     if (!typed && command(text)) return;
+    if (st.rt) { record('you', text); st.turn = null; caption('#ncYou', text); st.rt.sendText(text); setState('thinking'); return; }
     hush(); st.ignore = false;
     if (st.listening) { v.abortListening(); st.listening = false; }
     record('you', text);
@@ -368,6 +430,7 @@
     caption('#ncYou', text);
     const box = $('#ncChips'); if (box) box.innerHTML = '';
     setState('processing');
+    markTurn('user');
     C.submitText(text);
     setTimeout(() => { if (st.on && st.state === 'processing') setState('thinking'); }, 300);
     clearTimeout(st.thinkT);
@@ -410,6 +473,7 @@
     if (!st.on) return;
     st.muted = !st.muted;
     const b = $('#ncMute'); if (b) { b.setAttribute('aria-pressed', st.muted); b.classList.toggle('is-off', st.muted); }
+    if (st.rt) { st.rt.mute(st.muted); setState(st.muted ? 'muted' : 'listening'); return; }
     if (st.muted) { v.abortListening(); st.listening = false; setState('muted'); }
     else if (!st.speaking) { st.misses = 0; if (SAFARI && st.tapOnly) setState('idle'); else listen(true); }
     else setState('speaking');
@@ -446,7 +510,7 @@
   function renderLog() {
     const ol = $('#ncLogList'); if (!ol) return;
     const name = AV.get(cfg().avatar).name;
-    ol.innerHTML = st.log.length ? st.log.map((x, k) => `<li class="is-${x.who}"><span><b>${x.who === 'you' ? T('You', 'أنت') : esc(name)}</b><time>${hhmm(x.at)}</time>${x.who === 'you' ? `<button type="button" data-lg="edit" data-k="${k}">${T('Edit & resend', 'تعديل وإعادة')}</button>` : ''}</span><p>${esc(x.text)}</p></li>`).join('') : `<li class="is-empty">${T('Your conversation will appear here.', 'ستظهر محادثتك هنا.')}</li>`;
+    ol.innerHTML = st.log.length ? st.log.map((x, k) => `<li class="is-${x.who}"><span><b>${x.who === 'you' ? T('You', 'أنت') : esc(name)}</b><time>${hhmm(x.at)}</time>${x.lat ? `<em class="ncall__lat" title="${T('time from your question to the first spoken word', 'الوقت من سؤالك حتى أول كلمة منطوقة')}">⚡ ${x.lat} s</em>` : ''}${x.who === 'you' ? `<button type="button" data-lg="edit" data-k="${k}">${T('Edit & resend', 'تعديل وإعادة')}</button>` : ''}</span><p>${esc(x.text)}</p></li>`).join('') : `<li class="is-empty">${T('Your conversation will appear here.', 'ستظهر محادثتك هنا.')}</li>`;
     ol.scrollTop = ol.scrollHeight;
   }
   function plain() { const name = AV.get(cfg().avatar).name; return st.log.map(x => `[${hhmm(x.at)}] ${x.who === 'you' ? 'You' : name}: ${x.text}`).join('\n'); }
@@ -695,6 +759,7 @@
         <button type="button" class="nstudio__vmain" data-vp="${p.id}" aria-pressed="${!!on}"><span class="nstudio__vav ${p.g === 'm' ? 'is-m' : ''}">${esc(p.name[0])}</span><span><b>${esc(p.name)}</b><small>${esc(p.accent)} · ${p.g === 'f' ? T('female-sounding', 'صوت أنثوي') : T('male-sounding', 'صوت ذكوري')}</small><em>${esc(pick(p.en, p.ar))}</em><i class="nstudio__uses">${T('Uses', 'يستخدم')}: ${esc(x.voice.name.replace(/\s+-\s+.*$/, '').replace(/^Microsoft /, ''))} · ${esc(x.voice.lang)}</i></span></button>
         <div class="nstudio__vact"><button type="button" class="ncall__ic" data-vp="${p.id}" data-play aria-label="${T('Preview', 'معاينة')} ${esc(p.name)}">${ICON('play')}</button><button type="button" class="ncall__ic ${favs.has(p.id) ? 'is-fav' : ''}" data-fav="${p.id}" aria-pressed="${favs.has(p.id)}" aria-label="${T('Favourite', 'مفضلة')}">${ICON('star')}</button></div></div>`; }).join('') || `<p class="nstudio__none">${lib.available.length ? T('No voices match.', 'لا توجد أصوات مطابقة.') : T('This browser hasn’t loaded any voices yet. Try Microsoft Edge (the widest choice of natural voices) or, on iPad, Settings → Accessibility → Spoken Content → Voices.', 'لم يحمّل هذا المتصفح أي أصوات بعد. جرّب مايكروسوفت إيدج أو، على الآيباد، الإعدادات ← تسهيلات الاستخدام ← المحتوى المنطوق ← الأصوات.')}</p>`}</div>
       ${lib.missing.length ? `<details class="nstudio__missing"><summary>${T(`${lib.missing.length} more voices aren’t on this device`, `${lib.missing.length} أصوات أخرى غير متوفرة على هذا الجهاز`)}</summary><p>${lib.missing.map(p => `<span>${esc(p.name)} · ${esc(p.accent)}</span>`).join('')}</p><p class="nstudio__note">${T('They appear automatically when a matching voice is installed: Microsoft Edge includes Indian, British, Australian and Gulf Arabic neural voices; on iPad and Mac, download Premium/Enhanced voices in Settings → Accessibility → Spoken Content → Voices.', 'تظهر تلقائياً عند تثبيت صوت مناسب.')}</p></details>` : ''}
+      ${(window.ERLY_AI_CONFIG || {}).cloudVoice && (window.ERLY_AI_CONFIG || {}).cloudVoice.url ? swOf('cloudVoice', 'Expressive cloud voice (ElevenLabs)', 'صوت سحابي معبّر (ElevenLabs)', T('Studio-quality voice with natural laughter and emotion; the text being spoken is sent to ElevenLabs through ERLY’s server. Falls back to the device voice if unavailable.', 'صوت بجودة استوديو مع ضحك وعاطفة طبيعيين؛ يُرسل النص المنطوق إلى ElevenLabs عبر خادم إيرلي.'), Object.assign({ cloudVoice: false }, c)) : ''}
       ${range('rate', 'Speed', 'السرعة', [0.6, 1.5, 0.05], c)}${range('pitch', 'Pitch', 'طبقة الصوت', [0.7, 1.3, 0.05], c)}${range('volume', 'Volume', 'مستوى الصوت', [0.2, 1, 0.05], c)}${range('expr', 'Expressiveness', 'التعبير', [0, 1.5, 0.05], c)}
       <p class="nstudio__note">${T('Expressiveness lets the voice brighten when something is exciting and soften when reassuring — by changing pace, pitch and pauses sentence by sentence.', 'يجعل التعبير الصوت أكثر إشراقاً عند الحماس وأهدأ عند الطمأنة — بتغيير السرعة والنبرة والتوقفات جملة بجملة.')}</p>
       <div class="nstudio__row"><span class="nstudio__k">${T('Language', 'اللغة')}</span>${segOf('lang', [['en', 'English', 'English'], ['ar', 'العربية', 'العربية']], { lang: U.lang() })}</div>
@@ -721,6 +786,7 @@
       <p class="nstudio__k">${T('Mode', 'الوضع')}</p>
       <div class="nstudio__modes">${MODES.map(([k, en, ar, ic]) => `<button type="button" data-opt="mode:${k}" aria-pressed="${c.mode === k}">${ICON(ic)} ${pick(en, ar)}</button>`).join('')}</div>
       <p class="nstudio__note">${modeHint(c.mode)}</p>
+      ${ERLY.realtime && ERLY.realtime.available() ? `<p class="nstudio__k">${T('Voice engine', 'محرك الصوت')}</p>${segOf('engine', [['browser', 'Browser voice (free, on this device)', 'صوت المتصفح (مجاني)'], ['realtime', 'Real-time voice (OpenAI, fastest)', 'الصوت الفوري (OpenAI، الأسرع)']], Object.assign({ engine: 'browser' }, c))}<p class="nstudio__note">${T('Real-time voice streams your microphone audio to OpenAI while the session is open (through ERLY’s server, which holds the key). Takes effect next time you start a conversation.', 'يرسل الصوت الفوري صوت الميكروفون إلى OpenAI أثناء الجلسة. يسري من المحادثة التالية.')}</p>` : ''}
       <p class="nstudio__k">${T('Explanations', 'الشرح')}</p>${segOf('style', STYLES, c)}
       <p class="nstudio__k">${T('Answer length', 'طول الإجابة')}</p>${segOf('length', [['short', 'Short', 'قصيرة'], ['medium', 'Medium', 'متوسطة'], ['long', 'Long', 'طويلة']], c)}
       <p class="nstudio__k">${T('Tone', 'النبرة')}</p>${segOf('tone', TONES, c)}
@@ -779,7 +845,8 @@
         } else st.echo *= 0.995;
       }
       const lvl = Math.min(1, st.level * 6);
-      const spk = st.avatar ? st.avatar.shape().o : 0;
+      if (st.rt && st.avatar && st.avatar.mouthLevel) st.avatar.mouthLevel(st.speaking ? (st.rtLevel || 0) : 0);
+      const spk = st.rt ? (st.speaking ? st.rtLevel || 0 : 0) : st.avatar ? st.avatar.shape().o : 0;
       el.style.setProperty('--lvl', (st.listening ? lvl : 0).toFixed(3));
       el.style.setProperty('--spk', spk.toFixed(3));
       if (st.avatar) st.avatar.level(st.listening ? lvl : 0);
@@ -794,5 +861,5 @@
     st.stream = null; st.ac = null; st.an = null; el.style.setProperty('--lvl', 0);
   }
   C.callMode = 'care';
-  C.call = { start, end, active: () => st.on, avatar: () => st.avatar, settings: cfg, openStudio: w => st.on && openStudio(w), state: () => st.state, transcript: () => st.log.slice() };
+  C.call = { start, end, say: sayExternal, metrics: () => metrics.slice(), active: () => st.on, avatar: () => st.avatar, settings: cfg, openStudio: w => st.on && openStudio(w), state: () => st.state, transcript: () => st.log.slice() };
 })();

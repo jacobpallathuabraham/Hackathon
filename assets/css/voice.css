@@ -280,7 +280,7 @@
 .avt--3d { position: relative; }
 .h3d { position: absolute; inset: 0; overflow: hidden; }
 .h3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.h3d__env { filter: blur(7px) saturate(1.05) brightness(.92); transform: scale(1.08); }
+.h3d__env { filter: blur(3.5px) saturate(1.08) brightness(.94) contrast(1.03); transform: scale(1.04); }
 .h3d__av { opacity: 0; animation: h3dIn 1s .1s cubic-bezier(.2, .8, .2, 1) forwards; }
 @keyframes h3dIn { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
 .avt3d__load { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; color: rgba(255,255,255,.8); font: 600 14px var(--f-body); background: radial-gradient(60% 60% at 50% 45%, #2a2438, #0d0b14); }
@@ -361,3 +361,4 @@
   .ncall.is-3d .ncall__btn { width: 46px; height: 46px; }
   .ncall.is-3d .ncall__chips { bottom: 240px; }
 }
+.ncall__lat { font: 600 11px var(--f-mono); color: #86efac; font-style: normal; }

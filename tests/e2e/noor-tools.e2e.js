@@ -40,7 +40,7 @@ const MOCKS = () => {
   await page.goto(BASE + 'student.html'); await page.waitForTimeout(600);
   await page.click('.cmp-launch'); await page.waitForTimeout(1300);
   assert.equal(await page.isVisible('.cwel'), true, 'welcome screen');
-  assert.equal(await page.locator('.cwel__grid button').count(), 6, 'six quick actions');
+  assert.equal(await page.locator('.cwel__grid button').count(), 8, 'eight quick actions (incl. visuals and audio lessons)');
   const box = await page.locator('.cmp').boundingBox();
   assert.ok(box.width >= 560, 'bigger panel: ' + box.width);
 
@@ -166,7 +166,7 @@ const MOCKS = () => {
   await ipad.waitForTimeout(1800);
   // the "Allow" tap lets Safari start the microphone straight after the greeting — no extra tap
   await ipad.waitForFunction(() => /listening|hearing/.test(document.querySelector('.ncall').dataset.s), null, { timeout: 10000 }); // hands-free after the Allow tap
-  await ipad.waitForTimeout(200);
+  await ipad.waitForFunction(() => /what is 6\*7/.test(document.querySelector('#ncYou').textContent), null, { timeout: 5000 }).catch(() => {});
   assert.match(await ipad.textContent('#ncYou'), /what is 6\*7/, 'live transcript');
   await ipad.click('#ncOrb'); await ipad.waitForTimeout(1500);
   assert.match(await ipad.textContent('#cmpLog'), /= 42/, 'tap sends what was heard');

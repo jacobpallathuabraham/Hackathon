@@ -434,3 +434,77 @@ None of these are connected yet: each needs an API key held on a server. The voi
 - **Lip-sync**: it follows text timing from the browser voice, not the audio phonemes. Exact phoneme visemes need a cloud TTS with viseme events (for example Azure Speech, via a backend that holds the key).
 - **Clothing**: each person's clothing is part of their model. Changing outfits would need separate garment meshes.
 - **Diversity**: it reflects what the library contains. Some regions, including South Asia, are under-represented. More characters can be added with the pipeline in `tools/humans/`.
+
+## v7: interactive visual learning, real-time voice and two-host audio lessons
+
+### Audit and research: what "photoreal" actually needs
+I checked each official option before choosing one. Here is what each needs and whether ERLY can use it:
+
+| Option | What it gives | Can ERLY run it today? |
+|---|---|---|
+| **Unreal MetaHuman** | Film-quality heads (strand hair, subsurface skin) | No. It needs Unreal Engine plus Pixel Streaming GPU servers, the licence terms on non-Unreal use are disputed, and there's no browser export. |
+| **NVIDIA ACE / Audio2Face** | Audio-driven facial animation (SDK open-sourced 2025) | Only with a GPU server. It could drive our blendshapes later. |
+| **HeyGen LiveAvatar / Tavus / Simli / Anam** | Photoreal *video* avatars streamed over WebRTC | Yes, but they are paid per minute and need an account and key. The `realtime` hook is where one would plug in. |
+| **OpenAI Realtime API (WebRTC)** | Speech-to-speech, server VAD, barge-in, live transcripts | **Implemented** (`realtime.js` and the worker). Needs a key on the server. |
+| **Gemini Live API** | Similar, using ephemeral tokens over WebSocket | Not wired. It has the same shape as the OpenAI path. |
+| **ElevenLabs** | Expressive TTS with character timestamps; v3 audio tags (`[laughs]`) | **Implemented** as an opt-in cloud voice (worker `/tts`). |
+| **three.js** | The in-browser 3D renderer | **In use** (Rocketbox people, plus the new 3D visuals). |
+
+**Decision:** keep the free, private, in-browser 3D person as the default. Add optional server-backed premium engines, where keys stay in the worker and are never in the page. The biggest learning gain in this round goes into the **Interactive Visual Learning Engine**.
+
+### Interactive Visual Learning Engine (`assets/js/companion/visuals.js`)
+- **8 real, interactive scenes**:
+
+  | Scene | Rendered with | What you can change or explore |
+  |---|---|---|
+  | Photosynthesis | SVG | 5 stages, with particle flows of CO₂, water, O₂ and sugar |
+  | The heart | SVG | 6 stages; blood flow through the chambers and valves |
+  | Electric circuit | SVG | Ohm's law computed live (I = V/R); a switch; voltage; one or two bulbs |
+  | Plate tectonics | SVG | 5 stages |
+  | Newton's three laws | Canvas | Friction, force and mass sliders driving real physics |
+  | Quadratic graphs | Canvas | a, b and c sliders, with vertex, roots and discriminant, plus a safe expression parser (no `eval`) |
+  | Gravity and orbits | three.js | Kepler-correct speeds, a gravity-off demo |
+  | Cylinder volume | three.js | r and h sliders, with V = π × r² × h worked out |
+
+  Every scene has stages, captions, pause/replay/step, speed control (0.5×, 1×, 2×) and keyboard control.
+- **Driven by the conversation:**
+  - Asking "explain photosynthesis" (or a similar question) opens the matching scene.
+  - The AI can also choose one with a `[[visual:…]]` tag, or draw a step-by-step flow (`[[visual:flow|Title|A > B > C]]`) for any topic.
+  - While the companion speaks, each sentence moves the visual to the stage it describes. "Guide me" gives a narrated tour.
+  - In a call, the visual docks beside the 3D person, the camera shifts, and the person gestures towards it.
+- **Audio lessons** (`audio-lesson.js`): two-host lessons in the style of NotebookLM, with **Maya and Sami**. They are built from a scene's stages, from the student's current reading (its pages and key terms), or from the AI using only the source it is given. The player has chapters, a transcript you can click to jump, and speed control. The two hosts use different voices.
+
+### Premium engines (off unless configured; keys live only in `server/cloudflare-worker.mjs`)
+- **Real-time conversation** (`ERLY_AI_CONFIG.realtime = { url: '<worker>/realtime/session' }`):
+  - The worker mints a client secret that lasts 2 minutes, and the browser connects to OpenAI over WebRTC.
+  - Turn detection is semantic VAD, so there's no tapping, and talking over the companion interrupts it.
+  - Live captions show both sides.
+  - Latency from end of speech to first audio is measured and shown (⚡).
+  - It starts only after a "Start conversation" press with microphone consent, and the UI says that audio goes to a remote service.
+- **Expressive cloud voice** (`ERLY_AI_CONFIG.cloudVoice = { url: '<worker>/tts', voices: { f, m } }`):
+  - Uses ElevenLabs with timestamps, so lip-sync follows real character timing.
+  - The v3 audio tags give real laughter only where the text actually laughs; nothing random is added.
+  - Each student must switch it on in Voice settings.
+  - If it fails, it falls back to the browser voice.
+- **Worker hardening**: an origin allow-list, rate limiting per IP, validated voice IDs, and safety rules added to the realtime instructions.
+
+### Measured (headless Chromium, software WebGL)
+- `tests/e2e/visuals.e2e.js` checks all of the following:
+  - every scene mounts;
+  - speech moves the stages;
+  - Ohm's law and cylinder maths are correct, and the parser rejects code;
+  - topic detection and AI tags;
+  - the narrated chat tour and the two-voice audio lesson.
+- The same file tests both premium engines **against simulated providers**:
+  - the ElevenLabs mock checks the laugh tag, voice ID, word boundaries and playback;
+  - the Realtime mock checks the hearing → thinking → speaking → listening states, `session.update`, and that a tap cancels the answer.
+- Neither engine has been run against the real OpenAI or ElevenLabs services, because no keys were available.
+- Lip latency on the 3D person: median 102–170 ms across runs on software GL (worst 197 ms); GPU devices haven't been measured.
+- Unit tests: 167 pass. All e2e suites pass.
+
+### Honest limits
+- **Realism**: the 3D people are still Rocketbox game-quality humans. Truly photoreal faces need a paid streaming-avatar service (HeyGen, Tavus, Simli, Anam) or licensed Character Creator / MetaHuman assets rendered on a GPU server.
+- **Avatar library**: there are no South Asian Rocketbox models yet.
+- **Laughter**: only the ElevenLabs v3 voice can laugh.
+- **Real-time voice**: needs the worker deployed with `OPENAI_API_KEY`. Without it, the existing browser speech loop is used.
+- **Gemini Live**: not wired yet.

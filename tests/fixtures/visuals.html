@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ERLY visuals test</title>
+<script type="importmap">{ "imports": { "three": "../../assets/vendor/three/build/three.module.min.js", "three/addons/": "../../assets/vendor/three/examples/jsm/" } }</script>
+<link rel="stylesheet" href="../../assets/css/visuals.css">
+<style>body{margin:0;background:#1b1626;font-family:system-ui} #host{position:fixed;inset:0}</style>
+</head><body><div id="host"></div>
+<script src="../../assets/js/companion/visuals.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+window.v = ERLY.visuals.open(document.getElementById('host'), q.get('id') || 'photosynthesis', { stage: +(q.get('s') || 0) });
+window.v.ready.then(() => { window.ready = true; });
+</script></body></html>
