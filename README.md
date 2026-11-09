@@ -608,3 +608,70 @@ I checked each official option before choosing one. Here is what each needs and 
   - Silero VAD, Whisper (Transformers.js) and Kokoro TTS. Their hosts were blocked in the build container, so they couldn't be tested.
   - A male model: see the workstation pipeline.
 - Real-time voice and the cloud voice still need the worker deployed with keys.
+
+## v9: experience layer (theme switch, living backgrounds, holo companion, accessibility centre)
+
+### Audit first (headless Chromium)
+- Every page (`index`, `login`, `student`, `checkins`, `support`, `faculty`, `counselor`, `university`, `avatar-lab`) was checked on desktop 1440 px and phone 390 px, in light and dark, scrolled top to bottom: **33 combinations**.
+- Result: no JavaScript errors, no failed requests, no horizontal overflow, no broken internal links. This was true both before and after v9.
+- Two real layout bugs were found by measuring, and fixed:
+  - **Student header.** The nine nav links needed ~675 px but had 633 px at every desktop width, so "Growth Plan" touched the language button.
+    - The links now fit, with slightly tighter link padding and gaps.
+    - `navfit.js` measures the header and collapses it to the menu button whenever links would touch the header tools, in any language, at any text size or width.
+  - **"Stop animations" hid the hero headline.** The reveal waited for an animation-end event that never fires at 0 s. Near-zero durations are now used, so the events still fire.
+
+### Eclipse theme switch (`theme-fx.js`, `theme-fx.css`)
+- The new theme spreads from the toggle with a **feathered edge**: an animated radial mask on a registered `--tfx-r` property, not a hard circle.
+- A **luminous ring** rides the edge: warm gold into light, cyan-violet into dark. It is its own view-transition layer.
+- The old theme dims and recedes slightly, and the icon springs.
+- **Rapid clicks** finish the running switch and start the next. Tested: 7 clicks in a row leave the right theme, nothing stuck, no leftover layers.
+- Fallbacks: a colour wash without View Transitions; an instant switch with reduced motion or with "Stop animations" on.
+- Debugging notes: the ring wasn't captured until `contain: strict` was removed and the gradient was set to `closest-side`.
+
+### Living backgrounds (`ambient.js`)
+- Three looks:
+  - **aurora**: soft light fields in the page's own accent colours, rendered into a 1/3-resolution offscreen canvas and scaled up;
+  - **constellation**: drifting linked points with slight pointer parallax;
+  - **holo**: a perspective grid with a scanning light.
+- Used on: the student hero (aurora + constellation), the three dark sections (constellation), the Daily Quest and Growth Plan pages, and the counsellor, faculty and university dashboards (aurora).
+- Capped at 30 fps; pauses off-screen and in hidden tabs.
+- Follows the theme and accent colour; shows a still frame with reduced motion; fewer particles on low-power devices.
+
+### Noor holo interface (`companion-holo.css`, `companion/holo.js`)
+- A JARVIS-inspired but original ERLY look for the companion. It works by overriding the design tokens the companion already uses, so every part follows.
+- Deep navy glass, HUD corner brackets, an arc-reactor orb with counter-rotating rings, and a cyan/violet light system.
+- A scanning-grid background that runs only while the panel is open.
+- Luminous AI message edges, gradient student bubbles, animated message arrivals, and a rotating light ring on the input while typing.
+- The full-screen voice call gets a matching HUD frame, glass-cyan controls and caption styling.
+- Text contrast stays high. Reduced motion stops every animation.
+
+### Accessibility Control Centre (`a11y.js`, every page)
+- Opened by the floating button (bottom-left) or **Alt+A**; Esc closes it and focus returns.
+- Settings:
+  - text size 90–140%;
+  - high contrast;
+  - stop animations;
+  - reading-friendly font;
+  - extra text spacing (WCAG 1.4.12 values);
+  - underline links;
+  - bold focus ring;
+  - read the selected text aloud, with a speed control.
+- Saved only on this device (`localStorage`). ERLY never infers or labels anything.
+- The panel lives outside `<body>`, so the zoom never clips it. The header re-measures itself at the new text size.
+
+### Page-to-page transitions and controls (`v9.css`)
+- Same-origin navigations cross-fade with a slight rise (CSS `@view-transition`). Browsers without support just navigate.
+- Buttons get springy press feedback, there is a consistent focus ring, and scrollbars and text selection are styled.
+
+### Tests
+- New `tests/e2e/v9.e2e.js` covers:
+  - the theme switch: the ring and reveal are both animated, rapid clicks end on the right theme, and nothing is stuck;
+  - backgrounds: visible ones animate, off-screen ones pause, and aurora renders below screen resolution;
+  - the holo grid: runs when the panel is open, stops when it closes;
+  - every accessibility setting: applied, persisted and reset; content stays visible with animations stopped; the panel stays on screen at 125%; read-aloud works;
+  - the header fits at 1250–1920 px in English and Arabic.
+- All previous suites still pass, plus 167 unit tests.
+
+### Limits
+- These are visual and interaction upgrades. They don't add backend, AI or voice capabilities. The earlier limits (no live AI provider configured, a demo-grade, browser-only role check) still apply.
+- Cross-page and theme view transitions need a Chromium-based browser or Safari 18+. Firefox gets the fallbacks.

@@ -12,7 +12,7 @@
    slide instead. Reduced-motion users get an instant switch. */
 (function () {
   'use strict';
-  const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
   const html = document.documentElement;
   const canVT = typeof document.startViewTransition === 'function';
   let replaying = false, busy = false;
@@ -37,35 +37,61 @@
     return b;
   }
 
-  /* ---------------- theme ---------------- */
+  /* ---------------- theme: "eclipse" reveal ----------------
+     The new theme spreads out from the button with a feathered edge (an
+     animated radial mask, not a hard circle) while a luminous ring rides the
+     edge — warm gold into light, cyan-violet into dark — and the old theme
+     dims and recedes slightly. Clicking again mid-way finishes the running
+     switch at once and starts the next one, so rapid clicks never stack or
+     flicker. Without View Transitions: a soft colour cross-fade with a wash.
+     Reduced motion: an instant switch. */
+  let canMask = false;
+  try { CSS.registerProperty({ name: '--tfx-r', syntax: '<length>', inherits: true, initialValue: '0px' }); canMask = CSS.supports('mask-image', 'radial-gradient(#000, transparent)') || CSS.supports('-webkit-mask-image', 'radial-gradient(#000, transparent)'); }
+  catch (e) { canMask = !!(window.CSS && CSS.supports && CSS.supports('mask-image', 'radial-gradient(#000, transparent)')) && /already/i.test(String(e && e.message)); }
+  let active = null;
   function switchTheme(btn) {
     const { x, y, radius } = origin(btn);
     const toDark = html.dataset.theme !== 'dark';
     html.style.setProperty('--tfx-x', x + 'px');
     html.style.setProperty('--tfx-y', y + 'px');
+    if (active) { try { active.skipTransition(); } catch (e) { /* already done */ } active = null; }
     if (reduce()) return replay(btn);
     const glyph = () => { const g = badge('tfx-orb ' + (toDark ? 'tfx-orb--moon' : 'tfx-orb--sun'), toDark ? MOON : SUN, 1300); g.style.left = x + 'px'; g.style.top = y + 'px'; };
+    btn.classList.remove('tfx-spin'); void btn.offsetWidth; btn.classList.add('tfx-spin');
     if (canVT) {
-      html.classList.add('vt-theme');
-      const t = document.startViewTransition(() => { replay(btn); glyph(); });
+      const dur = Math.round(Math.min(1150, 700 + radius * 0.22)); // larger screens get a little longer, never sluggish
+      const feather = Math.max(70, Math.min(160, radius * 0.08));
+      let ring = null;
+      html.classList.add('vt-theme'); html.classList.toggle('vt-mask', canMask); html.classList.toggle('vt-to-dark', toDark);
+      html.style.setProperty('--tfx-f', feather + 'px');
+      const t = active = document.startViewTransition(() => {
+        replay(btn); glyph();
+        ring = document.createElement('div');
+        ring.className = 'tfx-ring ' + (toDark ? 'tfx-ring--dark' : 'tfx-ring--light');
+        ring.setAttribute('aria-hidden', 'true');
+        ring.style.left = x + 'px'; ring.style.top = y + 'px';
+        document.body.appendChild(ring);
+      });
       t.ready.then(() => {
-        html.animate(
-          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-          { duration: 750, easing: 'cubic-bezier(.65,0,.25,1)', pseudoElement: '::view-transition-new(root)' }
-        );
-        html.animate({ filter: ['brightness(1)', toDark ? 'brightness(.7)' : 'brightness(1.15)'], transform: ['scale(1)', 'scale(.985)'] },
-          { duration: 750, easing: 'ease-in', pseudoElement: '::view-transition-old(root)' });
+        const ease = 'cubic-bezier(.62,0,.22,1)';
+        if (canMask) html.animate({ '--tfx-r': ['0px', (radius + feather + 20) + 'px'] }, { duration: dur, easing: ease, pseudoElement: '::view-transition-new(root)' });
+        else html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, { duration: dur, easing: ease, pseudoElement: '::view-transition-new(root)' });
+        html.animate({ filter: ['brightness(1) saturate(1)', toDark ? 'brightness(.62) saturate(.85)' : 'brightness(1.12) saturate(1.05)'], transform: ['scale(1)', 'scale(.982)'] },
+          { duration: dur, easing: 'cubic-bezier(.4,0,.6,1)', pseudoElement: '::view-transition-old(root)' });
+        // the ring is a 1024px glowing circle scaled to ride the reveal's edge (soft upscaling adds glow)
+        const end = (radius + feather * 0.5 + 20) / (0.966 * 512); // ring core sits mid-feather
+        html.animate([{ transform: 'scale(.02)', opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0.95, offset: 0.72 }, { transform: `scale(${end})`, opacity: 0 }],
+          { duration: dur, easing: ease, pseudoElement: '::view-transition-new(tfx-ring)', fill: 'both' });
       }).catch(() => {});
-      t.finished.finally(() => html.classList.remove('vt-theme'));
+      t.finished.finally(() => { if (ring) ring.remove(); html.classList.remove('vt-theme', 'vt-mask', 'vt-to-dark'); if (active === t) active = null; });
     } else {
       html.classList.add('tfx-fade');
       const wash = badge('tfx-wash', '', 900);
       wash.style.setProperty('--r', radius + 'px');
-      wash.style.background = toDark ? '#121110' : '#F4EFE6';
+      wash.style.background = toDark ? 'radial-gradient(circle at var(--tfx-x) var(--tfx-y), #1c2340, #0e1120 70%)' : 'radial-gradient(circle at var(--tfx-x) var(--tfx-y), #fff7e6, #F4EFE6 70%)';
       requestAnimationFrame(() => { replay(btn); glyph(); });
       setTimeout(() => html.classList.remove('tfx-fade'), 700);
     }
-    btn.classList.remove('tfx-spin'); void btn.offsetWidth; btn.classList.add('tfx-spin');
   }
 
   /* ---------------- language ---------------- */
@@ -94,9 +120,10 @@
     if (!btn || replaying) return;
     e.stopImmediatePropagation();
     e.preventDefault();
-    if (busy) return; // one switch at a time
+    if (btn.id === 'themeToggle') return switchTheme(btn); // a new click finishes the running switch first
+    if (busy) return; // one language switch at a time
     busy = true; setTimeout(() => { busy = false; }, 800);
-    if (btn.id === 'themeToggle') switchTheme(btn); else switchLang(btn);
+    switchLang(btn);
   }, true);
 
   window.ERLY_FX = { theme: () => { const b = document.getElementById('themeToggle'); b && b.click(); }, lang: () => { const b = document.getElementById('langToggle'); b && b.click(); } };

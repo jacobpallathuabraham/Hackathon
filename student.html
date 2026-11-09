@@ -44,6 +44,8 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/css/theme-fx.css">
+  <link rel="stylesheet" href="assets/css/v9.css">
+  <link rel="stylesheet" href="assets/css/companion-holo.css">
 </head>
 <body>
   <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
@@ -91,6 +93,7 @@
 
   <!-- ============ HERO ============ -->
   <section class="hero" id="top">
+    <div class="amb amb--fade-b" data-ambient="aurora constellation" aria-hidden="true"></div>
     <div class="wrap hero__grid">
       <div class="hero__copy">
         <p class="eyebrow reveal"><span class="dot"></span><span data-i18n="hero.eyebrow">Student Accessibility Services · Welcome back, Acubins</span></p>
@@ -197,6 +200,7 @@
 
   <!-- ============ TRACKING ============ -->
   <section class="section section--ink" id="tracking">
+    <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
@@ -307,6 +311,7 @@
 
   <!-- ============ HOW ERLY THINKS ============ -->
   <section class="section section--ink" id="ai">
+    <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
@@ -418,6 +423,7 @@
 
   <!-- ============ PRIVACY ============ -->
   <section class="section section--ink" id="privacy">
+    <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
     <div class="wrap">
       <header class="section__head">
         <p class="kicker"><span class="num">11</span><span data-i18n="pv.kicker">Privacy by design</span></p>
@@ -636,5 +642,9 @@
     [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });
   </script>
   <script src="assets/js/theme-fx.js"></script>
+  <script src="assets/js/ambient.js" defer></script>
+  <script src="assets/js/a11y.js"></script>
+  <script src="assets/js/navfit.js"></script>
+  <script src="assets/js/companion/holo.js" defer></script>
 </body>
 </html>

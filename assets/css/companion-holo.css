@@ -1,0 +1,138 @@
+/* ERLY v9 — Noor "holo" interface: a JARVIS-inspired, original ERLY look for
+   the AI companion (chat panel + launcher). It re-themes the companion by
+   overriding the design tokens the companion already uses, then adds:
+   HUD corner brackets, an arc-reactor orb, a scanning grid behind the
+   conversation (ambient.js "holo"), luminous message edges, animated
+   arrivals and a living focus ring on the input. Text stays high-contrast
+   (WCAG AA on the panel); reduced motion turns every animation off. */
+
+.cmp, .cmp-launch, .cmp-invite {
+  --h-bg: #040a17; --h-bg2: #07142a; --h-cyan: #22d3ee; --h-blue: #3b82f6; --h-violet: #8b5cf6; --h-ink: #e6f4ff; --h-ink2: #a9bfd3;
+  --bg: #050c1b; --bg-2: #081428; --surface: rgba(10, 22, 44, .78); --surface-2: rgba(14, 30, 58, .85);
+  --ink: var(--h-ink); --ink-2: #cfe2f2; --muted: var(--h-ink2); --line: rgba(56, 189, 248, .2); --line-2: rgba(56, 189, 248, .32);
+  --accent: var(--h-cyan); --accent-soft: rgba(34, 211, 238, .14); --accent-ink: #02131b; --teal: #2dd4bf;
+  --shadow: 0 0 0 1px rgba(34, 211, 238, .08);
+  color-scheme: dark;
+}
+
+/* ---------- the panel ---------- */
+.cmp {
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(59, 130, 246, .16), transparent 55%),
+    radial-gradient(90% 50% at 0% 100%, rgba(139, 92, 246, .14), transparent 60%),
+    linear-gradient(180deg, rgba(6, 14, 30, .96), rgba(3, 8, 20, .97));
+  border: 1px solid rgba(56, 189, 248, .32);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, .06), 0 0 42px -6px rgba(34, 211, 238, .28), 0 40px 90px -30px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(165, 243, 252, .08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+}
+/* HUD corner brackets */
+.cmp::before, .cmp::after { content: ""; position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 5; opacity: .9; }
+.cmp::before { top: 7px; left: 7px; border-top: 2px solid var(--h-cyan); border-left: 2px solid var(--h-cyan); border-top-left-radius: 10px; filter: drop-shadow(0 0 6px rgba(34, 211, 238, .8)); }
+.cmp::after { bottom: 7px; right: 7px; border-bottom: 2px solid var(--h-violet); border-right: 2px solid var(--h-violet); border-bottom-right-radius: 10px; filter: drop-shadow(0 0 6px rgba(139, 92, 246, .8)); }
+.cmp .amb { z-index: 0; opacity: .85; }
+.cmp > *:not(.amb) { position: relative; z-index: 1; }
+.cmp__head { background: linear-gradient(180deg, rgba(8, 20, 42, .9), rgba(8, 20, 42, .35)); border-bottom: 1px solid rgba(56, 189, 248, .18); }
+.cmp__title b { font-family: var(--f-mono, ui-monospace, monospace); letter-spacing: .18em; text-transform: uppercase; font-size: 15px; background: linear-gradient(90deg, #e0faff, var(--h-cyan) 55%, #a5b4fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cmp__title small { color: var(--h-ink2); letter-spacing: .02em; }
+.cmp__mode { background: rgba(34, 211, 238, .08) !important; border: 1px solid rgba(34, 211, 238, .3) !important; color: #a5f3fc !important; }
+.cmp .icon-btn { background: rgba(14, 30, 58, .6); border: 1px solid rgba(56, 189, 248, .22); color: #cfeaff; }
+.cmp .icon-btn:hover { border-color: var(--h-cyan); box-shadow: 0 0 14px -2px rgba(34, 211, 238, .55); color: #fff; }
+.cmp__tabs { border-bottom: 1px solid rgba(56, 189, 248, .14); }
+.cmp__tabs [role="tab"] { color: var(--h-ink2); letter-spacing: .04em; }
+.cmp__tabs [role="tab"][aria-selected="true"] { color: #fff; text-shadow: 0 0 12px rgba(34, 211, 238, .6); }
+.cmp__tabpill { background: linear-gradient(90deg, var(--h-cyan), var(--h-violet)) !important; box-shadow: 0 0 12px rgba(34, 211, 238, .7); }
+
+/* ---------- arc-reactor orb (header + launcher) ---------- */
+.cmp .cmp-orb, .cmp-launch .cmp-orb {
+  background: radial-gradient(circle at 50% 50%, #e0fbff 0 10%, #67e8f9 18%, rgba(34, 211, 238, .55) 32%, rgba(8, 20, 42, .9) 60%) !important;
+  box-shadow: 0 0 0 1px rgba(103, 232, 249, .55), 0 0 18px rgba(34, 211, 238, .65), inset 0 0 10px rgba(165, 243, 252, .5) !important;
+  border-radius: 50%;
+}
+.cmp .cmp-orb i, .cmp-launch .cmp-orb i { position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid transparent; border-top-color: rgba(103, 232, 249, .9); border-right-color: rgba(139, 92, 246, .55); background: none !important; animation: hOrb 3.2s linear infinite; opacity: 1 !important; transform: none; }
+.cmp .cmp-orb i:nth-child(2), .cmp-launch .cmp-orb i:nth-child(2) { inset: -8px; border-top-color: transparent; border-left-color: rgba(34, 211, 238, .55); border-bottom-color: rgba(59, 130, 246, .45); animation-duration: 5.4s; animation-direction: reverse; }
+.cmp .cmp-orb i:nth-child(3), .cmp-launch .cmp-orb i:nth-child(3) { inset: 22%; border: 0; background: radial-gradient(circle, rgba(255, 255, 255, .95), rgba(165, 243, 252, 0) 70%) !important; animation: hCore 2.4s ease-in-out infinite; }
+@keyframes hOrb { to { transform: rotate(360deg); } }
+@keyframes hCore { 50% { transform: scale(.75); opacity: .7; } }
+
+/* ---------- the launcher pill ---------- */
+.cmp-launch { background: linear-gradient(135deg, rgba(6, 16, 34, .92), rgba(10, 24, 50, .92)) !important; border: 1px solid rgba(56, 189, 248, .4) !important; color: var(--h-ink) !important; box-shadow: 0 0 22px -4px rgba(34, 211, 238, .5), 0 18px 40px -18px rgba(0, 0, 0, .6) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.cmp-launch b { color: #fff; letter-spacing: .06em; }
+.cmp-launch small { color: var(--h-ink2) !important; }
+.cmp-launch:hover { box-shadow: 0 0 30px -2px rgba(34, 211, 238, .75), 0 18px 40px -18px rgba(0, 0, 0, .6) !important; }
+.cmp-invite { background: linear-gradient(160deg, rgba(8, 18, 38, .96), rgba(6, 12, 28, .96)) !important; color: var(--h-ink) !important; border: 1px solid rgba(56, 189, 248, .35) !important; }
+
+/* ---------- messages ---------- */
+.cmp .cmsg { animation: hMsg .42s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes hMsg { from { opacity: 0; transform: translateY(10px); filter: blur(3px); } }
+.cmp .cmsg--ai .cmsg__b {
+  background: linear-gradient(180deg, rgba(14, 32, 62, .72), rgba(9, 21, 44, .72)); color: var(--h-ink);
+  border: 1px solid rgba(56, 189, 248, .2); border-left: 2px solid var(--h-cyan);
+  box-shadow: inset 0 1px 0 rgba(165, 243, 252, .06), 0 10px 26px -18px rgba(34, 211, 238, .45);
+}
+.cmp .cmsg--you .cmsg__b { background: linear-gradient(135deg, #1d4ed8, #6d28d9) !important; color: #fff !important; border: 1px solid rgba(165, 180, 252, .45); box-shadow: 0 8px 26px -12px rgba(109, 40, 217, .7), inset 0 1px 0 rgba(255, 255, 255, .18); }
+.cmp .cmsg__b a { color: #67e8f9; }
+.cmp .cmsg__b code, .cmp .cmsg__b pre { background: rgba(2, 8, 20, .7) !important; border: 1px solid rgba(56, 189, 248, .18); color: #bae6fd; }
+.cmp .cmsg__b strong, .cmp .cmsg__b b { color: #fff; }
+.cmp .cmsg__tag, .cmp .ctrace span, .cmp [class*="trace"] { color: #a5f3fc; }
+.cmp .cmsg--note .cmsg__b { border-left-color: var(--h-violet); }
+/* thinking dots + caret */
+.cmp .cdots i { background: var(--h-cyan) !important; box-shadow: 0 0 8px var(--h-cyan); }
+.cmp .ccaret { background: var(--h-cyan) !important; box-shadow: 0 0 8px var(--h-cyan); }
+
+/* ---------- welcome tiles, chips, cards ---------- */
+.cmp .cwel h2, .cmp .cwel h3, .cmp .cwel b { color: #fff; }
+.cmp .cwel__grid button { background: linear-gradient(180deg, rgba(14, 30, 58, .66), rgba(8, 18, 38, .66)) !important; border: 1px solid rgba(56, 189, 248, .18) !important; color: var(--h-ink); position: relative; overflow: hidden; }
+.cmp .cwel__grid button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(165, 243, 252, .14) 50%, transparent 70%); transform: translateX(-120%); transition: transform .7s cubic-bezier(.16, 1, .3, 1); pointer-events: none; }
+.cmp .cwel__grid button:hover { border-color: rgba(34, 211, 238, .6) !important; box-shadow: 0 0 22px -6px rgba(34, 211, 238, .6); transform: translateY(-2px); }
+.cmp .cwel__grid button:hover::after { transform: translateX(120%); }
+.cmp .cwel__grid button small { color: var(--h-ink2); }
+.cmp .cchips button { background: rgba(10, 24, 50, .7) !important; border: 1px solid rgba(56, 189, 248, .3) !important; color: #cfeaff !important; }
+.cmp .cchips button:hover { border-color: var(--h-cyan) !important; box-shadow: 0 0 14px -3px rgba(34, 211, 238, .6); color: #fff !important; }
+.cmp .ccard, .cmp .cvoffer { background: linear-gradient(160deg, rgba(14, 32, 62, .7), rgba(9, 20, 42, .7)) !important; border: 1px solid rgba(56, 189, 248, .3) !important; color: var(--h-ink); }
+.cmp .cvoffer__b button { background: transparent; color: #a5f3fc; border-color: rgba(34, 211, 238, .7); }
+.cmp .cvoffer__b button[data-vo="yes"] { background: linear-gradient(135deg, var(--h-cyan), var(--h-blue)); color: #02131b; border-color: transparent; box-shadow: 0 0 18px -4px rgba(34, 211, 238, .8); }
+.cmp .btn--accent, .cmp .cmp__conv { background: linear-gradient(135deg, var(--h-cyan), var(--h-blue)) !important; color: #02131b !important; border: 0 !important; box-shadow: 0 0 18px -4px rgba(34, 211, 238, .75); }
+.cmp .btn--ghost { color: #cfeaff; border-color: rgba(56, 189, 248, .35); }
+
+/* ---------- dock: voice bar + input ---------- */
+.cmp__dock { background: linear-gradient(180deg, rgba(4, 10, 23, 0), rgba(4, 10, 23, .9) 30%); border-top: 1px solid rgba(56, 189, 248, .12); }
+.cmp__mini { color: #9fd8ef; }
+.cmp__mini:not(:disabled):hover { color: #fff; filter: drop-shadow(0 0 6px rgba(34, 211, 238, .8)); }
+.cmp__input { position: relative; background: rgba(4, 12, 28, .9) !important; border: 1px solid rgba(56, 189, 248, .3) !important; box-shadow: inset 0 0 20px -10px rgba(34, 211, 238, .5); }
+.cmp__input::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--h-a, 0deg), transparent 0 60%, var(--h-cyan) 72%, var(--h-violet) 82%, transparent 92%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.cmp__input:focus-within::before { opacity: 1; animation: hSpin 3.2s linear infinite; }
+@property --h-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes hSpin { to { --h-a: 360deg; } }
+.cmp__input textarea { color: #fff !important; caret-color: var(--h-cyan); }
+.cmp__input textarea::placeholder { color: #7f9bb3; }
+.cmp__voice { background: linear-gradient(135deg, var(--h-cyan), var(--h-violet)) !important; box-shadow: 0 0 16px -2px rgba(34, 211, 238, .75) !important; }
+.cmp__mic { color: #a5f3fc !important; }
+.cmp__mic[aria-pressed="true"] { color: #fff !important; background: rgba(34, 211, 238, .2) !important; box-shadow: 0 0 0 2px var(--h-cyan), 0 0 18px var(--h-cyan); }
+.cmp__plusmenu { background: rgba(6, 14, 30, .97) !important; border: 1px solid rgba(56, 189, 248, .3) !important; color: var(--h-ink); }
+
+/* ---------- status light ---------- */
+.cmp__status i { background: var(--h-cyan) !important; box-shadow: 0 0 10px var(--h-cyan); }
+.cmp__status[data-s="listening"] i, .cmp__status[data-s="speaking"] i, .cmp__status[data-s="thinking"] i { animation: hPulse 1.1s ease-in-out infinite; }
+@keyframes hPulse { 50% { transform: scale(1.6); opacity: .55; } }
+
+/* scrollbars inside the panel */
+.cmp * { scrollbar-color: rgba(56, 189, 248, .35) transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cmp .cmsg, .cmp .cmp-orb i, .cmp-launch .cmp-orb i, .cmp__input:focus-within::before, .cmp__status i { animation: none !important; }
+}
+
+/* ---------- the full-screen voice conversation (3D companion) ---------- */
+.ncall.is-3d::before, .ncall.is-3d::after { content: ""; position: absolute; width: 46px; height: 46px; pointer-events: none; z-index: 40; opacity: .85; }
+.ncall.is-3d::before { top: 64px; left: 14px; border-top: 2px solid #22d3ee; border-left: 2px solid #22d3ee; border-top-left-radius: 14px; filter: drop-shadow(0 0 8px rgba(34, 211, 238, .8)); }
+.ncall.is-3d::after { bottom: 14px; right: 14px; border-bottom: 2px solid #8b5cf6; border-right: 2px solid #8b5cf6; border-bottom-right-radius: 14px; filter: drop-shadow(0 0 8px rgba(139, 92, 246, .8)); }
+.ncall.is-3d .ncall__btns { background: rgba(4, 12, 28, .62) !important; border: 1px solid rgba(56, 189, 248, .35) !important; box-shadow: 0 0 30px -8px rgba(34, 211, 238, .55), inset 0 1px 0 rgba(165, 243, 252, .1) !important; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.ncall.is-3d .ncall__btn { background: rgba(10, 26, 54, .75) !important; border: 1px solid rgba(56, 189, 248, .3) !important; color: #d6f3ff !important; }
+.ncall.is-3d .ncall__btn:hover { border-color: #22d3ee !important; box-shadow: 0 0 18px -2px rgba(34, 211, 238, .75); color: #fff !important; }
+.ncall.is-3d .ncall__btn--end { background: linear-gradient(135deg, #e11d48, #9f1239) !important; border-color: rgba(251, 113, 133, .6) !important; }
+.ncall.is-3d .ncall__noor { background: linear-gradient(160deg, rgba(8, 20, 44, .82), rgba(5, 12, 28, .82)) !important; border: 1px solid rgba(56, 189, 248, .35) !important; border-left: 3px solid #22d3ee !important; color: #eaf7ff !important; box-shadow: 0 0 34px -10px rgba(34, 211, 238, .6) !important; }
+.ncall.is-3d .ncall__you:not(:empty) { background: linear-gradient(135deg, rgba(29, 78, 216, .85), rgba(109, 40, 217, .85)) !important; color: #fff !important; border: 1px solid rgba(165, 180, 252, .45) !important; }
+.ncall.is-3d .ncall__pill, .ncall.is-3d .ncall__tag, .ncall.is-3d .ncall__state { background: rgba(4, 12, 28, .66) !important; border: 1px solid rgba(56, 189, 248, .3) !important; color: #cfeaff !important; }
+.ncall.is-3d .ncall__who b { font-family: var(--f-mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; background: linear-gradient(90deg, #e0faff, #22d3ee 60%, #a5b4fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ncall.is-3d .ncall__viz i, .ncall.is-3d .ncall__bar i { background: linear-gradient(180deg, #67e8f9, #8b5cf6) !important; box-shadow: 0 0 6px rgba(34, 211, 238, .6); }
+@media (prefers-reduced-motion: reduce) { .ncall.is-3d::before, .ncall.is-3d::after { filter: none; } }

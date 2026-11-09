@@ -20,8 +20,22 @@
 /* View Transitions: the new theme is revealed in a circle by theme-fx.js */
 html.vt-theme::view-transition-old(root),
 html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-html.vt-theme::view-transition-old(root) { z-index: 1; }
+html.vt-theme::view-transition-old(root) { z-index: 1; transform-origin: var(--tfx-x, 50%) var(--tfx-y, 50%); }
 html.vt-theme::view-transition-new(root) { z-index: 2; }
+/* feathered "eclipse" edge: the reveal radius --tfx-r is animated by theme-fx.js */
+html.vt-theme.vt-mask::view-transition-new(root) {
+  -webkit-mask-image: radial-gradient(circle at var(--tfx-x, 50%) var(--tfx-y, 50%), #000 calc(var(--tfx-r, 0px) - var(--tfx-f, 100px)), rgba(0,0,0,.55) calc(var(--tfx-r, 0px) - var(--tfx-f, 100px) * .45), transparent var(--tfx-r, 0px));
+          mask-image: radial-gradient(circle at var(--tfx-x, 50%) var(--tfx-y, 50%), #000 calc(var(--tfx-r, 0px) - var(--tfx-f, 100px)), rgba(0,0,0,.55) calc(var(--tfx-r, 0px) - var(--tfx-f, 100px) * .45), transparent var(--tfx-r, 0px));
+}
+/* the luminous ring that rides the edge (captured as its own transition layer, above the page) */
+.tfx-ring { position: fixed; width: 1024px; height: 1024px; margin: -512px 0 0 -512px; border-radius: 50%; pointer-events: none; z-index: 2147483000; view-transition-name: tfx-ring; opacity: 0; } /* (no CSS containment: it stops the ring being captured) */
+/* visible only inside the transition (the new layer is a live view of this element); never on the page itself */
+html.vt-theme .tfx-ring { opacity: 1; }
+.tfx-ring--light { background: radial-gradient(circle closest-side, transparent 0 86%, rgba(255, 196, 102, .14) 92%, rgba(255, 206, 128, .55) 95.6%, rgba(255, 252, 238, .98) 96.6%, rgba(255, 168, 64, .6) 97.4%, rgba(255, 168, 64, 0) 99.6%); }
+.tfx-ring--dark { background: radial-gradient(circle closest-side, transparent 0 86%, rgba(99, 102, 241, .16) 92%, rgba(34, 211, 238, .6) 95.6%, rgba(236, 254, 255, .98) 96.6%, rgba(139, 92, 246, .6) 97.4%, rgba(139, 92, 246, 0) 99.6%); }
+html.vt-theme::view-transition-group(tfx-ring) { animation: none; z-index: 3; }
+html.vt-theme::view-transition-old(tfx-ring) { display: none; }
+html.vt-theme::view-transition-new(tfx-ring) { animation: none; transform-origin: 50% 50%; }
 /* fallback: everything eases to its new colour */
 html.tfx-fade, html.tfx-fade *, html.tfx-fade *::before, html.tfx-fade *::after {
   transition: background-color .6s ease, color .5s ease, border-color .6s ease, fill .5s ease, stroke .5s ease, box-shadow .6s ease !important;
@@ -39,8 +53,10 @@ html.tfx-fade, html.tfx-fade *, html.tfx-fade *::before, html.tfx-fade *::after 
   25% { transform: scale(1.5) rotate(0deg); opacity: 1; }
   100% { transform: translateY(46px) scale(2.6) rotate(25deg); opacity: 0; }
 }
-#themeToggle.tfx-spin svg { animation: tfxSpin .7s cubic-bezier(.3, 1.4, .5, 1); }
-@keyframes tfxSpin { from { transform: rotate(-200deg) scale(.4); opacity: 0; } }
+#themeToggle.tfx-spin svg { animation: tfxSpin .8s cubic-bezier(.34, 1.56, .64, 1); }
+#themeToggle.tfx-spin { animation: tfxPulse .8s ease-out; }
+@keyframes tfxSpin { 0% { transform: rotate(-220deg) scale(.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+@keyframes tfxPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent, #C1502B) 55%, transparent); } 100% { box-shadow: 0 0 0 18px transparent; } }
 
 /* ---------- language switch ---------- */
 html.vt-lang::view-transition-old(root) { animation: tfxLangOut .42s cubic-bezier(.4, 0, 1, 1) both; }
@@ -62,7 +78,8 @@ html.tfx-lang-in body { animation: tfxBodyIn .6s cubic-bezier(.15, .85, .25, 1);
 
 @media (prefers-reduced-motion: reduce) {
   html.vt-lang::view-transition-old(root), html.vt-lang::view-transition-new(root) { animation: none; }
-  .tfx-badge, #themeToggle.tfx-spin svg { animation: none; display: none; }
+  .tfx-badge, #themeToggle.tfx-spin svg, #themeToggle.tfx-spin { animation: none; }
+  .tfx-badge { display: none; }
 }
 
 /* =====================================================================
