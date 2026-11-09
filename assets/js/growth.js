@@ -55,13 +55,12 @@
     const plan = S.plan, pr = G.progress(S.sessions, S.start, now());
     const sess = G.sessionFor(plan, pr.week, S.sessions.length);
     const lv = G.levelOf(S.xp || 0);
-    const st = G.streak(S.sessions.map(s => s.date), now());
     const C = 2 * Math.PI * 34;
     const needConsult = pr.week > 1 && !(S.consults || []).some(c => c.week === pr.week - 1);
-    app.innerHTML = `
+    const html = `
       <section class="gd-top">
         <div class="gd-stat gd-stat--lvl"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34"/><circle cx="40" cy="40" r="34" class="gd-arc" style="stroke-dasharray:${C};stroke-dashoffset:${C * (1 - (lv.xp - lv.from) / (lv.to - lv.from))}"/></svg><b>${lv.level}</b><span>${T('level', 'المستوى')} · ${lv.xp} XP</span></div>
-        <div class="gd-stat"><span class="gd-flame ${st ? 'is-on' : ''}">${ICON('flame')}</span><b>${st}</b><span>${T('day streak', 'أيام متتالية')}</span></div>
+        <div class="gd-stat"><span class="gd-ic">${ICON('sprout')}</span><b>${new Set(S.sessions.map(s => s.date).filter(x => x >= G.dateKey(now() - 6 * 864e5))).size}<small>/7</small></b><span>${T('days you practised this week', 'أيام تدرّبت فيها هذا الأسبوع')}</span></div>
         <div class="gd-stat"><span class="gd-ic">${ICON('calendar')}</span><b>${pr.week}<small>/6</small></b><span>${T('week', 'الأسبوع')} · ${pr.inWeek}/${pr.perWeek} ${T('sessions', 'جلسات')}</span></div>
         <div class="gd-stat"><span class="gd-ic">${ICON('check')}</span><b>${pr.total}</b><span>${T('sessions done', 'جلسات منجزة')}</span></div>
       </section>
@@ -87,6 +86,7 @@
         <p class="gx-small">${ICON('shield')} ${T('Stored only on this device: your choices, scores and dates. Nothing you type into an exercise is kept.', 'يُحفظ على هذا الجهاز فقط: اختياراتك ودرجاتك والتواريخ. لا يُحفظ شيء تكتبه في التمارين.')}</p>
         <div class="gd-demo"><span class="mono">${T('Demo', 'عرض')}</span><button class="btn btn--xs btn--ghost" data-skipday>${T('Skip to tomorrow', 'انتقل إلى الغد')}</button><button class="btn btn--xs btn--stop" data-reset>${T('Reset plan', 'أعد ضبط الخطة')}</button></div>
       </section>`;
+    if (window.ERLY_GPV10) ERLY_GPV10.mount(app, html); else app.innerHTML = html;
   }
   function skillRow(a) {
     const xs = ((S.scores || {})[a] || []).slice(-12);

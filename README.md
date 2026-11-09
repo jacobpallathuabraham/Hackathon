@@ -670,8 +670,96 @@ I checked each official option before choosing one. Here is what each needs and 
   - the holo grid: runs when the panel is open, stops when it closes;
   - every accessibility setting: applied, persisted and reset; content stays visible with animations stopped; the panel stays on screen at 125%; read-aloud works;
   - the header fits at 1250–1920 px in English and Arabic.
-- All previous suites still pass, plus 167 unit tests.
+- All previous suites still pass, plus 167 unit tests (v9).
 
 ### Limits
 - These are visual and interaction upgrades. They don't add backend, AI or voice capabilities. The earlier limits (no live AI provider configured, a demo-grade, browser-only role check) still apply.
 - Cross-page and theme view transitions need a Chromium-based browser or Safari 18+. Firefox gets the fallbacks.
+
+## v10 — Noor repair, Learning Games, and the Growth Plan timetable
+
+### Noor: bug register (reproduced or found by reading the code)
+| # | Problem | Root cause | Fix | Test |
+|---|---|---|---|---|
+| 1 | "Would you like an interactive visual?" after almost every answer | `offerable()` offered a visual for any "how/why/explain" question once an AI tier was on. AI `[[visual:…]]` tags were also turned into offers. | Visuals are created **only on explicit request** ("draw", "plot", "diagram", "graph", "3D", "animate", "simulate", "chart", "timeline"…). Offers only appear if the student turns on **Companion Studio → Talk → Suggest visuals** (off by default). AI tags are ignored unless that setting is on. | `vspec.e2e.js` §7, `visuals.e2e.js` |
+| 2 | The system prompt contradicted the UI (it said visuals open "automatically" and asked the model for tags) | Stale v7 prompt text | Prompt rewritten: never offer visuals or emit tags; refer to a visual only when one is open | `noor-ai.test.js` |
+| 3 | Fabrication risk / weak uncertainty handling | No explicit accuracy instructions | Prompt now requires correctness before fluency, saying when unsure, never inventing facts, figures, quotes, references or URLs, showing working, and answering follow-ups from context | review of `ai.js` |
+| 4 | Matrices, `cases` and `aligned` rendered flat (`A = 1 2 <br> 3 4`) | `md.js` discarded `\begin…\end` and turned `&`/`\\` into spaces and `<br>` | Real environment parser: a CSS grid with ( ) [ ] { } \| \|\| brackets, aligned columns, and a spoken form ("matrix [1, 2]; [3, 4]") | manual + `vspec`/`noor` e2e |
+| 5 | Follow-ups such as "make it 3D", "add labels" or "highlight X" did nothing to the open visual | No edit path existed | `vspec.edit()` re-validates and re-renders the same spec. Supported: 3D (surface of revolution or field magnitude), rotate, labels on/off, add a layer or the derivative, animate (narrated tour), highlight a part, set a parameter (clamped to its range), bar/line/pie, more advanced/simpler. Edits it can't do faithfully are refused in plain words (e.g. no fake 3D for a process diagram). | `vspec.e2e.js` §7 |
+| 6 | "Highlight" was overridden by the running tour | The tour kept advancing | Editing stops the tour first | `vspec.e2e.js` |
+| 7 | The conversation was lost on every page change or reload | `history` lived in memory only | Kept in **sessionStorage** (this tab only; cleared by "New chat" or closing the tab) and restored as "Earlier in this tab" | `vspec.e2e.js` |
+| 8 | Long conversations silently forgot the beginning | Only the last 10 turns were sent and the history cap was 16 | Cap raised to 40; turns older than the last 10 are passed as a compact list of the student's earlier questions | `noor-ai.test.js` |
+| 9 | Shallow answers | No AI is connected by default (built-in rules only); the keyless online tier allows about 1 request per 30 s, then falls back to Wikipedia; on-device models are small | Not fixable in frontend code alone. Noor says plainly when the built-in brain can't answer. **Recommended:** deploy `server/llm-proxy.mjs` with a server-side key and set `ERLY_AI_CONFIG.endpoint`. | — |
+| 10 | Data visualisation and timelines weren't supported | No renderer | New `chart` (bar/line/pie from the student's own numbers, or sourced figures from the AI planner) and `timeline` kinds, both validated | `vspec.e2e.js` |
+
+Checked and **not** a bug:
+- duplicate submissions (a `busy` lock already exists);
+- code blocks, tables, fractions, roots, sums, limits, vectors and `\ce{}`;
+- streaming stops (a Stop button already exists).
+
+AI-generated JavaScript is never executed. Specs are JSON; expressions go through a whitelist compiler.
+
+### Learning Games (`games.html`, `games.js`, `games-data.js`)
+Eight optional activities:
+
+| Area | Activity | What you do |
+|---|---|---|
+| Reading & language | Word Builder | Morphemes |
+| Reading & language | Sentence Flow | Signal words |
+| Memory | Glow Sequence | Repeat a sequence of lights |
+| Memory | Chunk It | Remember digits; compares chunked and un-chunked rounds |
+| Planning | Plan It | Order tasks by dependencies; several valid orders are accepted |
+| Attention | Switch! | Sort by shape or by colour as the rule changes |
+| Spatial | Rotate 3D | Real three.js polycubes, all verified chiral; Gentle level has a turn slider; 2D fallback |
+| Listening | Listen & Tap | Spoken instructions; text when sound is off |
+
+Settings:
+- difficulty: Gentle / Standard / Stretch;
+- length: 5 / 8 / 12 rounds;
+- graphics: High / Low-performance (no antialias, 1× pixels, render on demand);
+- sound: **off by default**;
+- category filter.
+
+During and after a game:
+- Pause (Esc), Skip and Stop cost nothing.
+- Each game ends with strategy tips and an optional "what helped today?".
+- My progress shows sessions and sparklines, with a "Clear my game data" button.
+
+Boundaries, enforced by tests:
+- no test or diagnosis wording;
+- no camera or microphone (`getUserMedia` is never called);
+- no network requests;
+- results stay in `localStorage` (`erly-games-v1`).
+
+The Growth Plan links straight into a game (`games.html?play=plan`).
+
+### Growth Plan v10 (`growth-plan-core.js` pure logic + `growth-v10.js` UI)
+Tabs: **Overview** (the existing plan), **Today**, **Timetable**, **Six weeks**, **Progress**, **Strategies** and **Future plan**.
+
+- **Timetable.** A UK-style day, 08:30–14:15 by default, with 45-minute sessions, 15-minute breaks and lunch at 12:00.
+  - Monday to Friday are structured. Saturday is an optional catch-up. Sunday is rest, with an optional reflection.
+  - You can customise: start and finish, session and break length, lunch, Saturday and Sunday, workload (1/2/3 programme blocks a day), and classes and commitments (placed first; study fits around them).
+  - On phones it shows one day at a time.
+- **Six weeks:**
+  1. Foundation
+  2. Reading and understanding
+  3. Memory and revision
+  4. Planning and organisation (Start-Ramp)
+  5. Focus and independent learning
+  6. Review and future planning, with an optional SAS summary
+
+  Each activity says why it's there and links to the real place in ERLY: Reading Studio, Videos, Start-Ramp, Daily Quest, Noor or a game. You can repeat a week, move on, pause or finish early. The journey map and weekly cards are animated.
+- **Daily planner.** Each entry has a time, activity, objective, duration and status, plus a reflection and next step. You can complete, skip, move to tomorrow, resize, reorder and add your own work.
+  - Activity that ERLY can actually see on this device (games played, Reading Studio opened, check-ins) is shown as a *suggestion*. Nothing is ticked automatically.
+- **Progress.** Planned vs done by week, minutes, active days, games, reflections and past reviews, all from this device's data. There are no streaks and no ability scores.
+- **Noor's weekly review.** Five questions. The summary uses the student's own numbers and words and changes the plan: workload, shorter sessions, repeat or pause. It is labelled as written without an AI model or server.
+- **Strategies.** Twelve evidence-informed strategies, each rated "helps me", "want to try" or "not for me". **Future plan** lists the helpful ones, shows a light weekly routine, and can be printed or saved as PDF.
+- The old "day streak" counter has been replaced by "days you practised this week".
+
+### Tests
+- New `tests/unit/growth-plan.test.js` (6 tests).
+- New `tests/e2e/v10.e2e.js`. It plays all 8 games correctly; checks pause, skip, stop and Esc, sound-off-by-default, low-performance 3D, and that nothing touches the mic, camera or another server; then exercises every Growth Plan tab, including mobile 390 px with no horizontal scroll.
+- `vspec.e2e.js` and `visuals.e2e.js` were updated to the v10 visual behaviour.
+
+### Backend still needed for "university-level" answers
+A configured LLM endpoint (`server/llm-proxy.mjs`, key held server-side). Without one, Noor uses its built-in knowledge, small on-device models, or a rate-limited keyless service, and says so.

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learning Games · ERLY</title>
+  <meta name="description" content="ERLY Learning Games: short, optional practice activities for reading, memory, planning, attention, spatial thinking and listening. Practice only — never a test or diagnosis.">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/accents.css">
+  <link rel="stylesheet" href="assets/css/erly.css">
+  <link rel="stylesheet" href="assets/css/companion.css">
+  <link rel="stylesheet" href="assets/css/checkins.css">
+  <link rel="stylesheet" href="assets/css/games.css">
+  <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
+  <script>
+    try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('login.html?next=student'); } catch (e) {}
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
+        if (sessionStorage.getItem('erly-warp') === '1') { document.documentElement.classList.add('q-arrive'); sessionStorage.removeItem('erly-warp'); }
+        if (sessionStorage.getItem('erly-grow') === '1') { document.documentElement.classList.add('g-arrive'); sessionStorage.removeItem('erly-grow'); }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/theme-fx.css">
+  <link rel="stylesheet" href="assets/css/v9.css">
+  <link rel="stylesheet" href="assets/css/companion-holo.css">
+</head>
+<body class="quest-page games-page">
+  <div class="q-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <header class="q-top">
+    <a class="q-back" href="student.html"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
+    <a href="student.html" class="brand" aria-label="ERLY home">
+      <img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
+      <span class="brand__word brand__word--caps">ERLY</span>
+    </a>
+    <div class="q-top__tools">
+      <a class="icon-btn gm-toplink" href="support.html" title="Growth Plan" aria-label="Growth Plan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></a>
+      <button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button>
+      <div data-accent-picker></div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="q-main" id="main">
+    <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
+    <div class="q-head gm-head">
+      <p class="kicker"><span data-i18n="gm.kicker">Learning Games · practice, not a test</span></p>
+      <h1 class="q-title" data-i18n="gm.title">Play with the skills behind studying.</h1>
+      <p class="q-lead" data-i18n="gm.lead">Short, optional activities for reading, memory, planning, attention, spatial thinking and listening. Pick what you like, change the difficulty any time, pause or stop whenever you want — nothing is lost and nothing counts against you.</p>
+      <p class="gm-bound" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span data-i18n="gm.bound">These games are for practice and enjoyment. They do not test, detect or diagnose anything (including dyslexia, ADHD or any other condition), and your results are never used to label you. No camera or microphone is used. Your scores stay on this device unless you clear them.</span></p>
+    </div>
+    <div id="gamesApp"></div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/i18n.js"></script>
+  <script>
+    (function () {
+      const bus = {}; let tt;
+      window.ERLY = {
+        on(e, f) { (bus[e] = bus[e] || []).push(f); }, emit(e, d) { (bus[e] || []).forEach(f => f(d)); },
+        toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('is-on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('is-on'), 2600); }
+      };
+      I18N.apply(I18N.lang);
+      document.getElementById('langToggle').addEventListener('click', () => I18N.apply(I18N.lang === 'ar' ? 'en' : 'ar'));
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('erly-theme', next); } catch (e) {}
+      });
+    })();
+  </script>
+  <script src="assets/js/accent.js"></script>
+  <script src="assets/js/games-data.js"></script>
+  <script src="assets/js/games.js"></script>
+  <script src="assets/js/theme-fx.js"></script>
+  <script src="assets/js/ambient.js" defer></script>
+  <script src="assets/js/a11y.js"></script>
+</body>
+</html>

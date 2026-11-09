@@ -96,7 +96,7 @@
   }
 
   /* ======================= schema + validation ======================= */
-  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'scene'];
+  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'chart', 'timeline', 'scene'];
   const ALGOS = ['bubble', 'insertion', 'selection', 'merge', 'quick', 'binary-search', 'fibonacci'];
   function validate(input) {
     const errors = [];
@@ -152,6 +152,16 @@
         out.params = { support: P.support === 'cantilever' ? 'cantilever' : 'simple', span: clamp(num(+P.span, 10), 1, 100) };
       } else if (kind === 'matrix2d') {
         out.params = {};
+      } else if (kind === 'chart') {
+        // data visualisation from numbers the student (or a cited source) supplied — never invented here
+        const labels = (Array.isArray(P.labels) ? P.labels : []).slice(0, 16).map(l => str(l, 24));
+        const series = (Array.isArray(P.series) ? P.series : []).slice(0, 3).map(se => ({ name: str(se && se.name, 30), values: (Array.isArray(se && se.values) ? se.values : []).slice(0, labels.length).map(Number) })).filter(se => se.values.length === labels.length && se.values.every(isFinite));
+        if (labels.length < 2 || !series.length) throw new Error('chart needs labels and numeric series');
+        out.params = { type: ['bar', 'line', 'pie'].includes(P.type) ? P.type : 'bar', labels, series, unit: str(P.unit, 16), source: str(P.source, 120), labelsOn: P.labelsOn !== false };
+      } else if (kind === 'timeline') {
+        const events = (Array.isArray(P.events) ? P.events : []).slice(0, 12).map(e => ({ when: str(e && e.when, 20), label: str(e && e.label, 60), detail: str(e && e.detail, 220) })).filter(e => e.when && e.label);
+        if (events.length < 2) throw new Error('timeline needs events');
+        out.params = { events };
       } else if (kind === 'scene') {
         const SC = (window.ERLY && ERLY.visuals && ERLY.visuals.scenes) || {};
         if (!SC[P.id]) throw new Error('unknown scene'); out.params = { id: P.id };
@@ -654,6 +664,57 @@
     return { stage(i) { if (i === 0) { t = 0; dir = 1; } draw(); }, tick(dt, sp) { if (dir) { t = Math.min(1, t + dt * sp * 0.5); if (t >= 1) dir = 0; draw(); } }, set(k, v) { env[k] = v; t = 1; draw(); }, state: () => Object.assign({ t }, env) };
   };
 
+  /* ---- chart: bar / line / pie from supplied numbers ---- */
+  R.chart = (spec) => (box) => {
+    const P = spec.params, W = 800, H = 460, pad = 52, COL = ['#38bdf8', '#a78bfa', '#f59e0b'];
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'vs-svg vs-chart'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', spec.alt || spec.title);
+    box.appendChild(svg);
+    let hi = -1;
+    const el = (tag, at, txt) => { const e = document.createElementNS(NS, tag); Object.keys(at).forEach(k => e.setAttribute(k, at[k])); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; };
+    const fmtv = v => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString() : +v.toFixed(2)) + (P.unit ? ' ' + P.unit : '');
+    function draw() {
+      svg.textContent = '';
+      const L = P.labels, S = P.series;
+      if (P.type === 'pie') {
+        const vals = S[0].values.map(v => Math.max(0, v)), tot = vals.reduce((a, b) => a + b, 0) || 1; let a0 = -Math.PI / 2;
+        vals.forEach((v, i) => { const a1 = a0 + v / tot * 2 * Math.PI, r = i === hi ? 182 : 170, cx = W / 2 - 120, cy = H / 2; const big = a1 - a0 > Math.PI ? 1 : 0;
+          el('path', { d: `M${cx},${cy} L${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} A${r},${r} 0 ${big} 1 ${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} Z`, fill: `hsl(${(i * 47 + 200) % 360} 70% 58%)`, stroke: 'var(--vz-bg, #0b1220)', 'stroke-width': 2, 'data-i': i, class: 'vs-bar' });
+          el('text', { x: W / 2 + 90, y: 70 + i * 26, class: 'vs-lbl', 'font-size': 14, fill: 'currentColor' }, `■ ${L[i]} — ${fmtv(v)} (${Math.round(v / tot * 100)}%)`).setAttribute('style', `fill:hsl(${(i * 47 + 200) % 360} 70% 62%)`);
+          a0 = a1; });
+        return;
+      }
+      const all = S.flatMap(se => se.values), mn = Math.min(0, ...all), mx = Math.max(0, ...all) || 1;
+      const Y = v => H - pad - (v - mn) / (mx - mn) * (H - 2 * pad), bw = (W - 2 * pad) / L.length;
+      for (let k = 0; k <= 4; k++) { const v = mn + (mx - mn) * k / 4; el('line', { x1: pad, x2: W - pad / 2, y1: Y(v), y2: Y(v), class: 'vs-grid', stroke: 'currentColor', 'stroke-opacity': .14 }); el('text', { x: pad - 6, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'currentColor', opacity: .7 }, fmtv(v)); }
+      L.forEach((l, i) => el('text', { x: pad + bw * (i + .5), y: H - pad + 18, 'text-anchor': 'middle', 'font-size': 12, fill: 'currentColor', 'font-weight': i === hi ? 700 : 400 }, l));
+      S.forEach((se, j) => {
+        if (P.type === 'line') {
+          el('polyline', { points: se.values.map((v, i) => `${pad + bw * (i + .5)},${Y(v)}`).join(' '), fill: 'none', stroke: COL[j], 'stroke-width': 3 });
+          se.values.forEach((v, i) => { el('circle', { cx: pad + bw * (i + .5), cy: Y(v), r: i === hi ? 7 : 4.5, fill: COL[j], class: 'vs-bar', 'data-i': i }); if (P.labelsOn) el('text', { x: pad + bw * (i + .5), y: Y(v) - 10, 'text-anchor': 'middle', 'font-size': 11, fill: 'currentColor' }, fmtv(v)); });
+        } else {
+          const w = bw * .7 / S.length;
+          se.values.forEach((v, i) => { const x = pad + bw * i + bw * .15 + w * j; el('rect', { x, y: Math.min(Y(v), Y(0)), width: w, height: Math.abs(Y(v) - Y(0)), rx: 4, fill: COL[j], opacity: hi < 0 || hi === i ? 1 : .35, class: 'vs-bar', 'data-i': i }); if (P.labelsOn) el('text', { x: x + w / 2, y: Math.min(Y(v), Y(0)) - 6, 'text-anchor': 'middle', 'font-size': 11, fill: 'currentColor' }, fmtv(v)); });
+        }
+      });
+      if (S.length > 1) S.forEach((se, j) => el('text', { x: W - pad, y: 22 + j * 18, 'text-anchor': 'end', 'font-size': 12, fill: COL[j] }, '■ ' + se.name));
+      if (P.source) el('text', { x: pad, y: H - 8, 'font-size': 11, fill: 'currentColor', opacity: .65 }, 'Source: ' + P.source);
+    }
+    svg.addEventListener('pointermove', e => { const b = e.target.closest('[data-i]'); const n = b ? +b.dataset.i : -1; if (n !== hi) { hi = n; draw(); } });
+    draw();
+    return { stage(i) { const st = spec.steps[i] || {}; const f = (st.focus || [])[0]; const k = f != null ? P.labels.findIndex(l => l.toLowerCase() === String(f).toLowerCase()) : -1; hi = k; draw(); }, tick() {}, set(k, v) { if (k === 'labelsOn') { P.labelsOn = !!v; draw(); } }, state: () => ({ type: P.type, bars: P.labels.length, highlight: hi }) };
+  };
+
+  /* ---- timeline: dated events along an axis ---- */
+  R.timeline = (spec) => (box) => {
+    const E = spec.params.events, W = 800, H = 460;
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'vs-svg vs-timeline'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', spec.alt || spec.title);
+    box.appendChild(svg);
+    const x = i => 60 + i * (W - 120) / Math.max(1, E.length - 1);
+    svg.innerHTML = `<line x1="40" x2="${W - 40}" y1="${H / 2}" y2="${H / 2}" stroke="currentColor" stroke-opacity=".35" stroke-width="3"/>` + E.map((e, i) => { const up = i % 2 === 0, y = up ? H / 2 - 70 : H / 2 + 70; return `<g class="vs-node" data-id="t${i}"><line x1="${x(i)}" x2="${x(i)}" y1="${H / 2}" y2="${y + (up ? 26 : -26)}" stroke="currentColor" stroke-opacity=".3"/><circle cx="${x(i)}" cy="${H / 2}" r="9" fill="#38bdf8"/><text x="${x(i)}" y="${y - 6}" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${esc(e.when)}</text><text x="${x(i)}" y="${y + 12}" text-anchor="middle" font-size="12" fill="currentColor" opacity=".85">${esc(e.label.length > 26 ? e.label.slice(0, 25) + '…' : e.label)}</text></g>`; }).join('');
+    const focus = ids => svg.querySelectorAll('.vs-node').forEach(g => { const on = !ids.length || ids.includes(g.dataset.id); g.style.opacity = on ? 1 : .3; g.querySelector('circle').setAttribute('r', ids.includes(g.dataset.id) ? 13 : 9); });
+    return { stage(i) { const st = spec.steps[i] || {}; focus(st.focus && st.focus.length ? st.focus : ['t' + i]); }, tick() {}, state: () => ({ events: E.length }) };
+  };
+
   /* ======================= spec → scene for the visual player ======================= */
   function toScene(spec) {
     if (spec.kind === 'scene') { const SC = ERLY.visuals.scenes[spec.params.id]; return { id: spec.params.id, scene: SC }; }
@@ -700,6 +761,7 @@
   function plan(question) {
     const q = String(question || ''), t = q.toLowerCase();
     let spec = null;
+    const ch = chartFrom(q); if (ch) return ch;
     // curated diagrams first (specific vocabulary)
     for (const [re, mk] of DIAGRAMS) if (re.test(q)) { spec = mk(); break; }
     const zf = !spec && exprFrom(q, 'z');
@@ -773,6 +835,92 @@
     return null;
   }
 
+  /* ======================= explicit requests and follow-up edits =======================
+     A visual is created only when the student ASKS for one (“draw…”, “show me a
+     diagram/graph/3D model…”, “animate…”, “simulate…”). Ordinary questions get a
+     text answer with no offer. Once a visual is open, follow-ups edit the SAME
+     spec — validated again before it is re-rendered. */
+  const EXPLICIT = /\b(visuali[sz]e|visuali[sz]ation|diagram|flow ?chart|concept map|mind ?map|graph (it|this|that|of|the|y|f)|plot|sketch|draw|chart|infographic|timeline|simulat(e|ion)|animat(e|ion)|3d|three.dimensional|interactive (visual|model|demo)|show (me )?(it |this )?(as |with )?(a |an )?(visual|picture|diagram|graph|model|animation))\b|ارسم|مخطط|رسم بياني|محاكاة/i;
+  function explicit(text) { const t = String(text || ''); return EXPLICIT.test(t) && t.length > 4 ? (/\b3d|three.dimensional\b/i.test(t) ? '3d' : /animat|simulat/i.test(t) ? 'animate' : 'visual') : null; }
+  const EDIT = [
+    ['3d', /\b(make|turn|show|convert|render|view)\b.{0,20}\b(it|this|that)?\b.{0,10}\b(3d|three.dimensional|in 3 ?d)\b|^3d\b/i],
+    ['rotate', /\b(rotate|spin|turn) (it|this|that|the (model|surface|graph|bridge))\b|\bstop rotating\b/i],
+    ['labels', /\b(add|show|turn on|include|hide|remove|turn off)\b.{0,12}\b(labels?|values|numbers|annotations?)\b/i],
+    ['layer', /\b(add|show)\b.{0,12}\b(another|one more|a second|an extra|more)\b.{0,10}\b(layer|hidden layer|curve|function|line|series)\b|\bshow the derivative\b|\badd the derivative\b/i],
+    ['animate', /\b(animate|play|walk me through|step through|run) (it|this|that|the (process|steps|animation|visual))\b|^animate\b/i],
+    ['highlight', /\b(highlight|focus on|zoom (in )?on|point to|show me) (the )?(.{2,40})$/i],
+    ['param', /\b(set|change|make|increase|decrease|raise|lower)\b.{0,6}\b(the )?([a-zα-ω₀-₉ ]{1,30}?)\s*(to|=|by)\s*(-?[\d.]+)/i],
+    ['type', /\b(as|to|into) (a |an )?(bar|line|pie) (chart|graph)\b/i],
+    ['advanced', /\b(more (advanced|detailed|rigorous|in.depth)|go deeper|explain (it )?(at a )?(higher|harder|more advanced) level|simpler|more simply|easier)\b/i]
+  ];
+  function editIntent(text) { const t = String(text || '').trim(); if (t.length > 120) return null; for (const [k, re] of EDIT) { const m = t.match(re); if (m) return { kind: k, m }; } return null; }
+  // apply a follow-up to a spec. Returns { spec?, action, note } — note is an honest, short message.
+  function edit(spec, text) {
+    const it = editIntent(text); if (!it || !spec) return null;
+    const S = JSON.parse(JSON.stringify(spec)), m = it.m;
+    const ok = sp => { const v = validate(sp); return v.ok ? v.spec : null; };
+    switch (it.kind) {
+      case '3d': {
+        if (S.kind === 'surface3d' || S.kind === 'truss3d') return { action: 'none', note: 'It is already a 3D model — drag to rotate, scroll or pinch to zoom.' };
+        if (S.kind === 'plot2d' && S.params.fns.length) {
+          const e = S.params.fns[0].expr.replace(/\bx\b/g, '(sqrt(x^2+y^2))');
+          const sp = ok({ kind: 'surface3d', title: S.title + ' — rotated into 3D', subject: S.subject, alt: `The curve y = ${S.params.fns[0].expr} spun about the vertical axis into a surface of revolution.`, params: { expr: e, range: Math.max(1, Math.min(6, Math.max(Math.abs(S.params.x[0]), Math.abs(S.params.x[1])))) }, vars: S.vars, steps: [{ title: 'Surface of revolution', text: `The 2D curve has been spun around the vertical axis: every point at distance r from the centre has height f(r). Drag to rotate.` }, { title: 'Reading it', text: 'A cross-section through the centre gives back the original curve.' }] });
+          return sp ? { spec: sp, action: 'reopen', note: 'Here it is in 3D: the curve is spun around the vertical axis into a surface of revolution (z = f(r), r = √(x² + y²)). Drag to rotate.' } : null;
+        }
+        if (S.kind === 'field2d' && S.params.fx) {
+          const sp = ok({ kind: 'surface3d', title: 'Field magnitude in 3D', subject: S.subject, alt: 'Height = the size of the vector field at each point.', params: { expr: `sqrt((${S.params.fx})^2 + (${S.params.fy})^2)`, range: 3 }, vars: S.vars, steps: [{ title: 'Magnitude as height', text: 'The surface height is |F(x, y)|: tall where the field is strong.' }] });
+          return sp ? { spec: sp, action: 'reopen', note: 'This shows the field’s strength |F| as height in 3D. The arrow directions are in the 2D view.' } : null;
+        }
+        return { action: 'none', note: 'I don’t have a faithful 3D version of this visual yet, so I’ve left it in 2D rather than fake depth. I can make 3D models of surfaces, functions, fields and trusses.' };
+      }
+      case 'rotate':
+        if (S.kind === 'surface3d' || S.kind === 'truss3d') return { action: 'play', note: /stop/i.test(text) ? 'Rotation paused — press ▶ to resume.' : 'Rotating now. You can also drag it with a finger or the mouse; ⏸ stops it.' };
+        return { action: 'none', note: 'This visual is 2D, so there is nothing to rotate. Say “make it 3D” if it’s a surface, function or field.' };
+      case 'labels': {
+        const on = !/\b(hide|remove|turn off)\b/i.test(text);
+        if (S.kind === 'chart') { S.params.labelsOn = on; return { spec: ok(S), action: 'reopen', note: on ? 'Value labels added to every bar/point.' : 'Value labels hidden.' }; }
+        if (S.kind === 'plot2d') { S.params.roots = on; return { spec: ok(S), action: 'reopen', note: on ? 'Labelled the roots (where the curve crosses y = 0) and kept the axis labels.' : 'Root labels hidden.' }; }
+        return { action: 'none', note: 'Every part of this visual is already labelled — tap any part for its detail.' };
+      }
+      case 'layer': {
+        if (S.kind === 'network' && S.params.layers.length < 5) { S.params.layers.splice(S.params.layers.length - 1, 0, 3); const sp = ok(S); return { spec: sp, action: 'reopen', note: `Added a hidden layer: the network is now ${sp.params.layers.join(' → ')}. More layers can model more complex boundaries but take longer to train.` }; }
+        if (S.kind === 'plot2d' && /derivative/i.test(text) || S.kind === 'plot2d' && !S.params.derivative && S.params.fns.length === 1) { S.params.derivative = true; return { spec: ok(S), action: 'reopen', note: 'Added the derivative f′(x) as a dashed curve: it is zero exactly where f has a turning point.' }; }
+        return { action: 'none', note: 'I can’t add another layer to this kind of visual without making something up. Tell me what you’d like added (e.g. “add the curve y = 2x”) and I’ll draw it.' };
+      }
+      case 'animate': return { action: 'tour', note: 'Playing it step by step — I’ll move through each stage. Press ■ to stop at any time.' };
+      case 'highlight': {
+        const want = m[4].replace(/[.?!]$/, '').toLowerCase();
+        const k = S.steps.findIndex(st => (st.title + ' ' + st.text).toLowerCase().includes(want) || want.split(/\s+/).filter(w => w.length > 3).some(w => st.title.toLowerCase().includes(w)));
+        if (k >= 0) return { action: 'stage', stage: k, note: `Highlighted: ${S.steps[k].title}.` };
+        if (S.kind === 'chart') { const i = S.params.labels.findIndex(l => l.toLowerCase().includes(want) || want.includes(l.toLowerCase())); if (i >= 0) { S.steps = [{ title: S.params.labels[i], text: S.params.series.map(se => `${se.name || 'Value'}: ${se.values[i]}`).join(' · '), focus: [S.params.labels[i]] }].concat(S.steps); return { spec: ok(S), action: 'reopen', note: `Highlighted ${S.params.labels[i]}.` }; } }
+        return { action: 'none', note: `I couldn’t find “${m[4]}” in this visual — the parts are: ${S.steps.map(st => st.title).slice(0, 8).join(', ')}.` };
+      }
+      case 'param': {
+        const name = m[3].trim().toLowerCase(), val = +m[5];
+        const v = S.vars.find(x => x.name.toLowerCase() === name || x.label.toLowerCase().includes(name) || name.includes(x.label.toLowerCase()));
+        if (!v) return S.vars.length ? { action: 'none', note: `This visual’s adjustable values are: ${S.vars.map(x => x.label).join(', ')}.` } : null;
+        let target = /\bby\b/i.test(m[4]) ? v.value + (/(decrease|lower)/i.test(m[1]) ? -val : val) : val;
+        const clamped = clamp(target, v.min, v.max);
+        return { action: 'setvar', name: v.name, value: clamped, note: `Set ${v.label} to ${+clamped.toFixed(4)}` + (clamped !== target ? ` (the allowed range is ${v.min} to ${v.max}).` : '.') };
+      }
+      case 'type':
+        if (S.kind !== 'chart') return { action: 'none', note: 'Only data charts can switch between bar, line and pie.' };
+        S.params.type = m[3].toLowerCase(); return { spec: ok(S), action: 'reopen', note: `Shown as a ${S.params.type} chart.` };
+      case 'advanced': return { action: 'level', up: !/simpl|easier/i.test(text), note: '' };
+    }
+    return null;
+  }
+  // numbers typed in the question → a chart ("bar chart of A 12, B 30, C 7")
+  function chartFrom(q) {
+    const t = String(q);
+    if (!/\b(bar|line|pie)?\s*(chart|graph)\b/i.test(t)) return null;
+    const pairs = [...t.matchAll(/([A-Za-z][\w .'-]{0,20}?)\s*[:=]?\s+(-?\d+(?:\.\d+)?)\s*%?(?=\s*(?:,|;|and\b|$))/g)].map(x => [x[1].replace(/^(of|for|with|and)\s+/i, '').trim(), +x[2]]);
+    if (pairs.length < 2) return null;
+    const type = (t.match(/\b(bar|line|pie)\b/i) || [, 'bar'])[1].toLowerCase();
+    const v = validate({ kind: 'chart', title: 'Your data', subject: 'Data visualisation', alt: `A ${type} chart of the values you gave.`, params: { type, labels: pairs.map(p => p[0]), series: [{ name: 'Value', values: pairs.map(p => p[1]) }] }, steps: [{ title: 'Your data', text: 'These are exactly the numbers you typed. Hover a bar to highlight it; say “as a pie chart” or “add labels” to change it.' }] });
+    return v.ok ? v.spec : null;
+  }
+
   /* ======================= AI planner ======================= */
   const AI_SCHEMA = `Return ONLY one JSON object, no prose.
 If a visual would not genuinely help, return {"visual": false}.
@@ -788,6 +936,8 @@ Kinds and params:
 - "truss3d": {"type":"pratt"|"warren"|"howe","panels":6,"span":24,"height":4} (vars P in kN, pos 0..1; a step with "focus":["sweep"] moves the load)
 - "beam": {"support":"simple"|"cantilever","span":10} (vars P, a, w)
 - "matrix2d": {} (vars a, b, c, d)
+- "chart": {"type":"bar"|"line"|"pie","labels":["..."],"series":[{"name","values":[numbers]}],"unit":"","source":"where the numbers come from"} — ONLY with numbers the student gave or well-established figures; name the source
+- "timeline": {"events":[{"when":"1953","label":"...","detail":"..."}]} — ONLY well-established dates; steps focus "t0","t1",…
 Expressions use only numbers, x, y, declared var names, + - * / ^ ( ) and sin cos tan exp ln log sqrt abs pi e.
 Use 2–6 steps of accurate, university-level explanation for THIS question. Choose the simplest kind that explains it; prefer "diagram" for processes and systems.`;
   async function aiPlan(question, level) {
@@ -807,5 +957,5 @@ Use 2–6 steps of accurate, university-level explanation for THIS question. Cho
   }
 
   window.ERLY = window.ERLY || {};
-  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, toScene, truss, beamCalc, frames, KINDS, renderers: R, diagrams: DIAGRAMS.length };
+  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, explicit, edit, editIntent, chartFrom, toScene, truss, beamCalc, frames, KINDS, renderers: R, diagrams: DIAGRAMS.length };
 })();

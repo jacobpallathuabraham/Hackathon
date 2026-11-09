@@ -17,7 +17,8 @@
   const { aiSays, bubble, chipRow, clearChips, pick, esc, T } = U;
   const lang = U.lang;
   let iv = null, ivSource = null;
-  const history = []; // short chat memory for the external model (text only, never stored)
+  const history = []; // chat memory for the model (text only); v10: kept in sessionStorage for this tab only
+  history.push = function () { const r = Array.prototype.push.apply(this, arguments); if (typeof saveHist === 'function') saveHist(); return r; };
   const results = () => (ERLY.analyser ? ERLY.analyser.interviews() : {});
   const LEVEL = { strong: ['A clear pattern', 'نمط واضح'], some: ['Some signs', 'بعض العلامات'], low: ['Few signs', 'علامات قليلة'], unclear: ['Not enough to say', 'لا يكفي للحكم'] };
   const EVL = { none: ['Nothing noticed', 'لم يُلاحظ شيء'], early: ['Early sign', 'إشارة أولية'], some: ['Some evidence', 'بعض الدلائل'], strong: ['Stronger evidence', 'دلائل أقوى'] };
@@ -93,7 +94,7 @@
     if (U.ai && U.ai.ready() && MD && AIX) { if (await aiReply(text, a, tr)) return; }
     if (tr && tr.pdf) { history.push({ role: 'user', text }); await C.tools.pdfLocal(tr); return offerChips([{ id: 'brain', en: 'Explain it with AI', ar: 'اشرحيها بالذكاء الاصطناعي' }, { id: 'fu:quiz', en: 'Quiz me on this page', ar: 'اختبريني في هذه الصفحة' }]); }
     history.push({ role: 'user', text });
-    if (await skill(text)) return;
+    if (await skill(text)) { captureReply(); return; }
     remember(a);
     if (a.kind === 'answer') await sayKB(a);
     else if (a.kind === 'unknown' && U.ai) {
@@ -103,7 +104,7 @@
       return;
     } else await say(a.en, a.ar);
     history.push({ role: 'assistant', text: pick(a.en, a.ar) });
-    if (history.length > 16) history.splice(0, history.length - 16);
+    if (history.length > 40) history.splice(0, history.length - 40); // older turns are summarised for the model (ai.js buildMessages)
     offerChips(a.chips && a.chips.length ? a.chips : [{ id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }, { id: 'kb:assessment:what', en: 'How do assessments work?', ar: 'كيف تعمل التقييمات؟' }]);
   }
   // a one-tap, informed choice to answer with Noor Online (or just a Wikipedia lookup)
@@ -171,7 +172,7 @@
     // the AI can ask for a visual with [[visual:…]]; the tag is never shown or spoken
     const VZ = ERLY.visuals; let visAsked = false;
     const clean = t => (VZ ? VZ.stripTags(t) : t);
-    const askVisual = t => { if (visAsked || !VZ || !C.tools || !C.tools.visual) return; const v = VZ.fromTag(t); if (v) { visAsked = true; if (!C.tools.visual.pending()) C.tools.visual.offerTag(v, text); } }; // offered, never auto-opened
+    const askVisual = t => { if (visAsked || !VZ || !C.tools || !C.tools.visual || !((U.store.prefs().vs || {}).suggestVisuals)) return; /* v10: only when the student turned “Suggest visuals” on */ const v = VZ.fromTag(t); if (v) { visAsked = true; if (!C.tools.visual.pending()) C.tools.visual.offerTag(v, text); } }; // offered, never auto-opened
     const speakPart = t => {
       if (!C.inCall) return;
       const sub = t.slice(spoken), r = AIX.takeSentences(sub);
@@ -223,7 +224,7 @@
     if (C.inCall) { const rest = out.slice(spoken).trim(); if (rest) ERLY.emit('noor:said', { text: MD.toText(rest), speak: true }); }
     finishReply(m, out, text, false);
     history.push({ role: 'assistant', text: out });
-    if (history.length > 16) history.splice(0, history.length - 16);
+    if (history.length > 40) history.splice(0, history.length - 40); // older turns are summarised for the model (ai.js buildMessages)
     U.setGenerating(null); U.setBusy(false);
     U.setStatus(U.voice.state().speaking ? 'speaking' : 'idle');
     if (!C.inCall) U.speak(MD.toText(out).slice(0, 700));
@@ -548,5 +549,20 @@
     return Object.values(results()).map(r => ({ type: 'interview', en: `${r.name[0].split(' (')[0]}: ${LEVEL[r.level][0]}. ${r.headline[0]}`, ar: `${r.name[1].split(' (')[0]}: ${LEVEL[r.level][1]}. ${r.headline[1]}` }));
   }
 
-  C.brain = { active: () => !!(iv && !iv.done), freeText, answerText, startInterview, renderProfile, entries, chip, reset: () => { history.length = 0; kctx = {}; }, _math: mathOf };
+  /* v10: the conversation survives moving between ERLY pages in the same tab (sessionStorage —
+     on this device only, cleared when the tab closes or with “New chat”). Never sent anywhere. */
+  const HKEY = 'erly-noor-chat';
+  var saveHist = () => { try { sessionStorage.setItem(HKEY, JSON.stringify(history.filter(h => h.text).map(h => (/^built-in:/.test(h.text) ? { role: h.role, text: 'My built-in brain couldn’t answer this one (no AI model was switched on).' } : h)).slice(-40))); } catch (e) { /* storage blocked: memory only */ } };
+  // answers from the built-in brain are rendered straight into the log: keep their text too, so a restored chat isn't one-sided
+  function captureReply() { const last = history[history.length - 1]; if (last && last.role === 'user') { const b = [...document.querySelectorAll('#cmpLog .cmsg--ai:not(.cmsg--note) .cmsg__b')].pop(); const t = b && b.innerText.trim(); if (t) Array.prototype.push.call(history, { role: 'assistant', text: t.slice(0, 2400) }); } saveHist(); }
+  if (ERLY.on) ERLY.on('noor:turn-end', captureReply);
+  (function restore() {
+    let old = []; try { old = JSON.parse(sessionStorage.getItem(HKEY) || '[]'); } catch (e) { old = []; }
+    if (!Array.isArray(old) || !old.length) return;
+    old.forEach(h => { if (h && (h.role === 'user' || h.role === 'assistant') && typeof h.text === 'string') Array.prototype.push.call(history, { role: h.role, text: h.text.slice(0, 4000) }); });
+    const log = U.$ && U.$('#cmpLog'); if (!log) return;
+    const mark = document.createElement('div'); mark.className = 'ctrace ctrace--restored'; mark.textContent = T('Earlier in this tab', 'سابقاً في هذه النافذة'); log.appendChild(mark);
+    history.slice(-12).forEach(h => { const MDx = window.ERLY_MD; if (h.role === 'user') bubble('you', h.text, { text: true, cls: 'cmsg--restored' }); else bubble('ai', MDx ? `<div class="md">${MDx.render(h.text)}</div>` : esc(h.text), { cls: 'cmsg--restored' }); });
+  })();
+  C.brain = { active: () => !!(iv && !iv.done), freeText, answerText, startInterview, renderProfile, entries, chip, reset: () => { history.length = 0; kctx = {}; try { sessionStorage.removeItem(HKEY); } catch (e) { /* nothing stored */ } }, _math: mathOf, history: () => history.slice() };
 })();

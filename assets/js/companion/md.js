@@ -67,13 +67,47 @@
       }
       if (ACCENT[name]) { const a = group(); return H ? `<span class="macc">${a}${ACCENT[name]}</span>` : a; }
       if (name === 'left' || name === 'right' || name === 'big' || name === 'Big' || name === 'bigg' || name === 'Bigg' || name === 'displaystyle' || name === 'limits' || name === 'nolimits') { if ((name === 'left' || name === 'right') && s[i] === '.') i++; return ''; }
-      if (name === 'begin' || name === 'end') { rawGroup(); if (s[i] === '{') rawGroup(); return name === 'end' ? '' : ''; }
+      if (name === 'begin') return env(rawGroup());
+      if (name === 'end') { rawGroup(); return ''; }
       if (name === 'color' || name === 'textcolor') { rawGroup(); return name === 'textcolor' ? group() : ''; }
       if (name === 'boxed') { const a = group(); return H ? `<span class="mbox">${a}</span>` : a; }
       if (name === 'overset' || name === 'stackrel') { const top = group(), base = group(); return H ? `<span class="mover"><small>${top}</small>${base}</span>` : base; }
       if (FN.test(name)) return H ? `<span class="mfn">${name}</span> ` : name + ' ';
       if (SYM[name] != null) return e(SYM[name]);
       return e(name);
+    }
+    // \begin{pmatrix} … \end{pmatrix} and friends: rows split on \\, cells on &
+    const ENV = { pmatrix: ['(', ')'], bmatrix: ['[', ']'], Bmatrix: ['{', '}'], vmatrix: ['|', '|'], Vmatrix: ['‖', '‖'], matrix: ['', ''], smallmatrix: ['', ''], cases: ['{', ''], aligned: ['', ''], align: ['', ''], 'align*': ['', ''], gathered: ['', ''], gather: ['', ''], array: ['', ''], split: ['', ''], eqnarray: ['', ''] };
+    function env(name) {
+      if (name === 'array' && s[i] === '{') rawGroup(); // column spec
+      // find the matching \end{name}, allowing nesting of the same environment
+      let depth = 0, j = i, end = -1;
+      const open = '\\begin{' + name + '}', close = '\\end{' + name + '}';
+      while (j < s.length) {
+        if (s.startsWith(open, j)) { depth++; j += open.length; continue; }
+        if (s.startsWith(close, j)) { if (!depth) { end = j; break; } depth--; j += close.length; continue; }
+        j++;
+      }
+      const body = s.slice(i, end < 0 ? s.length : end); i = end < 0 ? s.length : end + close.length;
+      // split rows/cells at the top level only (not inside nested braces or environments)
+      const rows = [[]]; let cell = '', d = 0;
+      for (let k = 0; k < body.length; k++) {
+        const ch = body[k];
+        if (body.startsWith('\\begin{', k)) d++;
+        if (body.startsWith('\\end{', k)) d--;
+        if (ch === '{') d++; else if (ch === '}') d--;
+        if (!d && ch === '\\' && body[k + 1] === '\\') { rows[rows.length - 1].push(cell); rows.push([]); cell = ''; k++; continue; }
+        if (!d && ch === '&' && body[k - 1] !== '\\') { rows[rows.length - 1].push(cell); cell = ''; continue; }
+        cell += ch;
+      }
+      rows[rows.length - 1].push(cell);
+      const R = rows.filter(r => r.some(c => c.trim()));
+      const cols = Math.max(1, ...R.map(r => r.length));
+      const [l, r] = ENV[name] || ['', ''];
+      if (!H) return ' ' + (l ? 'matrix ' : '') + R.map(row => '[' + row.map(c => tex(c, 't')).join(', ') + ']').join('; ') + ' ';
+      const align = /align|split|eqnarray/.test(name) ? 'mmat--align' : name === 'cases' ? 'mmat--cases' : '';
+      const cells = R.map(row => { const out = []; for (let k = 0; k < cols; k++) out.push(`<span>${tex(row[k] || '', 'h')}</span>`); return out.join(''); }).join('');
+      return `<span class="mmat ${align}">${l ? `<span class="mmat__b">${esc(l)}</span>` : ''}<span class="mmat__g" style="grid-template-columns:repeat(${cols},auto)">${cells}</span>${r ? `<span class="mmat__b">${esc(r)}</span>` : ''}</span>`;
     }
     function atom() {
       const c = s[i];

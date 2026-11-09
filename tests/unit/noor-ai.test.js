@@ -73,3 +73,30 @@ test('half-written markdown never hangs the renderer', () => {
   const full = '## Plan\n- **one**\n  - sub\n1. two\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n```py\nx = 1\n```\n> quote';
   for (let i = 0; i <= full.length; i++) MD.render(full.slice(0, i));
 });
+
+/* ---------- v10 ---------- */
+test('v10 prompt: no automatic visuals or visual tags; accuracy and uncertainty rules', () => {
+  const s = AI.systemPrompt({});
+  assert.doesNotMatch(s, /automatically/i);
+  assert.match(s, /never write \[\[visual/i);
+  assert.match(s, /Never ask whether they would like a visual/i);
+  assert.match(s, /Never invent facts, figures, quotations, studies, references, URLs/);
+  assert.match(s, /say clearly when something is uncertain/);
+});
+test('v10 long conversations keep the earlier questions as a compact note', () => {
+  const h = [];
+  for (let i = 0; i < 14; i++) { h.push({ role: 'user', text: 'question ' + i }); h.push({ role: 'assistant', text: 'answer ' + i }); }
+  const m = AI.buildMessages(h, 'and the last one?', {});
+  assert.match(m[0].content, /Earlier in this conversation the student asked about: .*“question 0”/);
+  assert.ok(m.length <= 12, 'only the recent turns are sent in full');
+  assert.equal(m[m.length - 1].content, 'and the last one?');
+});
+test('v10 matrices, cases and aligned equations render as grids and are speakable', () => {
+  const h = MD.render('\\[A = \\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}\\]');
+  assert.match(h, /class="mmat "/); assert.match(h, /grid-template-columns:repeat\(2,auto\)/);
+  assert.equal((h.match(/<span> ?\d ?<\/span>/g) || []).length, 4, 'four cells');
+  assert.match(h, /mmat__b">\(</);
+  assert.match(MD.toText('\\[A = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}\\]'), /matrix \[1, 2\]; \[3, 4\]/);
+  assert.match(MD.render('\\[\\begin{aligned} a &= b \\\\ &= c \\end{aligned}\\]'), /mmat--align/);
+  assert.match(MD.render('\\[f(x)=\\begin{cases} 1 & x>0 \\\\ 0 & x\\le 0 \\end{cases}\\]'), /mmat--cases[\s\S]*mmat__b">\{/);
+});

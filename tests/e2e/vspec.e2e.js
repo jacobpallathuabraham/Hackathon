@@ -148,40 +148,53 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await settle(); assert.match(await p.evaluate(() => v.el.querySelector('.vz__status').textContent), /Compressor/, 'diagram nodes are interactive');
   await p.close();
 
-  /* ---------- 7. consent-first inside the real companion ---------- */
+  /* ---------- 7. v10: visuals on request only, follow-up edits, opt-in suggestions ---------- */
   const s = await browser.newPage({ viewport: { width: 1280, height: 860 } }); watch(s);
   await s.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); });
   await s.goto(BASE + 'student.html'); await s.waitForTimeout(600);
   await s.click('.cmp-launch'); await s.waitForTimeout(900);
-  const ask = async q => { await s.fill('#cmpText', q); await s.press('#cmpText', 'Enter'); await s.waitForTimeout(1100); };
-  await ask('How does a Pratt truss bridge carry load?');
-  assert.equal(await s.locator('.cvoffer').count(), 1, 'a visual is OFFERED');
-  assert.equal(await s.locator('.vz').count(), 0, 'and NOT opened without permission');
-  await s.click('.cvoffer [data-vo="no"]'); await s.waitForTimeout(300);
-  assert.equal(await s.locator('.vz').count(), 0, 'declining opens nothing');
-  await ask('How does a Pratt truss bridge carry load?');
-  assert.equal(await s.locator('.cvoffer:not(.is-done)').count(), 0, 'not asked again for the same question');
-  await ask('Explain supply and demand and market equilibrium');
-  await s.click('.cvoffer:not(.is-done) [data-vo="yes"]'); await s.waitForTimeout(800);
-  assert.equal(await s.locator('.vz').count(), 1, 'accepting builds the visual');
-  assert.match(await s.textContent('.vz__h b'), /Supply, demand/, 'the visual matches the question');
-  await s.click('.vz [data-v="close"]'); await s.waitForTimeout(400);
-  await ask('How does merge sort work?');
-  await ask('yes');
-  assert.equal(await s.locator('.vz').count(), 1, 'a typed or spoken “yes” accepts the offer');
-  assert.match(await s.textContent('.vz__h b'), /Merge sort/);
+  const ask = async (q, w) => { await s.fill('#cmpText', q); await s.press('#cmpText', 'Enter'); await s.waitForTimeout(w || 1100); };
+  const title = () => s.textContent('.vz.is-in .vz__h b');
+  for (const q of ['How does a Pratt truss bridge carry load?', 'Explain supply and demand and market equilibrium', 'How does merge sort work?']) {
+    await ask(q);
+    assert.equal(await s.locator('.cvoffer').count(), 0, 'no “would you like a visual?” after an ordinary question: ' + q);
+    assert.equal(await s.locator('.vz').count(), 0, 'and nothing opens on its own');
+  }
+  await ask('Draw a diagram of how a Pratt truss bridge carries load');
+  assert.equal(await s.locator('.vz.is-in').count(), 1, 'an explicit request creates the visual directly');
+  assert.match(await title(), /Pratt truss/, 'the visual matches the request');
+  await ask('plot y = x^2 - 4');
+  assert.match(await title(), /y = x\^2 - 4/, 'plot request builds the graph');
+  await ask('add the derivative');
+  assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.params.derivative), true, '“add the derivative” edits the same graph');
+  await ask('make it 3D', 1600);
+  assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.kind), 'surface3d', '“make it 3D” turns the curve into a 3D surface');
+  assert.match(await s.locator('.cmsg--ai').last().textContent(), /surface of revolution/, 'and says exactly what it did');
+  await ask('rotate it');
+  assert.match(await s.locator('.cmsg--ai').last().textContent(), /Rotating/);
+  await ask('bar chart of Maths 72, Physics 64, Chemistry 81');
+  assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.kind), 'chart', 'numbers typed by the student become a chart');
+  assert.equal(await s.locator('.vz.is-in .vs-chart rect.vs-bar').count(), 3);
+  await ask('show it as a pie chart');
+  assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.params.type), 'pie');
+  await ask('Show me a diagram of the electron transport chain in cellular respiration');
+  assert.match(await title(), /Cellular respiration/);
+  await ask('highlight the Krebs cycle');
+  assert.match(await s.textContent('.vz.is-in .vz__t'), /Krebs/i, '“highlight X” moves to that part');
+  await ask('make it 3D');
+  assert.match(await s.locator('.cmsg--ai').last().textContent(), /won’t|rather than fake|don’t have a faithful 3D/i, 'no fake 3D for a process diagram');
+  await ask('Plot the demand curve as a graph showing supply and demand');
+  await ask('set the demand intercept a to 15');
+  assert.match(await s.locator('.cmsg--ai').last().textContent(), /Set .*15|allowed range/, 'parameter follow-up');
   await s.screenshot({ path: process.env.SHOT || '/tmp/vspec-chat.png' });
-  await s.click('.vz [data-v="close"]'); await s.waitForTimeout(400);
-  // "Explain first, then create a visual": the visual follows the explanation
-  await ask('Explain the TCP three-way handshake');
-  await s.click('.cvoffer:not(.is-done) [data-vo="after"]');
-  await s.waitForSelector('.vz', { timeout: 8000 });
-  assert.match(await s.textContent('.vz__h b'), /TCP three-way handshake/, 'explain-first builds the visual after the answer');
-  // a typed "no" declines
-  await s.click('.vz [data-v="close"]'); await s.waitForTimeout(400);
+  // opt-in: with “Suggest visuals” on, the old consent offer comes back (and still never auto-opens)
+  await s.evaluate(() => { ERLY.companion.tools.visual.close(); const st = JSON.parse(localStorage.getItem('erly-companion-v1')); st.prefs.vs = Object.assign(st.prefs.vs || {}, { suggestVisuals: true }); localStorage.setItem('erly-companion-v1', JSON.stringify(st)); });
+  await s.reload(); await s.waitForTimeout(600); await s.click('.cmp-launch'); await s.waitForTimeout(900);
+  assert.ok(await s.locator('.cmsg--restored').count() > 0, 'the conversation is restored after a reload in the same tab');
   await ask('How does binary search work?');
-  await ask('no thanks');
-  await s.waitForTimeout(400);
+  assert.equal(await s.locator('.cvoffer').count(), 1, 'Suggest visuals ON: a visual is offered');
+  assert.equal(await s.locator('.vz').count(), 0, 'but not opened');
+  await ask('no thanks'); await s.waitForTimeout(300);
   assert.equal(await s.locator('.vz').count(), 0, 'a typed “no” declines');
   await s.close();
 

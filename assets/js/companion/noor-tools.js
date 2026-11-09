@@ -326,11 +326,42 @@
     if (choice === 'after' && (U.isGenerating && U.isGenerating())) { afterTurn = o; return; } // built when the explanation finishes
     return buildVisual(o);
   }
+  // follow-up edits to the visual that is open (“make it 3D”, “add labels”, “highlight the Krebs cycle”, “set a to 2”, “animate it”)
+  let lastQ = '';
+  const LEVELS = ['quick', 'ug', 'adv', 'pg', 'research'], LEVEL_N = { quick: 'a quick overview', ug: 'undergraduate', adv: 'advanced undergraduate', pg: 'postgraduate', research: 'research-oriented' };
+  async function editVisual(t) {
+    const VS = ERLY.vspec, it = VS.editIntent(t); if (!it || !vis) return null;
+    const spec = vis.scene && vis.scene.spec;
+    let r = spec ? VS.edit(spec, t) : null;
+    if (!spec) { // a hand-built scene: it can be animated, rotated (if 3D) and focused, not re-specified
+      if (it.kind === 'animate') r = { action: 'tour', note: 'Playing it step by step. Press ■ to stop.' };
+      else if (it.kind === 'highlight') { const k = vis.sync(it.m[4]); r = { action: 'none', note: k >= 0 ? 'Highlighted that part.' : 'I couldn’t find that part in this visual — tap the numbered steps to see each part.' }; }
+      else if (it.kind === 'advanced') r = { action: 'level', up: !/simpl|easier/i.test(t) };
+      else if (it.kind === 'param' || it.kind === 'labels' || it.kind === '3d' || it.kind === 'layer') r = { action: 'none', note: 'This is one of the hand-built lessons, so I can’t rebuild it — use its own sliders and steps. Ask me to “draw” or “plot” something specific and I’ll make an editable one.' };
+    }
+    if (!r) return null;
+    if (r.action === 'level') { // a deeper (or simpler) explanation of the same thing, from the answer engine
+      const vs = Object.assign({}, U.store.prefs().vs || {}); const i = Math.max(0, LEVELS.indexOf(vs.level || 'ug'));
+      vs.level = LEVELS[Math.max(0, Math.min(LEVELS.length - 1, i + (r.up ? 1 : -1)))]; U.store.setPref('vs', vs);
+      trace([T('Explanation level', 'مستوى الشرح') + ': ' + LEVEL_N[vs.level]]);
+      return null; // the normal answer follows, now at the new level and with the conversation as context
+    }
+    trace([T('Edited the visual', 'عدّلت الشرح المرئي')]);
+    if (r.action === 'reopen' && r.spec) { openVisual(VS.toScene(r.spec)); }
+    else if (r.action === 'tour') vis.tour();
+    else if (r.action === 'play') { if (/stop/i.test(t)) vis.pause(); else vis.play(); }
+    else if (r.action === 'stage') { vis.stopTour(); vis.show(r.stage); }
+    else if (r.action === 'setvar') { vis.stopTour(); vis.setVar(r.name, r.value); }
+    ERLY.emit('noor:visual-edit', { action: r.action, kind: it.kind });
+    await U.aiSays(r.note, r.note, { speak: !C.inCall });
+    return { done: true };
+  }
   async function buildVisual(o) {
     const VS = ERLY.vspec; let spec = null, pickV = null;
     if (o.tagPick) pickV = o.tagPick;
     else {
       spec = VS.plan(o.question);
+      if (spec && o.want === '3d' && spec.kind !== 'surface3d' && spec.kind !== 'truss3d') { const e = VS.edit(spec, 'make it 3d'); if (e && e.spec) spec = e.spec; }
       if (!spec && U.ai && U.ai.ready()) {
         const note = U.bubble('ai', T('Designing a visual for your question…', 'أصمم شرحاً مرئياً لسؤالك…'), { text: true, cls: 'cmsg--note' });
         const lvl = ((U.store.prefs().vs || {}).level) || 'ug';
@@ -340,8 +371,8 @@
       }
       if (spec) pickV = VS.toScene(spec);
     }
-    if (!pickV) { await U.aiSays('I couldn’t build a reliable interactive visual for this question, so I’ll keep to a clear step-by-step explanation instead. Ask me to “show it as a diagram” with the steps if that would help.', 'لم أستطع بناء شرح مرئي موثوق لهذا السؤال، لذا سأكتفي بشرح واضح خطوة بخطوة.', { speak: !C.inCall }); return null; }
-    const v = openVisual(pickV, { tour: !(U.ai && U.ai.ready()) });
+    if (!pickV) { await U.aiSays((U.ai && U.ai.ready()) ? 'I couldn’t build a reliable interactive visual for this, so I won’t show a made-up one — here’s a clear explanation instead. You can give me the steps (“show it as a diagram: A > B > C”) or numbers (“bar chart of A 3, B 5”) and I’ll draw exactly that.' : 'I don’t have a ready-made visual for this, and no AI model is connected to design a new one, so I won’t invent one. I can draw functions (“plot y = x^2 − 3”), surfaces, fields, waves, algorithms, bridges, beams, matrices, charts from your numbers and many science processes.', 'لم أستطع بناء شرح مرئي موثوق لهذا السؤال، لذا سأكتفي بشرح واضح خطوة بخطوة.', { speak: !C.inCall }); return null; }
+    const v = openVisual(pickV, { tour: o.want === 'animate' || !(U.ai && U.ai.ready()) });
     return v;
   }
   // in a voice conversation the companion also asks out loud, after it finishes its answer
@@ -374,11 +405,15 @@
       const names = { quick: 'a quick overview', ug: 'undergraduate', adv: 'advanced undergraduate', pg: 'postgraduate', research: 'research-oriented' };
       if (t.length < 50 && !/\?/.test(t)) { await U.aiSays(`Got it — I’ll explain things at ${names[level]} level from now on. You can change this any time in Companion Studio → Talk.`, `حسناً — سأشرح بمستوى ${names[level]} من الآن.`, { speak: !C.inCall }); return { done: true }; }
     }
-    // a question that a picture would genuinely help with: ASK first (never auto-open)
+    // v10 visuals: created only when the student asks for one; follow-ups edit the open visual.
+    // Ordinary questions get a plain answer and NO “would you like a visual?” question —
+    // unless the student turned “Suggest visuals” on in Companion Studio → Talk.
     const VS = ERLY.vspec;
-    const kind = VS && !/^(what is|calculate)\s+[\d(]/i.test(t) ? VS.offerable(t, U.ai && U.ai.ready()) : null;
-    // (the normal answer still follows — from the AI brain, or the built-in brain when no AI is connected)
-    if (kind) showOffer(t, kind);
+    if (VS && vis) { const r = await editVisual(t); if (r) return r; }
+    const want = VS && VS.explicit(t);
+    if (want) { lastQ = t; await buildVisual({ question: t, want }); if (/^(draw|plot|graph|sketch|chart|visuali[sz]e|animate|simulate|make|show)\b[^?]{0,80}$/i.test(t) && vis) return { done: true }; }
+    else if (VS && (U.store.prefs().vs || {}).suggestVisuals && !/^(what is|calculate)\s+[\d(]/i.test(t)) { const kind = VS.offerable(t, U.ai && U.ai.ready()); if (kind) showOffer(t, kind); }
+    if (!want) lastQ = t;
     // exact maths
     const math = C.brain && C.brain._math && C.brain._math(t);
     if (math) return { done: false, math };
