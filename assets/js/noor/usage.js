@@ -19,12 +19,12 @@
     const total = () => Object.values(d.ai).reduce((s, x) => s + x.requests, 0);
     return {
       // may the device send another AI request now? returns null or 'day' / 'minute'
-      check() { roll(); const t = now(); d.minute = d.minute.filter(x => t - x < 60000); if (total() >= (limits.aiPerDay || 150)) return 'day'; if (d.minute.length >= (limits.aiPerMinute || 8)) return 'minute'; return null; },
+      check() { roll(); const t = now(); d.minute = d.minute.filter(x => t - x < 60000); if (total() >= (limits.aiPerDay || 150)) return 'day'; if (d.minute.length >= (limits.aiPerMinute || 20)) return 'minute'; return null; },
       start(name) { roll(); p(name).requests++; d.minute.push(now()); save(); },
       ok(name, usage) { const x = p(name); x.ok++; if (usage) { x.input += usage.input || 0; x.output += usage.output || 0; } save(); },
       fail(name, code) { const x = p(name); x.failures++; if (code === 'rate_limited') x.rateLimited++; if (code === 'quota') x.quota++; save(); },
       research(source, status) { roll(); const r = d.research[source] || (d.research[source] = { ok: 0, failed: 0, rateLimited: 0, last: null }); if (status === 'ok') { r.ok++; r.last = new Date(now()).toISOString(); } else if (status === 'rate-limited') r.rateLimited++; else r.failed++; save(); },
-      snapshot() { roll(); return JSON.parse(JSON.stringify(Object.assign({ limits: { aiPerDay: limits.aiPerDay || 150, aiPerMinute: limits.aiPerMinute || 8 }, total: total() }, d))); },
+      snapshot() { roll(); return JSON.parse(JSON.stringify(Object.assign({ limits: { aiPerDay: limits.aiPerDay || 150, aiPerMinute: limits.aiPerMinute || 20 }, total: total() }, d))); },
       reset() { d = { day: day(), ai: {}, research: {}, minute: [] }; save(); }
     };
   }

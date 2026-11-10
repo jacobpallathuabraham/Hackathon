@@ -417,7 +417,17 @@
     // explicit requests, plus questions that are clearly about how something looks or fits together, when an accurate visual exists
     const CLEARLY = /^(please )?(show me|explain (the )?(structure|anatomy|parts|layout|relationship)|what does .{2,40} look like|how (is|are) .{2,40} (structured|arranged|connected))\b/i;
     const want = VS && (VS.explicit(t) || (CLEARLY.test(t) && (U.store.prefs().vs || {}).visualMode !== 'ask' && VS.plan(t) ? 'visual' : null));
-    if (want) { lastQ = t; await buildVisual({ question: t, want }); if (/^(draw|plot|graph|sketch|chart|visuali[sz]e|animate|simulate|make|show)\b[^?]{0,80}$/i.test(t) && vis) return { done: true }; }
+    if (want) {
+      lastQ = t; await buildVisual({ question: t, want });
+      if (/^(draw|plot|graph|sketch|chart|visuali[sz]e|animate|simulate|make|show)\b[^?]{0,80}$/i.test(t) && vis) return { done: true };
+      // with no AI model on, the visual's own reviewed explanation is the answer (never "I can't answer that")
+      if (vis && !(U.ai && U.ai.ready())) {
+        const sc = vis.scene, L = x => (Array.isArray(x) ? (window.I18N && I18N.lang === 'ar' ? x[1] : x[0]) : x);
+        const md = `**${L(sc.title)}**${sc.note ? ' — ' + L(sc.note) : ''}\n\n` + sc.stages.map((st, i) => `${i + 1}. **${L(st.title).replace(/^\d+\s*·\s*/, '')}** — ${L(st.text)}`).join('\n') + `\n\n_${T('Use the steps under the visual, or tap any labelled part for its detail.', 'استخدم الخطوات أسفل الشرح المرئي، أو اضغط أي جزء للتفاصيل.')}_`;
+        await U.aiSays(md, md, { html: `<div class="md">${window.ERLY_MD ? ERLY_MD.render(md) : md}</div>`, speak: !C.inCall });
+        return { done: true };
+      }
+    }
     else if (VS && (U.store.prefs().vs || {}).suggestVisuals && !/^(what is|calculate)\s+[\d(]/i.test(t)) { const kind = VS.offerable(t, U.ai && U.ai.ready()); if (kind) showOffer(t, kind); }
     if (!want) lastQ = t;
     // exact maths

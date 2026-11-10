@@ -19,6 +19,8 @@
         if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
         var f = JSON.parse(sessionStorage.getItem('erly-ink') || 'null');
         if (f && Date.now() - f.at < 8000) document.documentElement.classList.add('ink-arrive');
+        // the liquid ink is this page's entrance: skip the browser's cross-fade then, and never leave its promises unhandled
+        addEventListener('pagereveal', function (e) { var vt = e.viewTransition; if (!vt) return; [vt.ready, vt.finished, vt.updateCallbackDone].forEach(function (p) { if (p) p.catch(function () {}); }); if (document.documentElement.classList.contains('ink-arrive')) vt.skipTransition(); });
       } catch (e) {}
     })();
   </script>

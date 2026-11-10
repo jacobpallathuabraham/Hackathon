@@ -12,7 +12,7 @@
   else root.ERLY_RESEARCH = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
-  const STOP = new Set('a an the of to in on for and or but is are was were be been being do does did how what why when where who whom which whose that this these those it its with by from as at about into than then so if not no can could should would will shall may might must i me my we our you your he she they them their his her there here please tell explain show give me us more most some any all each every just also very really vs versus compare comparison between difference differences pros cons advantages disadvantages better best which one ما هو هي في من على إلى عن كيف لماذا متى أين'.split(' '));
+  const STOP = new Set('a an the of to in on for and or but is are was were be been being do does did how what why when where who whom which whose that this these those it its with by from as at about into than then so if not no can could should would will shall may might must i me my we our you your he she they them their his her there here please tell explain show give me us more most some any all each every just also very really vs versus compare comparison between difference differences pros cons advantages disadvantages better best which one say says said mean means know known ما هو هي في من على إلى عن كيف لماذا متى أين'.split(' '));
   const norm = s => String(s || '').toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}\s-]/gu, ' ');
   // a light stemmer: compression / compresses / compressed → compress; studies → study
   const stem = w => (w.length > 4 ? w.replace(/ies$/, 'y').replace(/(ations?|ions?|ing|ed|es|ers?|ly|s)$/, '') : w);
@@ -76,6 +76,19 @@
   const C3 = { afghanistan: 'AFG', algeria: 'DZA', argentina: 'ARG', australia: 'AUS', austria: 'AUT', bahrain: 'BHR', bangladesh: 'BGD', belgium: 'BEL', brazil: 'BRA', canada: 'CAN', chile: 'CHL', china: 'CHN', colombia: 'COL', denmark: 'DNK', egypt: 'EGY', ethiopia: 'ETH', finland: 'FIN', france: 'FRA', germany: 'DEU', ghana: 'GHA', greece: 'GRC', india: 'IND', indonesia: 'IDN', iran: 'IRN', iraq: 'IRQ', ireland: 'IRL', israel: 'ISR', italy: 'ITA', japan: 'JPN', jordan: 'JOR', kenya: 'KEN', korea: 'KOR', 'south korea': 'KOR', kuwait: 'KWT', lebanon: 'LBN', malaysia: 'MYS', mexico: 'MEX', morocco: 'MAR', netherlands: 'NLD', 'new zealand': 'NZL', nigeria: 'NGA', norway: 'NOR', oman: 'OMN', pakistan: 'PAK', peru: 'PER', philippines: 'PHL', poland: 'POL', portugal: 'PRT', qatar: 'QAT', russia: 'RUS', 'saudi arabia': 'SAU', singapore: 'SGP', 'south africa': 'ZAF', spain: 'ESP', 'sri lanka': 'LKA', sudan: 'SDN', sweden: 'SWE', switzerland: 'CHE', syria: 'SYR', thailand: 'THA', tunisia: 'TUN', turkey: 'TUR', 'türkiye': 'TUR', uae: 'ARE', 'united arab emirates': 'ARE', emirates: 'ARE', uk: 'GBR', 'united kingdom': 'GBR', britain: 'GBR', usa: 'USA', 'united states': 'USA', america: 'USA', vietnam: 'VNM', yemen: 'YEM', 'الإمارات': 'ARE', 'السعودية': 'SAU', 'مصر': 'EGY', 'اليابان': 'JPN', 'الهند': 'IND', 'الصين': 'CHN' };
   function countriesIn(t) { const s = ' ' + norm(t) + ' ', out = []; for (const [n, c] of Object.entries(C3).sort((a, b) => b[0].length - a[0].length)) if (s.includes(' ' + n + ' ') && !out.includes(c)) out.push(c); return out.slice(0, 6); }
 
+  // the topic of a scholarly question, without its scaffolding ("what does research say about …")
+  const SCAFFOLD = /\b(what|how|does|do|did|is|are|the|research|researchers?|studies|study|studied|evidence|science|scientific|papers?|literature|journals?|peer[- ]reviewed|meta-?analys[ie]s|say|says|show|shows|suggest|suggests|find|found|about|on|regarding|latest|recent)\b/gi;
+  // the topic of an everyday question, for encyclopedia search ("Explain how a four-stroke engine works" → "four-stroke engine")
+  function topicQuery(q) {
+    let t = String(q).trim().replace(/[?!.]+$/, '');
+    t = t.replace(/^(please\s+)?(can|could) you\s+/i, '').replace(/^(explain|describe|define|summari[sz]e|outline|tell me (more )?about|teach me( about)?|what (is|are|was|were)( the)?|who (is|are|was|were)|how (does|do|did|is|are|can)|why (is|are|does|do|did)|when (did|was|were)|where (is|are)|give me (an? )?(overview|summary|introduction) (of|to))\s+/i, '');
+    t = t.replace(/^(how|why|what|whether)\s+/i, '').replace(/^(a|an|the)\s+/i, '');
+    t = t.replace(/\s+(works?|happens?|functions?|operates?|is made|are made|came about|started|means?)$/i, '').replace(/\s+(at an? (introductory|basic|simple|advanced) level|in simple (terms|words)|for beginners|step by step|visually|with examples?)$/i, '');
+    t = t.replace(/^(the )?(history|geography|economy|culture|rules|basics) of the\s+/i, (m, a, b) => b + ' of ');
+    return t.trim() || String(q);
+  }
+  const scholarQuery = q => String(q).replace(/[?.!]/g, ' ').replace(SCAFFOLD, ' ').replace(/\s+/g, ' ').trim() || String(q);
+
   /* ---------- connectors ---------- */
   const now = () => new Date().toISOString();
   const LIC = { wiki: 'CC BY-SA 4.0', wd: 'CC0', wb: 'CC BY 4.0', cr: 'Metadata: CC0 (Crossref); works under their own licences', sdb: 'TheSportsDB free API (Patreon-supported; attribution)', mb: 'CC0 core data (MusicBrainz)', oa: 'CC0', ax: 'Metadata CC0; papers under their own licences' };
@@ -84,14 +97,14 @@
     // Wikipedia: search, then the article text (headings kept, so sections like "Advantages" can be found)
     async wikipedia(p, f) {
       const host = `https://${p.lang}.wikipedia.org/w/api.php`;
-      const s = await getJSON(f, `${host}?action=query&list=search&srsearch=${encodeURIComponent(p.query)}&srlimit=3&format=json&origin=*`);
+      const s = await getJSON(f, `${host}?action=query&list=search&srsearch=${encodeURIComponent(topicQuery(p.query))}&srlimit=3&format=json&origin=*`);
       const hits = ((s.query || {}).search || []).slice(0, 2);
       if (!hits.length) return [];
       const ex = await getJSON(f, `${host}?action=query&prop=extracts|info&explaintext=1&exsectionformat=wiki&inprop=url&titles=${encodeURIComponent(hits.map(h => h.title).join('|'))}&format=json&origin=*`);
       return Object.values((ex.query || {}).pages || {}).filter(pg => pg.extract).map(pg => ({ source: 'Wikipedia', sourceId: 'wikipedia', authority: 'reference', title: pg.title, url: pg.fullurl || `https://${p.lang}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, text: pg.extract.slice(0, 30000), updated: pg.touched || null, licence: LIC.wiki, retrieved: now() }));
     },
     async wikidata(p, f) {
-      const s = await getJSON(f, `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(p.query.split(/[?.!]/)[0].slice(0, 80))}&language=${p.lang}&uselang=${p.lang}&limit=1&format=json&origin=*`);
+      const s = await getJSON(f, `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(topicQuery(p.query).slice(0, 80))}&language=${p.lang}&uselang=${p.lang}&limit=1&format=json&origin=*`);
       const e = (s.search || [])[0]; if (!e || !e.description) return [];
       return [{ source: 'Wikidata', sourceId: 'wikidata', authority: 'reference', title: e.label, url: e.concepturi || `https://www.wikidata.org/wiki/${e.id}`, text: `${e.label}: ${e.description}.`, licence: LIC.wd, retrieved: now() }];
     },
@@ -107,7 +120,7 @@
       return [{ source: 'World Bank Open Data', sourceId: 'worldbank', authority: 'official', title: `${ind[2]} — ${rows.map(r => r.country).join(', ')}`, url: `https://data.worldbank.org/indicator/${ind[1]}?locations=${rows.map(r => r.iso3).join('-')}`, text: rows.map(r => `${r.country}: ${ind[2]} was ${fmt(r.value)} in ${r.year}.`).join(' '), data: { indicator: ind[2], code: ind[1], rows }, published: rows.map(r => r.year).sort().pop(), licence: LIC.wb, retrieved: now() }];
     },
     async crossref(p, f) {
-      const j = await getJSON(f, `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(p.query.replace(/^(research|studies|evidence|papers?)\s+(on|about|for)\s+/i, ''))}&filter=type:journal-article,has-abstract:true&rows=4&select=DOI,title,author,issued,container-title,type,abstract`);
+      const j = await getJSON(f, `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(scholarQuery(p.query))}&filter=type:journal-article,has-abstract:true&rows=4&select=DOI,title,author,issued,container-title,type,abstract`);
       return ((j.message || {}).items || []).filter(w => w.title && w.title[0]).map(w => ({ source: 'Crossref', sourceId: 'crossref', authority: 'scholarly', title: w.title[0], url: 'https://doi.org/' + w.DOI, text: `${w.title[0]}${w['container-title'] && w['container-title'][0] ? ' — ' + w['container-title'][0] : ''}${w.issued && w.issued['date-parts'] ? ' (' + w.issued['date-parts'][0][0] + ')' : ''}. ${(w.author || []).slice(0, 3).map(a => [a.given, a.family].filter(Boolean).join(' ')).join(', ')}. ${String(w.abstract || '').replace(/<[^>]+>/g, '').slice(0, 900)}`, published: w.issued && w.issued['date-parts'] ? String(w.issued['date-parts'][0][0]) : null, licence: LIC.cr, retrieved: now() }));
     },
     // TheSportsDB: a team's recent results (free test key "123", per https://www.thesportsdb.com/free_sports_api)
@@ -189,7 +202,7 @@
       try {
         for (const qp of (n === 'wikipedia' || n === 'wikidata' ? queries : [pl])) { const r = await timeout(fn(qp, f, gw), o.timeoutMs || 7000); r.forEach(d => { d.option = qp.option || null; }); docs.push(...r); }
         status[n] = 'ok';
-      } catch (e) { status[n] = e.message === 'timeout' ? 'timeout' : e.status === 429 ? 'rate-limited' : 'failed'; }
+      } catch (e) { status[n] = e.message === 'timeout' ? 'timeout' : e.status === 429 || e.status === 503 ? 'rate-limited' : 'failed'; }
     }));
     const all = docs.flatMap(passages);
     // comparisons: the best passages for each option, plus shared data (e.g. World Bank figures for all of them)
@@ -210,8 +223,9 @@
   function sourcesMarkdown(list, cited) {
     const used = list.filter(p => !cited || cited.includes(p.n));
     if (!used.length) return '';
-    const seen = new Set();
-    return '\n\n**Sources**\n' + used.filter(p => { const k = p.n; if (seen.has(k)) return false; seen.add(k); return true; }).map(p => `${p.n}. [${String(p.title).replace(/[[\]]/g, '')}](${p.url}) — ${p.source}${p.published ? ', ' + p.published : ''} · ${p.licence}`).join('\n');
+    // one line per source page, listing every passage number taken from it
+    const by = new Map(); for (const p of used) { const g = by.get(p.url) || by.set(p.url, { p, ns: [] }).get(p.url); if (!g.ns.includes(p.n)) g.ns.push(p.n); }
+    return '\n\n**Sources**\n' + [...by.values()].map(({ p, ns }) => `${ns.sort((a, b) => a - b).map(n => '[' + n + ']').join('')} [${String(p.title).replace(/[[\]]/g, '')}](${p.url}) — ${p.source}${p.published ? ', ' + p.published : ''} · ${p.licence}`).join('\n');
   }
 
   /* ---------- answers without the AI (zero-budget tier 2): quote, don't invent ---------- */
@@ -243,5 +257,5 @@
     return res.evidence === 'live' ? '' : (lang === 'ar' ? 'هذا سؤال عن معلومات تتغير، ولم أجد مصدراً مباشراً يغطي آخر المستجدات — قد تكون المعلومات أدناه قديمة.' : 'This asks about something that changes, and I could not reach a live source for it — what follows may be out of date.');
   }
 
-  return { plan, compareOptions, countriesIn, retrieve, rank, passages, verifyCitations, sourcesMarkdown, extractive, compareFromSources, freshnessNote, terms, redact, connectors: C, INDICATORS };
+  return { topicQuery, scholarQuery, plan, compareOptions, countriesIn, retrieve, rank, passages, verifyCitations, sourcesMarkdown, extractive, compareFromSources, freshnessNote, terms, redact, connectors: C, INDICATORS };
 });

@@ -72,6 +72,8 @@
         ring.style.left = x + 'px'; ring.style.top = y + 'px';
         document.body.appendChild(ring);
       });
+      // a transition aborted by a rapid second click or a page change is harmless: the theme still switches
+      [t.ready, t.finished, t.updateCallbackDone].forEach(pr => pr && pr.catch(() => {}));
       t.ready.then(() => {
         const ease = 'cubic-bezier(.62,0,.22,1)';
         if (canMask) html.animate({ '--tfx-r': ['0px', (radius + feather + 20) + 'px'] }, { duration: dur, easing: ease, pseudoElement: '::view-transition-new(root)' });
@@ -83,7 +85,7 @@
         html.animate([{ transform: 'scale(.02)', opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0.95, offset: 0.72 }, { transform: `scale(${end})`, opacity: 0 }],
           { duration: dur, easing: ease, pseudoElement: '::view-transition-new(tfx-ring)', fill: 'both' });
       }).catch(() => {});
-      t.finished.finally(() => { if (ring) ring.remove(); html.classList.remove('vt-theme', 'vt-mask', 'vt-to-dark'); if (active === t) active = null; });
+      t.finished.catch(() => {}).finally(() => { if (ring) ring.remove(); html.classList.remove('vt-theme', 'vt-mask', 'vt-to-dark'); if (active === t) active = null; });
     } else {
       html.classList.add('tfx-fade');
       const wash = badge('tfx-wash', '', 900);
@@ -104,7 +106,8 @@
     if (canVT) {
       html.classList.add('vt-lang');
       const t = document.startViewTransition(() => { replay(btn); label(); });
-      t.finished.finally(() => html.classList.remove('vt-lang'));
+      [t.ready, t.updateCallbackDone].forEach(pr => pr && pr.catch(() => {}));
+      t.finished.catch(() => {}).finally(() => html.classList.remove('vt-lang'));
     } else {
       html.classList.add('tfx-lang-out');
       setTimeout(() => {

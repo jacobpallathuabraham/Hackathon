@@ -43,6 +43,8 @@ const srv = http.createServer((req, res) => {
     localStorage.setItem('erly-ai-v1', JSON.stringify({ tier: 'online', consented: Date.now() }));
     Object.defineProperty(window, 'ERLY_AI_CONFIG', { configurable: true, get: () => ({ online: { name: 'Claude', model: 'claude', vision: true, url: 'http://localhost:8794/v1/chat/completions', get: '' } }), set() {} });
   });
+  // open sources answer with nothing here, so the AI-path behaviour is tested deterministically (sources are covered in noor-platform.e2e.js)
+  await ctx.route(/wikipedia\.org|wikidata\.org|crossref\.org|worldbank\.org|thesportsdb\.com|musicbrainz\.org/, r => r.fulfill({ status: 200, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: '{"query":{"search":[]},"search":[]}' }));
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message));
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(1200); await p.click('.cmp-launch'); await p.waitForTimeout(900);
   const settle = () => p.waitForFunction(() => !document.querySelector('.cmp.is-gen') && !document.querySelector('.cmsg.is-writing') && !document.querySelector('.cmsg--typing'), null, { timeout: 30000 });

@@ -901,3 +901,57 @@ Options considered for recognition:
   - Mermaid (about 1 MB), Plotly (about 3.5 MB) and D3 would add weight without adding a kind of visual the spec engine lacks. A diagram language would also need its own sanitising, so none were added.
 - **Arabic layout:** game text in English (reading passages, sentences, plans) keeps its own direction on an Arabic page, so punctuation no longer jumps to the wrong end.
 - **Still not done** (needs a backend or a product decision): multi-provider routing; retrieval over licensed sources (RAG); building visuals for topics outside the built-in set, which needs the AI planner (the Claude server).
+
+## v13: zero-budget Noor platform, research with citations, Mermaid visuals, ink-transition writing studio
+
+### Architecture
+```
+Noor chat (noor-brain.js)          conversation: per-tab conversation ID, turn IDs, stale-turn discard,
+  │                                history bounded with earlier questions summarised
+  ├─ research.js  ── plan → open sources from the student's browser (Wikipedia, Wikidata, World Bank,
+  │                   Crossref, TheSportsDB, MusicBrainz) / via gateway (OpenAlex, arXiv) → passages →
+  │                   BM25 + source authority → numbered citations → verify
+  ├─ ai.js        ── provider-independent client; "gateway" mode sends request/conversation/turn IDs and
+  │                   reads provider, model and token events
+  ├─ validate.js  ── empty / provider-error / off-topic answers rejected → one regeneration → clear error
+  ├─ usage.js     ── per-device counts and caps (ERLY_AI_CONFIG.limits)
+  ├─ visual-spec  ── validated specs → SVG / canvas / three.js / Mermaid (lazy, vendored) renderers
+  └─ registry     ── assets/data/noor-registry.js: 9 groups, 33 domains, 40 sources with honest status
+server/gateway   ── common format; Gemini (free tier) → optional OpenRouter :free → (optional paid) ;
+                    usage manager, per-IP/daily caps, pause on quota; opt-in Google Search grounding
+```
+Tiers: **1** free AI through the gateway (when deployed) → **2** local: built-in guide, visuals, maths,
+quoted answers from open sources, games → **3** recovery: the message stays, a clear "temporarily unable"
+message, a retry, a support reference — never an unrelated or invented answer.
+
+### What is real today
+* **Gateway** (`server/gateway`, see its README for the free-tier facts checked on 2026-11-10 and deployment):
+  13 unit tests plus an end-to-end test of the real gateway with a simulated Gemini endpoint
+  (`tests/e2e/noor-platform.e2e.js`, 11 scenarios: grounded answer, controlled regeneration, quota, timeout,
+  live data, comparison, rapid messages, long conversation, usage counting, device caps, phone + dark).
+  **Not yet run against real Gemini** — no API key was provided; deploy it with your own free key.
+* **Gemini terms to act on**: users must be 18+ and the API must not be used in services likely to be used by
+  under-18s; free-tier prompts may be read by human reviewers. The opt-in card says so and asks for 18+.
+* **Research**: connectors called live on 2026-11-10 — World Bank, Crossref, TheSportsDB (real result:
+  Arsenal 1–0 Hull City, 2026-11-07), MusicBrainz returned real data; Wikipedia/Wikidata returned 429 from the
+  shared test IP (students' browsers have their own 200/min limit); OpenAlex needs a free key.
+  Found and fixed during live testing: World Bank multi-country requests lack CORS (now one per country).
+* **Knowledge dashboard** (`knowledge.html`, university role): counts computed from the registry, a live
+  connector check from the viewer's browser, gateway health, device usage, domain coverage and limitations.
+  Registered ≠ integrated; **no documents are indexed** (retrieval is on demand).
+* **Visuals**: all 10 acceptance prompts pass with **no AI at all** (`tests/e2e/visual-acceptance.e2e.js`):
+  engine, photosynthesis, binary search, digestive system, Newton's laws (new), electric motor (new), solar
+  system, function graph, ER diagram (Mermaid, new), abstract concept (recursion concept map, new).
+  Mermaid 11.4.1 (MIT) is vendored and loaded only when needed; specs are validated (no click/href/init
+  directives) and every rendered diagram is checked for real nodes and labels, otherwise an honest error.
+  Libraries evaluated and not added: D3, Plotly, Chart.js, p5.js, KaTeX/MathJax (existing renderers cover them).
+* **Handwriting Check**: own page (`handwriting.html`) entered through a full-viewport liquid-ink transition
+  (Canvas 2D, theme-aware, reduced-motion fade, ~1.5 s at a steady 60 fps in testing), plus an on-screen
+  writing pad (mouse, touch, stylus pressure, undo/redo, eraser, resize-safe) analysed by the same on-device
+  recognition (16/18 words on simulated writing). `tests/e2e/ink-studio.e2e.js`.
+
+### Not implemented (and why)
+* Live news needs the opt-in grounding (terms above) or a news API; GDELT timed out and isn't integrated.
+* Keyed sources (TMDB, YouTube, NASA, FRED, Semantic Scholar…) are registered, not connected.
+* No document index / vector store: retrieval is per question from open APIs.
+* Usage counters in the gateway are per instance (KV free plan: 1,000 writes/day).

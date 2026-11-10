@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noor knowledge quality · Acubins University</title>
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <script>
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'university') location.replace('index.html?next=university'); } catch (e) {}
+    try { var t = localStorage.getItem('erly-theme'); if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css?v=13">
+  <link rel="stylesheet" href="assets/css/accents.css?v=13">
+  <link rel="stylesheet" href="assets/css/knowledge.css?v=13">
+</head>
+<body class="kq">
+  <header class="kq-top">
+    <a class="kq-back" href="university.html">← University portal</a>
+    <b>Noor knowledge quality</b>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">◐</button>
+  </header>
+  <main class="kq-main" id="main">
+    <section class="kq-hero">
+      <h1>What Noor can draw on — and what it can’t</h1>
+      <p>Every number on this page is computed from Noor’s source registry or from requests actually made from <em>this browser</em>. A <b>registered</b> source is only listed; an <b>integrated</b> source has a working, tested connector. Noor retrieves on demand, so <b>no documents are indexed</b>.</p>
+    </section>
+    <section class="kq-cards" id="kqCards" aria-label="Summary"></section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Live connector check</h2><button class="btn btn--accent btn--sm" id="kqCheck">Check connectors now</button></div>
+      <p class="kq-note">Sends one small public test query (“photosynthesis”, “Japan”, “Arsenal”, “Queen”) to each integrated source from this browser and records the result on this device only.</p>
+      <div class="kq-table-wrap"><table class="kq-table" id="kqLive"><thead><tr><th>Source</th><th>Result</th><th>Time</th><th>Last successful retrieval</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>AI gateway</h2></div>
+      <div id="kqGateway" class="kq-note"></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>This device’s usage today</h2></div>
+      <div id="kqUsage"></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Source registry</h2>
+        <div class="kq-filter" role="radiogroup" aria-label="Filter by status" id="kqFilter"></div></div>
+      <div class="kq-table-wrap"><table class="kq-table" id="kqSources"><thead><tr><th>Source</th><th>Status</th><th>Type · authority</th><th>Access</th><th>Licence</th><th>Rate limits</th><th>Last checked</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Domain taxonomy</h2></div>
+      <div class="kq-domains" id="kqDomains"></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Coverage limitations</h2></div>
+      <ul class="kq-limits">
+        <li>Wikipedia is the broadest integrated source; specialist domains (law, medicine, film, social platforms) rely on it until their connectors are added.</li>
+        <li>Live news needs either the opt-in Google Search grounding in the gateway (with its display rules) or a news connector; GDELT timed out during testing and is not integrated.</li>
+        <li>Sources needing keys (OpenAlex, TMDB, YouTube, NASA, FRED…) work only after a free key is added to the gateway — never to the website.</li>
+        <li>Paywalled publishers (Reuters, AP, Britannica, journals) are linked, never scraped.</li>
+        <li>Answers can only be as current and complete as the sources returned for each question; Noor says when a live source was not reached.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="assets/data/noor-registry.js?v=13"></script>
+  <script src="assets/js/noor/research.js?v=13"></script>
+  <script src="assets/js/noor/usage.js?v=13"></script>
+  <script src="assets/js/companion/config.js?v=13"></script>
+  <script src="assets/js/knowledge-dashboard.js?v=13"></script>
+</body>
+</html>

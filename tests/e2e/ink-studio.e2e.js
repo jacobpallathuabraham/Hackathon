@@ -14,7 +14,7 @@ const SHOT = process.env.ERLY_SHOTS;
     await c.addInitScript(t => { sessionStorage.setItem('acubins-role', 'student'); if (!localStorage.getItem('erly-theme')) localStorage.setItem('erly-theme', t); }, opts.theme || 'light');
     return c;
   };
-  const watch = p => { p.on('pageerror', e => errors.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_|ViewTransition/.test(m.text())) errors.push(m.text()); }); };
+  const watch = p => { p.on('pageerror', e => errors.push(e.message + ' @' + p.url().split('/').pop() + ' t=' + Date.now() % 100000)); p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_|ViewTransition/.test(m.text())) errors.push(m.text()); }); };
   // sample how much of the viewport the overlay covers, every 80 ms, from the moment of the click
   const startSampling = p => p.evaluate(() => { window.__cov = []; window.__blocked = null; const t0 = performance.now(); const tick = () => { const cv = document.querySelector('canvas.ink-fx'); if (cv) { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0, k = 0; for (let i = 3; i < d.length; i += 4 * 61) { k++; if (d[i] > 200) n++; } window.__cov.push(n / k); if (window.__blocked == null) window.__blocked = document.elementFromPoint(innerWidth / 2, innerHeight / 2) === cv; } if (performance.now() - t0 < 2600) setTimeout(tick, 80); }; setTimeout(tick, 20); });
 
@@ -168,6 +168,7 @@ const SHOT = process.env.ERLY_SHOTS;
   if (SHOT) await p.screenshot({ path: SHOT + '/studio-phone-dark.png' });
   await c.close();
 
+  if (errors.length) console.log('PAGE ERRORS', JSON.stringify(errors));
   assert.deepEqual(errors, [], 'no page errors');
   console.log('ink transition + writing studio e2e: all checks passed');
   await b.close();

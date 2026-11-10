@@ -96,7 +96,9 @@
   }
 
   /* ======================= schema + validation ======================= */
-  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'chart', 'timeline', 'scene2d', 'scene3d', 'scene'];
+  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'chart', 'timeline', 'scene2d', 'scene3d', 'scene', 'mermaid'];
+  // Mermaid (MIT, vendored, loaded only when needed) draws structured diagrams; only these types are accepted
+  const MERMAID_TYPES = /^(flowchart|graph|erDiagram|sequenceDiagram|classDiagram|stateDiagram(-v2)?|timeline|mindmap|journey|gantt|pie|quadrantChart)\b/;
   // named colours the AI may use (plus any #hex); theme-safe mid tones
   const PALETTE = { red: '#ef4444', orange: '#f97316', amber: '#f59e0b', yellow: '#eab308', lime: '#84cc16', green: '#22c55e', teal: '#14b8a6', cyan: '#06b6d4', sky: '#38bdf8', blue: '#3b82f6', indigo: '#6366f1', violet: '#8b5cf6', purple: '#a855f7', pink: '#ec4899', rose: '#f43f5e', brown: '#92400e', grey: '#94a3b8', gray: '#94a3b8', slate: '#64748b', white: '#f8fafc', black: '#0f172a', blood: '#b91c1c', bone: '#e7e5e4', water: '#60a5fa', metal: '#a1a1aa' };
   const ALGOS = ['bubble', 'insertion', 'selection', 'merge', 'quick', 'binary-search', 'fibonacci'];
@@ -160,6 +162,12 @@
         const series = (Array.isArray(P.series) ? P.series : []).slice(0, 3).map(se => ({ name: str(se && se.name, 30), values: (Array.isArray(se && se.values) ? se.values : []).slice(0, labels.length).map(Number) })).filter(se => se.values.length === labels.length && se.values.every(isFinite));
         if (labels.length < 2 || !series.length) throw new Error('chart needs labels and numeric series');
         out.params = { type: ['bar', 'line', 'pie'].includes(P.type) ? P.type : 'bar', labels, series, unit: str(P.unit, 16), source: str(P.source, 120), labelsOn: P.labelsOn !== false };
+      } else if (kind === 'mermaid') {
+        const code = String(P.code || '').replace(/\r/g, '').trim().slice(0, 5000);
+        if (!MERMAID_TYPES.test(code)) throw new Error('unsupported diagram type');
+        // no interactivity directives, links, init overrides, raw HTML or styles that load anything
+        if (/(^|\n)\s*(click|href)\s+\S+|\bcall\s+[\w$.]+\s*\(|%%\s*\{|<\s*\/?\s*(script|iframe|img|a|style|foreignObject)\b|javascript:|url\(|@import/i.test(code)) throw new Error('unsafe diagram directive');
+        out.params = { code, label: str(P.label, 120) };
       } else if (kind === 'timeline') {
         const events = (Array.isArray(P.events) ? P.events : []).slice(0, 12).map(e => ({ when: str(e && e.when, 20), label: str(e && e.label, 60), detail: str(e && e.detail, 220) })).filter(e => e.when && e.label);
         if (events.length < 2) throw new Error('timeline needs events');
@@ -736,6 +744,38 @@
     return { stage(i) { const st = spec.steps[i] || {}; const f = (st.focus || [])[0]; const k = f != null ? P.labels.findIndex(l => l.toLowerCase() === String(f).toLowerCase()) : -1; hi = k; draw(); }, tick() {}, set(k, v) { if (k === 'labelsOn') { P.labelsOn = !!v; draw(); } }, state: () => ({ type: P.type, bars: P.labels.length, highlight: hi }) };
   };
 
+  /* ---- mermaid: flowcharts, ER / class / state / sequence diagrams, mind maps, timelines ---- */
+  let mermaidLoad = null, mermaidSeq = 0;
+  const loadMermaid = () => mermaidLoad || (mermaidLoad = new Promise((res, rej) => { if (window.mermaid) return res(window.mermaid); const sc = document.createElement('script'); sc.src = 'assets/vendor/mermaid/mermaid.min.js'; sc.onload = () => res(window.mermaid); sc.onerror = () => { mermaidLoad = null; rej(new Error('mermaid failed to load')); }; document.head.appendChild(sc); }));
+  R.mermaid = (spec) => async (box) => {
+    const wrap = document.createElement('div'); wrap.className = 'vs-mermaid'; wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', spec.alt || spec.title); box.appendChild(wrap);
+    let ok = false, nodes = 0, mo = null;
+    const draw = async () => {
+      try {
+        const mm = await loadMermaid();
+        const dark = document.documentElement.dataset.theme === 'dark';
+        mm.initialize({ startOnLoad: false, securityLevel: 'strict', theme: dark ? 'dark' : 'neutral', fontFamily: 'inherit', flowchart: { htmlLabels: false, curve: 'basis' }, er: { useMaxWidth: true }, mindmap: { useMaxWidth: true } });
+        const { svg } = await mm.render('vsmm' + (++mermaidSeq), spec.params.code);
+        wrap.innerHTML = svg;
+        const el = wrap.querySelector('svg');
+        // verify it really drew something: shapes with labels, not an error graphic
+        nodes = el ? el.querySelectorAll('g.node, g.entityBox, .er.entityBox, g[id^="entity"], .mindmap-node, g.section, .actor, .stateGroup, g.classGroup, .timeline-node, .task, .pieCircle').length : 0;
+        const labels = el ? [...el.querySelectorAll('text, tspan, .nodeLabel')].map(t => t.textContent.trim()).filter(Boolean).length : 0;
+        ok = !!el && nodes > 0 && labels > 0 && !/syntax error/i.test(el.textContent);
+        if (!ok) throw new Error('empty diagram');
+        el.removeAttribute('height'); el.style.maxWidth = '100%'; el.style.height = 'auto';
+      } catch (e) {
+        ok = false;
+        wrap.innerHTML = `<p class="vs-err">${T('This diagram couldn’t be drawn correctly, so I won’t show a broken one. Ask me again or describe it differently.', 'تعذّر رسم هذا المخطط بشكل صحيح، لذلك لن أعرض مخططاً معطوباً. اطلب مجدداً أو صِفه بشكل مختلف.')}</p>`;
+      }
+    };
+    await draw();
+    // follow the site theme
+    mo = new MutationObserver(() => draw()); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    const focus = labels => wrap.querySelectorAll('g.node, g.entityBox, g[id^="entity"], .mindmap-node, .actor, .stateGroup, g.classGroup').forEach(g => { const on = !labels.length || labels.some(l => g.textContent.toLowerCase().includes(String(l).toLowerCase())); g.style.opacity = on ? 1 : 0.28; g.style.transition = 'opacity .3s'; });
+    return { stage(i) { const st = spec.steps[i] || {}; focus(st.focus || []); }, tick() {}, state: () => ({ rendered: ok, nodes, kind: 'mermaid', type: (spec.params.code.match(MERMAID_TYPES) || [''])[0] }), destroy() { if (mo) mo.disconnect(); } };
+  };
+
   /* ---- timeline: dated events along an axis ---- */
   R.timeline = (spec) => (box) => {
     const E = spec.params.events, W = 800, H = 460;
@@ -985,6 +1025,61 @@
           { id: 'flow', shape: 'arrow', x: 70, y: 6, x2: 70, y2: 48, stroke: 'teal', sw: 0.6, label: 'Direction of food', anim: { type: 'flow', period: 2 } }
         ] },
       steps: [{ title: 'Mouth and oesophagus', text: 'Chewing and saliva start mechanical and chemical digestion; peristalsis moves food down.', focus: ['mouth', 'oes'] }, { title: 'Stomach', text: 'Acid kills microbes and pepsin starts breaking proteins down.', focus: ['stom'] }, { title: 'Small intestine + helpers', text: 'Bile from the liver/gallbladder and enzymes from the pancreas finish digestion; nutrients are absorbed through the villi.', focus: ['small', 'liver', 'gall', 'panc'] }, { title: 'Large intestine', text: 'Water and salts are absorbed; what remains is stored in the rectum.', focus: ['large', 'rect'] }] })],
+    [/electric motor|dc motor|how (does |do )?(an? )?(electric )?motors? work|motor effect|fleming'?s left/i, () => ({
+      kind: 'scene2d', title: 'How a DC electric motor works', subject: 'Physics / electrical engineering', alt: 'A simple DC motor: a current-carrying coil between the poles of a magnet feels opposite forces on its two sides, so it turns; a split-ring commutator keeps it turning the same way.',
+      params: { scale: 'schematic', caption: 'Schematic two-pole motor; real motors use many coils and an iron core.', layers: [{ id: 'field', label: 'Magnetic field' }, { id: 'forces', label: 'Forces' }],
+        elements: [
+          { id: 'north', shape: 'rect', x: 15, y: 30, w: 12, h: 26, rx: 1.5, fill: 'red', label: 'N pole', detail: 'North pole of the permanent magnet: field lines leave here.' },
+          { id: 'south', shape: 'rect', x: 85, y: 30, w: 12, h: 26, rx: 1.5, fill: 'blue', label: 'S pole', detail: 'South pole: field lines enter here, so the field runs N → S across the gap.' },
+          { id: 'b1', shape: 'arrow', x: 23, y: 21, x2: 77, y2: 21, stroke: 'slate', sw: 0.5, label: '', layer: 'field', anim: { type: 'flow', period: 2 } },
+          { id: 'bl', shape: 'text', x: 50, y: 9, text: 'Magnetic field B: N → S', fill: 'slate', layer: 'field', detail: 'Field lines run from the N pole to the S pole across the gap.' },
+          { id: 'b2', shape: 'arrow', x: 23, y: 39, x2: 77, y2: 39, stroke: 'slate', sw: 0.5, label: '', layer: 'field', anim: { type: 'flow', period: 2 } },
+          { id: 'coil', shape: 'rect', x: 50, y: 30, w: 32, h: 16, fill: 'none', stroke: 'amber', sw: 1.4, label: '', detail: 'A loop of wire carrying current. Each side of the loop sits in the magnetic field.', anim: { type: 'rotate', period: 4, deg: 360 } },
+          { id: 'axle', shape: 'circle', x: 50, y: 30, r: 1.2, fill: 'slate', label: '', detail: 'The coil turns the shaft, which delivers the motor’s rotation.' },
+          { id: 'coilL', shape: 'text', x: 50, y: 14.5, text: 'Armature coil (rotating) on a shaft', fill: 'amber', detail: 'A loop of wire carrying current, fixed to the shaft.' },
+          { id: 'fup', shape: 'arrow', x: 34, y: 31, x2: 34, y2: 17, stroke: 'green', sw: 0.9, label: 'Force up', detail: 'F = B·I·L on this side of the coil (Fleming’s left-hand rule gives the direction).', layer: 'forces' },
+          { id: 'fdown', shape: 'arrow', x: 66, y: 29, x2: 66, y2: 43, stroke: 'green', sw: 0.9, label: 'Force down', detail: 'The current flows the opposite way on this side, so the force is opposite: together they make a turning effect (torque).', layer: 'forces' },
+          { id: 'comm', shape: 'circle', x: 50, y: 52, r: 3, fill: 'amber', label: '', detail: 'Two half-rings that swap the coil’s connections every half turn, reversing the current so the torque always acts the same way.', anim: { type: 'spin', period: 4, deg: 360 } },
+          { id: 'commL', shape: 'text', x: 72, y: 52, text: 'Split-ring commutator + brushes', fill: 'amber', detail: 'The commutator swaps the coil’s connections every half turn; the brushes carry current to it.' },
+          { id: 'brushL', shape: 'rect', x: 45, y: 52, w: 2, h: 4, fill: 'slate', label: '', detail: 'Carbon brushes press on the commutator and carry current into the spinning coil.' },
+          { id: 'brushR', shape: 'rect', x: 55, y: 52, w: 2, h: 4, fill: 'slate', label: '' },
+          { id: 'cell', shape: 'rect', x: 50, y: 64, w: 14, h: 4, rx: 1, fill: 'green', label: 'DC supply', detail: 'Provides the current I. Reversing the supply reverses the direction of rotation.' },
+          { id: 'cur', shape: 'arrow', x: 36, y: 64, x2: 44, y2: 55, stroke: 'orange', sw: 0.7, label: 'Current I', anim: { type: 'flow', period: 1 } }
+        ] },
+      steps: [{ title: '1 · Current flows', text: 'The DC supply drives a current through the brushes and commutator into the coil.', focus: ['cell', 'cur', 'brushL', 'comm', 'coil', 'commL'] }, { title: '2 · A magnetic field', text: 'The permanent magnet makes a field across the gap, from the N pole to the S pole.', focus: ['north', 'south', 'b1', 'b2', 'bl'] }, { title: '3 · Forces on the coil', text: 'A current-carrying wire in a magnetic field feels a force F = B·I·L. The two sides carry current in opposite directions, so one is pushed up and the other down.', focus: ['fup', 'fdown', 'coil', 'coilL'] }, { title: '4 · Torque turns the coil', text: 'The opposite forces form a couple: a turning effect (torque) about the shaft, so the coil rotates.', focus: ['coil', 'axle', 'coilL'] }, { title: '5 · The commutator', text: 'Every half turn the split-ring commutator reverses the current in the coil, so the torque keeps acting in the same direction and the motor keeps spinning.', focus: ['comm', 'brushL', 'commL'] }]
+    })],
+    [/newton['’]?s (three |3 )?laws|laws of motion|f\s*=\s*m\s*a\b|inertia|action and reaction/i, () => ({
+      kind: 'scene2d', title: 'Newton’s three laws of motion', subject: 'Physics', alt: 'Three panels: a puck gliding at constant velocity (first law), a cart accelerating under a net force with a = F/m (second law), and two skaters pushing apart with equal and opposite forces (third law).',
+      params: { scale: 'schematic', caption: 'Illustrations of each law; quantities are examples.', layers: [],
+        elements: [
+          { id: 'h1', shape: 'text', x: 18, y: 6, text: '1st law · inertia', fill: 'slate' },
+          { id: 'h2', shape: 'text', x: 50, y: 6, text: '2nd law · F = m·a', fill: 'slate' },
+          { id: 'h3', shape: 'text', x: 82, y: 6, text: '3rd law · action–reaction', fill: 'slate' },
+          { id: 'ice', shape: 'line', x: 4, y: 34, x2: 32, y2: 34, stroke: 'sky', sw: 0.8, label: '' },
+          { id: 'puck', shape: 'circle', x: 9, y: 31, r: 3, fill: 'slate', label: 'Puck (no net force)', detail: 'With no net force acting, it keeps moving in a straight line at constant speed.', anim: { type: 'move', to: [27, 31], period: 4 } },
+          { id: 'v1', shape: 'arrow', x: 6, y: 24, x2: 16, y2: 24, stroke: 'blue', sw: 0.6, label: 'constant velocity', anim: { type: 'move', to: [24, 24], period: 4 } },
+          { id: 'track', shape: 'line', x: 37, y: 34, x2: 63, y2: 34, stroke: 'slate', sw: 0.8, label: '' },
+          { id: 'cart', shape: 'rect', x: 44, y: 30, w: 8, h: 5, rx: 1, fill: 'amber', label: 'Cart, m = 2 kg', detail: 'A net force of 10 N on a 2 kg cart gives a = F/m = 5 m/s². Double the mass and the acceleration halves.', anim: { type: 'move', to: [58, 30], period: 3 } },
+          { id: 'force', shape: 'arrow', x: 34, y: 30, x2: 40, y2: 30, stroke: 'red', sw: 1, label: 'Net force F = 10 N', anim: { type: 'move', to: [48, 30], period: 3 } },
+          { id: 'acc', shape: 'text', x: 50, y: 44, text: 'a = F / m = 10 / 2 = 5 m/s²', fill: 'red' },
+          { id: 'ice3', shape: 'line', x: 68, y: 34, x2: 96, y2: 34, stroke: 'sky', sw: 0.8, label: '' },
+          { id: 'skA', shape: 'circle', x: 79, y: 29, r: 3, fill: 'teal', label: 'Skater A', detail: 'A pushes B…', anim: { type: 'move', to: [71, 29], period: 3 } },
+          { id: 'skB', shape: 'circle', x: 85, y: 29, r: 3, fill: 'violet', label: 'Skater B', detail: '…and B pushes A back with a force of equal size in the opposite direction.', anim: { type: 'move', to: [93, 29], period: 3 } },
+          { id: 'fa', shape: 'arrow', x: 78, y: 22, x2: 70, y2: 22, stroke: 'teal', sw: 0.8, label: 'on A' },
+          { id: 'fb', shape: 'arrow', x: 86, y: 22, x2: 94, y2: 22, stroke: 'violet', sw: 0.8, label: 'on B' }
+        ] },
+      steps: [{ title: 'First law (inertia)', text: 'An object stays at rest, or keeps moving at constant velocity, unless a net (unbalanced) force acts on it. On nearly frictionless ice the puck just keeps gliding.', focus: ['puck', 'v1', 'ice'] }, { title: 'Second law (F = m·a)', text: 'The acceleration is proportional to the net force and inversely proportional to the mass: a = F/m. Here 10 N on 2 kg gives 5 m/s²; on 4 kg it would be 2.5 m/s².', focus: ['cart', 'force', 'acc', 'track'] }, { title: 'Third law (action–reaction)', text: 'Forces come in pairs: if A pushes B, B pushes A with a force of equal size in the opposite direction. The two forces act on different objects, so they don’t cancel — both skaters move apart.', focus: ['skA', 'skB', 'fa', 'fb', 'ice3'] }]
+    })],
+    [/\b(er diagram|e-r diagram|entity[- ]relationship|database relationships?|relational (database|model)|one[- ]to[- ]many|many[- ]to[- ]many|primary keys?|foreign keys?)\b/i, () => ({
+      kind: 'mermaid', title: 'Entity–relationship diagram: a university database', subject: 'Databases', alt: 'Students enrol on courses through an Enrolment table; lecturers teach courses. PK = primary key, FK = foreign key.',
+      params: { code: 'erDiagram\n  STUDENT ||--o{ ENROLMENT : makes\n  COURSE ||--o{ ENROLMENT : "is taken in"\n  LECTURER ||--o{ COURSE : teaches\n  STUDENT {\n    int student_id PK\n    string name\n    string email\n  }\n  COURSE {\n    string course_code PK\n    string title\n    int credits\n    int lecturer_id FK\n  }\n  ENROLMENT {\n    int student_id PK, FK\n    string course_code PK, FK\n    string term\n    string grade\n  }\n  LECTURER {\n    int lecturer_id PK\n    string name\n  }' },
+      steps: [{ title: 'Entities', text: 'Each box is an entity (a table): Student, Course, Lecturer and Enrolment. Each row of a table is one instance.', focus: ['STUDENT', 'COURSE', 'LECTURER', 'ENROLMENT'] }, { title: 'Keys', text: 'A primary key (PK) identifies each row uniquely, e.g. student_id. A foreign key (FK) refers to a primary key in another table, e.g. Course.lecturer_id → Lecturer.', focus: ['STUDENT', 'COURSE'] }, { title: 'One-to-many', text: 'One lecturer teaches many courses (||--o{): the “many” side holds the foreign key.', focus: ['LECTURER', 'COURSE'] }, { title: 'Many-to-many via a junction table', text: 'A student takes many courses and a course has many students. Enrolment resolves this: its key is the pair (student_id, course_code), each a foreign key, and it can store facts about the relationship such as the grade.', focus: ['ENROLMENT', 'STUDENT', 'COURSE'] }]
+    })],
+    [/complex abstract concept|an abstract (idea|concept)|explain (a|an|some) (complex|difficult|hard|abstract) (idea|concept|topic)/i, () => ({
+      kind: 'mermaid', title: 'Recursion — a concept map', subject: 'Computer science / mathematics', alt: 'You didn’t name a concept, so this maps recursion as an example. Ask about any concept (entropy, opportunity cost, natural selection…) and Noor will map that instead.',
+      params: { code: 'mindmap\n  root((Recursion))\n    Base case\n      Stops the recursion\n      e.g. factorial of 0 is 1\n    Recursive case\n      Calls itself on a smaller problem\n      factorial of n = n × factorial of n − 1\n    Call stack\n      Each call waits for the one it made\n      Results return in reverse order\n    Examples\n      Factorial and Fibonacci\n      Tree and folder traversal\n      Divide and conquer sorting\n    Pitfalls\n      Missing base case\n      Stack overflow\n      Repeated work fixed by memoisation' },
+      steps: [{ title: 'The idea', text: 'Recursion solves a problem by reducing it to a smaller version of the same problem, until it reaches a case simple enough to answer directly.', focus: ['Recursion'] }, { title: 'Base case', text: 'Every recursion needs a base case that stops it — without one it never ends.', focus: ['Base case'] }, { title: 'Recursive case and the call stack', text: 'Each call makes the problem smaller and waits for the result; the calls then return in reverse order, combining the results.', focus: ['Recursive case', 'Call stack'] }, { title: 'Where it is used, and pitfalls', text: 'Factorials, Fibonacci, tree traversal and merge sort are recursive. Watch for missing base cases, deep stacks and repeated work (memoisation helps).', focus: ['Examples', 'Pitfalls'] }]
+    })],
     [/water cycle|hydrological cycle|evaporation.{0,20}condensation|how (does )?rain (form|happen)/i, () => ({
       kind: 'scene2d', title: 'The water cycle', subject: 'Geography / earth science', alt: 'Water evaporates from the sea, condenses into clouds, falls as precipitation and returns by rivers and groundwater.',
       params: { scale: 'schematic', caption: 'A conceptual diagram; heights and distances are not to scale.', layers: [{ id: 'land', label: 'Land processes' }],
@@ -1097,7 +1192,7 @@
      diagram/graph/3D model…”, “animate…”, “simulate…”). Ordinary questions get a
      text answer with no offer. Once a visual is open, follow-ups edit the SAME
      spec — validated again before it is re-rendered. */
-  const EXPLICIT = /\b(visually|show me how|walk me through .{0,30}visual|visual (explanation|representation|model|diagram|summary|walkthrough|guide)|(create|make|build|generate|give me|produce) (me )?(a |an )?(visual|diagram|model|simulation|animation|infographic|illustration|graphic|3d)|visuali[sz]e|visuali[sz]ation|diagram|flow ?chart|concept map|mind ?map|graph (it|this|that|of|the|y|f)|plot|sketch|draw|chart|infographic|timeline|simulat(e|ion)|animat(e|ion)|3d|three.dimensional|interactive (visual|model|demo)|show (me )?(it |this )?(as |with )?(a |an )?(visual|picture|diagram|graph|model|animation))\b|ارسم|مخطط|رسم بياني|محاكاة/i;
+  const EXPLICIT = /\b(visually|show me how|show how .{2,40} works?|with labels|labell?ed (diagram|drawing|picture)|using (a |an )?(\w+ )?(visual|diagram|illustrations?|animation|picture|graph|chart|model|simulation)s?|illustrat(e|ion|ions)|walk me through .{0,30}visual|visual (explanation|representation|model|diagram|summary|walkthrough|guide)|(create|make|build|generate|give me|produce|draw) (me )?(a |an )?(\w+ )?(visual|diagram|model|simulation|animation|infographic|illustration|graphic|graph|chart|plot|map|3d)|visuali[sz]e|visuali[sz]ation|diagram|flow ?chart|concept map|mind ?map|graph (it|this|that|of|the|y|f)|plot|sketch|draw|chart|infographic|timeline|simulat(e|ion)|animat(e|ion)|3d|three.dimensional|interactive (visual|model|demo)|show (me )?(it |this )?(as |with )?(a |an )?(visual|picture|diagram|graph|model|animation))\b|ارسم|مخطط|رسم بياني|محاكاة/i;
   function explicit(text) { const t = String(text || ''); return EXPLICIT.test(t) && t.length > 4 ? (/\b3d|three.dimensional\b/i.test(t) ? '3d' : /animat|simulat/i.test(t) ? 'animate' : 'visual') : null; }
   const EDIT = [
     ['3d', /\b(make|turn|show|convert|render|view)\b.{0,20}\b(it|this|that)?\b.{0,10}\b(3d|three.dimensional|in 3 ?d)\b|^3d\b/i],
@@ -1209,6 +1304,7 @@ Kinds and params:
 - "matrix2d": {} (vars a, b, c, d)
 - "chart": {"type":"bar"|"line"|"pie","labels":["..."],"series":[{"name","values":[numbers]}],"unit":"","source":"where the numbers come from"} — ONLY with numbers the student gave or well-established figures; name the source
 - "timeline": {"events":[{"when":"1953","label":"...","detail":"..."}]} — ONLY well-established dates; steps focus "t0","t1",…
+- "mermaid": {"code":"<Mermaid source>"} for flowcharts (flowchart TD), ER diagrams (erDiagram with entities, attributes PK/FK and cardinalities like ||--o{), sequence diagrams, class/state diagrams, mind maps / concept maps (mindmap), business workflows. No click/href/init directives. Steps focus node or entity names.
 - "scene2d": an open-ended labelled 2D diagram for ANY subject without a better kind (anatomy, cells, engines, circuits, ecosystems, geology, architecture, computer systems, processes…). Canvas is 100 wide × 60 tall (x right, y down). {"scale":"schematic"|"to-scale","caption":"...","layers":[{"id","label"}],"elements":[{"id","shape":"rect"|"circle"|"ellipse"|"line"|"arrow"|"polygon"|"path"|"text","x","y","w","h","r","x2","y2","points":[[x,y],…],"fill":"<named colour or #hex>","stroke","label","detail":"one accurate sentence","layer":"<layer id>","anim":{"type":"move"|"rotate"|"pulse"|"flow"|"orbit"|"bob","to":[x,y],"period":seconds,"around":"<id>","radius"}}]} (≤ 90 elements; steps focus element ids)
 - "scene3d": an open-ended 3D model (planetary systems, molecules, structures, machines, organs). {"scale":"schematic"|"to-scale","caption":"...","layers":[…],"objects":[{"id","shape":"sphere"|"box"|"cylinder"|"cone"|"torus"|"ring","pos":[x,y,z],"size":[a,b,c],"color","emissive":bool,"label","detail","layer","anim":{"type":"orbit"|"spin"|"bob"|"pulse"|"move","around":"<id>","radius","period"}}],"links":[{"from","to","label"}]} (≤ 60 objects)
 Named colours: red orange amber yellow lime green teal cyan sky blue indigo violet purple pink rose brown grey slate white black blood bone water metal.
@@ -1231,6 +1327,16 @@ Use 2–6 steps of accurate, university-level explanation for THIS question. Cho
     return v.ok ? v.spec : null;
   }
 
+  // a concept map built from a source article's own section outline (no AI) — labelled as such
+  function outlineMap(title, sections, source) {
+    const clean = t => String(t || '').replace(/[()[\]{}<>"`#:;|]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 48);
+    const skip = /^(see also|references|notes|further reading|external links|bibliography|sources|citations|footnotes|gallery)$/i;
+    const top = [...new Set(sections.map(clean).filter(x => x && !skip.test(x)))].slice(0, 10);
+    if (top.length < 3) return null;
+    const v = validate({ kind: 'mermaid', title: `${clean(title)} — concept map`, subject: 'Concept map', alt: `The main parts of the topic, taken from the section outline of “${clean(title)}”${source ? ' (' + source + ')' : ''}. A map of the source’s structure, not an AI summary.`, params: { code: `mindmap\n  root((${clean(title)}))\n` + top.map(x => `    ${x}`).join('\n') }, steps: [{ title: 'The topic', text: `The centre is the topic; each branch is a main section of the source${source ? ' (' + source + ')' : ''}. Ask about any branch to explore it.`, focus: [] }] });
+    return v.ok ? v.spec : null;
+  }
+
   window.ERLY = window.ERLY || {};
-  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, explicit, edit, editIntent, chartFrom, toScene, truss, beamCalc, frames, KINDS, renderers: R, diagrams: DIAGRAMS.length };
+  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, explicit, edit, editIntent, chartFrom, toScene, truss, beamCalc, frames, outlineMap, loadMermaid, KINDS, renderers: R, diagrams: DIAGRAMS.length };
 })();

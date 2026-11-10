@@ -86,8 +86,16 @@ test('AI-free answer quotes the sources with citations; AI-free comparison uses 
   const f = fake([[/list=search/, WIKI_SEARCH], [/prop=extracts/, WIKI_PAGE], [/wikidata/, { search: [] }]]);
   const r = await R.retrieve('How does the compression stroke work?', { fetchFn: f });
   const x = R.extractive('How does the compression stroke work?', r);
-  assert.match(x.md, /compresses the mixture, raising its temperature\. \[\d\]/); assert.match(x.md, /\*\*Sources\*\*\n1\. \[Four-stroke engine\]\(https:\/\/en\.wikipedia\.org/);
+  assert.match(x.md, /compresses the mixture, raising its temperature\. \[\d\]/); assert.match(x.md, /\*\*Sources\*\*\n(\[\d\])+ \[Four-stroke engine\]\(https:\/\/en\.wikipedia\.org/);
   const c = await R.retrieve('Pros and cons of four-stroke engines', { fetchFn: f });
   const rows = R.compareFromSources(c);
   assert.equal(rows.length, 1); assert.match(rows[0].pros[0].s, /more fuel efficient/); assert.match(rows[0].cons[0].s, /heavier and mechanically more complex/);
+});
+
+test('search queries use the topic, not the question scaffolding (found during live testing)', () => {
+  assert.equal(R.topicQuery('Explain how a four-stroke engine works'), 'four-stroke engine'); // whole sentence returned "Chrysler Hemi engine"
+  assert.equal(R.topicQuery('Explain quantum mechanics at an introductory level'), 'quantum mechanics');
+  assert.equal(R.topicQuery('How do neural networks work?'), 'neural networks');
+  assert.equal(R.topicQuery('What is photosynthesis?'), 'photosynthesis');
+  assert.equal(R.scholarQuery('What does research say about sleep and memory?'), 'sleep and memory'); // returned League of Nations papers before
 });

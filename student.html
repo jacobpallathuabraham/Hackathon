@@ -14,20 +14,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=12">
-  <link rel="stylesheet" href="assets/css/portal.css?v=12">
-  <link rel="stylesheet" href="assets/css/accents.css?v=12">
-  <link rel="stylesheet" href="assets/css/erly.css?v=12">
-  <link rel="stylesheet" href="assets/css/realtrack.css?v=12">
-  <link rel="stylesheet" href="assets/css/hand.css?v=12">
-  <link rel="stylesheet" href="assets/css/companion.css?v=12">
-  <link rel="stylesheet" href="assets/css/studio.css?v=12">
-  <link rel="stylesheet" href="assets/css/noor.css?v=12">
-  <link rel="stylesheet" href="assets/css/voice.css?v=12">
-  <link rel="stylesheet" href="assets/css/visuals.css?v=12">
+  <link rel="stylesheet" href="assets/css/style.css?v=13">
+  <link rel="stylesheet" href="assets/css/portal.css?v=13">
+  <link rel="stylesheet" href="assets/css/accents.css?v=13">
+  <link rel="stylesheet" href="assets/css/erly.css?v=13">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=13">
+  <link rel="stylesheet" href="assets/css/hand.css?v=13">
+  <link rel="stylesheet" href="assets/css/companion.css?v=13">
+  <link rel="stylesheet" href="assets/css/studio.css?v=13">
+  <link rel="stylesheet" href="assets/css/noor.css?v=13">
+  <link rel="stylesheet" href="assets/css/voice.css?v=13">
+  <link rel="stylesheet" href="assets/css/visuals.css?v=13">
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
-  <link rel="stylesheet" href="assets/css/checkins.css?v=12">
-  <link rel="stylesheet" href="assets/css/videos.css?v=12">
+  <link rel="stylesheet" href="assets/css/checkins.css?v=13">
+  <link rel="stylesheet" href="assets/css/videos.css?v=13">
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -43,9 +43,9 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=12">
-  <link rel="stylesheet" href="assets/css/v9.css?v=12">
-  <link rel="stylesheet" href="assets/css/companion-holo.css?v=12">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=13">
+  <link rel="stylesheet" href="assets/css/v9.css?v=13">
+  <link rel="stylesheet" href="assets/css/companion-holo.css?v=13">
 </head>
 <body>
   <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
@@ -589,69 +589,69 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/js/icons.js?v=12"></script>
-  <script src="assets/js/i18n.js?v=12"></script>
-  <script src="assets/js/fun.js?v=12"></script>
-  <script src="assets/js/main.js?v=12"></script>
-  <script src="assets/js/accent.js?v=12"></script>
-  <script src="assets/js/indicators.js?v=12"></script>
-  <script src="assets/js/domain-art.js?v=12"></script>
-  <script src="assets/js/realtrack.js?v=12"></script>
-  <script src="assets/js/handwriting.js?v=12"></script>
-  <script src="assets/js/tracker.js?v=12"></script>
-  <script src="assets/js/study-tools.js?v=12"></script>
-  <script src="assets/js/studio-content.js?v=12"></script>
-  <script src="assets/js/studio.js?v=12"></script>
-  <script src="assets/js/companion/config.js?v=12"></script>
-  <script src="assets/js/companion/signals.js?v=12"></script>
-  <script src="assets/js/companion/dialogue.js?v=12"></script>
-  <script src="assets/js/companion/store.js?v=12"></script>
-  <script src="assets/js/companion/llm.js?v=12"></script>
-  <script src="assets/js/companion/md.js?v=12"></script>
-  <script src="assets/js/noor/research.js?v=12"></script>
-  <script src="assets/js/noor/validate.js?v=12"></script>
-  <script src="assets/js/noor/usage.js?v=12"></script>
-  <script src="assets/js/companion/ai.js?v=12"></script>
-  <script src="assets/js/companion/prosody.js?v=12"></script>
-  <script src="assets/js/companion/voicelib.js?v=12"></script>
-  <script src="assets/js/companion/voice.js?v=12"></script>
-  <script src="assets/js/companion/summary.js?v=12"></script>
-  <script src="assets/js/companion/kb-extra.js?v=12"></script>
-  <script src="assets/js/companion/knowledge.js?v=12"></script>
-  <script src="assets/js/companion/interview.js?v=12"></script>
-  <script src="assets/js/companion/evidence.js?v=12"></script>
-  <script src="assets/js/companion/ui.js?v=12"></script>
-  <script src="assets/js/companion/noor-brain.js?v=12"></script>
-  <script src="assets/js/companion/noor-tools.js?v=12"></script>
-  <script src="assets/js/companion/lipsync.js?v=12"></script>
-  <script src="assets/js/companion/photoreal.js?v=12"></script>
-  <script src="assets/js/companion/avatar.js?v=12"></script>
-  <script src="assets/js/companion/visuals.js?v=12"></script>
-  <script src="assets/js/companion/visual-spec.js?v=12"></script>
-  <script src="assets/js/companion/audio-lesson.js?v=12"></script>
-  <script src="assets/js/companion/realtime.js?v=12"></script>
-  <script src="assets/js/companion/call.js?v=12"></script>
-  <script type="module" src="assets/js/companion/human3d.js?v=12"></script>
-  <script src="assets/js/checkins-score.js?v=12"></script>
-  <script src="assets/js/analyser.js?v=12"></script>
-  <script src="assets/js/ink-transition.js?v=12"></script>
-  <script src="assets/js/hand-ui.js?v=12"></script>
-  <script src="assets/js/growth-warp.js?v=12"></script>
-  <script src="assets/js/games-home.js?v=12"></script>
-  <script src="assets/js/videos.js?v=12"></script>
-  <script src="assets/js/insight.js?v=12"></script>
+  <script src="assets/js/icons.js?v=13"></script>
+  <script src="assets/js/i18n.js?v=13"></script>
+  <script src="assets/js/fun.js?v=13"></script>
+  <script src="assets/js/main.js?v=13"></script>
+  <script src="assets/js/accent.js?v=13"></script>
+  <script src="assets/js/indicators.js?v=13"></script>
+  <script src="assets/js/domain-art.js?v=13"></script>
+  <script src="assets/js/realtrack.js?v=13"></script>
+  <script src="assets/js/handwriting.js?v=13"></script>
+  <script src="assets/js/tracker.js?v=13"></script>
+  <script src="assets/js/study-tools.js?v=13"></script>
+  <script src="assets/js/studio-content.js?v=13"></script>
+  <script src="assets/js/studio.js?v=13"></script>
+  <script src="assets/js/companion/config.js?v=13"></script>
+  <script src="assets/js/companion/signals.js?v=13"></script>
+  <script src="assets/js/companion/dialogue.js?v=13"></script>
+  <script src="assets/js/companion/store.js?v=13"></script>
+  <script src="assets/js/companion/llm.js?v=13"></script>
+  <script src="assets/js/companion/md.js?v=13"></script>
+  <script src="assets/js/noor/research.js?v=13"></script>
+  <script src="assets/js/noor/validate.js?v=13"></script>
+  <script src="assets/js/noor/usage.js?v=13"></script>
+  <script src="assets/js/companion/ai.js?v=13"></script>
+  <script src="assets/js/companion/prosody.js?v=13"></script>
+  <script src="assets/js/companion/voicelib.js?v=13"></script>
+  <script src="assets/js/companion/voice.js?v=13"></script>
+  <script src="assets/js/companion/summary.js?v=13"></script>
+  <script src="assets/js/companion/kb-extra.js?v=13"></script>
+  <script src="assets/js/companion/knowledge.js?v=13"></script>
+  <script src="assets/js/companion/interview.js?v=13"></script>
+  <script src="assets/js/companion/evidence.js?v=13"></script>
+  <script src="assets/js/companion/ui.js?v=13"></script>
+  <script src="assets/js/companion/noor-brain.js?v=13"></script>
+  <script src="assets/js/companion/noor-tools.js?v=13"></script>
+  <script src="assets/js/companion/lipsync.js?v=13"></script>
+  <script src="assets/js/companion/photoreal.js?v=13"></script>
+  <script src="assets/js/companion/avatar.js?v=13"></script>
+  <script src="assets/js/companion/visuals.js?v=13"></script>
+  <script src="assets/js/companion/visual-spec.js?v=13"></script>
+  <script src="assets/js/companion/audio-lesson.js?v=13"></script>
+  <script src="assets/js/companion/realtime.js?v=13"></script>
+  <script src="assets/js/companion/call.js?v=13"></script>
+  <script type="module" src="assets/js/companion/human3d.js?v=13"></script>
+  <script src="assets/js/checkins-score.js?v=13"></script>
+  <script src="assets/js/analyser.js?v=13"></script>
+  <script src="assets/js/ink-transition.js?v=13"></script>
+  <script src="assets/js/hand-ui.js?v=13"></script>
+  <script src="assets/js/growth-warp.js?v=13"></script>
+  <script src="assets/js/games-home.js?v=13"></script>
+  <script src="assets/js/videos.js?v=13"></script>
+  <script src="assets/js/insight.js?v=13"></script>
   <script src="assets/vendor/jspdf.umd.min.js" defer></script>
-  <script src="assets/js/report.js?v=12"></script>
-  <script src="assets/js/handoff.js?v=12"></script>
-  <script src="assets/js/ramp.js?v=12"></script>
-  <script src="assets/js/flow.js?v=12"></script>
-  <script src="assets/js/session.js?v=12"></script>
+  <script src="assets/js/report.js?v=13"></script>
+  <script src="assets/js/handoff.js?v=13"></script>
+  <script src="assets/js/ramp.js?v=13"></script>
+  <script src="assets/js/flow.js?v=13"></script>
+  <script src="assets/js/session.js?v=13"></script>
   <script>
     [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });
   </script>
-  <script src="assets/js/theme-fx.js?v=12"></script>
-  <script src="assets/js/ambient.js?v=12" defer></script>
-  <script src="assets/js/a11y.js?v=12"></script>
-  <script src="assets/js/companion/holo.js?v=12" defer></script>
+  <script src="assets/js/theme-fx.js?v=13"></script>
+  <script src="assets/js/ambient.js?v=13" defer></script>
+  <script src="assets/js/a11y.js?v=13"></script>
+  <script src="assets/js/companion/holo.js?v=13" defer></script>
 </body>
 </html>

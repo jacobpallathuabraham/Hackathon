@@ -1,0 +1,171 @@
+{
+ "date": "2026-11-10T16:24:48.760Z",
+ "note": "Real API responses from the development environment (a shared IP that Wikimedia and OpenAlex rate-limit more strictly than a student browser).",
+ "rows": [
+  {
+   "q": "Explain how a four-stroke engine works",
+   "ms": 148,
+   "plan": {
+    "kinds": [
+     "reference"
+    ],
+    "freshness": "stable",
+    "compare": null
+   },
+   "status": {
+    "wikipedia": "rate-limited",
+    "wikidata": "rate-limited"
+   },
+   "evidence": "none",
+   "sources": [],
+   "top": null
+  },
+  {
+   "q": "Compare the economies of Japan and Germany",
+   "ms": 232,
+   "plan": {
+    "kinds": [
+     "reference",
+     "data"
+    ],
+    "freshness": "stable",
+    "compare": [
+     "Japan",
+     "Germany"
+    ]
+   },
+   "status": {
+    "wikipedia": "rate-limited",
+    "worldbank": "ok"
+   },
+   "evidence": "retrieved",
+   "sources": [
+    "World Bank Open Data: GDP (current US$) — Germany, Japan"
+   ],
+   "top": "Germany: GDP (current US$) was 5.05 trillion in 2025. Japan: GDP (current US$) was 4.44 trillion in 2025."
+  },
+  {
+   "q": "What does research say about sleep and memory?",
+   "ms": 725,
+   "plan": {
+    "kinds": [
+     "reference",
+     "scholarly"
+    ],
+    "freshness": "stable",
+    "compare": null
+   },
+   "status": {
+    "crossref": "ok",
+    "wikipedia": "rate-limited"
+   },
+   "evidence": "retrieved",
+   "sources": [
+    "Crossref: Working memory: what does research say about oscillation and functional connectivity?",
+    "Crossref: Using research in teaching: What does research say about geometry in the elementary school?",
+    "Crossref: The League of Nations Mandate System and the Palestine Mandate: What Did and Does It Say about International Law and What Did and Does It Say about Palestine?"
+   ],
+   "top": "Working memory: what does research say about oscillation and functional connectivity? — Genes &amp; Cells (2023). N. S. Otstavnov, E. A. Voevodina, T. Fedele. W"
+  },
+  {
+   "q": "Arsenal latest results",
+   "ms": 765,
+   "plan": {
+    "kinds": [
+     "reference",
+     "sports",
+     "live"
+    ],
+    "freshness": "live",
+    "compare": null
+   },
+   "status": {
+    "wikidata": "rate-limited",
+    "wikipedia": "rate-limited",
+    "sportsdb": "ok"
+   },
+   "evidence": "live",
+   "sources": [
+    "TheSportsDB: Arsenal — recent results",
+    "TheSportsDB: Arsenal"
+   ],
+   "top": "2026-11-07: Arsenal 1–0 Hull City (English Premier League)."
+  },
+  {
+   "q": "Who is Queen the band?",
+   "ms": 470,
+   "plan": {
+    "kinds": [
+     "reference",
+     "music"
+    ],
+    "freshness": "stable",
+    "compare": null
+   },
+   "status": {
+    "wikipedia": "rate-limited",
+    "wikidata": "rate-limited",
+    "musicbrainz": "failed"
+   },
+   "evidence": "none",
+   "sources": [],
+   "top": null
+  },
+  {
+   "q": "Pros and cons of nuclear power",
+   "ms": 142,
+   "plan": {
+    "kinds": [
+     "reference"
+    ],
+    "freshness": "stable",
+    "compare": [
+     "nuclear power"
+    ]
+   },
+   "status": {
+    "wikidata": "rate-limited",
+    "wikipedia": "rate-limited"
+   },
+   "evidence": "none",
+   "sources": [],
+   "top": null
+  },
+  {
+   "q": "Describe the geography of Japan",
+   "ms": 117,
+   "plan": {
+    "kinds": [
+     "reference"
+    ],
+    "freshness": "stable",
+    "compare": null
+   },
+   "status": {
+    "wikidata": "rate-limited",
+    "wikipedia": "rate-limited"
+   },
+   "evidence": "none",
+   "sources": [],
+   "top": null
+  },
+  {
+   "q": "Explain how neural networks work",
+   "ms": 164,
+   "plan": {
+    "kinds": [
+     "reference"
+    ],
+    "freshness": "stable",
+    "compare": null
+   },
+   "status": {
+    "wikidata": "rate-limited",
+    "wikipedia": "rate-limited"
+   },
+   "evidence": "none",
+   "sources": [],
+   "top": null
+  }
+ ]
+}

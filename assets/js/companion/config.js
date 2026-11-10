@@ -12,5 +12,10 @@ window.ERLY_AI_CONFIG = {
   // Leave null for the free, key-less Pollinations text API, or point it at
   // your own OpenAI-compatible endpoint that needs no browser-side key, e.g.
   // { name: 'Acubins AI', site: 'ai.acubins.example', url: 'https://…/v1/chat/completions', get: '', model: 'gpt-4o-mini' }
-  online: null
+  online: null,
+  // Noor's zero-budget AI gateway (server/gateway): Gemini free tier first, optional free fallbacks.
+  // Set the deployed URL to switch it on, e.g. { url: 'https://noor-gateway.<you>.workers.dev', name: 'Noor AI (Gemini)' }.
+  gateway: null,
+  // per-device caps so one device can't use up a shared free quota
+  limits: { aiPerDay: 150, aiPerMinute: 20 }
 };

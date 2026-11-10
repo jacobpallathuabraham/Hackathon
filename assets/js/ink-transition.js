@@ -200,6 +200,12 @@
     addEventListener('pagehide', finish, { once: true });
   }
 
+  // the ink replaces the browser's cross-document view transition for this navigation; any transition the
+  // browser starts or aborts has its promises handled, so it is never reported as an error
+  const tame = vt => { if (!vt) return; [vt.ready, vt.finished, vt.updateCallbackDone].forEach(p => p && p.catch(() => {})); };
+  addEventListener('pageswap', e => { tame(e.viewTransition); if (running && e.viewTransition) e.viewTransition.skipTransition(); });
+  addEventListener('pagereveal', e => tame(e.viewTransition));
+
   window.ERLY = window.ERLY || {};
   ERLY.ink = { go, reveal, arriving, _pal: pal, running: () => running };
   // links and buttons marked data-ink-href play the transition (e.g. the Handwriting Check entry points)

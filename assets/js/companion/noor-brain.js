@@ -168,11 +168,12 @@
     const card = document.createElement('div');
     card.className = 'ccard conline';
     card.innerHTML = `<b>${ICON('globe')} ${T('Answer this with Noor Online?', 'أجيب عن هذا بنور أونلاين؟')}</b>
-      <p>${T(`Your question and the recent chat go to ${esc(svc.name)}, a free AI service. Emails and numbers are removed first; your name, profile and tracking are never sent. Please don’t share anything private.`, `يُرسل سؤالك والمحادثة الأخيرة إلى ${esc(svc.name)}، وهي خدمة ذكاء اصطناعي مجانية. تُحذف عناوين البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو بيانات التتبع أبداً. لا تشارك أي شيء خاص.`)}</p>
+      ${svc.gateway ? `<p>${T('Your question and the recent chat go to Noor’s AI gateway, which uses Google’s Gemini API free tier. Google may use what is sent to its free tier to improve its products, and human reviewers may read it — so never include personal, health or other sensitive information. Emails and numbers are removed first; your name, profile, learning records and handwriting are never sent.', 'يُرسل سؤالك والمحادثة الأخيرة إلى بوابة نور، التي تستخدم الطبقة المجانية من Gemini من Google. قد تستخدم Google ما يُرسل إلى طبقتها المجانية لتحسين منتجاتها، وقد يقرؤه مراجعون بشريون — لذا لا تُدرج أي معلومات شخصية أو صحية أو حساسة. تُحذف البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو سجلاتك أو كتابتك اليدوية أبداً.')}</p><label class="conline__age"><input type="checkbox" data-age> ${T('I am 18 or older (required by Google’s Gemini API terms)', 'عمري ١٨ عاماً أو أكثر (شرط في شروط Gemini من Google)')}</label>` : `<p>${T(`Your question and the recent chat go to ${esc(svc.name)}, a free AI service. Emails and numbers are removed first; your name, profile and tracking are never sent. Please don’t share anything private.`, `يُرسل سؤالك والمحادثة الأخيرة إلى ${esc(svc.name)}، وهي خدمة ذكاء اصطناعي مجانية. تُحذف عناوين البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو بيانات التتبع أبداً. لا تشارك أي شيء خاص.`)}</p>`}
       <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Turn on & answer', 'شغّل وأجب')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search open sources', 'ابحث في المصادر المفتوحة فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
     card.addEventListener('click', async e => {
       const b = e.target.closest('[data-o]'); if (!b) return;
-      card.remove();
+      if (!(b.dataset.o === 'on' && svc.gateway && !card.querySelector('[data-age]').checked)) card.remove();
+      if (b.dataset.o === 'on' && svc.gateway && !card.querySelector('[data-age]').checked) { card.querySelector('.conline__age').classList.add('is-need'); card.querySelector('[data-age]').focus(); return; }
       if (b.dataset.o === 'on') { U.ai.useOnline(); ERLY.toast && ERLY.toast(T('Noor Online is on — ask me anything.', 'نور أونلاين مفعّل — اسألني أي شيء.')); history.pop(); history.pop(); return freeText(q, { silentUser: true }); }
       if (b.dataset.o === 'wiki') { try { U.store.setPref('research', 'on'); } catch (er) { /* prefs unavailable */ } return wikiAnswer(q); }
       offerChips([{ id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
@@ -223,22 +224,24 @@
     // privacy: personal memory (preferences, goals, profile) stays on the device when the AI runs outside it
     const external = ['online', 'cloud'].includes(ai.state().tier);
     const prevQs = history.filter(h => h.role === 'user').map(h => h.text);
-    // research first, so the answer can cite real sources
-    let res = null;
-    if (!images && !reading && !voiceMode && wantsResearch(text, a)) {
-      res = await research(text, () => U.setStatus('thinking'));
-      if (myTurn !== turnSeq) return true; // the student already moved on
-      if (res && (!res.passages.length || !relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) && !res.plan.compare)) res = Object.assign({}, res, { passages: [], evidence: res.plan.freshness === 'live' ? 'retrieved-not-live' : 'none' });
-    }
-    const srcOpts = res ? { sources: res.passages.length ? res.passages : null, freshNote: RS.freshnessNote(res, lang()), compare: res.plan.compare, compareAspect: res.plan.aspect } : {};
-    const msgs = AIX.buildMessages(history, text, Object.assign({ visual, lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools && !external ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 }, srcOpts));
-    history.push({ role: 'user', text: images && images.length ? text + ` [${images.length} image(s) attached]` : text });
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';
     m.innerHTML = `<span class="cmsg__tag">${ICON('chip')} ${esc(pick(ai.label().en, ai.label().ar))}${reading ? ` · ${ICON('file')} ${esc(reading.title)}` : ''}</span><div class="cmsg__b md"><span class="cdots"><i></i><i></i><i></i></span></div>`;
     U.$('#cmpLog').appendChild(m); U.scrollLog();
     const body = m.querySelector('.cmsg__b');
     U.setStatus('thinking'); U.setBusy(true);
+    // research first, so the answer can cite real sources
+    let res = null;
+    if (!images && !reading && !voiceMode && wantsResearch(text, a)) {
+      body.innerHTML = `<p class="cmsg__busy">${ICON('globe')} ${T('Checking sources…', 'أتحقق من المصادر…')}</p>`;
+      res = await research(text, () => U.setStatus('thinking'));
+      body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>';
+      if (myTurn !== turnSeq) { m.remove(); U.setBusy(false); return true; } // the student already moved on
+      if (res && (!res.passages.length || !relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) && !res.plan.compare)) res = Object.assign({}, res, { passages: [], evidence: res.plan.freshness === 'live' ? 'retrieved-not-live' : 'none' });
+    }
+    const srcOpts = res ? { sources: res.passages.length ? res.passages : null, freshNote: RS.freshnessNote(res, lang()), compare: res.plan.compare, compareAspect: res.plan.aspect } : {};
+    const msgs = AIX.buildMessages(history, text, Object.assign({ visual, lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools && !external ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 }, srcOpts));
+    history.push({ role: 'user', text: images && images.length ? text + ` [${images.length} image(s) attached]` : text });
     let stopped = false, spoken = 0, raf = 0, latest = '', busyT = null;
     U.setGenerating({ stop: () => { stopped = true; ai.stop(); } });
     // repaint at most ~12 times a second; animations are off while writing, so nothing blinks
@@ -272,7 +275,8 @@
       out = await ai.generate(msgs, genOpts);
       clearInterval(busyT);
       // validation: the answer must be about THIS question; one controlled regeneration, then a clear error
-      if (VAL && !stopped) {
+      // (answers about a page or passage the student selected are anchored to it, so the topic check is for free-standing questions)
+      if (VAL && !stopped && !reading) {
         let v = VAL.check(text, out, prevQs);
         if (!v.ok) {
           body.innerHTML = `<p class="cmsg__busy">${ICON('reset')} ${T('That answer didn’t match your question — asking once more…', 'لم تطابق الإجابة سؤالك — أسأل مرة أخرى…')}</p>`;

@@ -408,3 +408,11 @@ html.erly-big body { zoom: 1.12; }
 .cev--live { color: #15803d; } .cev--retrieved { color: #1d4ed8; } .cev--quoted { color: #7c3aed; }
 .cev--retrieved-not-live { color: #b45309; } .cev--none { color: var(--muted, #6b7280); }
 :root[data-theme="dark"] .cev--live { color: #4ade80; } :root[data-theme="dark"] .cev--retrieved { color: #93c5fd; } :root[data-theme="dark"] .cev--quoted { color: #c4b5fd; } :root[data-theme="dark"] .cev--retrieved-not-live { color: #fbbf24; }
+/* v13 — Mermaid diagrams inside Noor's visual panel */
+.vs-mermaid { display: grid; place-items: center; width: 100%; min-height: 220px; padding: 8px; overflow: auto; }
+.vs-mermaid svg { max-width: 100%; height: auto; }
+.vs-err { color: var(--muted); padding: 16px; text-align: center; }
+/* text never gets an outline when highlighted (it smudged); it is emphasised by weight and colour instead */
+.vs-compose .vs-c.is-on > text:first-child, .vs-compose .vs-c.is-focus > text:first-child { stroke: none; font-weight: 700; fill: var(--accent, #c1502b); }
+.conline__age { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 4px 0 8px; }
+.conline__age.is-need { color: #b45309; font-weight: 600; }
