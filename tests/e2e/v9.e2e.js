@@ -68,15 +68,7 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await p.evaluate(() => ERLY.a11y.open()); await p.click('[data-a="reset"]');
   assert.doesNotMatch(await p.evaluate(() => document.documentElement.className), /a11y-/, 'reset');
 
-  /* ---------- header fits at every width, in both languages ---------- */
-  for (const w of [1250, 1300, 1440, 1600, 1920]) {
-    await p.setViewportSize({ width: w, height: 700 }); await p.waitForTimeout(150);
-    const r = await p.evaluate(() => { const l = [...document.querySelectorAll('.nav__links a')]; const t = document.querySelector('.nav__tools').getBoundingClientRect(); const collapsed = getComputedStyle(document.querySelector('.nav__links')).position === 'fixed'; return { collapsed, gap: collapsed ? 99 : t.left - Math.max(...l.map(a => a.getBoundingClientRect().right)) }; });
-    assert.ok(r.gap >= 8, `${w}px: links never touch the header tools (gap ${Math.round(r.gap)})`);
-  }
-  await p.click('#langToggle'); await p.waitForTimeout(1200);
-  const ar = await p.evaluate(() => { const l = [...document.querySelectorAll('.nav__links a')]; const t = document.querySelector('.nav__tools').getBoundingClientRect(); const collapsed = getComputedStyle(document.querySelector('.nav__links')).position === 'fixed'; return collapsed ? 99 : Math.min(...l.map(a => a.getBoundingClientRect().left)) - t.right; });
-  assert.ok(ar >= 8, 'Arabic header fits too');
+  // (v10.2: the v9 header changes were reverted to the original header at the student's request)
 
   /* ---------- page-to-page transitions are declared; reduced motion opts out ---------- */
   const vt = await p.evaluate(() => [...document.styleSheets].some(s => { try { return [...s.cssRules].some(r => r.cssText && r.cssText.includes('@view-transition')); } catch (e) { return false; } }));

@@ -86,18 +86,9 @@ html.a11y-links a:not(.btn):not([role="button"]) { text-decoration: underline !i
 html.a11y-focus :focus-visible { outline: 4px solid #F59E0B !important; outline-offset: 3px !important; box-shadow: 0 0 0 8px rgba(245, 158, 11, .25) !important; }
 @media print { .a11y-fab, .a11y { display: none !important; } }
 
-/* ---------- header: collapse to the menu button whenever the links would touch the
-   header tools (measured by navfit.js — works for every language, text size and width) ---------- */
-html.nav-collapse .nav__links { position: fixed; inset: 68px 0 auto 0; flex-direction: column; gap: 0; padding: 12px var(--gutter) 24px; background: var(--bg); border-bottom: 1px solid var(--line); transform: translateY(-8px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s var(--ease); }
-html.nav-collapse .nav__links.is-open { opacity: 1; transform: none; pointer-events: auto; }
-html.nav-collapse .nav__links a { font-size: 18px; padding: 14px 4px; border-radius: 0; border-bottom: 1px solid var(--line); }
-html.nav-collapse .nav__burger { display: flex; }
-html.nav-collapse .nav__tools { margin-inline-start: auto; }
-/* the nine student links overflowed their space by ~40px at every desktop width (they touched
-   the language button); slightly tighter link padding and header gaps make them fit */
-@media (min-width: 1241px) {
-  html:not(.nav-collapse) .nav__inner { gap: 16px; }
-  html:not(.nav-collapse) .nav__links { gap: 2px; }
-  html:not(.nav-collapse) .nav__links a { padding: 8px 5px; }
-  html:not(.nav-collapse) .nav__tools { gap: 6px; }
-}
+/* v10.2: the v9 header changes (measured collapse + tighter links) were removed — the original header is back. */
+
+/* the Games link lives in the ☰ menu only, so the wide header keeps its original links */
+.nav__links .nav__games { display: none; }
+@media (max-width: 1080px) { .nav__links .nav__games { display: block; } }
+.games-cta { margin-top: 12px; }
