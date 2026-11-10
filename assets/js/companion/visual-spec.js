@@ -96,7 +96,9 @@
   }
 
   /* ======================= schema + validation ======================= */
-  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'chart', 'timeline', 'scene'];
+  const KINDS = ['plot2d', 'surface3d', 'field2d', 'waves', 'network', 'algorithm', 'diagram', 'truss3d', 'beam', 'matrix2d', 'chart', 'timeline', 'scene2d', 'scene3d', 'scene'];
+  // named colours the AI may use (plus any #hex); theme-safe mid tones
+  const PALETTE = { red: '#ef4444', orange: '#f97316', amber: '#f59e0b', yellow: '#eab308', lime: '#84cc16', green: '#22c55e', teal: '#14b8a6', cyan: '#06b6d4', sky: '#38bdf8', blue: '#3b82f6', indigo: '#6366f1', violet: '#8b5cf6', purple: '#a855f7', pink: '#ec4899', rose: '#f43f5e', brown: '#92400e', grey: '#94a3b8', gray: '#94a3b8', slate: '#64748b', white: '#f8fafc', black: '#0f172a', blood: '#b91c1c', bone: '#e7e5e4', water: '#60a5fa', metal: '#a1a1aa' };
   const ALGOS = ['bubble', 'insertion', 'selection', 'merge', 'quick', 'binary-search', 'fibonacci'];
   function validate(input) {
     const errors = [];
@@ -162,6 +164,36 @@
         const events = (Array.isArray(P.events) ? P.events : []).slice(0, 12).map(e => ({ when: str(e && e.when, 20), label: str(e && e.label, 60), detail: str(e && e.detail, 220) })).filter(e => e.when && e.label);
         if (events.length < 2) throw new Error('timeline needs events');
         out.params = { events };
+      } else if (kind === 'scene2d' || kind === 'scene3d') {
+        // open-ended composition: any subject, built only from validated shapes, labels, layers and animations
+        const ids = new Set(), color = c => c === 'none' ? 'none' : (typeof c === 'string' && (/^#[0-9a-f]{3,8}$/i.test(c) || PALETTE[c]) ? (PALETTE[c] || c) : null);
+        const id = (v, k) => { let x = String(v || 'e' + k).replace(/[^\w-]/g, '').slice(0, 24) || 'e' + k; while (ids.has(x)) x += '_'; ids.add(x); return x; };
+        const n = (v, a, b, d) => clamp(num(+v, d), a, b);
+        const layers = (Array.isArray(P.layers) ? P.layers : []).slice(0, 6).map(l => ({ id: String(l && l.id || '').replace(/[^\w-]/g, '').slice(0, 20), label: str(l && l.label, 30) })).filter(l => l.id && l.label);
+        const lids = new Set(layers.map(l => l.id));
+        const anim = a => (a && ['move', 'rotate', 'pulse', 'flow', 'orbit', 'spin', 'bob'].includes(a.type) ? { type: a.type, to: Array.isArray(a.to) ? a.to.slice(0, 3).map(v => num(+v, 0)) : null, period: n(a.period, 0.3, 120, 4), radius: n(a.radius, 0, 1000, 0), around: a.around ? String(a.around).replace(/[^\w-]/g, '').slice(0, 24) : null, deg: n(a.deg, -720, 720, 360) } : null);
+        if (kind === 'scene2d') {
+          const SH = ['rect', 'circle', 'ellipse', 'line', 'arrow', 'polygon', 'path', 'text'];
+          const els = (Array.isArray(P.elements) ? P.elements : []).slice(0, 90).map((e, k) => e && SH.includes(e.shape) ? {
+            id: id(e.id, k), shape: e.shape, x: n(e.x, -50, 150, 50), y: n(e.y, -50, 110, 30), w: n(e.w, 0, 200, 10), h: n(e.h, 0, 120, 10), r: n(e.r, 0, 80, 4), rx: n(e.rx, 0, 50, 0),
+            x2: n(e.x2, -50, 150, 60), y2: n(e.y2, -50, 110, 30), points: Array.isArray(e.points) ? e.points.slice(0, 40).map(pt => [n(pt && pt[0], -50, 150, 0), n(pt && pt[1], -50, 110, 0)]) : null,
+            fill: color(e.fill), stroke: color(e.stroke), sw: n(e.sw, 0, 4, 0.4), text: str(e.text, 60), size: n(e.size, 1, 8, 2.6), label: str(e.label, 48), detail: str(e.detail, 260),
+            layer: lids.has(e.layer) ? e.layer : null, anim: anim(e.anim), opacity: n(e.opacity, 0.05, 1, 1)
+          } : null).filter(Boolean);
+          if (els.length < 2) throw new Error('scene2d needs elements');
+          out.params = { elements: els, layers, w: 100, h: 60, scale: P.scale === 'to-scale' ? 'to-scale' : 'schematic', caption: str(P.caption, 160) };
+        } else {
+          const SH = ['sphere', 'box', 'cylinder', 'cone', 'torus', 'ring', 'arrow'];
+          const objs = (Array.isArray(P.objects) ? P.objects : []).slice(0, 60).map((o, k) => o && SH.includes(o.shape) ? {
+            id: id(o.id, k), shape: o.shape, pos: (Array.isArray(o.pos) ? o.pos : [0, 0, 0]).slice(0, 3).map(v => n(v, -200, 200, 0)).concat([0, 0, 0]).slice(0, 3),
+            size: (Array.isArray(o.size) ? o.size : [o.size]).slice(0, 3).map(v => n(v, 0.02, 60, 1)), color: color(o.color) || '#38bdf8', emissive: !!o.emissive,
+            label: str(o.label, 48), detail: str(o.detail, 260), layer: lids.has(o.layer) ? o.layer : null, anim: anim(o.anim), rot: (Array.isArray(o.rot) ? o.rot : [0, 0, 0]).slice(0, 3).map(v => n(v, -360, 360, 0)).concat([0, 0, 0]).slice(0, 3)
+          } : null).filter(Boolean);
+          if (!objs.length) throw new Error('scene3d needs objects');
+          const oid = new Set(objs.map(o => o.id));
+          const links = (Array.isArray(P.links) ? P.links : []).slice(0, 60).map(l => ({ from: String(l && l.from), to: String(l && l.to), label: str(l && l.label, 30) })).filter(l => oid.has(l.from) && oid.has(l.to));
+          out.params = { objects: objs, links, layers, scale: P.scale === 'to-scale' ? 'to-scale' : 'schematic', camera: n(P.camera, 2, 400, 0), caption: str(P.caption, 160) };
+        }
       } else if (kind === 'scene') {
         const SC = (window.ERLY && ERLY.visuals && ERLY.visuals.scenes) || {};
         if (!SC[P.id]) throw new Error('unknown scene'); out.params = { id: P.id };
@@ -715,6 +747,136 @@
     return { stage(i) { const st = spec.steps[i] || {}; focus(st.focus && st.focus.length ? st.focus : ['t' + i]); }, tick() {}, state: () => ({ events: E.length }) };
   };
 
+  /* ---- scene2d: an open-ended 2D composition (SVG): hover/tap for detail, layers, zoom & pan, animation ---- */
+  R.scene2d = (spec) => (box, api) => {
+    const P = spec.params, VB = [0, 0, P.w, P.h];
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'vs-svg vs-compose'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', spec.alt || spec.title);
+    svg.setAttribute('viewBox', VB.join(' ')); box.appendChild(svg);
+    svg.innerHTML = '<defs><marker id="vsArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>';
+    const root = document.createElementNS(NS, 'g'); svg.appendChild(root);
+    const hidden = new Set(); let showLabels = P.labelsAll !== false, t = 0, focus = [];
+    const el = (tag, at) => { const e = document.createElementNS(NS, tag); for (const k in at) if (at[k] != null) e.setAttribute(k, at[k]); return e; };
+    const nodes = {};
+    P.elements.forEach(e => {
+      const g = el('g', { class: 'vs-node vs-c', 'data-id': e.id, tabindex: e.detail || e.label ? 0 : null, role: e.detail || e.label ? 'button' : null, 'aria-label': e.label || null });
+      const st = { fill: e.fill || (e.shape === 'line' || e.shape === 'arrow' ? 'none' : 'rgba(148,163,184,.25)'), stroke: e.stroke || (e.shape === 'text' ? 'none' : 'currentColor'), 'stroke-width': e.sw, opacity: e.opacity };
+      let shape;
+      if (e.shape === 'rect') shape = el('rect', Object.assign({ x: e.x - e.w / 2, y: e.y - e.h / 2, width: e.w, height: e.h, rx: e.rx }, st));
+      else if (e.shape === 'circle') shape = el('circle', Object.assign({ cx: e.x, cy: e.y, r: e.r }, st));
+      else if (e.shape === 'ellipse') shape = el('ellipse', Object.assign({ cx: e.x, cy: e.y, rx: e.w / 2, ry: e.h / 2 }, st));
+      else if (e.shape === 'line' || e.shape === 'arrow') shape = el('line', Object.assign({ x1: e.x, y1: e.y, x2: e.x2, y2: e.y2, 'marker-end': e.shape === 'arrow' ? 'url(#vsArr)' : null }, st, { fill: null, stroke: e.stroke || 'currentColor' }));
+      else if ((e.shape === 'polygon' || e.shape === 'path') && e.points && e.points.length > 1) shape = el(e.shape === 'polygon' ? 'polygon' : 'polyline', Object.assign({ points: e.points.map(q => q.join(',')).join(' ') }, st, e.shape === 'path' ? { fill: 'none' } : {}));
+      else if (e.shape === 'text') { shape = el('text', { x: e.x, y: e.y, 'font-size': e.size, 'text-anchor': 'middle', fill: e.fill || 'currentColor' }); shape.textContent = e.text || e.label; }
+      if (!shape) return;
+      if (e.anim && e.anim.type === 'flow') shape.setAttribute('stroke-dasharray', '2 1.5');
+      g.appendChild(shape);
+      if (e.label && e.shape !== 'text') { const tx = el('text', { class: 'vs-c__lbl', x: e.shape === 'line' || e.shape === 'arrow' ? (e.x + e.x2) / 2 : e.x, y: (e.shape === 'line' || e.shape === 'arrow' ? (e.y + e.y2) / 2 - 1.6 : e.shape === 'circle' ? e.y + e.r + 3.2 : e.y + e.h / 2 + 3.2), 'font-size': 2.4, 'text-anchor': 'middle', fill: 'currentColor' }); tx.textContent = e.label; g.appendChild(tx); }
+      root.appendChild(g); nodes[e.id] = { g, e, shape };
+    });
+    // zoom (wheel / pinch via buttons) and pan (drag)
+    let zoom = 1, px = 0, py = 0, drag = null;
+    const view = () => { const w = P.w / zoom, h = P.h / zoom; svg.setAttribute('viewBox', `${clamp(px, -P.w / 2, P.w - w / 2)} ${clamp(py, -P.h / 2, P.h - h / 2)} ${w} ${h}`); };
+    svg.addEventListener('wheel', e => { e.preventDefault(); zoom = clamp(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 1, 6); view(); }, { passive: false });
+    svg.addEventListener('pointerdown', e => { if (e.target.closest('[data-id][tabindex]')) return; drag = [e.clientX, e.clientY, px, py]; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', e => { if (!drag) return; const k = P.w / zoom / svg.clientWidth; px = drag[2] - (e.clientX - drag[0]) * k; py = drag[3] - (e.clientY - drag[1]) * k; view(); });
+    svg.addEventListener('pointerup', () => { drag = null; });
+    const pick = id => { const nd = nodes[id]; if (!nd) return; Object.values(nodes).forEach(x => x.g.classList.toggle('is-on', x === nd)); api.status(`${nd.e.label || ''}${nd.e.detail ? ' — ' + nd.e.detail : ''}`); };
+    svg.addEventListener('click', e => { const g = e.target.closest('[data-id]'); if (g) pick(g.dataset.id); });
+    svg.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.id) { e.preventDefault(); pick(e.target.dataset.id); } });
+    // layer toggles + zoom buttons
+    const bar = document.createElement('div'); bar.className = 'vs-tools';
+    bar.innerHTML = P.layers.map(l => `<label><input type="checkbox" checked data-layer="${l.id}"> ${esc(l.label)}</label>`).join('') + `<button type="button" data-z="in" aria-label="${T('Zoom in', 'تكبير')}">＋</button><button type="button" data-z="out" aria-label="${T('Zoom out', 'تصغير')}">－</button><button type="button" data-z="reset">${T('Reset view', 'إعادة العرض')}</button>` + (P.scale === 'schematic' ? `<span class="vs-tools__note">${T('Schematic — not to scale', 'تخطيطي — ليس بمقياس حقيقي')}</span>` : '');
+    box.appendChild(bar);
+    bar.addEventListener('change', e => { const c = e.target.closest('[data-layer]'); if (!c) return; c.checked ? hidden.delete(c.dataset.layer) : hidden.add(c.dataset.layer); paint(); });
+    bar.addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (!b) return; if (b.dataset.z === 'reset') { zoom = 1; px = py = 0; } else zoom = clamp(zoom * (b.dataset.z === 'in' ? 1.4 : 1 / 1.4), 1, 6); view(); });
+    function paint() {
+      Object.values(nodes).forEach(({ g, e, shape }) => {
+        g.style.display = e.layer && hidden.has(e.layer) ? 'none' : '';
+        g.style.opacity = focus.length && !focus.includes(e.id) ? 0.28 : 1;
+        g.classList.toggle('is-focus', focus.includes(e.id));
+        const lbl = g.querySelector('.vs-c__lbl'); if (lbl) lbl.style.display = showLabels ? '' : 'none';
+        const a = e.anim; if (!a) return;
+        const ph = (t / a.period) % 1, s = Math.sin(ph * 2 * Math.PI);
+        if (a.type === 'move' && a.to) { const k = (1 - Math.cos(ph * 2 * Math.PI)) / 2; g.setAttribute('transform', `translate(${(a.to[0] - e.x) * k} ${(a.to[1] - e.y) * k})`); }
+        else if (a.type === 'rotate' || a.type === 'spin') g.setAttribute('transform', `rotate(${ph * a.deg} ${e.x} ${e.y})`);
+        else if (a.type === 'pulse') g.setAttribute('transform', `translate(${e.x} ${e.y}) scale(${1 + 0.12 * s}) translate(${-e.x} ${-e.y})`);
+        else if (a.type === 'bob') g.setAttribute('transform', `translate(0 ${s * 1.5})`);
+        else if (a.type === 'flow') shape.setAttribute('stroke-dashoffset', -t * 6 / a.period);
+        else if (a.type === 'orbit') { const c = a.around && nodes[a.around] ? nodes[a.around].e : { x: P.w / 2, y: P.h / 2 }, R0 = a.radius || Math.hypot(e.x - c.x, e.y - c.y), an = ph * 2 * Math.PI; g.setAttribute('transform', `translate(${c.x + R0 * Math.cos(an) - e.x} ${c.y + R0 * Math.sin(an) - e.y})`); }
+      });
+    }
+    paint();
+    return {
+      stage(i) { const st = spec.steps[i] || {}; focus = st.focus || []; if (focus[0]) pick(focus[0]); paint(); },
+      tick(dt, sp) { if (P.elements.some(e => e.anim)) { t += dt * sp; paint(); } },
+      set(k, v) { if (k === 'labels') { showLabels = !!v; paint(); } },
+      state: () => ({ elements: P.elements.length, layers: P.layers.length, hidden: [...hidden], labels: showLabels, zoom })
+    };
+  };
+
+  /* ---- scene3d: an open-ended 3D composition (three.js): orbit camera, labels, layers, orbits & spins ---- */
+  R.scene3d = (spec) => async (box, api) => {
+    const THREE = await import('three'); const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+    const P = spec.params;
+    const wrap = document.createElement('div'); wrap.className = 'vs-3d'; box.appendChild(wrap);
+    const cv = document.createElement('canvas'); cv.className = 'vz-canvas'; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', spec.alt || spec.title); wrap.appendChild(cv);
+    const lblBox = document.createElement('div'); lblBox.className = 'vs-3d__labels'; lblBox.setAttribute('aria-hidden', 'true'); wrap.appendChild(lblBox);
+    const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+    const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(45, 16 / 9, 0.05, 4000);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x334155, 1.2)); const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(5, 8, 6); scene.add(sun);
+    const ext = Math.max(4, ...P.objects.map(o => Math.hypot(...o.pos) + Math.max(...o.size) + (o.anim && o.anim.radius || 0)));
+    cam.position.set(ext * 0.9, ext * 0.7, ext * 1.3); const ctl = new OrbitControls(cam, r.domElement); ctl.enableDamping = true; if (P.camera) cam.position.setLength(P.camera);
+    const mats = [], geos = [], items = {}, hidden = new Set(); let showLabels = true, t = 0, focus = [];
+    P.objects.forEach(o => {
+      const [a, b, c] = [o.size[0], o.size[1] || o.size[0], o.size[2] || o.size[0]];
+      const g = o.shape === 'sphere' ? new THREE.SphereGeometry(a, 32, 20) : o.shape === 'box' ? new THREE.BoxGeometry(a, b, c) : o.shape === 'cylinder' ? new THREE.CylinderGeometry(a, a, b, 32) : o.shape === 'cone' ? new THREE.ConeGeometry(a, b, 32) : o.shape === 'torus' ? new THREE.TorusGeometry(a, Math.max(0.02, b * 0.25), 16, 64) : o.shape === 'ring' ? new THREE.RingGeometry(a, a + Math.max(0.02, b * 0.15), 64) : new THREE.ConeGeometry(a * 0.3, b, 12);
+      const m = new THREE.MeshStandardMaterial({ color: o.color, roughness: 0.5, metalness: 0.1, emissive: o.emissive ? o.color : 0x000000, emissiveIntensity: o.emissive ? 0.9 : 0, side: o.shape === 'ring' ? THREE.DoubleSide : THREE.FrontSide });
+      const mesh = new THREE.Mesh(g, m); mesh.position.set(...o.pos); mesh.rotation.set(...o.rot.map(d => d * Math.PI / 180)); mesh.userData.id = o.id;
+      scene.add(mesh); mats.push(m); geos.push(g);
+      const lab = document.createElement('span'); lab.textContent = o.label || ''; lblBox.appendChild(lab);
+      items[o.id] = { o, mesh, lab, home: mesh.position.clone() };
+      if (o.anim && o.anim.type === 'orbit') { const ring = new THREE.Mesh(new THREE.RingGeometry(o.anim.radius - 0.01, o.anim.radius + 0.01, 128), new THREE.MeshBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.35, side: THREE.DoubleSide })); ring.rotation.x = -Math.PI / 2; scene.add(ring); items[o.id].ring = ring; geos.push(ring.geometry); mats.push(ring.material); }
+    });
+    const lines = P.links.map(l => { const g = new THREE.BufferGeometry().setFromPoints([items[l.from].mesh.position, items[l.to].mesh.position]); const m = new THREE.LineBasicMaterial({ color: 0x94a3b8 }); const ln = new THREE.Line(g, m); scene.add(ln); geos.push(g); mats.push(m); return { l, ln }; });
+    const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+    const pick = id => { const it = items[id]; if (!it) return; api.status(`${it.o.label || ''}${it.o.detail ? ' — ' + it.o.detail : ''}`); Object.values(items).forEach(x => { x.mesh.material.emissiveIntensity = x === it ? 0.6 : (x.o.emissive ? 0.9 : 0); if (x === it && !x.o.emissive) x.mesh.material.emissive.set(0x334155); }); };
+    cv.addEventListener('click', e => { const rc = cv.getBoundingClientRect(); ptr.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1); ray.setFromCamera(ptr, cam); const hit = ray.intersectObjects(Object.values(items).map(x => x.mesh))[0]; if (hit) pick(hit.object.userData.id); });
+    const bar = document.createElement('div'); bar.className = 'vs-tools';
+    bar.innerHTML = P.layers.map(l => `<label><input type="checkbox" checked data-layer="${l.id}"> ${esc(l.label)}</label>`).join('') + `<button type="button" data-v3="reset">${T('Reset camera', 'إعادة الكاميرا')}</button>` + (P.scale === 'schematic' ? `<span class="vs-tools__note">${T('Schematic — sizes and distances not to scale', 'تخطيطي — الأحجام والمسافات ليست بمقياس حقيقي')}</span>` : '');
+    box.appendChild(bar);
+    bar.addEventListener('change', e => { const c = e.target.closest('[data-layer]'); if (!c) return; c.checked ? hidden.delete(c.dataset.layer) : hidden.add(c.dataset.layer); });
+    bar.addEventListener('click', e => { if (e.target.closest('[data-v3="reset"]')) { cam.position.set(ext * 0.9, ext * 0.7, ext * 1.3); ctl.target.set(0, 0, 0); } });
+    const v = new THREE.Vector3();
+    function frame() {
+      const W = wrap.clientWidth || 800, H = Math.round(W * 9 / 16); if (cv.width !== Math.round(W * r.getPixelRatio())) { r.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix(); }
+      Object.values(items).forEach(({ o, mesh, lab, home, ring }) => {
+        const vis = !(o.layer && hidden.has(o.layer)); mesh.visible = vis; if (ring) ring.visible = vis;
+        const a = o.anim;
+        if (a) { const ph = (t / a.period) % 1, an = ph * 2 * Math.PI;
+          if (a.type === 'orbit') { const c = a.around && items[a.around] ? items[a.around].mesh.position : new THREE.Vector3(); mesh.position.set(c.x + a.radius * Math.cos(an), home.y, c.z - a.radius * Math.sin(an)); if (ring) ring.position.set(c.x, home.y, c.z); }
+          else if (a.type === 'spin' || a.type === 'rotate') mesh.rotation.y = an;
+          else if (a.type === 'bob') mesh.position.y = home.y + Math.sin(an) * 0.3;
+          else if (a.type === 'pulse') mesh.scale.setScalar(1 + 0.1 * Math.sin(an));
+          else if (a.type === 'move' && a.to) { const k = (1 - Math.cos(an)) / 2; mesh.position.set(home.x + (a.to[0] - home.x) * k, home.y + (a.to[1] - home.y) * k, home.z + ((a.to[2] || home.z) - home.z) * k); }
+        }
+        mesh.material.opacity = 1; mesh.material.transparent = focus.length > 0 && !focus.includes(o.id); if (mesh.material.transparent) mesh.material.opacity = 0.25;
+        v.copy(mesh.position).project(cam);
+        const on = vis && showLabels && o.label && v.z < 1; lab.style.display = on ? '' : 'none';
+        if (on) lab.style.transform = `translate(${(v.x + 1) / 2 * W}px, ${(1 - v.y) / 2 * H}px) translate(-50%, -150%)`;
+      });
+      lines.forEach(({ ln, l }) => { ln.geometry.setFromPoints([items[l.from].mesh.position, items[l.to].mesh.position]); });
+      ctl.update(); r.render(scene, cam);
+    }
+    frame();
+    return {
+      stage(i) { const st = spec.steps[i] || {}; focus = st.focus || []; if (focus[0]) pick(focus[0]); frame(); },
+      tick(dt, sp) { t += dt * sp; frame(); },
+      set(k, val) { if (k === 'labels') { showLabels = !!val; frame(); } },
+      state: () => ({ objects: P.objects.length, labels: showLabels, hidden: [...hidden], positions: Object.fromEntries(Object.values(items).map(x => [x.o.id, x.mesh.position.toArray().map(n => +n.toFixed(2))])) }),
+      destroy() { geos.forEach(g => g.dispose()); mats.forEach(m => m.dispose()); r.dispose(); ctl.dispose(); }
+    };
+  };
+
   /* ======================= spec → scene for the visual player ======================= */
   function toScene(spec) {
     if (spec.kind === 'scene') { const SC = ERLY.visuals.scenes[spec.params.id]; return { id: spec.params.id, scene: SC }; }
@@ -747,6 +909,46 @@
     [/dna replication|how (does )?dna (copy|replicate)/i, () => D('DNA replication', 'Molecular biology', 'flow', [['heli', 'Helicase unwinds', 'Hydrogen bonds between bases break, opening a replication fork.'], ['prim', 'Primase adds primers', 'Short RNA primers give DNA polymerase a starting point.'], ['pol', 'DNA polymerase extends', 'New nucleotides are added 5′→3′: continuously on the leading strand, in Okazaki fragments on the lagging strand.'], ['lig', 'Ligase joins', 'Primers are replaced with DNA and ligase seals the fragments.'], ['semi', 'Two DNA molecules', 'Each new molecule has one old and one new strand (semi-conservative).']], [['heli', 'prim'], ['prim', 'pol'], ['pol', 'lig'], ['lig', 'semi']], 'The main enzymes and steps of DNA replication.')]
   ];
 
+  /* ======================= built-in compositions (accurate, reviewed; the AI composes new ones) ======================= */
+  const PLANETS = [['Mercury', '#a8a29e', 0.38, 0.24, 'Smallest planet; a year lasts 88 Earth days.'], ['Venus', '#fbbf24', 0.95, 0.62, 'Thick CO₂ atmosphere makes it the hottest planet (~465 °C).'], ['Earth', '#3b82f6', 1, 1, 'The only planet known to support life; 1 year = 365.25 days.'], ['Mars', '#ef4444', 0.53, 1.88, 'Iron oxide dust makes it red; has the tallest volcano, Olympus Mons.'], ['Jupiter', '#f59e0b', 11.2, 11.86, 'Largest planet — a gas giant with a storm (the Great Red Spot) bigger than Earth.'], ['Saturn', '#eab308', 9.45, 29.46, 'Gas giant with bright rings of ice and rock.'], ['Uranus', '#22d3ee', 4.0, 84.0, 'Ice giant tilted ~98°, so it rolls around the Sun on its side.'], ['Neptune', '#6366f1', 3.88, 164.8, 'Ice giant with the fastest winds measured in the Solar System.']];
+  const COMPOSED = [
+    [/solar system|planets? (orbit|around the sun)|orbits? of the planets/i, () => ({
+      kind: 'scene3d', title: 'The Solar System', subject: 'Astronomy', alt: 'The Sun and eight planets orbiting it; click a planet for facts. Sizes and distances are not to scale.',
+      params: { scale: 'schematic', caption: 'Orbit order and relative orbital periods are real; sizes and distances are compressed so everything fits.', layers: [{ id: 'inner', label: 'Inner (rocky) planets' }, { id: 'outer', label: 'Outer (giant) planets' }],
+        objects: [{ id: 'sun', shape: 'sphere', pos: [0, 0, 0], size: [2.2], color: '#fbbf24', emissive: true, label: 'Sun', detail: 'A G-type star holding 99.8% of the Solar System’s mass.' }].concat(PLANETS.map(([n, c, rad, yr, d], i) => ({ id: n.toLowerCase(), shape: 'sphere', pos: [3.6 + i * 2.1, 0, 0], size: [0.28 + Math.log10(1 + rad) * 0.55], color: c, label: n, detail: d, layer: i < 4 ? 'inner' : 'outer', anim: { type: 'orbit', around: 'sun', radius: 3.6 + i * 2.1, period: 6 * Math.pow(yr, 0.5) } }))) },
+      steps: [{ title: 'The Sun at the centre', text: 'Everything orbits the Sun, which holds almost all the mass. Drag to rotate, scroll to zoom.', focus: ['sun'] }, { title: 'The rocky inner planets', text: 'Mercury, Venus, Earth and Mars are small and rocky.', focus: ['mercury', 'venus', 'earth', 'mars'] }, { title: 'The giant outer planets', text: 'Jupiter and Saturn are gas giants; Uranus and Neptune are ice giants.', focus: ['jupiter', 'saturn', 'uranus', 'neptune'] }, { title: 'Farther means slower', text: 'Kepler’s third law: the farther a planet is, the longer its year (T² ∝ a³). Watch the inner planets lap the outer ones.' }] })],
+    [/four[- ]stroke|4[- ]stroke|internal combustion engine|how (does )?a (car|petrol|gasoline) engine work|otto cycle/i, () => ({
+      kind: 'scene2d', title: 'How a four-stroke engine works', subject: 'Mechanical engineering', alt: 'A cylinder with a piston, two valves, a spark plug and a crankshaft, cycling through intake, compression, power and exhaust.',
+      params: { scale: 'schematic', caption: 'One cycle = two crankshaft turns (720°).', layers: [{ id: 'flow', label: 'Gas flow' }],
+        elements: [
+          { id: 'cyl', shape: 'rect', x: 50, y: 30, w: 26, h: 40, fill: 'none', stroke: 'slate', sw: 0.8, label: '', detail: 'The cylinder: the piston slides inside it.' },
+          { id: 'head', shape: 'rect', x: 50, y: 8.5, w: 30, h: 3, fill: 'slate', label: '' },
+          { id: 'piston', shape: 'rect', x: 50, y: 34, w: 24, h: 8, rx: 1, fill: 'metal', label: 'Piston', detail: 'Moves down on intake and power, up on compression and exhaust.', anim: { type: 'move', to: [50, 44], period: 2 } },
+          { id: 'rod', shape: 'line', x: 50, y: 38, x2: 50, y2: 54, stroke: 'grey', sw: 1.4, label: '', anim: { type: 'move', to: [50, 48], period: 2 } },
+          { id: 'crank', shape: 'circle', x: 50, y: 55, r: 4, fill: 'none', stroke: 'slate', sw: 0.8, label: 'Crankshaft', detail: 'Turns the piston’s up-and-down motion into rotation.', anim: { type: 'rotate', period: 2, deg: 360 } },
+          { id: 'inlet', shape: 'polygon', points: [[36, 10], [41, 10], [43, 14], [38, 14]], fill: 'sky', label: 'Intake valve', detail: 'Opens on the intake stroke to let the air–fuel mixture in.' },
+          { id: 'exhaust', shape: 'polygon', points: [[59, 10], [64, 10], [62, 14], [57, 14]], fill: 'rose', label: 'Exhaust valve', detail: 'Opens on the exhaust stroke to let burnt gases out.' },
+          { id: 'plug', shape: 'rect', x: 50, y: 5.5, w: 3, h: 4, fill: 'amber', label: 'Spark plug', detail: 'Ignites the compressed mixture at the start of the power stroke.', anim: { type: 'pulse', period: 2 } },
+          { id: 'mix', shape: 'arrow', x: 26, y: 12, x2: 38, y2: 13, stroke: 'sky', sw: 0.9, label: 'Air + fuel', layer: 'flow', anim: { type: 'flow', period: 1 } },
+          { id: 'out', shape: 'arrow', x: 62, y: 13, x2: 76, y2: 12, stroke: 'rose', sw: 0.9, label: 'Exhaust gas', layer: 'flow', anim: { type: 'flow', period: 1 } }
+        ] },
+      steps: [{ title: '1 · Intake', text: 'The piston moves down with the intake valve open, drawing in the air–fuel mixture.', focus: ['inlet', 'mix', 'piston'] }, { title: '2 · Compression', text: 'Both valves close and the piston moves up, squeezing the mixture (compression ratio ≈ 8–12 : 1 in petrol engines).', focus: ['piston', 'cyl'] }, { title: '3 · Power', text: 'The spark plug fires; the burning gas expands and pushes the piston down — the only stroke that does work.', focus: ['plug', 'piston', 'crank'] }, { title: '4 · Exhaust', text: 'The exhaust valve opens and the piston moves up, pushing the burnt gas out. Then the cycle repeats.', focus: ['exhaust', 'out'] }] })],
+    [/quantum entangle|entangled (particles|photons|qubits)|bell (state|test|inequality)|epr paradox/i, () => ({
+      kind: 'scene2d', title: 'Quantum entanglement (simplified)', subject: 'Quantum physics', alt: 'A source emits two entangled particles to two distant detectors whose results are correlated.',
+      params: { scale: 'schematic', caption: 'Simplified model: arrows show measurement outcomes, not little spinning balls. No signal travels between the detectors.', layers: [{ id: 'meas', label: 'Measurements' }],
+        elements: [
+          { id: 'src', shape: 'circle', x: 50, y: 30, r: 4, fill: 'violet', label: 'Source', detail: 'Creates a pair in one shared state, e.g. (|↑↓⟩ − |↓↑⟩)/√2 — neither particle has its own definite spin.', anim: { type: 'pulse', period: 2 } },
+          { id: 'a', shape: 'circle', x: 30, y: 30, r: 2.4, fill: 'sky', label: 'Particle A', detail: 'Travels left. Its spin is undetermined until measured.', anim: { type: 'move', to: [14, 30], period: 4 } },
+          { id: 'b', shape: 'circle', x: 70, y: 30, r: 2.4, fill: 'pink', label: 'Particle B', detail: 'Travels right. Measured along the same axis it always gives the opposite result to A.', anim: { type: 'move', to: [86, 30], period: 4 } },
+          { id: 'detA', shape: 'rect', x: 8, y: 30, w: 6, h: 14, rx: 1, fill: 'slate', label: 'Detector A (Alice)', detail: 'Measures spin along a chosen axis: result ↑ or ↓, each 50% of the time.' },
+          { id: 'detB', shape: 'rect', x: 92, y: 30, w: 6, h: 14, rx: 1, fill: 'slate', label: 'Detector B (Bob)', detail: 'Same axis → always opposite to Alice. Different axes → correlation −cos θ.' },
+          { id: 'ra', shape: 'arrow', x: 8, y: 50, x2: 8, y2: 43, stroke: 'sky', sw: 1, label: 'A: ↑', layer: 'meas' },
+          { id: 'rb', shape: 'arrow', x: 92, y: 43, x2: 92, y2: 50, stroke: 'pink', sw: 1, label: 'B: ↓', layer: 'meas' },
+          { id: 'link', shape: 'path', points: [[14, 20], [50, 12], [86, 20]], stroke: 'violet', sw: 0.5, label: 'Correlation, not communication', detail: 'Each side alone sees random 50/50 results, so no message can be sent faster than light; the correlation shows only when results are compared.' }
+        ] },
+      steps: [{ title: 'One shared state', text: 'The source creates a pair whose spins are described together; neither has its own definite value.', focus: ['src'] }, { title: 'Separated', text: 'The particles fly apart — the distance can be anything.', focus: ['a', 'b'] }, { title: 'Measure A', text: 'Alice gets ↑ or ↓ at random (50/50).', focus: ['detA', 'ra'] }, { title: 'Measure B', text: 'Bob, measuring the same axis, always gets the opposite. At other angles the correlation is −cos θ, which Bell tests show no local hidden-variable theory can reproduce.', focus: ['detB', 'rb'] }, { title: 'No faster-than-light signal', text: 'Bob’s results on their own are random; the correlation appears only when the two lists are compared over ordinary channels.', focus: ['link'] }] })]
+  ];
+
   /* ======================= local planner ======================= */
   const V = (name, label, min, max, step, value) => ({ name, label, min, max, step, value });
   function exprFrom(q, letter) {
@@ -763,11 +965,12 @@
     let spec = null;
     const ch = chartFrom(q); if (ch) return ch;
     // curated diagrams first (specific vocabulary)
-    for (const [re, mk] of DIAGRAMS) if (re.test(q)) { spec = mk(); break; }
+    for (const [re, mk] of COMPOSED) if (re.test(q)) { spec = mk(); break; }
+    if (!spec) for (const [re, mk] of DIAGRAMS) if (re.test(q)) { spec = mk(); break; }
     const zf = !spec && exprFrom(q, 'z');
     const yf = !spec && !zf && exprFrom(q, 'y');
     if (spec) { /* done */ }
-    else if (zf || /\b(surface|multivariable|partial derivative|saddle point|paraboloid|level curves?|contour|gradient (vector|of a function)|function of two variables)\b/.test(t)) {
+    else if (zf || /\b(surface|multivariable|partial derivative|saddle point|paraboloid|level curves?|contour|gradient (vector|of a function)|function of two variables)\b|\b(three[- ]dimensional|3d|3-d)\b.{0,30}\b(function|graph|plot|surface)\b/.test(t)) {
       const desc = /gradient descent|optimi[sz]/.test(t);
       spec = { kind: 'surface3d', title: zf ? `z = ${zf}` : desc ? 'Gradient descent on a surface' : 'A surface z = f(x, y)', subject: 'Multivariable calculus', alt: 'A rotatable 3D surface coloured by height.', params: { expr: zf || (desc ? '0.5*x^2 + y^2 + 0.6*sin(2*x)' : 'x^2 - y^2'), range: 3, descent: desc }, vars: desc ? [V('lr', 'learning rate', 0.01, 0.6, 0.01, 0.12)] : [],
         steps: desc ? [{ title: 'The loss surface', text: 'Height = the value we want to minimise. Drag to rotate.' }, { title: 'Follow the slope downhill', text: 'Each step moves against the gradient: (x, y) ← (x, y) − η∇f. Watch the red ball.', focus: ['descent'] }, { title: 'Learning rate', text: 'Too small = slow; too large = overshoot and oscillate. Try the slider.', focus: ['descent'] }] : [{ title: 'The surface', text: 'Each point (x, y) has a height z = f(x, y). Drag to rotate, scroll to zoom.' }, { title: 'Partial derivatives', text: '∂f/∂x is the slope walking parallel to the x-axis; ∂f/∂y the slope parallel to y.' }, { title: 'Critical points', text: 'Where both partial derivatives are zero: a minimum, maximum or (like x² − y²) a saddle point.' }] };
@@ -840,7 +1043,7 @@
      diagram/graph/3D model…”, “animate…”, “simulate…”). Ordinary questions get a
      text answer with no offer. Once a visual is open, follow-ups edit the SAME
      spec — validated again before it is re-rendered. */
-  const EXPLICIT = /\b(visuali[sz]e|visuali[sz]ation|diagram|flow ?chart|concept map|mind ?map|graph (it|this|that|of|the|y|f)|plot|sketch|draw|chart|infographic|timeline|simulat(e|ion)|animat(e|ion)|3d|three.dimensional|interactive (visual|model|demo)|show (me )?(it |this )?(as |with )?(a |an )?(visual|picture|diagram|graph|model|animation))\b|ارسم|مخطط|رسم بياني|محاكاة/i;
+  const EXPLICIT = /\b(visual (explanation|representation|model|diagram|summary|walkthrough|guide)|(create|make|build|generate|give me|produce) (me )?(a |an )?(visual|diagram|model|simulation|animation|infographic|illustration|graphic|3d)|visuali[sz]e|visuali[sz]ation|diagram|flow ?chart|concept map|mind ?map|graph (it|this|that|of|the|y|f)|plot|sketch|draw|chart|infographic|timeline|simulat(e|ion)|animat(e|ion)|3d|three.dimensional|interactive (visual|model|demo)|show (me )?(it |this )?(as |with )?(a |an )?(visual|picture|diagram|graph|model|animation))\b|ارسم|مخطط|رسم بياني|محاكاة/i;
   function explicit(text) { const t = String(text || ''); return EXPLICIT.test(t) && t.length > 4 ? (/\b3d|three.dimensional\b/i.test(t) ? '3d' : /animat|simulat/i.test(t) ? 'animate' : 'visual') : null; }
   const EDIT = [
     ['3d', /\b(make|turn|show|convert|render|view)\b.{0,20}\b(it|this|that)?\b.{0,10}\b(3d|three.dimensional|in 3 ?d)\b|^3d\b/i],
@@ -851,6 +1054,8 @@
     ['highlight', /\b(highlight|focus on|zoom (in )?on|point to|show me) (the )?(.{2,40})$/i],
     ['param', /\b(set|change|make|increase|decrease|raise|lower)\b.{0,6}\b(the )?([a-zα-ω₀-₉ ]{1,30}?)\s*(to|=|by)\s*(-?[\d.]+)/i],
     ['type', /\b(as|to|into) (a |an )?(bar|line|pie) (chart|graph)\b/i],
+    ['simplify', /\b(simplify|simpler|less detail|fewer (parts|labels|details)|declutter)\b.{0,20}\b(diagram|visual|it|this|picture|model)\b|^simplify\b/i],
+    ['detail', /\b(more detail(ed)?|more detailed|show more|add (more )?detail|label every (part|component)|label all)\b/i],
     ['advanced', /\b(more (advanced|detailed|rigorous|in.depth)|go deeper|explain (it )?(at a )?(higher|harder|more advanced) level|simpler|more simply|easier)\b/i]
   ];
   function editIntent(text) { const t = String(text || '').trim(); if (t.length > 120) return null; for (const [k, re] of EDIT) { const m = t.match(re); if (m) return { kind: k, m }; } return null; }
@@ -861,7 +1066,7 @@
     const ok = sp => { const v = validate(sp); return v.ok ? v.spec : null; };
     switch (it.kind) {
       case '3d': {
-        if (S.kind === 'surface3d' || S.kind === 'truss3d') return { action: 'none', note: 'It is already a 3D model — drag to rotate, scroll or pinch to zoom.' };
+        if (S.kind === 'surface3d' || S.kind === 'truss3d' || S.kind === 'scene3d') return { action: 'none', note: 'It is already a 3D model — drag to rotate, scroll or pinch to zoom.' };
         if (S.kind === 'plot2d' && S.params.fns.length) {
           const e = S.params.fns[0].expr.replace(/\bx\b/g, '(sqrt(x^2+y^2))');
           const sp = ok({ kind: 'surface3d', title: S.title + ' — rotated into 3D', subject: S.subject, alt: `The curve y = ${S.params.fns[0].expr} spun about the vertical axis into a surface of revolution.`, params: { expr: e, range: Math.max(1, Math.min(6, Math.max(Math.abs(S.params.x[0]), Math.abs(S.params.x[1])))) }, vars: S.vars, steps: [{ title: 'Surface of revolution', text: `The 2D curve has been spun around the vertical axis: every point at distance r from the centre has height f(r). Drag to rotate.` }, { title: 'Reading it', text: 'A cross-section through the centre gives back the original curve.' }] });
@@ -874,10 +1079,11 @@
         return { action: 'none', note: 'I don’t have a faithful 3D version of this visual yet, so I’ve left it in 2D rather than fake depth. I can make 3D models of surfaces, functions, fields and trusses.' };
       }
       case 'rotate':
-        if (S.kind === 'surface3d' || S.kind === 'truss3d') return { action: 'play', note: /stop/i.test(text) ? 'Rotation paused — press ▶ to resume.' : 'Rotating now. You can also drag it with a finger or the mouse; ⏸ stops it.' };
+        if (S.kind === 'surface3d' || S.kind === 'truss3d' || S.kind === 'scene3d') return { action: 'play', note: /stop/i.test(text) ? 'Rotation paused — press ▶ to resume.' : 'Rotating now. You can also drag it with a finger or the mouse; ⏸ stops it.' };
         return { action: 'none', note: 'This visual is 2D, so there is nothing to rotate. Say “make it 3D” if it’s a surface, function or field.' };
       case 'labels': {
         const on = !/\b(hide|remove|turn off)\b/i.test(text);
+        if (S.kind === 'scene2d' || S.kind === 'scene3d') return { action: 'setvar', name: 'labels', value: on ? 1 : 0, note: on ? 'Every labelled part now shows its name — tap any part for its detail.' : 'Labels hidden; tap a part to see its name and detail.' };
         if (S.kind === 'chart') { S.params.labelsOn = on; return { spec: ok(S), action: 'reopen', note: on ? 'Value labels added to every bar/point.' : 'Value labels hidden.' }; }
         if (S.kind === 'plot2d') { S.params.roots = on; return { spec: ok(S), action: 'reopen', note: on ? 'Labelled the roots (where the curve crosses y = 0) and kept the axis labels.' : 'Root labels hidden.' }; }
         return { action: 'none', note: 'Every part of this visual is already labelled — tap any part for its detail.' };
@@ -890,6 +1096,9 @@
       case 'animate': return { action: 'tour', note: 'Playing it step by step — I’ll move through each stage. Press ■ to stop at any time.' };
       case 'highlight': {
         const want = m[4].replace(/[.?!]$/, '').toLowerCase();
+        const ORD = { first: 0, '1st': 0, second: 1, '2nd': 1, third: 2, '3rd': 2, fourth: 3, '4th': 3, fifth: 4, '5th': 4, last: S.steps.length - 1 };
+        const om = want.match(/\b(first|1st|second|2nd|third|3rd|fourth|4th|fifth|5th|last)\b/);
+        if (om && S.steps[ORD[om[1]]]) return { action: 'stage', stage: ORD[om[1]], note: `Highlighted: ${S.steps[ORD[om[1]]].title}.` };
         const k = S.steps.findIndex(st => (st.title + ' ' + st.text).toLowerCase().includes(want) || want.split(/\s+/).filter(w => w.length > 3).some(w => st.title.toLowerCase().includes(w)));
         if (k >= 0) return { action: 'stage', stage: k, note: `Highlighted: ${S.steps[k].title}.` };
         if (S.kind === 'chart') { const i = S.params.labels.findIndex(l => l.toLowerCase().includes(want) || want.includes(l.toLowerCase())); if (i >= 0) { S.steps = [{ title: S.params.labels[i], text: S.params.series.map(se => `${se.name || 'Value'}: ${se.values[i]}`).join(' · '), focus: [S.params.labels[i]] }].concat(S.steps); return { spec: ok(S), action: 'reopen', note: `Highlighted ${S.params.labels[i]}.` }; } }
@@ -906,6 +1115,14 @@
       case 'type':
         if (S.kind !== 'chart') return { action: 'none', note: 'Only data charts can switch between bar, line and pie.' };
         S.params.type = m[3].toLowerCase(); return { spec: ok(S), action: 'reopen', note: `Shown as a ${S.params.type} chart.` };
+      case 'simplify': {
+        if ((S.kind === 'scene2d' || S.kind === 'scene3d') && S.params.layers.length) { const key = S.kind === 'scene2d' ? 'elements' : 'objects'; S.params[key] = S.params[key].filter(e => !e.layer); S.params.layers = []; const sp = ok(S); return sp ? { spec: sp, action: 'reopen', note: 'Simplified: only the core parts are shown now (the optional layers are hidden). Say “show more detail” to bring them back.' } : null; }
+        if (S.kind === 'diagram' && S.params.nodes.length > 4) { const keep = new Set(S.params.nodes.slice(0, 4).map(n => n.id)); S.params.nodes = S.params.nodes.filter(n => keep.has(n.id)); S.params.edges = S.params.edges.filter(e => keep.has(e.from) && keep.has(e.to)); S.steps = S.steps.filter(st => !st.focus.length || st.focus.some(f => keep.has(f))); const sp = ok(S); return sp ? { spec: sp, action: 'reopen', note: 'Simplified to the first four stages.' } : null; }
+        return { action: 'level', up: false };
+      }
+      case 'detail':
+        if (S.kind === 'scene2d' || S.kind === 'scene3d' || S.kind === 'chart' || S.kind === 'plot2d') return { action: 'setvar', name: 'labels', value: 1, note: 'All parts are labelled. Tap any part for a one-line explanation — or ask me about a specific part and I’ll go deeper.' };
+        return { action: 'level', up: true };
       case 'advanced': return { action: 'level', up: !/simpl|easier/i.test(text), note: '' };
     }
     return null;
@@ -938,8 +1155,12 @@ Kinds and params:
 - "matrix2d": {} (vars a, b, c, d)
 - "chart": {"type":"bar"|"line"|"pie","labels":["..."],"series":[{"name","values":[numbers]}],"unit":"","source":"where the numbers come from"} — ONLY with numbers the student gave or well-established figures; name the source
 - "timeline": {"events":[{"when":"1953","label":"...","detail":"..."}]} — ONLY well-established dates; steps focus "t0","t1",…
+- "scene2d": an open-ended labelled 2D diagram for ANY subject without a better kind (anatomy, cells, engines, circuits, ecosystems, geology, architecture, computer systems, processes…). Canvas is 100 wide × 60 tall (x right, y down). {"scale":"schematic"|"to-scale","caption":"...","layers":[{"id","label"}],"elements":[{"id","shape":"rect"|"circle"|"ellipse"|"line"|"arrow"|"polygon"|"path"|"text","x","y","w","h","r","x2","y2","points":[[x,y],…],"fill":"<named colour or #hex>","stroke","label","detail":"one accurate sentence","layer":"<layer id>","anim":{"type":"move"|"rotate"|"pulse"|"flow"|"orbit"|"bob","to":[x,y],"period":seconds,"around":"<id>","radius"}}]} (≤ 90 elements; steps focus element ids)
+- "scene3d": an open-ended 3D model (planetary systems, molecules, structures, machines, organs). {"scale":"schematic"|"to-scale","caption":"...","layers":[…],"objects":[{"id","shape":"sphere"|"box"|"cylinder"|"cone"|"torus"|"ring","pos":[x,y,z],"size":[a,b,c],"color","emissive":bool,"label","detail","layer","anim":{"type":"orbit"|"spin"|"bob"|"pulse"|"move","around":"<id>","radius","period"}}],"links":[{"from","to","label"}]} (≤ 60 objects)
+Named colours: red orange amber yellow lime green teal cyan sky blue indigo violet purple pink rose brown grey slate white black blood bone water metal.
+Accuracy rules: correct names, relationships and order; never invent measurements; use "schematic" unless proportions are real; one-sentence "detail" per labelled part.
 Expressions use only numbers, x, y, declared var names, + - * / ^ ( ) and sin cos tan exp ln log sqrt abs pi e.
-Use 2–6 steps of accurate, university-level explanation for THIS question. Choose the simplest kind that explains it; prefer "diagram" for processes and systems.`;
+Use 2–6 steps of accurate, university-level explanation for THIS question. Choose the kind that teaches best: a specialised kind when one fits (plot2d, surface3d, network, truss3d…), "diagram" for step processes, "scene2d"/"scene3d" for anything that needs a picture or model of the thing itself.`;
   async function aiPlan(question, level) {
     const ai = window.ERLY && ERLY.companion && ERLY.companion.ai;
     const gen = ai && ai.ready && ai.ready() ? ai : null;

@@ -18,7 +18,7 @@
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
@@ -32,7 +32,7 @@
   <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
   <canvas class="uni-fx" id="uniFx" aria-hidden="true"></canvas>
   <header class="uni-top">
-    <a class="uni-brand" href="#top"><span class="campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>Acubins University</b><small>Command Center</small></span></a>
+    <a class="uni-brand" href="#top"><span class="campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span><b>Acubins University</b> <small>Command Center</small></span></a>
     <nav class="uni-nav"><a href="#overview">Overview</a><a href="#colleges">Colleges</a><a href="#access">Accessibility</a><a href="#portals">Portals</a></nav>
     <div class="uni-tools">
       <div data-accent-picker></div>
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div class="uni-orbit" aria-hidden="true">
-        <div class="uni-orbit__core"><b id="uniTotal">0</b><small>students</small></div>
+        <div class="uni-orbit__core"><b id="uniTotal">0</b> <small>students</small></div>
         <div class="uni-orbit__ring uni-orbit__ring--1"><span style="--a:0deg">Eng</span><span style="--a:120deg">Bus</span><span style="--a:240deg">Med</span></div>
         <div class="uni-orbit__ring uni-orbit__ring--2"><span style="--a:60deg">CS</span><span style="--a:200deg">Arts</span><span style="--a:310deg">SAS</span></div>
       </div>
@@ -75,9 +75,9 @@
     <section class="uni-portals" id="portals">
       <h2>Portals</h2>
       <div class="uni-pgrid">
-        <a class="uni-portal uni-portal--sas" href="counselor.html" data-portal="sas"><span class="uni-portal__ic" id="pSas"></span><b>Student Accessibility Services</b><small>Requests, ERLY evidence packs, assessments, support plans, faculty referrals</small><span class="uni-portal__go">Enter SAS →</span></a>
-        <a class="uni-portal uni-portal--fac" href="faculty.html" data-portal="faculty"><span class="uni-portal__ic" id="pFac"></span><b>Faculty portal</b><small>Courses &amp; streams, attendance, students and classroom observations</small><span class="uni-portal__go">Enter faculty →</span></a>
-        <a class="uni-portal uni-portal--stu" href="login.html" data-signout><span class="uni-portal__ic" id="pStu"></span><b>Student ERLY</b><small>Sign in as a student to see the ERLY companion</small><span class="uni-portal__go">Switch account →</span></a>
+        <a class="uni-portal uni-portal--sas" href="counselor.html" data-portal="sas"><span class="uni-portal__ic" id="pSas"></span><b>Student Accessibility Services</b> <small>Requests, ERLY evidence packs, assessments, support plans, faculty referrals</small><span class="uni-portal__go">Enter SAS →</span></a>
+        <a class="uni-portal uni-portal--fac" href="faculty.html" data-portal="faculty"><span class="uni-portal__ic" id="pFac"></span><b>Faculty portal</b> <small>Courses &amp; streams, attendance, students and classroom observations</small><span class="uni-portal__go">Enter faculty →</span></a>
+        <a class="uni-portal uni-portal--stu" href="login.html" data-signout><span class="uni-portal__ic" id="pStu"></span><b>Student ERLY</b> <small>Sign in as a student to see the ERLY companion</small><span class="uni-portal__go">Switch account →</span></a>
       </div>
     </section>
   </main>

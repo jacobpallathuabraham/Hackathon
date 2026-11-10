@@ -159,7 +159,9 @@
     const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) || /\b(erly|noor|sas|support pact|reading studio|growth plan|check-?ins?|daily quest|start-?ramp|insight|signals?)\b/i.test(text) ? K.context(text, lang()) : '';
     if (tr && tr.tools) C.tools.trace(tr.tools);
     const strong = ai.canSee && ai.canSee(); // a large-context server model gets more of the conversation verbatim
-    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 });
+    const vz = C.tools && C.tools.visual && C.tools.visual.current(), vsc = vz && vz.scene;
+    const visual = vsc ? `an interactive visual "${vsc.title[0]}" (${vsc.subject[0]}) with steps: ${vsc.stages.map((st, i) => `${i + 1}. ${st.title[0]}`).join('; ')}${vsc.spec && vsc.spec.params && (vsc.spec.params.elements || vsc.spec.params.objects) ? '; labelled parts: ' + (vsc.spec.params.elements || vsc.spec.params.objects).map(e => e.label).filter(Boolean).slice(0, 30).join(', ') : ''}${vz.stageIndex != null ? `; currently showing step ${vz.stageIndex + 1}` : ''}` : '';
+    const msgs = AIX.buildMessages(history, text, { visual, lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 });
     history.push({ role: 'user', text: images && images.length ? text + ` [${images.length} image(s) attached]` : text });
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';

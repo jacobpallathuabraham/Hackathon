@@ -18,7 +18,7 @@
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
@@ -33,7 +33,7 @@
   <aside class="side" id="side">
     <a class="brand brand--sas" href="#overview">
       <span class="sas-mark campus-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 12 16 5l12 7-12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 15v6c3 3 11 3 14 0v-6" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/><path d="M28 12v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="brand__stack"><b>Faculty</b><small>Acubins University</small></span>
+      <span class="brand__stack"><b>Faculty</b> <small>Acubins University</small></span>
     </a>
     <nav class="side__nav">
       <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
@@ -47,7 +47,7 @@
     </div>
     <div class="side__me">
       <span class="avatar avatar--hue" style="--h:265">DH</span>
-      <div><b>Dr. Haddad</b><small class="muted">Faculty · Mechanical Eng.</small></div>
+      <div><b>Dr. Haddad</b> <small class="muted">Faculty · Mechanical Eng.</small></div>
       <button class="icon-btn icon-btn--sm" id="logoutBtn" aria-label="Sign out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </aside>

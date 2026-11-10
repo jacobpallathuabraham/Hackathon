@@ -51,13 +51,14 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await p.keyboard.press('Alt+a'); await p.waitForTimeout(250);
   assert.equal(await p.isVisible('#a11yPanel'), true, 'Alt+A opens');
   await p.click('[data-size="125"]');
-  for (const k of ['contrast', 'still', 'font', 'spacing', 'links', 'focus']) await p.click(`.a11y__row:has([data-k="${k}"])`);
+  for (const [tab, k] of [['visual', 'contrast'], ['interaction', 'still'], ['reading', 'font'], ['reading', 'spacing'], ['visual', 'links'], ['interaction', 'focus']]) { await p.click(`[data-tab="${tab}"]`); await p.click(`.a11y__row:has([data-k="${k}"])`); }
   const cls = await p.evaluate(() => document.documentElement.className);
   ['a11y-zoom', 'a11y-contrast', 'a11y-still', 'a11y-font', 'a11y-spacing', 'a11y-links', 'a11y-focus'].forEach(c => assert.match(cls, new RegExp(c), c));
   assert.equal(await p.evaluate(() => getComputedStyle(document.body).zoom), '1.25');
   assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.hero h1')).opacity), '1', 'stopping animations never hides content');
   const panelBox = await p.locator('#a11yPanel').boundingBox();
   assert.ok(panelBox.y >= 0 && panelBox.y + panelBox.height <= 800, 'panel stays on screen at 125% text');
+  await p.click('[data-tab="reading"]');
   await p.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.hero h1')); getSelection().removeAllRanges(); getSelection().addRange(r); });
   await p.click('[data-a="read"]');
   assert.match(await p.evaluate(() => window.__spoken.join(' ')), /Notice sooner/, 'reads the selection aloud');

@@ -36,7 +36,7 @@
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
@@ -79,7 +79,7 @@
         <div class="user-chip" id="userChip">
           <button class="user-chip__btn" id="userBtn" aria-haspopup="true" aria-expanded="false"><span class="avatar avatar--sm">A</span><span class="user-chip__name">Acubins</span><svg viewBox="0 0 12 12" width="10"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
           <div class="user-menu" id="userMenu" hidden>
-            <p class="user-menu__who"><b>Acubins</b><small class="muted">Student · ID 2026-0417</small></p>
+            <p class="user-menu__who"><b>Acubins</b> <small class="muted">Demo student account</small></p>
             <a href="#tracking" data-i18n="nav.cta2">My tracking</a>
             <a href="#handoff" data-i18n="nav.handoff">Get support</a>
             <button id="logoutBtn" data-i18n="nav.logout">Sign out</button>
@@ -107,13 +107,13 @@
         <ul class="hero__facts reveal">
           <li><b data-i18n="h3.f1a">100</b><span data-i18n="h3.f1b">indicators across 10 domains</span></li>
           <li><b data-i18n="h3.f2a">14</b><span data-i18n="h3.f2b">days: one week to learn your normal, one to notice</span></li>
-          <li><b data-i18n="h2.f3a">0</b><span data-i18n="h2.f3b">bytes of raw activity leave your device</span></li>
+          <li><b data-i18n="h2.f3a">0</b><span data-i18n="h2.f3b">bytes of raw tracking data leave your device (Noor’s optional online AI sends only what you type, after you agree)</span></li>
         </ul>
       </div>
 
       <div class="hero__stage hero__stage--v2 reveal" aria-hidden="true">
         <div class="hcard hcard--track">
-          <div class="hcard__head"><span class="mono" data-i18n="h3.c1">Watching · day 10 of 14</span><span class="hcard__rec"><i></i><span data-i18n="h2.c2">on this device</span></span></div>
+          <div class="hcard__head"><span class="mono" data-i18n="h3.c1">Example · day 10 of 14</span><span class="hcard__rec"><i></i><span data-i18n="h2.c2">on this device</span></span></div>
           <div class="hbars">
             <div><span data-i18n="h2.b1">Re-read loops</span><i style="--w:72%;--c:var(--c-R)"></i></div>
             <div><span data-i18n="h2.b2">Dwell vs. expected</span><i style="--w:58%;--c:var(--c-R)"></i></div>
@@ -125,14 +125,13 @@
           <span class="mini-noor"><i></i></span>
           <div><b>Noor</b><p data-i18n="h2.c3">I noticed you returned to this section a few times. Would you like to talk about how the reading is going?</p><span class="hcard__chips"><em data-i18n="h2.c4">Talk about it</em><em data-i18n="h2.c5">Later</em></span></div>
         </div>
-        <div class="hcard hcard--voice"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span><div><b data-i18n="h2.c6">Reading aloud</b><small class="muted" data-i18n="h2.c7">your choice of voice · 0.9×</small></div></div>
+        <div class="hcard hcard--voice"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span><div><b data-i18n="h2.c6">Reading aloud</b> <small class="muted" data-i18n="h2.c7">your choice of voice · 0.9×</small></div></div>
       </div>
     </div>
 
     <div class="ticker" aria-label="Principles">
       <div class="ticker__track">
         <span data-i18n="tk3.1">No quizzes, no labels</span><span data-i18n="tk3.2">A Support Pact, not surveillance</span><span data-i18n="tk3.3">You vs. you</span><span data-i18n="tk3.4">A baseline week first</span><span data-i18n="tk3.5">3+ signals, a whole week</span><span data-i18n="tk3.6">Looks at your textbook, never at you</span><span data-i18n="tk3.7">Arabic & English baselines</span><span data-i18n="tk3.8">SAS confirms, ERLY never diagnoses</span>
-        <span aria-hidden="true">No quizzes, no labels</span><span aria-hidden="true">A Support Pact, not surveillance</span><span aria-hidden="true">You vs. you</span><span aria-hidden="true">A baseline week first</span><span aria-hidden="true">3+ signals, a whole week</span><span aria-hidden="true">Looks at your textbook, never at you</span><span aria-hidden="true">Arabic & English baselines</span><span aria-hidden="true">SAS confirms, ERLY never diagnoses</span>
       </div>
     </div>
   </section>
@@ -146,16 +145,16 @@
       </header>
       <div class="gap">
         <article class="gap__stat reveal">
-          <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">0</span><small>%</small></p>
-          <p class="gap__label" data-i18n="gap.a">of UAE Grade 12 students pass national literacy benchmarks.</p>
-          <p class="gap__src mono" data-i18n="gap.asrc">Bayanat open data · Grade 12 pass rates, 2012–2021</p>
+          <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">≈94</span><small>%</small></p>
+          <p class="gap__label" data-i18n="gap.a">of UAE Grade 12 students pass their final school exams (reported pass rate).</p>
+          <p class="gap__src mono" data-i18n="gap.asrc">Reported Grade 12 pass rate 94.4% (Khaleej Times) · not independently verified</p>
           <div class="bar"><span style="--w:94%"></span></div>
         </article>
         <div class="gap__vs reveal" aria-hidden="true"><span>vs</span></div>
         <article class="gap__stat gap__stat--hot reveal">
-          <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">0</span><small>%</small></p>
+          <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">17.6</span><small>%</small></p>
           <p class="gap__label" data-i18n="gap.b">of Emirati female students screened at UAE University showed dyslexic features — in Arabic <em>and</em> English.</p>
-          <p class="gap__src mono">Aboudan et al., 2011 · IJEL 1(2):64</p>
+          <p class="gap__src mono">Aboudan et al., 2011 · Int. J. English Linguistics 1(2):64 · 2007/08 UAEU sample</p>
           <div class="bar bar--hot"><span style="--w:17.6%"></span></div>
         </article>
       </div>
@@ -270,7 +269,7 @@
         <p class="section__lead reveal" data-i18n="ck.lead">Listening in noise, memory, planning and switching, steady focus, writing flow, finding your way, quizzes under a timer, and how you work with others. Noor guides each one by voice. Several results have to agree before anything is suggested, and the answer is always “worth exploring with SAS” — never a label.</p>
       </header>
       <div id="checkins-app" data-mode="cta"></div>
-      <button type="button" class="hw-cta reveal" data-hand-open><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></span><span><b data-i18n="hw.cta.t">Handwriting check</b><small data-i18n="hw.cta.s">Write three dictated sentences, snap a photo — analysed on this device, never uploaded.</small></span><em data-i18n="hw.cta.go">Try it →</em></button>
+      <button type="button" class="hw-cta reveal" data-hand-open><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></span><span><b data-i18n="hw.cta.t">Handwriting check</b> <small data-i18n="hw.cta.s">Write three dictated sentences, snap a photo — analysed on this device, never uploaded.</small></span><em data-i18n="hw.cta.go">Try it →</em></button>
     </div>
   </section>
 
@@ -291,9 +290,9 @@
           <h3>MECH 210 · Lab report 3</h3>
           <p class="ramp__due"><span class="mono" id="rampDue">due in 3 days</span></p>
           <div class="ramp__nudges">
-            <label class="rnudge"><input type="checkbox" checked><span><b>72 h</b><small data-i18n="rp.n1">“Five minutes today?”</small></span></label>
-            <label class="rnudge"><input type="checkbox" checked><span><b>24 h</b><small data-i18n="rp.n2">“One micro-task left”</small></span></label>
-            <label class="rnudge"><input type="checkbox"><span><b>3 h</b><small data-i18n="rp.n3">“Submit the draft you have”</small></span></label>
+            <label class="rnudge"><input type="checkbox" checked><span><b>72 h</b> <small data-i18n="rp.n1">“Five minutes today?”</small></span></label>
+            <label class="rnudge"><input type="checkbox" checked><span><b>24 h</b> <small data-i18n="rp.n2">“One micro-task left”</small></span></label>
+            <label class="rnudge"><input type="checkbox"><span><b>3 h</b> <small data-i18n="rp.n3">“Submit the draft you have”</small></span></label>
           </div>
         </div>
         <div class="ramp__steps">
@@ -304,7 +303,7 @@
         <div class="ramp__go">
           <div class="timer5" id="timer5"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring__bg"/><circle cx="60" cy="60" r="52" class="ring__fg" id="t5ring"/></svg><b class="mono" id="t5txt">5:00</b></div>
           <button class="btn btn--accent btn--block" id="t5go" data-i18n="rp.go">Start a 5-minute first step</button>
-          <button class="room" id="roomBtn"><span class="room__dots"><i></i><i></i><i></i><i></i></span><span><b data-i18n="rp.room">Body-doubling room</b><small id="roomN" data-i18n="rp.roomn">4 students studying quietly · cameras off</small></span></button>
+          <button class="room" id="roomBtn"><span class="room__dots"><i></i><i></i><i></i><i></i></span><span><b data-i18n="rp.room">Body-doubling room</b> <small id="roomN" data-i18n="rp.roomn">4 students studying quietly · cameras off</small></span></button>
         </div>
       </div>
     </div>
@@ -319,7 +318,7 @@
           <p class="kicker"><span class="num">08</span><span data-i18n="ai.kicker">How ERLY thinks</span></p>
           <h2 class="h2 reveal" data-i18n="ai.title">It looks at your textbook. <em>Never at you.</em></h2>
         </div>
-        <p class="section__lead reveal" data-i18n="ai.lead">Fully on-device edge AI. No labelled disability data is needed — the data that ethically shouldn’t exist publicly — because ERLY only ever compares you with you.</p>
+        <p class="section__lead reveal" data-i18n="ai.lead">Everything that analyses your activity runs in this browser: simple, inspectable statistics compared only with your own baseline — not a trained model, and no labelled disability data. Demo mode uses a synthetic LMS feed; Real mode uses your own actions on these pages.</p>
       </header>
       <div class="sig-cluster reveal">
         <article class="sigc"><span class="mono">S1</span><h3 data-i18n="ai.s1">Visual tracking friction</h3><p data-i18n="ai.s1p">Scroll regressions — re-reading the same paragraph.</p><small data-i18n="ai.s1m">scroll events only</small></article>
@@ -329,7 +328,7 @@
       </div>
       <ol class="layers4">
         <li class="reveal"><span class="layers4__k mono">L1</span><div><h3 data-i18n="ai.l1">Self-baseline anomaly detection</h3><p data-i18n="ai.l1p">Unsupervised. Learns your normal in the baseline week, per language, then flags only what persists.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
-        <li class="reveal"><span class="layers4__k mono">L2</span><div><h3 data-i18n="ai.l2">On-device insight cards</h3><p data-i18n="ai.l2p">Bilingual templates that always list the three contributing signals. No cloud model ever sees personal data.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
+        <li class="reveal"><span class="layers4__k mono">L2</span><div><h3 data-i18n="ai.l2">On-device insight cards</h3><p data-i18n="ai.l2p">Bilingual templates, built in this browser, that always list the three contributing signals. Your tracking data is never sent to any AI model.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
         <li class="reveal"><span class="layers4__k mono">L3</span><div><h3 data-i18n="ai.l3">Outcome calibration</h3><p data-i18n="ai.l3p">Semi-supervised, from consented and anonymised SAS outcomes. Federated only.</p></div><em class="honesty honesty--road" data-i18n="ai.road">roadmap</em></li>
         <li class="reveal"><span class="layers4__k mono">L4</span><div><h3 data-i18n="ai.l4">Contextual RL via 1-tap micro-nudges</h3><p data-i18n="ai.l4p">Noor’s “Did that help?” and “too dense / tired / lost thread” taps update which support you’re offered — without survey fatigue.</p></div><em class="honesty honesty--sim" data-i18n="ai.sim">simulated</em></li>
       </ol>
@@ -343,7 +342,7 @@
           </ul></article>
         <article class="rej reveal"><h3 data-i18n="ai.mh">How ERLY could be misused — and what stops it</h3>
           <ul>
-            <li><b data-i18n="ai.m1">A parent demands the data</b><span data-i18n="ai.m1p">There is none to hand over: raw logs never leave the device and are deleted on day 14.</span></li>
+            <li><b data-i18n="ai.m1">A parent demands the data</b><span data-i18n="ai.m1p">There is none to hand over: raw logs never leave the device and are deleted when the 14 days end (the next time ERLY is opened).</span></li>
             <li><b data-i18n="ai.m2">A university wants to rank students</b><span data-i18n="ai.m2p">SAS sees only what a student shares; cohort views hide any group under 10 students.</span></li>
             <li><b data-i18n="ai.m3">An employer asks for “ERLY results”</b><span data-i18n="ai.m3p">ERLY never produces a label or a score — only a private picture the student owns.</span></li>
           </ul></article>
@@ -362,8 +361,8 @@
         <p class="section__lead reveal" data-i18n="in3.lead">After day 14, all 100 indicators come together in a page made for you: a bilingual evidence card, your month as weather, a friction fingerprint, what stayed steady — and what actually helped you.</p>
       </header>
       <div id="insightBox"></div>
-      <a class="hw-cta growth-cta reveal" href="support.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11c0-4 3-7 8-7 0 5-3 8-8 7zM12 14c0-3-2.5-5.5-7-5.5 0 4.5 2.5 6.5 7 5.5z"/></svg></span><span><b data-i18n="gp.cta.t">Growth Plan — build the skills, slowly</b><small data-i18n="gp.cta.s">A six-week programme of short daily exercises and strategies, with a weekly review with Noor. Like coaching, at your pace.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
-      <a class="hw-cta growth-cta games-cta reveal" href="games.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01"/></svg></span><span><b data-i18n="gm.cta.t">Learning Games — practise, not a test</b><small data-i18n="gm.cta.s">Eight short games for reading, memory, planning, attention, 3D spatial thinking and listening.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
+      <a class="hw-cta growth-cta reveal" href="support.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11c0-4 3-7 8-7 0 5-3 8-8 7zM12 14c0-3-2.5-5.5-7-5.5 0 4.5 2.5 6.5 7 5.5z"/></svg></span><span><b data-i18n="gp.cta.t">Growth Plan — build the skills, slowly</b> <small data-i18n="gp.cta.s">A six-week programme of short daily exercises and strategies, with a weekly review with Noor. Like coaching, at your pace.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
+      <a class="hw-cta growth-cta games-cta reveal" href="games.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01"/></svg></span><span><b data-i18n="gm.cta.t">Learning Games — practise, not a test</b> <small data-i18n="gm.cta.s">Eight short games for reading, memory, planning, attention, 3D spatial thinking and listening.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
     </div>
   </section>
 
@@ -526,7 +525,7 @@
         <details class="reveal"><summary data-i18n="fq3.6q">Why a baseline week?</summary><p data-i18n="fq3.6a">We chose a quiet baseline week over a noisy one. Your tools still work from day one.</p></details>
         <details class="reveal"><summary data-i18n="fq3.7q">Why not eye-tracking?</summary><p data-i18n="fq3.7a">Accuracy, biometrics under PDPL, and stigma. Confirmation is a human’s job with validated instruments.</p></details>
         <details class="reveal"><summary data-i18n="fq3.8q">Won’t university IT block it?</summary><p data-i18n="fq3.8a">The Grammarly defence: a student-owned extension on a personal browser needs zero IT procurement for v1.</p></details>
-        <details class="reveal"><summary data-i18n="fq3.9q">Can high-schoolers really deploy on-device models?</summary><p data-i18n="fq3.9a">This demo simulates inference on synthetic data and says so. The architecture names real local models and runtimes for the 90-day plan.</p></details>
+        <details class="reveal"><summary data-i18n="fq3.9q">Can high-schoolers really deploy on-device models?</summary><p data-i18n="fq3.9a">What is live today: the tracking and its statistics run in your browser (Demo mode feeds them synthetic LMS data; Real mode uses your own actions). What is planned: the local machine-learning models named in the architecture are part of the 90-day plan and are not running yet.</p></details>
         <details class="reveal"><summary data-i18n="fq3.10q">The 17.6% study is old.</summary><p data-i18n="fq3.10a">We critique it on stage: 2007/08, one university, women only. That’s the argument — nobody has measured since. Our pilot creates current, consented data.</p></details>
       </div>
     </div>

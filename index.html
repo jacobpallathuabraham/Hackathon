@@ -50,7 +50,7 @@
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (sessionStorage.getItem('acu-seen-intro')) document.documentElement.classList.add('no-intro');
@@ -81,13 +81,13 @@
 
   <header class="acu-nav" id="acuNav">
     <div class="acu-wrap acu-nav__in">
-      <a class="acu-brand" href="#top" aria-label="Acubins University home"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="var(--navy)"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b><small>University</small></span></a>
+      <a class="acu-brand" href="#top" aria-label="Acubins University home"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="var(--navy)"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b> <small>University</small></span></a>
       <nav class="acu-links" aria-label="Main">
         <div class="acu-mega-wrap"><button class="acu-link" aria-expanded="false" data-mega>Study <span aria-hidden="true">▾</span></button>
           <div class="acu-mega" hidden>
             <div><p class="mono">Undergraduate</p><a href="#programs" data-filter="ug">Bachelor’s degrees</a><a href="#admissions">How to apply</a><a href="#scholar">Scholarships</a></div>
             <div><p class="mono">Postgraduate</p><a href="#programs" data-filter="pg">Master’s degrees</a><a href="#programs" data-filter="phd">PhD programmes</a><a href="#programs">Executive education</a></div>
-            <div class="acu-mega__card"><b>Open Day · Nov 4</b><p>Tour the campus, meet professors and get same-day admission advice.</p><a href="#events" class="acu-btn acu-btn--gold acu-btn--sm">Register</a></div>
+            <div class="acu-mega__card"><b id="megaEv">Upcoming events</b><p>Tour the campus, meet professors and get same-day admission advice.</p><a href="#events" class="acu-btn acu-btn--gold acu-btn--sm">Register</a></div>
           </div>
         </div>
         <a class="acu-link" href="#research">Research</a>
@@ -117,8 +117,8 @@
         <g class="sk-win"></g>
       </svg>
       <div class="acu-wrap acu-hero__in">
-        <p class="acu-eyebrow"><i></i>Ranked top 5 in the UAE · QS 2026</p>
-        <h1 class="acu-h1"><span class="acu-sr">Acubins University — </span><span class="ln"><span>Where you become</span></span><span class="ln"><span class="acu-rot" id="heroRot"><b class="is-on">an engineer.</b><b>a doctor.</b><b>a designer.</b><b>a founder.</b><b>a leader.</b><b>yourself.</b></span></span></h1>
+        <p class="acu-eyebrow"><i></i>Acubins is a fictional university created for the ERLY hackathon demo</p>
+        <h1 class="acu-h1"><span class="acu-sr">Acubins University — where you become an engineer, a doctor, a designer, a founder, a leader — yourself.</span><span class="ln" aria-hidden="true"><span>Where you become</span></span><span class="ln"><span class="acu-rot" id="heroRot" aria-hidden="true"><b class="is-on">an engineer.</b> <b>a doctor.</b> <b>a designer.</b> <b>a founder.</b> <b>a leader.</b> <b>yourself.</b></span></span></h1>
         <p class="acu-lead">Five colleges, 120+ programmes and one of the region’s most supportive campuses — in the heart of Abu Dhabi.</p>
         <div class="acu-hero__cta">
           <a class="acu-btn acu-btn--gold acu-mag" href="#programs">Explore programmes <span aria-hidden="true">→</span></a>
@@ -131,10 +131,10 @@
 
     <!-- QUICK LINKS -->
     <section class="acu-quick acu-wrap" aria-label="Quick links">
-      <a href="#programs" class="rv"><span>01</span><b>Find a programme</b><small>120+ degrees</small></a>
-      <a href="#admissions" class="rv"><span>02</span><b>Apply</b><small>Deadline Nov 30</small></a>
-      <a href="#scholar" class="rv"><span>03</span><b>Scholarships</b><small>Up to 100%</small></a>
-      <a href="#map" class="rv"><span>04</span><b>Visit campus</b><small>Map & tours</small></a>
+      <a href="#programs" class="rv"><span>01</span><b>Find a programme</b> <small>120+ degrees</small></a>
+      <a href="#admissions" class="rv"><span>02</span><b>Apply</b> <small>Deadline Nov 30</small></a>
+      <a href="#scholar" class="rv"><span>03</span><b>Scholarships</b> <small>Up to 100%</small></a>
+      <a href="#map" class="rv"><span>04</span><b>Visit campus</b> <small>Map & tours</small></a>
     </section>
 
     <!-- SIGN IN: the two options -->
@@ -192,7 +192,7 @@
         <div class="acu-tabs rv" role="tablist" id="progTabs"><button class="is-on" data-lv="all">All</button><button data-lv="ug">Undergraduate</button><button data-lv="pg">Master’s</button><button data-lv="phd">PhD</button><i class="acu-tabs__ink"></i></div>
         <div class="acu-colfilter rv" id="colFilter"></div>
         <div class="acu-progs" id="progGrid"></div>
-        <p class="acu-empty" id="progEmpty" hidden>No programmes match — try another word.</p>
+        <p class="acu-empty" id="progEmpty" hidden></p>
       </div>
     </section>
 
@@ -221,9 +221,9 @@
           <label><span>High-school average <b id="gpaV">92%</b></span><input type="range" id="gpa" min="70" max="100" value="92"></label>
           <label><span>Programme</span><select id="estProg"></select></label>
           <div class="acu-est__chk"><label><input type="checkbox" id="estSport"> Athlete</label><label><input type="checkbox" id="estSib"> Sibling at Acubins</label></div>
-          <div class="acu-est__out"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="52" id="estArc"/></svg><div><b id="estPct">50%</b><small>estimated award</small></div></div>
-          <p class="acu-est__fee">Tuition after award: <b id="estFee">AED 0</b> / year</p>
-          <p class="acu-fine">Estimate only — final awards are confirmed in your offer letter.</p>
+          <div class="acu-est__out"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="52" id="estArc"/></svg><div><b id="estPct">50%</b> <small>estimated award</small></div></div>
+          <p class="acu-est__fee">Tuition after award: <b id="estFee">AED 36,000</b> / year</p>
+          <p class="acu-fine">Illustrative fees and award rules for a fictional university. Estimate only.</p>
         </div>
       </div>
     </section>
@@ -303,15 +303,15 @@
         <form class="acu-contact rv" id="contactForm"><p class="acu-kick">Get in touch</p><h3>Talk to admissions</h3>
           <label><span>Name</span><input required id="cName"></label><label><span>Email</span><input type="email" required id="cMail"></label>
           <label><span>Interested in</span><select id="cProg"></select></label><label><span>Message</span><textarea rows="3" id="cMsg"></textarea></label>
-          <button class="acu-btn acu-btn--gold" type="submit">Send message</button><p class="acu-fine">Demo form — nothing is sent anywhere.</p></form>
+          <button class="acu-btn acu-btn--gold" type="submit">Send message</button><p class="acu-fine">Demonstration form for a fictional university — nothing is sent anywhere.</p></form>
       </div>
     </section>
   </main>
 
   <footer class="acu-foot">
     <div class="acu-wrap acu-foot__in">
-      <div><a class="acu-brand acu-brand--light" href="#top"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="#fff"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b><small>University</small></span></a>
-        <p>Saadiyat Knowledge District, Abu Dhabi, UAE<br>+971 2 000 0000 · admissions@acubins.example</p>
+      <div><a class="acu-brand acu-brand--light" href="#top"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M60 6 110 24v44c0 34-22 56-50 66C32 124 10 102 10 68V24z" fill="#fff"/><path d="M30 58 60 42l30 16-30 16z" fill="#E2B851"/><path d="M40 66v18c10 10 30 10 40 0V66" fill="none" stroke="#E2B851" stroke-width="7"/></svg><span><b>Acubins</b> <small>University</small></span></a>
+        <p>Saadiyat Knowledge District, Abu Dhabi, UAE<br>Example contact details — Acubins is fictional (+971 2 000 0000 · admissions@acubins.example)</p>
         <form class="acu-news-sub" id="subForm"><input type="email" placeholder="Your email for news" aria-label="Email for newsletter" required><button class="acu-btn acu-btn--gold acu-btn--sm">Subscribe</button></form></div>
       <div><p class="mono">Study</p><a href="#programs">Programmes</a><a href="#admissions">Admissions</a><a href="#scholar">Scholarships</a><a href="#events">Open Day</a></div>
       <div><p class="mono">Students</p><a href="login.html">Student sign-in</a><a href="#services">Services</a><a href="#life">Campus life</a><a href="#map">Campus map</a></div>

@@ -763,3 +763,48 @@ Tabs: **Overview** (the existing plan), **Today**, **Timetable**, **Six weeks**,
 
 ### Backend still needed for "university-level" answers
 A configured LLM endpoint (`server/llm-proxy.mjs`, key held server-side). Without one, Noor uses its built-in knowledge, small on-device models, or a rate-limited keyless service, and says so.
+
+## v11 — emergency repair, real AI architecture, open-ended visuals, accessibility and audit
+
+### Bug register (reproduced in a browser or confirmed in the code)
+| # | Area | Problem | Root cause | Fix | Test |
+|---|---|---|---|---|---|
+| 1 | Chat | Pressing Enter while Noor was replying didn't send — it only stopped the reply | The submit handler returned after `stopGenerating()`; the old reply also held the `busy` lock after it was stopped | A typed message stops the old reply and is sent; an empty box means "stop" | `chat.e2e.js` |
+| 2 | Chat | Scrolling the chat scrolled the page behind it (iPad/iPhone) | `#cmpLog` had no `overscroll-behavior`, so scrolling chained to the page; older iOS ignores that property | `overscroll-behavior: contain`, `touch-action: pan-y`, plus a touch fallback that stops chaining at the top and bottom | `chat.e2e.js` (wheel over 30+ messages, page never moves) |
+| 3 | Chat | New replies dragged you down while reading older messages | Every bubble called `scrollTo(bottom)` | Follows only when you're near the bottom; otherwise a "New messages ↓" button appears | `chat.e2e.js` |
+| 4 | Chat | No way to upload screenshots or images | Never implemented | Attach, paste or drop PNG/JPEG/WebP: validated, previewed, removable, up to 4, scaled to ≤1600 px; sent as OpenAI-style `image_url` parts **only** to a service that declares vision; otherwise Noor says plainly the image was **not** analysed and keeps it in the composer | `chat.e2e.js` (a fake vision server receives the PNG) |
+| 5 | Navigation | Back after opening the Growth Plan showed a frozen page | Safari/Chrome restore the page from the back-forward cache with the full-screen "seedling" overlay still on top (also the Daily Quest rocket and the login wipe) | A `pageshow` (persisted) handler removes leftover overlays and unlocks the login form | `nav.e2e.js` |
+| 6 | Navigation | Back/refresh asked you to sign in again | `index.html` and `login.html` deleted the session (and **all** Growth Plan and Games data) on every direct visit, including Back/Forward | The reset never runs on reload or back/forward and never deletes progress or settings; an 8-hour device session (`acubins-session`) survives new tabs; sign-out clears it; sign-in returns to the page that asked | `nav.e2e.js` |
+| 7 | AI | Shallow answers | No model connected by default; the Worker used `effort: low`, 4,096 tokens and dropped images; the proxy had 1,500 tokens and 8 turns | `server/noor-core.mjs` (shared by the Worker and the Node proxy): `claude-opus-5-5`, effort chosen per question, 16k output, streaming, vision, 60-turn context, optional web search with real citations, refusal fallbacks, validation and rate limits | `noor-core.test.js` |
+| 8 | Visuals | Only a fixed set of visual templates | Renderers existed only for specific topics | New open kinds `scene2d` (SVG) and `scene3d` (three.js), composed by the model as validated JSON. Shapes, labels, details, layers, steps and animations (move/rotate/orbit/flow/pulse) with hover/tap detail, zoom/pan, an orbit camera and layer toggles. No generated code runs | `companion-quality.e2e.js` (a model-composed plant cell renders) |
+| 9 | Visuals | "Create a visual explanation of…" wasn't treated as a request for a visual | The intent regex was too narrow | Widened ("visual explanation/representation", "create/make/build a …") | `companion-quality.e2e.js` |
+| 10 | Content | Stats showed "0" / "0%" and the scholarship "AED 0" in the page source | Count-up animations started at 0; static placeholders | Real values in the markup; JS only animates them | — |
+| 11 | Content | "Reading aloudyour choice…" and "Read-aloud onfollowing…" in text extraction and screen readers | No whitespace between adjacent elements | Whitespace added (`</b> <small>`) site-wide | — |
+| 12 | Content | Duplicated ticker block | The loop copy was written into the markup | The copy is created at runtime with `aria-hidden` | — |
+| 13 | Content | Open Day (Nov 4) still advertised as upcoming | Events had no date awareness | Past events are labelled and listed last; the menu card shows the next real event | — |
+| 14 | Content | "Ranked top 5 · QS 2026", example phone and email shown as real | Fictional university not labelled | Labelled as a fictional demo university, with example contact details | — |
+| 15 | Content | "Fully on-device edge AI" vs "simulates inference" | Contradictory claims | Rewritten: what is live (in-browser statistics), what is simulated (Demo mode feed), what is planned (local ML models) | — |
+| 16 | Content | Arabic hero said 44 indicators / 7 categories; login said "Four weeks" | Stale translation and copy | 100 indicators / 10 domains; two weeks | — |
+| 17 | Content | "≈94% pass literacy benchmarks (Bayanat)" | Source could not be verified | Relabelled as a reported Grade 12 pass rate (94.4%), marked not independently verified. The 17.6% figure was checked against Aboudan et al. 2011 (IJEL) | — |
+
+### Accessibility Control Centre (rebuilt)
+Four sections, all applied as classes or variables on `<html>` (no re-rendering), saved on this device, reversible, and usable by keyboard (arrow keys switch sections):
+- **Reading:** text size, reading font, line/letter/word spacing, reading width, reading guide band, WCAG preset, and read-aloud (play/pause/resume/stop, voice, speed).
+- **Visual:** theme Light/Dark/System (System follows the device live), high contrast, colour tint, fewer distractions, underline links.
+- **Interaction:** stop animations (follows the device's reduced-motion setting until you choose), bold focus ring, 44 px targets.
+- **Learning:** shorter, step by step, more examples, information density. These change Noor's instructions. Also the "suggest visuals" and "speak replies" preferences, which are Noor's own settings.
+
+### What needs infrastructure
+A strong model needs the Claude server. It is ready to deploy, but needs an Anthropic API key held on a server (never in this repo):
+1. `npm create cloudflare@latest erly-noor -- --type hello-world --lang js`
+2. Copy `server/cloudflare-worker.mjs` → `src/index.js` and `server/noor-core.mjs` → `src/noor-core.mjs`.
+3. `npm install @anthropic-ai/sdk`
+4. `npx wrangler secret put ANTHROPIC_API_KEY`
+5. Optionally, `npx wrangler secret put ERLY_WEB_SEARCH` (value `1`).
+6. `npx wrangler deploy`
+7. In `assets/js/companion/config.js` set:
+   `online: { name: 'Claude', site: 'ERLY server', model: 'claude', vision: true, url: 'https://erly-noor.<you>.workers.dev/v1/chat/completions' }`
+
+Without it, Noor uses its built-in knowledge, a small on-device model, or the rate-limited free service, and says so. Image understanding works only with the server.
+
+Not implemented (needs a backend or a product decision): retrieval over course documents (embeddings and a vector index), server-side accounts and authentication (the sign-in is a client-side demo), and cross-device sync.

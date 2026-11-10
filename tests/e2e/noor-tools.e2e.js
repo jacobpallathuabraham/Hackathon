@@ -165,10 +165,11 @@ const MOCKS = () => {
   if (await ipad.isVisible('#ncConsent [data-c="yes"]')) await ipad.click('#ncConsent [data-c="yes"]');
   await ipad.waitForTimeout(1800);
   // the "Allow" tap lets Safari start the microphone straight after the greeting — no extra tap
-  await ipad.waitForFunction(() => /listening|hearing/.test(document.querySelector('.ncall').dataset.s), null, { timeout: 10000 }); // hands-free after the Allow tap
-  await ipad.waitForFunction(() => /what is 6\*7/.test(document.querySelector('#ncYou').textContent), null, { timeout: 5000 }).catch(() => {});
+  // hands-free after the Allow tap: the microphone starts by itself once the greeting ends (the "hearing" state can be brief)
+  await ipad.waitForFunction(() => window.__recStarts >= 1, null, { timeout: 15000 });
+  await ipad.waitForFunction(() => /what is 6\*7/.test(document.querySelector('#ncYou').textContent) || /= 42/.test(document.querySelector('#cmpLog').textContent), null, { timeout: 6000 });
   assert.match(await ipad.textContent('#ncYou'), /what is 6\*7/, 'live transcript');
-  await ipad.click('#ncOrb'); await ipad.waitForTimeout(1500);
+  if (!/= 42/.test(await ipad.textContent('#cmpLog'))) { await ipad.click('#ncOrb'); } await ipad.waitForTimeout(1500);
   assert.match(await ipad.textContent('#cmpLog'), /= 42/, 'tap sends what was heard');
   // if Safari refuses to start the mic without a tap, Noor falls back to tap-to-talk
   await ipad.evaluate(() => { window.__recDead = true; });

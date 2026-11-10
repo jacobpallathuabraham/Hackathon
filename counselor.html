@@ -20,7 +20,7 @@
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = t;
         var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
         if (sessionStorage.getItem('acubins-portal-warp')) { document.documentElement.classList.add('portal-arrive'); sessionStorage.removeItem('acubins-portal-warp'); }
@@ -35,7 +35,7 @@
   <aside class="side" id="side">
     <a class="brand brand--sas" href="#overview">
       <span class="sas-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 22h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9.5 22a6.5 6.5 0 0 1 13 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="11" r="2.2" fill="var(--accent)"/></svg></span>
-      <span class="brand__stack"><b>SAS</b><small>Counselor workspace</small></span>
+      <span class="brand__stack"><b>SAS</b> <small>Counselor workspace</small></span>
     </a>
     <nav class="side__nav">
       <button class="side__a is-on" data-view="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg>Overview</button>
@@ -50,7 +50,7 @@
     </div>
     <div class="side__me">
       <span class="avatar">C</span>
-      <div><b>Counselor</b><small class="muted">Student Accessibility Services</small></div>
+      <div><b>Counselor</b> <small class="muted">Student Accessibility Services</small></div>
       <button class="icon-btn icon-btn--sm" id="logoutBtn" aria-label="Sign out" title="Sign out"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
   </aside>

@@ -103,7 +103,7 @@
   $('#marq').innerHTML = [...partners, ...partners].map(p => `<span>${esc(p)}</span>`).join('<i>✦</i>');
   const total = window.CAMPUS ? window.CAMPUS.COLLEGES.reduce((a, c) => a + c.students, 0) : 12480;
   const STATS = [[total, '', 'students from 90 countries'], [120, '+', 'degree programmes'], [412, '', 'faculty members'], [94, '%', 'graduates employed in 6 months'], [180, '+', 'student clubs'], [62, 'M', 'AED research funding']];
-  $('#stats').innerHTML = STATS.map(([n, suf, l], i) => `<div class="acu-stat rv" style="--d:${i * 80}ms"><b data-n="${n}" data-s="${suf}">0${suf}</b><span>${l}</span></div>`).join('');
+  $('#stats').innerHTML = STATS.map(([n, suf, l], i) => `<div class="acu-stat rv" style="--d:${i * 80}ms"><b data-n="${n}" data-s="${suf}">${n.toLocaleString('en-US')}${suf}</b><span>${l}</span></div>`).join('');
   const sio = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; const b = e.target, to = +b.dataset.n, s = b.dataset.s; sio.unobserve(b); if (reduce) { b.textContent = to.toLocaleString('en-US') + s; return; } const t0 = performance.now(); (function f(t) { const k = Math.min(1, (t - t0) / 1600), v = Math.round(to * (1 - Math.pow(1 - k, 4))); b.textContent = v.toLocaleString('en-US') + s; if (k < 1) requestAnimationFrame(f); })(t0); }), { threshold: .6 });
   $$('#stats b').forEach(b => sio.observe(b));
 
@@ -116,7 +116,7 @@
   function renderProgs() {
     const list = U.programs.filter(p => (level === 'all' || p.level === level) && (college === 'all' || p.college === college) && (!q || (p.name + ' ' + p.blurb + ' ' + p.careers.join(' ') + ' ' + U.colleges[p.college]).toLowerCase().includes(q)));
     $('#progGrid').innerHTML = list.map((p, i) => `<button class="acu-prog" data-prog="${p.id}" style="--h:${HUE[p.college]};--i:${i}"><span class="acu-prog__lv mono">${p.level === 'ug' ? 'Undergraduate' : p.level === 'pg' ? 'Master’s' : 'Doctoral'} · ${p.deg}</span><b>${esc(p.name)}</b><small>${esc(U.colleges[p.college])}</small><p>${esc(p.blurb)}</p><span class="acu-prog__meta"><i>${p.years} yrs</i><i>${p.credits} credits</i><i>${esc(p.intake)}</i></span><span class="acu-prog__go">View programme →</span></button>`).join('');
-    $('#progEmpty').hidden = list.length > 0;
+    $('#progEmpty').hidden = list.length > 0; $('#progEmpty').textContent = list.length ? '' : 'No programmes match “' + q + '” — try another word, or clear the filters.';
   }
   $('#progTabs').addEventListener('click', e => { const b = e.target.closest('[data-lv]'); if (b) setLevel(b.dataset.lv); });
   $('#colFilter').addEventListener('click', e => { const b = e.target.closest('[data-col]'); if (!b) return; college = b.dataset.col; $$('#colFilter button').forEach(x => x.classList.toggle('is-on', x === b)); renderProgs(); });
@@ -183,7 +183,12 @@
   $('#newsTabs').addEventListener('click', e => { const b = e.target.closest('[data-tag]'); if (!b) return; $$('#newsTabs button').forEach(x => x.classList.toggle('is-on', x === b)); renderNews(b.dataset.tag); });
   $('#newsGrid').addEventListener('click', e => { const a = e.target.closest('[data-news]'); if (a) openModal('news', +a.dataset.news); });
   renderNews('All');
-  $('#eventList').innerHTML = U.events.map((ev, i) => { const d = new Date(ev.d + 'T12:00'); return `<div class="acu-ev rv" style="--d:${i * 60}ms"><div class="acu-ev__d"><b>${d.getDate()}</b><small>${d.toLocaleDateString('en-GB', { month: 'short' })}</small></div><div><span class="mono">${esc(ev.type)} · ${ev.time}</span><b>${esc(ev.title)}</b><small>${esc(ev.place)}</small></div><button class="acu-ev__add" data-ics="${i}" aria-label="Add ${esc(ev.title)} to calendar">+ Calendar</button></div>`; }).join('');
+  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+  const isPast = ev => new Date(ev.d + 'T23:59') < today0;
+  U.events.sort((a, b) => (isPast(a) - isPast(b)) || (isPast(a) ? b.d.localeCompare(a.d) : a.d.localeCompare(b.d)));
+  const nextEv = U.events.find(ev => !isPast(ev));
+  if ($('#megaEv')) $('#megaEv').textContent = nextEv ? `${nextEv.title} · ${new Date(nextEv.d + 'T12:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'See the events calendar';
+  $('#eventList').innerHTML = U.events.map((ev, i) => { const d = new Date(ev.d + 'T12:00'); return `<div class="acu-ev rv${isPast(ev) ? ' is-past' : ''}" style="--d:${i * 60}ms"><div class="acu-ev__d"><b>${d.getDate()}</b><small>${d.toLocaleDateString('en-GB', { month: 'short' })}</small></div><div><span class="mono">${isPast(ev) ? 'Past event · ' : ''}${esc(ev.type)} · ${ev.time}</span><b>${esc(ev.title)}</b><small>${esc(ev.place)}</small></div><button class="acu-ev__add" data-ics="${i}" aria-label="Add ${esc(ev.title)} to calendar">+ Calendar</button></div>`; }).join('');
   $('#eventList').addEventListener('click', e => {
     const b = e.target.closest('[data-ics]'); if (!b) return;
     const ev = U.events[+b.dataset.ics], st = ev.d.replace(/-/g, '') + 'T' + ev.time.replace(':', '') + '00';

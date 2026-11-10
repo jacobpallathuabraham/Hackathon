@@ -70,6 +70,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
     if (o.voice) s += `\n\nThis is a spoken conversation. Reply in 1–3 short spoken sentences: no Markdown, no lists, no emojis, no symbols.`;
     if (o.voice && o.care) s += ` It is like a calm, private appointment with a caring specialist. Listen, reflect back what you heard, then ask ONE gentle follow-up question at a time — how it shows up in their studies and daily life, when it started, how often, what makes it easier or harder. Never diagnose; when it sounds like more support would help, mention that SAS can arrange a proper assessment.`;
     if (o.reading) s += `\n\nThe student is reading "${o.reading.title}" (${o.reading.course}), page ${o.reading.page}: ${o.reading.heading}.${o.reading.quote ? `\nThey selected this passage:\n<<<${o.reading.quote}>>>` : ''}\nPage text:\n<<<${o.reading.text}>>>`;
+    if (o.visual) s += `\n\nOn the student's screen right now: ${o.visual}. When they say "it", "the diagram", "this part" or "the second component", they mean this visual — explain using its parts and step numbers.`;
     if (o.kb) s += `\n\nERLY reference notes (use if relevant):\n${o.kb}`;
     if (o.memory) s += `\n\n${o.memory}`;
     return s;

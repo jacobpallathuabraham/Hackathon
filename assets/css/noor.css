@@ -372,3 +372,18 @@ html.erly-big body { zoom: 1.12; }
 .md .mmat--align .mmat__g { justify-items: start; gap: 2px 4px; }
 .md .mmat--align .mmat__g > span:nth-child(odd) { justify-self: end; }
 .md .mmat--cases .mmat__g { justify-items: start; gap: 2px 18px; }
+
+/* v11 open compositions (visual-spec scene2d / scene3d) */
+.vs-compose { width: 100%; height: auto; aspect-ratio: 5 / 3; cursor: grab; touch-action: none; color: var(--ink, #1b1915); }
+.vs-compose .vs-c[tabindex] { cursor: pointer; }
+.vs-compose .vs-c.is-on > :first-child, .vs-compose .vs-c.is-focus > :first-child { stroke: var(--accent, #c1502b); stroke-width: 0.9; }
+.vs-compose .vs-c:focus-visible { outline: none; } .vs-compose .vs-c:focus-visible > :first-child { stroke: #f59e0b; stroke-width: 1.2; }
+.vs-compose .vs-c__lbl { paint-order: stroke; stroke: var(--surface, #fff); stroke-width: .5; font-weight: 600; }
+.vs-tools { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 2px 0; font-size: 12.5px; }
+.vs-tools button { border: 1px solid var(--line); background: var(--surface-2); color: inherit; border-radius: 999px; padding: 4px 10px; cursor: pointer; font: 600 12px inherit; }
+.vs-tools__note { color: var(--muted); font-style: italic; margin-inline-start: auto; }
+.vs-3d { position: relative; } .vs-3d canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; touch-action: none; }
+.vs-3d__labels span { position: absolute; left: 0; top: 0; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--surface, #fff) 85%, transparent); font: 600 11.5px var(--f-body, sans-serif); white-space: nowrap; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.vz__stage .vs-3d { width: 100%; }
+.vz__stage .vs-3d > .vz-canvas { position: static; inset: auto; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.vz__stage:has(.vs-3d), .vz__stage:has(.vs-compose) { display: flex; flex-direction: column; justify-content: center; }
