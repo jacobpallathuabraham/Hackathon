@@ -25,6 +25,8 @@
   fill('icLock', 'lock'); fill('icUser', 'users'); fill('icPass', 'lock'); fill('eyeBtn', 'eye');
 
   let role = null, fails = 0, busy = false;
+  // Safari/Chrome restore this page from memory on Back: undo the sign-in animation so the page is usable again
+  addEventListener('pageshow', e => { if (!e.persisted) return; busy = false; const w = document.getElementById('wipe'); if (w) w.className = w.className.replace(/\bis-\S+/g, '').trim(); const b = document.getElementById('signIn'); if (b) b.classList.remove('is-loading', 'is-ok'); });
   const card = $('#lcard');
 
   // theme
@@ -100,12 +102,12 @@
       if (u.toLowerCase() === acc.user && p === acc.pass) {
         btn.classList.remove('is-loading');
         btn.classList.add('is-ok');
-        try { sessionStorage.setItem('acubins-role', role); } catch (err) {}
+        try { sessionStorage.setItem('acubins-role', role); localStorage.setItem('acubins-session', JSON.stringify({ role: role, exp: Date.now() + 8 * 36e5 })); } catch (err) {}
         setTimeout(() => {
           $('#wipeTxt').textContent = acc.hi;
           $('#wipeK').textContent = acc.k;
           $('#wipe').classList.add('is-on', role === 'counselor' ? 'is-teal' : role === 'faculty' ? 'is-violet' : role === 'university' ? 'is-gold' : 'is-accent');
-          setTimeout(() => { location.href = acc.go; }, 900);
+          setTimeout(() => { const back = new URLSearchParams(location.search).get('back'); location.href = role === 'student' && back && /^[\w-]+\.html([?#][\w=&%#.-]*)?$/.test(back) ? back : acc.go; }, 900); // back to the page that asked for sign-in
         }, 520);
       } else {
         busy = false;

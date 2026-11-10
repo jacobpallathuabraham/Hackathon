@@ -41,9 +41,10 @@
     // every fresh visit starts the demo from scratch (display preferences are kept)
     (function () {
       try {
-        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1, 'erly-ai-v1': 1 };
+        var nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0] || {}).type; if (nav === 'reload' || nav === 'back_forward') return; // never reset on refresh or Back/Forward
+        var keep = { 'erly-theme': 1, 'erly-accent': 1, 'erly-lang': 1, 'erly-mute': 1, 'erly-ai-v1': 1, 'erly-a11y': 1, 'erly-growth-v1': 1, 'erly-gplan-v10': 1, 'erly-games-v1': 1, 'acubins-session': 1 };
         Object.keys(localStorage).forEach(function (k) { if (!keep[k] && /^(erly-|acubins-)/.test(k)) localStorage.removeItem(k); });
-        ['acubins-role', 'acubins-portal-warp', 'erly-warp'].forEach(function (k) { sessionStorage.removeItem(k); });
+        ['acubins-portal-warp', 'erly-warp'].forEach(function (k) { sessionStorage.removeItem(k); });
       } catch (e) {}
     })();
     (function () {

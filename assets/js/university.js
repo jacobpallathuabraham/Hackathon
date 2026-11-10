@@ -16,7 +16,7 @@
   $('#uniDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · Fall 2026, week 10';
   $('#themeToggle').addEventListener('click', () => { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('erly-theme', n); } catch (e) {} drawCharts(); });
   $('#logoutBtn').addEventListener('click', signOut);
-  function signOut() { try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {} location.href = 'index.html'; }
+  function signOut() { try { sessionStorage.removeItem('acubins-role'); localStorage.removeItem('acubins-session'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {} location.href = 'index.html'; }
   ['pSas', 'pFac', 'pStu', 'warpLogo'].forEach((id, i) => { $('#' + id).innerHTML = ICON(['counsel', 'cap', 'sparkle', 'counsel'][i]); });
 
   const total = C.COLLEGES.reduce((a, c) => a + c.students, 0);

@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="assets/css/games.css">
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
   <script>
-    try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('login.html?next=student'); } catch (e) {}
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');

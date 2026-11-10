@@ -264,7 +264,7 @@
   addEventListener('accentchange', () => setTimeout(() => { readTheme(); refresh(); if (open) openDrawer(open.s, open.ask, true); }, 60));
   $('#logoutBtn').addEventListener('click', () => {
     let to = 'login.html';
-    try { if (sessionStorage.getItem('acubins-role') === 'university') to = 'index.html'; sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
+    try { if (sessionStorage.getItem('acubins-role') === 'university') to = 'index.html'; sessionStorage.removeItem('acubins-role'); localStorage.removeItem('acubins-session'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
     document.body.classList.add('is-leaving');
     setTimeout(() => location.href = to, 450);
   });

@@ -334,7 +334,7 @@
       btn.classList.remove('is-loading');
       if (u === ACCOUNT.user && p === ACCOUNT.pass) {
         btn.classList.add('is-ok');
-        try { sessionStorage.setItem('acubins-role', 'university'); } catch (er) {}
+        try { sessionStorage.setItem('acubins-role', 'university'); localStorage.setItem('acubins-session', JSON.stringify({ role: 'university', exp: Date.now() + 8 * 36e5 })); } catch (er) {}
         return setTimeout(() => warp(btn, 'university.html', 'Acubins University', 'Command Center', 'building'), 450);
       }
       busy = false;

@@ -99,6 +99,7 @@
       <div class="cmp__panes">
         <div class="cmp__pane cmp__pane--chat" role="tabpanel" id="cmpP-chat" aria-labelledby="cmpTab-chat">
           <div class="cmp__log" id="cmpLog" aria-live="polite" aria-relevant="additions"></div>
+          <button type="button" class="cmp__newmsg" id="cmpNewMsg" hidden>${T('New messages ↓', 'رسائل جديدة ↓')}</button>
           <div class="cmp__dock">
             <div class="cmp__voicebar" id="cmpVoiceBar">
               <button type="button" class="cmp__mini" id="cmpPause" aria-label="${T('Pause speaking', 'إيقاف مؤقت')}" disabled>${PAUSE}</button>
@@ -115,8 +116,11 @@
               <p class="muted cmp-small" id="cmpVoiceHint"></p>
             </div>
             <div class="cmp__attach" id="cmpAttach" hidden></div>
+            <div class="cmp__imgs" id="cmpImgs" hidden aria-live="polite"></div>
+            <input type="file" id="cmpFile" accept="image/png,image/jpeg,image/webp" multiple hidden>
             <form class="cmp__input cmp__input--v2" id="cmpForm" autocomplete="off">
               <button type="button" class="cmp__plus" id="cmpPlus" aria-expanded="false" aria-controls="cmpPlusMenu" aria-label="${T('More options', 'خيارات أخرى')}">${ICON('plus')}</button>
+              <button type="button" class="cmp__clip" id="cmpClip" aria-label="${T('Attach images (PNG, JPEG, WebP)', 'أرفق صوراً')}" title="${T('Attach images', 'أرفق صوراً')}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg></button>
               <label class="sr-only" for="cmpText">${T('Message Noor', 'راسل نور')}</label>
               <textarea id="cmpText" rows="1" maxlength="2000" enterkeyhint="send" placeholder="${T('Ask Noor anything…', 'اسأل نور أي شيء…')}"></textarea>
               <button type="button" class="cmp__mic" id="cmpMic" aria-pressed="false">${MIC}<span class="cmp__micring" aria-hidden="true"></span></button>
@@ -125,6 +129,7 @@
             </form>
             <div class="cmp__plusmenu" id="cmpPlusMenu" hidden role="menu">
               <button type="button" role="menuitem" data-plus="read">${ICON('book')}<span><b>${T('Ask about what I’m reading', 'اسأل عما أقرؤه')}</b><small>${T('Attach the open page as context', 'أرفق الصفحة المفتوحة كسياق')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="image">${ICON('upload')}<span><b>${T('Add an image or screenshot', 'أضف صورة أو لقطة شاشة')}</b><small>${T('PNG, JPEG or WebP — read by a vision AI model if one is connected', 'PNG أو JPEG أو WebP — يقرأها نموذج يرى الصور إن كان متصلاً')}</small></span></button>
               <button type="button" role="menuitem" data-plus="pdf">${ICON('upload')}<span><b>${T('Open a PDF', 'افتح ملف PDF')}</b><small>${T('In the Reading Studio — stays on this device', 'في استوديو القراءة — يبقى على جهازك')}</small></span></button>
               <button type="button" role="menuitem" data-plus="voice">${ICON('wave')}<span><b>${T('Voice conversation', 'محادثة صوتية')}</b><small>${T('Talk it through, hands-free', 'تحدث دون استخدام يديك')}</small></span></button>
               <button type="button" role="menuitem" data-plus="brain">${ICON('chip')}<span><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Built-in, on-device AI or cloud', 'مدمج، أو ذكاء على الجهاز، أو سحابي')}</small></span></button>
@@ -154,11 +159,51 @@
   }
   function refreshMode() { const m = $('#cmpMode'); if (m) m.innerHTML = modeHTML(); if (!$('#cmpBrain').hidden) renderBrain(); }
   if (ai) ai.on(() => refreshMode());
+  /* ---------- image attachments: validated, previewed, removable, sent only to a model that can see ---------- */
+  let imgs = []; // [{ name, url }] — data URLs, kept in memory only
+  const IMG_OK = { 'image/png': 1, 'image/jpeg': 1, 'image/webp': 1 }, IMG_MAX = 10 * 1024 * 1024, IMG_N = 4;
+  function imgNote(t) { const b = $('#cmpImgs'); let n = b.querySelector('.cmp__imgnote'); if (!n) { n = document.createElement('p'); n.className = 'cmp__imgnote'; n.setAttribute('role', 'status'); b.appendChild(n); } n.textContent = t; b.hidden = false; }
+  // large photos are scaled to at most 1600 px so they upload quickly (well under the server's 5 MB limit)
+  function shrink(file) {
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onerror = () => rej(new Error('read'));
+      fr.onload = () => {
+        const im = new Image();
+        im.onerror = () => rej(new Error('decode'));
+        im.onload = () => {
+          const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
+          if (k === 1 && file.size < 3.5e6) return res(fr.result);
+          const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+          c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+          res(c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.88));
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  async function addImages(files) {
+    for (const f of [...files]) {
+      if (imgs.length >= IMG_N) { imgNote(T(`Up to ${IMG_N} images per message.`, `حتى ${IMG_N} صور لكل رسالة.`)); break; }
+      if (!IMG_OK[f.type]) { imgNote(T(`“${f.name}” isn’t a PNG, JPEG or WebP image.`, `«${f.name}» ليست صورة PNG أو JPEG أو WebP.`)); continue; }
+      if (f.size > IMG_MAX) { imgNote(T(`“${f.name}” is larger than 10 MB.`, `«${f.name}» أكبر من ١٠ ميغابايت.`)); continue; }
+      try { imgs.push({ name: f.name, url: await shrink(f) }); } catch (e) { imgNote(T(`“${f.name}” couldn’t be opened as an image.`, `تعذر فتح «${f.name}» كصورة.`)); }
+    }
+    renderImgs(); composer();
+  }
+  function renderImgs() {
+    const b = $('#cmpImgs'); const note = b.querySelector('.cmp__imgnote');
+    b.innerHTML = imgs.map((x, i) => `<figure class="cmp__img"><img src="${x.url}" alt="${esc(x.name)}"><button type="button" data-unimg="${i}" aria-label="${T('Remove image', 'إزالة الصورة')} ${esc(x.name)}">✕</button></figure>`).join('');
+    if (note) b.appendChild(note);
+    b.hidden = !imgs.length && !note;
+  }
+  function restoreImages(urls, text) { imgs = urls.map((url, i) => ({ name: T('image', 'صورة') + ' ' + (i + 1), url })); renderImgs(); if (text != null && !$('#cmpText').value) $('#cmpText').value = text; composer(); }
   // ChatGPT-style composer: the voice button turns into "send" while typing, and "stop" while Noor writes
   function composer() {
     const t = $('#cmpText'); if (!t) return;
     t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px';
-    const has = !!t.value.trim();
+    const has = !!t.value.trim() || imgs.length > 0;
     $('#cmpSend').hidden = !has && !generating; $('#cmpVoice').hidden = has || !!generating;
     $('#cmpSend').innerHTML = ICON(generating ? 'stop' : 'send');
     $('#cmpSend').setAttribute('aria-label', generating ? T('Stop', 'إيقاف') : T('Send', 'إرسال'));
@@ -312,14 +357,34 @@
         setTab(tabs[n].dataset.tab); tabs[n].focus();
       }
     });
-    $('#cmpForm').addEventListener('submit', e => {
+    $('#cmpForm').addEventListener('submit', async e => {
       e.preventDefault();
-      if (generating) return stopGenerating();
-      const v = $('#cmpText').value.trim();
-      if (!v || busy) return;
-      $('#cmpText').value = ''; composer();
-      submit(v);
+      const field = $('#cmpText'), raw = field.value, v = raw.trim();
+      // pressing Send/Enter while Noor is writing: an empty box means "stop"; a typed message stops the old reply and is sent
+      if (generating) { stopGenerating(); if (!v && !imgs.length) return; busy = false; await new Promise(r => setTimeout(r, 30)); } // the student chose to move on: the stopped reply just finishes its own bubble
+      if (!v && !imgs.length) return;
+      if (busy) { flashBusy(); return; } // a scripted turn is still being shown — the message stays in the box
+      const pics = imgs.map(x => x.url);
+      field.value = ''; imgs = []; renderImgs(); composer();
+      try { await submit(v || T('Please explain this image.', 'اشرح هذه الصورة من فضلك.'), null, pics); }
+      catch (err) { console.error('ERLY: message failed', err); field.value = raw; if (pics.length) restoreImages(pics); bubble('ai', T('That message couldn’t be sent — it’s back in the box. Please try again.', 'تعذر إرسال الرسالة — أعدناها إلى المربع. حاول مجدداً.'), { text: true, cls: 'cmsg--note' }); }
     });
+    function flashBusy() { const f = $('#cmpForm'); f.classList.remove('is-wait'); void f.offsetWidth; f.classList.add('is-wait'); }
+    $('#cmpClip').addEventListener('click', () => $('#cmpFile').click());
+    $('#cmpFile').addEventListener('change', e => { addImages(e.target.files); e.target.value = ''; });
+    $('#cmpImgs').addEventListener('click', e => { const b = e.target.closest('[data-unimg]'); if (!b) return; imgs.splice(+b.dataset.unimg, 1); renderImgs(); composer(); $('#cmpClip').focus(); });
+    // paste or drop a screenshot straight into the chat
+    $('#cmpText').addEventListener('paste', e => { const fs = [...(e.clipboardData && e.clipboardData.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); addImages(fs); } });
+    $('#cmpP-chat').addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+    $('#cmpP-chat').addEventListener('drop', e => { const fs = [...(e.dataTransfer && e.dataTransfer.files || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); addImages(fs); } });
+    // the chat scrolls on its own: wheel/touch at the top or bottom of the conversation never moves the page behind (older iOS ignores overscroll-behavior)
+    (function contain() {
+      const l = $('#cmpLog'); let y0 = 0;
+      l.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
+      l.addEventListener('touchmove', e => { const dy = e.touches[0].clientY - y0, top = l.scrollTop <= 0, end = l.scrollTop + l.clientHeight >= l.scrollHeight - 1; if ((top && dy > 0) || (end && dy < 0) || l.scrollHeight <= l.clientHeight) e.preventDefault(); }, { passive: false });
+      l.addEventListener('scroll', () => { if (l.scrollHeight - l.scrollTop - l.clientHeight < 80) $('#cmpNewMsg').hidden = true; }, { passive: true });
+      $('#cmpNewMsg').addEventListener('click', () => { l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' }); $('#cmpNewMsg').hidden = true; });
+    })();
     $('#cmpText').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#cmpForm').requestSubmit ? $('#cmpForm').requestSubmit() : $('#cmpForm').dispatchEvent(new Event('submit', { cancelable: true })); }
     });
@@ -328,6 +393,7 @@
     $('#cmpPlus').addEventListener('click', e => { e.stopPropagation(); plusMenu(); });
     $('#cmpPlusMenu').addEventListener('click', e => {
       const b = e.target.closest('[data-plus]'); if (!b) return;
+      if (b.dataset.plus === 'image') { plusMenu(false); return $('#cmpFile').click(); }
       plusMenu(false);
       const k = b.dataset.plus;
       if (k === 'read') { if (R.isOpen()) attach(R.contextFor()); else { R.openLibrary(); ERLY.toast && ERLY.toast(T('Pick a reading — then ask me about it.', 'اختر قراءة — ثم اسألني عنها.')); } }
@@ -426,13 +492,18 @@
     if (o.text) body.textContent = html; else body.innerHTML = html;
     m.appendChild(body);
     $('#cmpLog').appendChild(m);
+    if (who === 'you') followNext = true;
     scrollLog();
     return m;
   }
   // follow new content only while the reader is at the bottom; jump (not glide) while text streams in
+  let followNext = false; // the student just sent something: always show it
   function scrollLog(instant) {
     const l = $('#cmpLog'); if (!l) return;
-    if (instant) { if (l.scrollHeight - l.scrollTop - l.clientHeight < 140) l.scrollTop = l.scrollHeight; return; }
+    const near = l.scrollHeight - l.scrollTop - l.clientHeight < 160;
+    if (!near && !followNext) { const n = $('#cmpNewMsg'); if (n) n.hidden = false; return; } // reading older messages: don't move, offer a jump instead
+    followNext = false;
+    if (instant) { l.scrollTop = l.scrollHeight; return; }
     l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
   }
   async function aiSays(en, ar, o = {}) {
@@ -810,10 +881,10 @@
     b.textContent = on ? T('End conversation', 'إنهاء المحادثة') : T('Start conversation', 'ابدأ محادثة');
     b.classList.toggle('btn--ghost', !!on); b.classList.toggle('btn--accent', !on);
   }
-  async function submit(text, chip) {
+  async function submit(text, chip, images) {
     const B = brain();
-    if (B && B.active()) return B.answerText(text);                 // a structured interview is running
-    if (B && (!conv || conv.done)) return B.freeText(text);          // otherwise Noor answers like a knowledgeable companion
+    if (B && B.active() && !(images && images.length)) return B.answerText(text);                 // a structured interview is running
+    if (B && (!conv || conv.done || (images && images.length))) return B.freeText(text, { images: images || [] });          // otherwise Noor answers like a knowledgeable companion
     // free text with no conversation running starts one
     if (!conv || conv.done) {
       if (helpCtx && !chip) { /* typed while the help menu was open: treat as a new conversation */ }
@@ -1274,6 +1345,6 @@
     _nudge: kind => showNudge(kind),
     _nudgeReset: () => { nud.lastAny = 0; nud.last = {}; nud.muted.clear(); ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { nud[k].length = 0; }); hideNudge(); },
     // internals shared with noor-brain.js and call.js (same feature, split for size)
-    _ui: { aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
+    _ui: { restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
 })();

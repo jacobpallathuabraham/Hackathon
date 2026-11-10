@@ -78,7 +78,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
   function buildMessages(history, user, o) {
     const msgs = [{ role: 'system', content: systemPrompt(o) }];
     // long conversations: older turns are not dropped silently — the student's earlier questions are kept as a compact note
-    const keep = o && o.voice ? 8 : 10, H = history || [];
+    const keep = o && o.voice ? 8 : o && o.keep ? o.keep : 10, H = history || [];
     if (H.length > keep) { const older = H.slice(0, -keep).filter(h => h.role === 'user').map(h => String(h.text || '').replace(/\s+/g, ' ').slice(0, 90)).filter(Boolean).slice(-12); if (older.length) msgs[0].content += `\n\nEarlier in this conversation the student asked about: ${older.map(q => '“' + q + '”').join('; ')}.`; }
     H.slice(-keep).forEach(h => {
       const role = h.role === 'user' ? 'user' : 'assistant';
@@ -89,7 +89,9 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
     });
     while (msgs.length > 1 && msgs[1].role !== 'user') msgs.splice(1, 1);
     if (msgs[msgs.length - 1].role === 'user') msgs.pop(); // the new message replaces a dangling one
-    msgs.push({ role: 'user', content: String(user).slice(0, 4000) });
+    const u = String(user).slice(0, 4000);
+    // images the student attached travel with THIS message only, as OpenAI-style content parts
+    msgs.push({ role: 'user', content: o && o.images && o.images.length ? [{ type: 'text', text: u }].concat(o.images.map(url => ({ type: 'image_url', image_url: { url } }))) : u });
     return msgs;
   }
   // hide any "thinking" the model writes, even while it is still streaming
@@ -188,6 +190,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       if (p.tier === 'cloud' && opts.cloud && opts.cloud.configured() && opts.cloud.consent()) { useCloud(); return true; }
       return false;
     }
+    const canSee = () => st.tier === 'online' && st.status === 'ready' && !!online().vision; // only a service that declares vision gets images
     const ready = () => st.status === 'ready' && st.tier !== 'local' && (st.tier !== 'cloud' || (opts.cloud && opts.cloud.consent()));
 
     // stream a reply. onToken(visibleTextSoFar). Resolves with the final visible text.
@@ -249,7 +252,10 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         if (left > 0) { o.onStatus && o.onStatus({ busy: left }); await wait(left * 1000); }
         onlineAt = Date.now();
       }
-      const clean = messages.map(m => ({ role: m.role, content: m.role === 'user' ? redact(m.content) : m.content }));
+      // a message may carry images (content parts); emails and numbers are removed from every text part
+      const clean = messages.map(m => ({ role: m.role, content: m.role !== 'user' ? m.content : Array.isArray(m.content) ? m.content.map(p => (p.type === 'text' ? { type: 'text', text: redact(p.text) } : p)) : redact(m.content) }));
+      const hasImages = clean.some(m => Array.isArray(m.content) && m.content.some(p => p.type === 'image_url'));
+      if (hasImages && !svc.vision) throw new Error('no-vision');
       const body = JSON.stringify({ model: svc.model, messages: clean, stream: true, temperature: o.voice ? 0.6 : 0.5, private: true, referrer: 'erly' });
       const signal = ctrl ? ctrl.signal : undefined;
       let tries = 0, lastErr = null;
@@ -295,9 +301,10 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         for (const w of out.split(/(\s+)/)) { push(w); if (w.trim()) await wait(10); }
         return;
       }
-      // fallback: a simple GET, which most networks allow
+      // fallback: a simple GET, which most networks allow (text only — images can't travel this way)
+      if (hasImages) throw lastErr || new Error('online-failed');
       const sys = clean[0].content.slice(0, 1500);
-      const convo = clean.slice(1).map(m => (m.role === 'user' ? 'Student: ' : 'Noor: ') + m.content).join('\n').slice(-2500);
+      const convo = clean.slice(1).map(m => (m.role === 'user' ? 'Student: ' : 'Noor: ') + (Array.isArray(m.content) ? m.content.filter(p => p.type === 'text').map(p => p.text).join(' ') : m.content)).join('\n').slice(-2500);
       const url = svc.get + encodeURIComponent(convo + '\nNoor:') + '?model=' + encodeURIComponent(svc.model) + '&private=true&system=' + encodeURIComponent(sys);
       let r;
       try { r = await fetchFn(url, { signal, credentials: 'omit', referrerPolicy: 'no-referrer' }); } catch (e) { if (e && e.name === 'AbortError') return; throw lastErr || e; }
@@ -328,7 +335,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       if (st.tier === 'cloud' && ready()) return { en: 'Cloud AI · university server', ar: 'ذكاء اصطناعي سحابي · خادم الجامعة' };
       return { en: 'Built-in brain · offline', ar: 'العقل المدمج · دون اتصال' };
     };
-    return { MODELS, state: () => Object.assign({}, st), on: f => subs.push(f), detect, useWebLLM, useChrome, useOnline, useCloud, useLocal, lookup, online, isIOS, resume, ready, generate, stop, label, chromeAvail: () => chromeAvail, pref };
+    return { canSee, MODELS, state: () => Object.assign({}, st), on: f => subs.push(f), detect, useWebLLM, useChrome, useOnline, useCloud, useLocal, lookup, online, isIOS, resume, ready, generate, stop, label, chromeAvail: () => chromeAvail, pref };
   }
 
   return { create, redact, ONLINE_DEFAULT, systemPrompt, buildMessages, visible, unsafe, takeSentences, MODELS, VERDICT, WEBLLM_URL };

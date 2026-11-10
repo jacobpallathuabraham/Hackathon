@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="assets/css/videos.css">
   <script>
     // Demo portal guard — must have signed in as a student
-    try { if (sessionStorage.getItem('acubins-role') !== 'student') location.replace('login.html?next=student'); } catch (e) {}
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
   </script>
   <script>
     (function () {

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="assets/css/accents.css">
   <link rel="stylesheet" href="assets/css/campus.css">
   <script>
-    try { if (sessionStorage.getItem('acubins-role') !== 'university') location.replace('index.html?next=university'); } catch (e) {}
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'university') location.replace('index.html?next=university'); } catch (e) {}
     (function () {
       try {
         var t = localStorage.getItem('erly-theme');

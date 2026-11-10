@@ -379,3 +379,21 @@ em.clab__r--easier, em.clab__r--same, em.clab__r--harder { background: none; fon
 .kb-fb button:hover { background: var(--surface-2); color: inherit; transform: translateY(-1px); }
 .kb-fb button.is-on { color: var(--accent); transform: scale(1.15); }
 @media (prefers-reduced-motion: reduce) { .cmsg__b.is-streaming .sw, .kb-ul li::before { animation: none; opacity: 1; filter: none; transform: none; } }
+
+/* ---------- v11: scroll containment, new-message jump, image attachments ---------- */
+.cmp__log { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.cmp__pane--chat { position: relative; min-height: 0; }
+.cmp__newmsg { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--cmp-dock-h, 76px) + 10px); z-index: 3; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: inherit; font: 600 12.5px inherit; box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); cursor: pointer; }
+.cmp__newmsg[hidden] { display: none; }
+.cmp__clip { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.cmp__clip:hover, .cmp__clip:focus-visible { background: var(--surface-2); color: var(--ink); }
+.cmp__imgs { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 10px 2px; }
+.cmp__imgs[hidden] { display: none; }
+.cmp__img { position: relative; margin: 0; width: 64px; height: 64px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); }
+.cmp__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cmp__img button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(15,23,42,.75); color: #fff; font-size: 11px; cursor: pointer; display: grid; place-items: center; }
+.cmp__imgnote { flex-basis: 100%; margin: 0; font-size: 12px; color: #b45309; }
+.cmsg__imgs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+.cmsg__imgs img { max-width: 140px; max-height: 140px; border-radius: 10px; object-fit: cover; }
+.cmp__input.is-wait { animation: cmpWait .4s; }
+@keyframes cmpWait { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }

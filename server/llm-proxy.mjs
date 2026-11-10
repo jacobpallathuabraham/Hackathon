@@ -10,6 +10,8 @@
 //   ANTHROPIC_API_KEY=... ALLOWED_ORIGIN=https://<user>.github.io node server/llm-proxy.mjs
 //
 // Two modes:
+//   POST /v1/chat/completions — OpenAI-style streaming chat with images (see noor-core.mjs);
+//           point ERLY_AI_CONFIG.online at it: { name: 'Claude', model: 'claude', vision: true, url: 'https://…/v1/chat/completions' }
 //   chat  — { mode: 'chat', question, context, history, lang } → { reply }: a free
 //           answer grounded on ERLY's own knowledge text (knowledge.js)
 //   intents (default) — see below
@@ -24,6 +26,7 @@
 // and every safety rule stay in the browser's rule engine.
 import http from 'node:http';
 import Anthropic from '@anthropic-ai/sdk';
+import { buildRequest, streamAnswer, chunk, BadRequest } from './noor-core.mjs';
 
 const PORT = Number(process.env.PORT || 8787);
 const ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:8765';
@@ -107,8 +110,34 @@ async function interpret({ question, answer, allowed, lang }) {
   return { intents, ack };
 }
 
+// a small per-IP rate limit (use your platform's limits for production)
+const HITS = new Map();
+function limited(ip, max, perMs) { const now = Date.now(), h = (HITS.get(ip) || []).filter(t => now - t < perMs); h.push(now); HITS.set(ip, h); if (HITS.size > 5000) HITS.clear(); return h.length > max; }
+
+function streamChat(req, res) {
+  let raw = '', size = 0, dead = false;
+  req.on('data', c => { size += c.length; if (size > 24 * 1024 * 1024) { dead = true; send(res, 413, { error: 'too-large' }); req.destroy(); } else raw += c; });
+  req.on('end', async () => {
+    if (dead) return;
+    let request;
+    try { request = buildRequest(JSON.parse(raw)); } catch (e) { return send(res, 400, { error: e instanceof BadRequest ? e.message : 'bad-json' }); }
+    res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'access-control-allow-origin': ORIGIN, 'cache-control': 'no-store' });
+    const ac = new AbortController(); res.on('close', () => ac.abort()); // the student pressed Stop
+    try { await streamAnswer(client, request, process.env, text => res.write(chunk(text)), ac.signal); }
+    catch (err) {
+      if (!ac.signal.aborted) console.error('noor chat:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err.message); // never log the student's text
+      if (!ac.signal.aborted) res.write(`data: ${JSON.stringify({ error: err instanceof Anthropic.RateLimitError ? 'rate-limited' : 'upstream' })}\n\n`);
+    }
+    res.end('data: [DONE]\n\n');
+  });
+}
+
 http.createServer((req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
+  if (req.method === 'POST' && req.url.startsWith('/v1/chat/completions')) {
+    if (limited(req.socket.remoteAddress || 'x', 60, 60 * 60 * 1000)) return send(res, 429, { error: 'rate-limited' });
+    return streamChat(req, res);
+  }
   if (req.method !== 'POST' || !req.url.startsWith('/api/companion')) return send(res, 404, { error: 'not-found' });
   let raw = '';
   req.on('data', c => { raw += c; if (raw.length > MAX_BODY) { send(res, 413, { error: 'too-large' }); req.destroy(); } });

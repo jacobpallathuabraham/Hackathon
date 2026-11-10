@@ -95,6 +95,15 @@
   document.addEventListener('pointerdown', e => { if (panel && !panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) close(); });
   if (window.I18N && I18N.onChange) I18N.onChange(() => { if (panel) { render(); btn.setAttribute('aria-label', T('Accessibility settings (Alt+A)', 'إعدادات سهولة الوصول (Alt+A)')); } });
   addEventListener('resize', () => apply(), { passive: true });
+  // Back/Forward restores pages from the browser's memory exactly as they were left — including a
+  // full-screen leaving animation (the Growth Plan seedling, the Daily Quest rocket, a sign-out fade).
+  // That made pages look frozen after pressing Back. Clear any such leftovers on restore.
+  addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    document.querySelectorAll('.gw-grow, .q-warp, .tfx-ring').forEach(x => x.remove());
+    document.body && document.body.classList.remove('is-leaving', 'gp-lock');
+    html.classList.remove('vt-theme', 'vt-mask', 'tfx-fade', 'gm-open');
+  });
   apply(); // settings apply before the button exists (no flash after load)
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
   window.ERLY = window.ERLY || {};

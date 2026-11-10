@@ -78,8 +78,17 @@
         summaries, quizzes) and then ERLY's knowledge guide */
   const MD = window.ERLY_MD, AIX = window.ERLY_AI;
   async function freeText(text, o = {}) {
-    if (!o.silentUser) bubble('you', text, { text: true });
+    const images = o.images || [];
+    if (!o.silentUser) { const b = bubble('you', text, { text: true }); if (images.length) { const g = document.createElement('div'); g.className = 'cmsg__imgs'; images.forEach(src => { const im = new Image(); im.src = src; im.alt = T('Image you sent', 'صورة أرسلتها'); g.appendChild(im); }); b.appendChild(g); } }
     clearChips();
+    // an image needs a brain that can actually see it — never pretend to have looked at it
+    if (images.length) {
+      if (U.ai && U.ai.ready() && U.ai.canSee && U.ai.canSee() && MD && AIX) { return aiReply(text, { kind: 'unknown' }, null, images); }
+      const why = !(U.ai && U.ai.ready()) ? T('No AI model is switched on', 'لا يوجد نموذج ذكاء اصطناعي مفعّل') : T('The AI model in use can’t read images', 'نموذج الذكاء الاصطناعي المستخدم لا يقرأ الصور');
+      await say(`${why}, so I haven’t looked at your image — I won’t guess what’s in it. Image understanding needs ERLY’s Claude server (a vision model); the free online and on-device options are text-only. Your image is still in the message box, and you can ask the question in words meanwhile.`, `${why}، لذلك لم أطّلع على صورتك ولن أخمّن محتواها. فهم الصور يحتاج خادم ERLY مع نموذج يرى الصور. ما زالت صورتك في مربع الرسالة.`);
+      if (U.restoreImages) U.restoreImages(images);
+      ERLY.emit('noor:turn-end'); return;
+    }
     const a = K.answer(text, lang(), kctx);
     if (a.kind === 'crisis') { history.push({ role: 'user', text }); return crisis(); }
     // tools first: navigation, resume, study coach, exact maths, the open PDF
@@ -143,14 +152,15 @@
 
   // stream an answer from the AI brain into a new chat bubble
   const READING_Q = /\b(this|the) (page|paragraph|passage|reading|section|text|chapter|diagram|figure|pdf|article)\b|هذه الصفحة|هذا النص|هذه القراءة|هذا المقطع/i;
-  async function aiReply(text, a, tr) {
+  async function aiReply(text, a, tr, images) {
     const ai = U.ai, voiceMode = !!C.inCall;
     const R = ERLY.reader;
     const reading = (tr && tr.reading) || U.attached() || (R && R.isOpen() && READING_Q.test(text) ? R.contextFor() : null);
     const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) || /\b(erly|noor|sas|support pact|reading studio|growth plan|check-?ins?|daily quest|start-?ramp|insight|signals?)\b/i.test(text) ? K.context(text, lang()) : '';
     if (tr && tr.tools) C.tools.trace(tr.tools);
-    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '' });
-    history.push({ role: 'user', text });
+    const strong = ai.canSee && ai.canSee(); // a large-context server model gets more of the conversation verbatim
+    const msgs = AIX.buildMessages(history, text, { lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 });
+    history.push({ role: 'user', text: images && images.length ? text + ` [${images.length} image(s) attached]` : text });
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';
     m.innerHTML = `<span class="cmsg__tag">${ICON('chip')} ${esc(pick(ai.label().en, ai.label().ar))}${reading ? ` · ${ICON('file')} ${esc(reading.title)}` : ''}</span><div class="cmsg__b md"><span class="cdots"><i></i><i></i><i></i></span></div>`;
@@ -202,6 +212,12 @@
         return true;
       }
       if (stopped) { ERLY.emit('noor:turn-end'); return true; }
+      if (images && images.length) { // never answer an image question without the image having been read
+        history.push({ role: 'user', text });
+        await say('The AI server didn’t answer, so your image has not been analysed. It’s back in the message box — press Send to try again.', 'لم يستجب خادم الذكاء الاصطناعي، لذلك لم تُحلَّل صورتك. أعدتها إلى مربع الرسالة — اضغط إرسال للمحاولة مجدداً.');
+        if (U.restoreImages) U.restoreImages(images, text);
+        ERLY.emit('noor:turn-end'); return true;
+      }
       if (ai.state().tier === 'online') {
         const msg = String(e && e.message || '');
         const secs = +(msg.match(/^busy:(\d+)/) || [])[1] || 0;

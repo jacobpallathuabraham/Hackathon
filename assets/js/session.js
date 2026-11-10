@@ -13,7 +13,7 @@
   }
   const out = document.getElementById('logoutBtn');
   if (out) out.addEventListener('click', () => {
-    try { sessionStorage.removeItem('acubins-role'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
+    try { sessionStorage.removeItem('acubins-role'); localStorage.removeItem('acubins-session'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {}
     document.body.classList.add('is-leaving');
     setTimeout(() => location.href = 'login.html', 450);
   });
