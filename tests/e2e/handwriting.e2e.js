@@ -36,14 +36,12 @@ const FONT_AR = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 
   }, { FONT, opts });
   const upload = async b64 => { await p.setInputFiles('.hw2 input[data-file]:not([capture])', { name: 'page.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(b64, 'base64') }); await p.waitForSelector('#hwPrev'); };
 
-  // 1 · open from the dashboard: signature transition, what it does / doesn't do, privacy
-  await p.click('#games [data-hand-open]'); await p.waitForSelector('.hw2.is-on');
-  assert.match(await p.getAttribute('.hw2-sig', 'aria-label'), /Your handwriting, your pace\./);
-  const intro = await p.textContent('.hw2-intro');
-  assert.match(intro, /What it cannot do/); assert.match(intro, /Detect dyslexia, dysgraphia/); assert.match(intro, /never uploaded or saved/);
-  if (SHOT) { await p.waitForTimeout(2600); await p.screenshot({ path: SHOT + '/hand-intro.png' }); }
+  // 1 · open from the dashboard: the ink transition leads to the Handwriting Check page (what it does / doesn't do, privacy)
+  await p.click('#games [data-hand-open]'); await p.waitForURL(/handwriting\.html/, { timeout: 6000 }); await p.waitForSelector('#hwPad canvas');
+  const intro = await p.textContent('.hws__aside');
+  assert.match(intro, /What it cannot do/); assert.match(intro, /Detect dyslexia, dysgraphia/); assert.match(intro, /nothing is uploaded or saved/);
   assert.equal(await p.evaluate(() => window.__media), 0, 'no camera on opening');
-  await p.click('.hw2-link[data-a="start"]'); // skip the animation
+  await p.click('.hw2 [data-method="paper"]'); // the paper + photo path
   await p.waitForSelector('.hw2-lines'); assert.equal(await p.locator('.hw2-lines li').count(), 3);
   if (SHOT) await p.screenshot({ path: SHOT + '/hand-notebook.png' });
   await p.click('.hw2 [data-a="tophoto"]');
@@ -81,10 +79,10 @@ const FONT_AR = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 
   assert.doesNotMatch(await p.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage)), /hand|Tesseract|data:image/i);
   await p.click('.hw2 [data-a="discard"]'); await p.waitForTimeout(400);
   assert.equal(await p.evaluate(() => { const s = ERLY.handwriting.state(); return !!(s.canvas || s.ocr); }), false, 'photo and result discarded');
-  assert.equal(await p.isVisible('.hw2'), false);
+  assert.equal(await p.evaluate(() => ERLY.handwriting.state().step), 'write', 'back to a fresh notebook');
 
   // 4b · experimental mixed Arabic + English page: labelled experimental, read with both models, honest result
-  await p.click('#games [data-hand-open]'); await p.click('.hw2 [data-lang="mix"]'); await p.click('.hw2-link[data-a="start"]');
+  await p.click('#hwsLang [data-l="mix"]'); await p.click('.hw2 [data-method="paper"]');
   assert.match(await p.textContent('.hw2-book'), /Experimental/);
   await p.click('.hw2 [data-a="tophoto"]');
   const mixed = await p.evaluate(async ({ FONT, FONT_AR }) => {
@@ -100,21 +98,22 @@ const FONT_AR = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 
   assert.ok(await p.locator('.hw2-words .is-found').count() >= 6, 'mixed: English words recognised');
   await p.click('.hw2 [data-a="discard"]'); await p.waitForTimeout(400);
 
-  // keyboard: focus moves into the dialog, Tab stays inside, Escape closes and focus returns to the opener
-  await p.focus('#games [data-hand-open]'); await p.keyboard.press('Enter'); await p.waitForSelector('.hw2.is-on'); await p.waitForTimeout(200);
-  assert.ok(await p.evaluate(() => document.querySelector('.hw2__panel').contains(document.activeElement)), 'focus moved into the dialog');
-  for (let i = 0; i < 12; i++) await p.keyboard.press('Tab');
-  assert.ok(await p.evaluate(() => document.querySelector('.hw2__panel').contains(document.activeElement)), 'Tab stays inside the dialog');
-  await p.keyboard.press('Escape'); await p.waitForTimeout(400);
-  assert.ok(await p.evaluate(() => document.activeElement && document.activeElement.matches('[data-hand-open]')), 'focus returns to the button that opened it');
+  // keyboard: every studio control is reachable with Tab (it is a page now, so focus is never trapped)
+  await p.click('#hwsLang [data-l="en"]'); await p.click('.hw2 [data-method="screen"]');
+  const box = await p.locator('#hwPad').boundingBox();
+  await p.mouse.move(box.x + 80, box.y + 60); await p.mouse.down(); await p.mouse.move(box.x + 160, box.y + 90, { steps: 8 }); await p.mouse.up();
+  const reached = new Set();
+  await p.focus('.q-back');
+  for (let i = 0; i < 40; i++) { await p.keyboard.press('Tab'); reached.add(await p.evaluate(() => { const a = document.activeElement; return a.dataset.a || a.dataset.tool || a.dataset.method || a.dataset.ink || (a.matches('[data-size]') ? 'size' : a.tagName); })); }
+  for (const k of ['screen', 'paper', 'pen', 'eraser', 'auto', 'size', 'undo', 'clearpad', 'analysepad']) assert.ok(reached.has(k), 'keyboard reaches ' + k + ' — ' + [...reached].join(','));
 
   // 5 · Arabic prompts, RTL notebook; mobile layout
   await p.setViewportSize({ width: 390, height: 844 });
-  await p.click('#games [data-hand-open]'); await p.click('[data-lang="ar"]'); await p.click('.hw2-link[data-a="start"], .hw2-btn[data-a="start"]');
+  await p.click('#hwsLang [data-l="ar"]'); await p.click('.hw2 [data-method="paper"]');
   await p.waitForSelector('.hw2-book[dir="rtl"]'); assert.match(await p.textContent('.hw2-lines'), /[؀-ۿ]/);
   assert.ok(await p.evaluate(() => document.querySelector('.hw2__panel').scrollWidth <= document.querySelector('.hw2__panel').clientWidth + 1), 'no sideways scroll on a phone');
+  assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'page does not scroll sideways');
   if (SHOT) await p.screenshot({ path: SHOT + '/hand-mobile-ar.png' });
-  await p.keyboard.press('Escape');
   assert.equal(await p.evaluate(() => window.__media), 0, 'getUserMedia never called');
   assert.deepEqual(errors, []);
   console.log('handwriting e2e: all checks passed');
