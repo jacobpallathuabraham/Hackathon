@@ -387,3 +387,18 @@ html.erly-big body { zoom: 1.12; }
 .vz__stage .vs-3d { width: 100%; }
 .vz__stage .vs-3d > .vz-canvas { position: static; inset: auto; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 .vz__stage:has(.vs-3d), .vz__stage:has(.vs-compose) { display: flex; flex-direction: column; justify-content: center; }
+
+/* v12: readable tables — no mid-word breaks, sensible column widths, horizontal scroll, stacked on phones */
+.md-table { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.md-table table { width: max-content; min-width: 100%; }
+.md-table th, .md-table td { word-break: normal; overflow-wrap: normal; hyphens: manual; white-space: normal; min-width: 8ch; max-width: 34ch; }
+.md-table th { white-space: nowrap; }
+.md-table td:first-child { min-width: 11ch; font-weight: 600; }
+@media (max-width: 560px) {
+  .md-table { border: 0; overflow: visible; }
+  .md-table table, .md-table tbody, .md-table tr, .md-table td { display: block; width: auto; min-width: 0; max-width: none; }
+  .md-table thead { display: none; }
+  .md-table tr { margin: 0 0 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; }
+  .md-table td { border: 0; padding: 3px 0; display: grid; grid-template-columns: minmax(7ch, 38%) 1fr; gap: 8px; }
+  .md-table td::before { content: attr(data-label); font-weight: 700; color: var(--muted); }
+}

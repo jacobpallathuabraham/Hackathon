@@ -1,218 +1,194 @@
-/* ERLY — the handwriting check, step by step.
-   intro (consent) → dictation → photo → scan → spelling self-check → result.
-   The photo is analysed in this browser tab and never uploaded or saved;
-   only the summary (levels per feature) is kept, if the student chooses. */
+/* ERLY — Handwriting Check v2 (interface).
+   intro (signature transition, skippable) → notebook: copy three sentences → photo (camera only after the
+   student taps “Take a photo”, or upload) → preview: rotate / crop / retake / remove → photo-quality checks
+   → text recognition with Tesseract running IN THIS PAGE (WebAssembly; English or Arabic model loaded from
+   this site) → result: what was recognised, what wasn't, and an honest verdict.
+   Privacy: the image never leaves the device (no network request carries it), is held in memory only,
+   and is wiped by “Discard”, by closing, or by leaving the page. Nothing about the writing is stored.
+   It never judges handwriting, spelling or ability, and never suggests any condition. */
 (function () {
   'use strict';
   const HW = window.ERLY_HAND;
   if (!HW || !window.ERLY) return;
   const $ = (s, r = document) => r.querySelector(s);
-  const T = (en, ar) => I18N.t(en, ar);
-  const P = (pair) => T(pair[0], pair[1]);
+  const T = (en, ar) => (window.I18N ? I18N.t(en, ar) : en);
+  const P = pair => T(pair[0], pair[1]);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const KEY = 'erly-hand-v1';
-  const STEPS = ['intro', 'dictate', 'photo', 'scan', 'spell', 'result'];
-
-  let st = null, root = null;
-  function fresh() { return { step: 'intro', lang: I18N.lang === 'ar' ? 'ar' : 'en', i: 0, img: null, res: null, missed: new Set(), plays: 0, source: null }; }
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
+  try { localStorage.removeItem('erly-hand-v1'); } catch (e) { /* the old feature "levels" are no longer kept */ }
+  const VENDOR = 'assets/vendor/tesseract/';
+  let st = null, root = null, worker = null, workerLang = null;
+  const fresh = () => ({ step: 'intro', lang: (window.I18N && I18N.lang === 'ar') ? 'ar' : 'en', set: 0, canvas: null, rot: 0, crop: null, q: null, ocr: null, busy: false, progress: 0 });
 
   function mount() {
     if (root) return;
+    if (!document.getElementById('hwFont')) { const l = document.createElement('link'); l.id = 'hwFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap'; document.head.appendChild(l); }
     root = document.createElement('div');
-    root.className = 'hw'; root.id = 'hw'; root.hidden = true;
-    root.innerHTML = `<div class="hw__scrim" data-hw-close></div>
-      <section class="hw__panel" role="dialog" aria-modal="true" aria-labelledby="hwTitle">
-        <header class="hw__head"><span class="hw__ic">${ICON('pen')}</span><div><b id="hwTitle">${T('Handwriting check', 'فحص الكتابة اليدوية')}</b><small>${T('Another way of looking — supporting evidence, never a diagnosis', 'طريقة أخرى للنظر — دليل مساند لا تشخيص')}</small></div>
-          <button class="icon-btn hw__x" data-hw-close aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button></header>
-        <ol class="hw__steps" aria-hidden="true">${STEPS.map((s, i) => `<li data-s="${s}"><i>${i + 1}</i></li>`).join('')}</ol>
-        <div class="hw__body" id="hwBody" aria-live="polite"></div>
+    root.className = 'hw2'; root.id = 'hw'; root.hidden = true;
+    root.innerHTML = `<div class="hw2__scrim" data-a="close"></div>
+      <section class="hw2__panel" role="dialog" aria-modal="true" aria-labelledby="hwTitle">
+        <header class="hw2__head"><div><b id="hwTitle">${T('Handwriting Check', 'فحص الكتابة اليدوية')}</b><small>${T('Optional · on this device · not a test', 'اختياري · على هذا الجهاز · ليس اختباراً')}</small></div>
+          <ol class="hw2__steps" aria-label="${T('Steps', 'الخطوات')}">${[['write', 'Write', 'اكتب'], ['photo', 'Photo', 'صوّر'], ['check', 'Check', 'تحقق'], ['result', 'Result', 'النتيجة']].map(([k, en, ar]) => `<li data-s="${k}">${T(en, ar)}</li>`).join('')}</ol>
+          <button type="button" class="hw2__x" data-a="close" aria-label="${T('Close and discard', 'إغلاق وحذف')}">✕</button></header>
+        <div class="hw2__body" id="hwBody" aria-live="polite"></div>
       </section>`;
     document.body.appendChild(root);
     root.addEventListener('click', onClick);
     root.addEventListener('change', onChange);
-    root.addEventListener('dragover', e => { const z = e.target.closest('.hw-drop'); if (z) { e.preventDefault(); z.classList.add('is-over'); } });
-    root.addEventListener('dragleave', e => { const z = e.target.closest('.hw-drop'); if (z) z.classList.remove('is-over'); });
-    root.addEventListener('drop', e => { const z = e.target.closest('.hw-drop'); if (!z) return; e.preventDefault(); z.classList.remove('is-over'); const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !root.hidden) close(); });
+    root.addEventListener('dragover', e => { if (e.target.closest('.hw2-drop')) e.preventDefault(); });
+    root.addEventListener('drop', e => { const z = e.target.closest('.hw2-drop'); if (!z) return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) load(f); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root && !root.hidden) close(); });
   }
-  function open() { mount(); st = fresh(); root.hidden = false; requestAnimationFrame(() => root.classList.add('is-on')); document.body.classList.add('hw-lock'); render(); setTimeout(() => { const f = root.querySelector('.hw__panel button, .hw__panel input'); f && f.focus(); }, 300); }
-  function close() { if (!root) return; root.classList.remove('is-on'); document.body.classList.remove('hw-lock'); try { speechSynthesis.cancel(); } catch (e) { /* none */ } setTimeout(() => { root.hidden = true; st = null; }, reduce ? 0 : 320); }
-  ERLY.on('hand:open', open);
-  ERLY.handwriting = { open, close };
+  function open() { mount(); st = fresh(); root.hidden = false; document.body.classList.add('hw-lock'); requestAnimationFrame(() => root.classList.add('is-on')); render(); }
+  function discard() { if (st) { st.canvas = null; st.q = null; st.ocr = null; st.crop = null; } }
+  function close() { if (!root) return; discard(); root.classList.remove('is-on'); document.body.classList.remove('hw-lock'); try { speechSynthesis.cancel(); } catch (e) { /* none */ } setTimeout(() => { root.hidden = true; }, still() ? 0 : 250); if (worker) { worker.terminate(); worker = null; workerLang = null; } }
 
-  const sentences = () => HW.DICTATION[st.lang];
-  function go(step) { st.step = step; render(); }
+  /* ---------- screens ---------- */
+  const set = () => HW.PROMPTS[st.lang][st.set % HW.PROMPTS[st.lang].length];
+  function stepDots(k) { root.querySelectorAll('.hw2__steps li').forEach(li => { const order = ['write', 'photo', 'check', 'result']; li.classList.toggle('is-on', li.dataset.s === k); li.classList.toggle('is-done', order.indexOf(li.dataset.s) < order.indexOf(k)); }); }
   function render() {
-    const body = $('#hwBody', root);
-    root.querySelectorAll('.hw__steps li').forEach((li, i) => { const k = STEPS.indexOf(st.step); li.classList.toggle('is-done', i < k); li.classList.toggle('is-on', i === k); });
-    body.innerHTML = VIEWS[st.step]();
-    body.firstElementChild && body.firstElementChild.classList.add('hw-in');
-    if (st.step === 'scan') runScan();
-    if (st.step === 'result') drawResult();
-  }
-
-  /* ---------- views ---------- */
-  const VIEWS = {
-    intro: () => `<div class="hw-v">
-      <h3>${T('Write three short sentences, take a photo, and see what stands out.', 'اكتب ثلاث جمل قصيرة، والتقط صورة، وشاهد ما يبرز.')}</h3>
-      <p>${T('Specialists sometimes look at handwriting and spelling alongside reading. I’ll read three sentences aloud; you write them on paper in your usual handwriting. Then I measure letter size, the baseline, spacing, slant, line direction, margins and crossings-out.', 'ينظر المختصون أحياناً إلى الكتابة اليدوية والإملاء إلى جانب القراءة. سأقرأ ثلاث جمل بصوت عالٍ، وتكتبها على ورقة بخطك المعتاد. ثم أقيس حجم الحروف والسطر والتباعد والميل واتجاه الأسطر والهوامش والشطب.')}</p>
-      <ul class="hw-priv">
-        <li>${ICON('lock')} ${T('Your photo is analysed inside this browser tab. It is never uploaded, never saved, and gone when you close this.', 'تُحلَّل صورتك داخل هذه النافذة. لا تُرفع ولا تُحفظ أبداً، وتختفي عند الإغلاق.')}</li>
-        <li>${ICON('shield')} ${T('Only the summary (a level for each feature) is kept — and only if you press Save.', 'يُحفظ الملخص فقط (مستوى لكل سمة) — وفقط إن ضغطت حفظ.')}</li>
-        <li>${ICON('info')} ${T('Handwriting can’t identify dyslexia or dysgraphia on its own. It adds a little to the bigger picture.', 'لا تستطيع الكتابة وحدها تحديد عسر القراءة أو الكتابة. إنها تضيف القليل إلى الصورة الأكبر.')}</li>
-      </ul>
-      <div class="hw-row"><span class="small muted">${T('Dictation language', 'لغة الإملاء')}</span><div class="hw-seg"><button data-lang="en" class="${st.lang === 'en' ? 'is-on' : ''}">English</button><button data-lang="ar" class="${st.lang === 'ar' ? 'is-on' : ''}">العربية</button></div></div>
-      <label class="check-row"><input type="checkbox" id="hwOk"><span>${T('I understand, and I want to try the handwriting check.', 'أفهم ذلك، وأريد تجربة فحص الكتابة.')}</span></label>
-      <div class="hw-btns"><button class="btn btn--accent" data-go="dictate" id="hwStart" disabled>${T('Start the dictation', 'ابدأ الإملاء')} →</button><button class="btn btn--ghost" data-go="photo" id="hwSkip" disabled>${T('I already have a sample', 'لدي عينة بالفعل')}</button></div>
-    </div>`,
-    dictate: () => { const d = sentences()[st.i]; return `<div class="hw-v hw-dict">
-      <p class="mono small muted">${T('Sentence', 'الجملة')} ${st.i + 1} / ${sentences().length} · ${T('write on paper, in your normal handwriting', 'اكتب على الورق بخطك المعتاد')}</p>
-      <button class="hw-play" data-hw-play aria-label="${T('Play the sentence', 'شغّل الجملة')}"><span class="hw-play__ring"></span>${ICON('volume')}<b>${st.plays ? T('Play again', 'شغّل مجدداً') : T('Play', 'شغّل')}</b></button>
-      <div class="hw-wave ${st.speaking ? 'is-on' : ''}" aria-hidden="true">${Array.from({ length: 24 }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</div>
-      <div class="hw-btns hw-btns--c"><button class="btn btn--sm btn--ghost" data-hw-play="slow">${T('Slower', 'أبطأ')}</button><button class="btn btn--sm btn--ghost" data-peek>${T('No sound? Show it for 4 s', 'لا صوت؟ اعرضها ٤ ثوانٍ')}</button></div>
-      <p class="hw-peek" id="hwPeek" ${st.lang === 'ar' ? 'dir="rtl"' : ''} hidden>${esc(d.text)}</p>
-      <div class="hw-btns"><button class="btn btn--accent" data-next>${st.i + 1 < sentences().length ? T('I wrote it — next sentence', 'كتبتها — الجملة التالية') : T('Done — take a photo', 'انتهيت — التقط صورة')} →</button></div>
-    </div>`; },
-    photo: () => `<div class="hw-v">
-      <h3>${T('Take a photo of your sentences', 'التقط صورة لجملك')}</h3>
-      <label class="hw-drop" tabindex="0"><input type="file" accept="image/*" capture="environment" id="hwFile" hidden>
-        <span class="hw-drop__ic">${ICON('camera')}</span><b>${T('Take a photo or choose an image', 'التقط صورة أو اختر صورة')}</b><small>${T('or drag it here', 'أو اسحبها هنا')}</small></label>
-      <ul class="hw-tips small"><li>${T('Paper flat, in good light, no shadow from your phone', 'الورقة مسطحة، في إضاءة جيدة، دون ظل من هاتفك')}</li><li>${T('Fill the frame with the writing; straight on, not at an angle', 'املأ الإطار بالكتابة؛ من الأمام لا بزاوية')}</li><li>${T('Dark pen on white or lined paper works best', 'قلم داكن على ورق أبيض أو مسطر هو الأفضل')}</li></ul>
-      <div class="hw-sample"><span class="small muted">${T('No paper handy? Try a built-in sample:', 'لا ورق قريب؟ جرّب عينة مدمجة:')}</span><button class="btn btn--xs btn--ghost" data-sample="neat">${T('Even handwriting', 'كتابة منتظمة')}</button><button class="btn btn--xs btn--ghost" data-sample="irregular">${T('Uneven handwriting', 'كتابة غير منتظمة')}</button></div>
-      ${st.err ? `<p class="hw-err">${ICON('alert')} ${esc(st.err)}</p>` : ''}
-    </div>`,
-    scan: () => `<div class="hw-v hw-scan"><div class="hw-stage"><canvas id="hwCanvas"></canvas><span class="hw-beam"></span></div><p class="hw-scan__t mono"><span id="hwScanT">${T('Evening out the lighting…', 'موازنة الإضاءة…')}</span></p></div>`,
-    spell: () => `<div class="hw-v">
-      <h3>${T('Now check your spelling against the sentences', 'الآن قارن إملاءك بالجمل')}</h3>
-      <p>${T('Tap any underlined word you spelled differently on your paper. Be honest — nobody else sees this.', 'انقر على أي كلمة مسطرة كتبتها بشكل مختلف على ورقتك. كن صادقاً — لا أحد غيرك يرى هذا.')}</p>
-      <div class="hw-sents" ${st.lang === 'ar' ? 'dir="rtl"' : ''}>${sentences().map((d, si) => `<p>${d.text.split(/(\s+)/).map(w => { const bare = w.replace(/[.,،]/g, ''); return d.tricky.includes(bare) ? `<button class="hw-w ${st.missed.has(si + ':' + bare) ? 'is-miss' : ''}" data-w="${si}:${esc(bare)}">${esc(w)}</button>` : esc(w); }).join('')}</p>`).join('')}</div>
-      <p class="small muted mono" id="hwMissN">${st.missed.size} ${T('marked', 'محددة')}</p>
-      <div class="hw-btns"><button class="btn btn--accent" data-go="result">${T('See my result', 'اعرض نتيجتي')} →</button>${st.source === 'sample' ? `<button class="btn btn--ghost" data-go="result" data-nospell>${T('Skip (sample)', 'تخطٍّ (عينة)')}</button>` : ''}</div>
-    </div>`,
-    result: () => {
-      const r = st.res, S = st.summary;
-      const lv = { few: 1, some: 2, several: 3, unclear: 0 }[S.level];
-      return `<div class="hw-v hw-res">
-        <div class="hw-res__top">
-          <div class="hw-gauge hw-gauge--${S.level}" aria-label="${esc(P(S.head))}">${[1, 2, 3].map(k => `<i class="${k <= lv ? 'is-on' : ''}" style="--k:${k}"></i>`).join('')}<span>${S.level === 'several' ? T('Several features', 'عدة سمات') : S.level === 'some' ? T('Some features', 'بعض السمات') : S.level === 'few' ? T('Few features', 'سمات قليلة') : T('Unclear', 'غير واضح')}</span></div>
-          <div><b class="hw-res__h">${esc(P(S.head))}</b>${S.spl ? `<p>${esc(P(S.spl))}</p>` : ''}</div>
+    const b = $('#hwBody'); const s = st.step;
+    stepDots(s === 'intro' ? '' : s === 'write' ? 'write' : s === 'photo' ? 'photo' : s === 'check' || s === 'reading' ? 'check' : 'result');
+    if (s === 'intro') {
+      b.innerHTML = `<div class="hw2-intro ${still() ? 'is-still' : ''}">
+        <svg class="hw2-sig" viewBox="0 0 900 200" role="img" aria-label="${T('Your handwriting, your pace.', 'كتابتك، بإيقاعك.')}">
+          <defs><clipPath id="hwReveal"><rect class="hw2-sig__clip" x="0" y="0" width="900" height="200"/></clipPath><linearGradient id="hwInk" x1="0" x2="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#4f46e5"/></linearGradient></defs>
+          <text class="hw2-sig__stroke" x="450" y="128" text-anchor="middle">${T('Your handwriting, your pace.', 'كتابتك، بإيقاعك.')}</text>
+          <g clip-path="url(#hwReveal)"><text class="hw2-sig__fill" x="450" y="128" text-anchor="middle">${T('Your handwriting, your pace.', 'كتابتك، بإيقاعك.')}</text></g>
+          <circle class="hw2-sig__nib" cx="0" cy="118" r="5"/>
+        </svg>
+        <p class="hw2-intro__lead">${T('Let’s explore how this activity works. You copy three short sentences by hand, take a photo, and ERLY tries to read them back — right here on your device.', 'لنستكشف كيف يعمل هذا النشاط. تنسخ ثلاث جمل قصيرة بخط يدك، ثم تلتقط صورة، ويحاول ERLY قراءتها — هنا على جهازك.')}</p>
+        <div class="hw2-intro__cols">
+          <div><b>${T('What it does', 'ما يفعله')}</b><ul><li>${T('Checks whether the photo is clear enough to read', 'يتحقق من وضوح الصورة للقراءة')}</li><li>${T('Tries to recognise the words with text-recognition software', 'يحاول التعرف على الكلمات ببرنامج قراءة النصوص')}</li><li>${T('Shows which words were recognised and which weren’t', 'يبيّن الكلمات المقروءة وغير المقروءة')}</li></ul></div>
+          <div><b>${T('What it cannot do', 'ما لا يستطيعه')}</b><ul><li>${T('Judge your handwriting, spelling or ability', 'الحكم على خطك أو إملائك أو قدرتك')}</li><li>${T('Detect dyslexia, dysgraphia, ADHD or any condition', 'اكتشاف عسر القراءة أو الكتابة أو أي حالة')}</li><li>${T('Replace a conversation with a specialist', 'أن يحل محل الحديث مع مختص')}</li></ul></div>
         </div>
-        ${r && r.ok ? `<div class="hw-stage hw-stage--res"><canvas id="hwCanvas"></canvas></div><p class="small muted hw-legend"><i class="hw-k hw-k--base"></i>${T('baseline of each line', 'خط قاعدة كل سطر')}<i class="hw-k hw-k--flag"></i>${T('marks that stood out', 'علامات بارزة')}</p>` : ''}
-        ${r && r.ok ? `<div class="hw-mets">${r.metrics.map((m, k) => `<div class="hw-met hw-met--${m.band}" style="--i:${k}"><b>${esc(P(m.name))}</b><span class="hw-met__b">${m.band === 'typical' ? T('typical', 'معتاد') : m.band === 'mixed' ? T('a little uneven', 'غير منتظم قليلاً') : m.band === 'notable' ? T('stood out', 'بارز') : T('not measured', 'لم يُقس')}</span><small>${esc(P(m.tip))}</small></div>`).join('')}${S.spelling ? `<div class="hw-met hw-met--${S.spelling}" style="--i:${r.metrics.length}"><b>${T('Spelling (dictation)', 'الإملاء')}</b><span class="hw-met__b">${st.missed.size} / ${sentences().reduce((a, d) => a + d.tricky.length, 0)} ${T('words differed', 'كلمات مختلفة')}</span><small>${T('Self-marked against the sentences', 'بتقييمك الذاتي مقابل الجمل')}</small></div>` : ''}</div>` : ''}
-        <p class="hw-note">${ICON('info')} ${esc(P(S.note))}</p>
-        <div class="hw-btns"><button class="btn btn--accent" data-save>${ICON('check')} ${T('Save the summary to my profile', 'احفظ الملخص في ملفي')}</button><button class="btn btn--ghost" data-hw-close>${T('Discard', 'تجاهل')}</button><button class="btn btn--ghost" data-go="photo">${T('Try another photo', 'جرّب صورة أخرى')}</button></div>
-        <p class="small muted">${T('Reference bands are demo calibrations, not clinical norms. The photo has already been discarded.', 'نطاقات المقارنة معايرة تجريبية وليست معايير سريرية. وقد تم التخلص من الصورة بالفعل.')}</p>
+        <p class="hw2-privacy">🔒 ${T('Your photo stays on this device: it is read inside this page, never uploaded or saved, and is deleted when you press Discard or close this window.', 'تبقى صورتك على هذا الجهاز: تُقرأ داخل هذه الصفحة ولا تُرفع ولا تُحفظ، وتُحذف عند الضغط على حذف أو إغلاق النافذة.')}</p>
+        <div class="hw2-row"><div class="hw2-seg" role="radiogroup" aria-label="${T('Language', 'اللغة')}"><button type="button" role="radio" aria-checked="${st.lang === 'en'}" data-lang="en">English</button><button type="button" role="radio" aria-checked="${st.lang === 'ar'}" data-lang="ar">العربية</button></div>
+          <button type="button" class="hw2-btn" data-a="start">${T('Open the notebook', 'افتح الدفتر')}</button>${still() ? '' : `<button type="button" class="hw2-link" data-a="start">${T('Skip animation', 'تخطَّ الحركة')}</button>`}</div>
       </div>`;
+      return;
     }
-  };
-
-  /* ---------- actions ---------- */
-  function speak(slow) {
-    const d = sentences()[st.i];
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(d.text);
-      u.lang = st.lang === 'ar' ? 'ar-SA' : 'en-GB'; u.rate = slow ? 0.62 : 0.85;
-      const V = ERLY.companion && ERLY.companion._ui && ERLY.companion._ui.voice; const v = V && V.voiceFor ? V.voiceFor(st.lang) : null; if (v) u.voice = v;
-      u.onstart = () => { st.speaking = true; const w = $('.hw-wave', root); w && w.classList.add('is-on'); };
-      u.onend = u.onerror = () => { if (!st) return; st.speaking = false; const w = $('.hw-wave', root); w && w.classList.remove('is-on'); };
-      speechSynthesis.speak(u);
-      st.plays++;
-      const b = $('[data-hw-play] b', root); if (b) b.textContent = T('Play again', 'شغّل مجدداً');
-    } catch (e) { peek(); }
+    if (s === 'write') {
+      b.innerHTML = `<div class="hw2-book" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><div class="hw2-page">
+          <p class="hw2-k">${T('On a sheet of paper, copy these three sentences — one per line, at your own pace', 'على ورقة، انسخ هذه الجمل الثلاث — كل جملة في سطر، بإيقاعك')}</p>
+          <ol class="hw2-lines">${set().map(l => `<li>${esc(l)}</li>`).join('')}</ol>
+          <p class="hw2-tip">${T('Tips: dark pen, plain paper, good light. There’s no time limit and no right or wrong way to write.', 'نصائح: قلم داكن، ورق سادة، إضاءة جيدة. لا وقت محدد ولا طريقة صحيحة أو خاطئة للكتابة.')}</p>
+        </div></div>
+        <div class="hw2-row"><button type="button" class="hw2-link" data-a="other">${T('Different sentences', 'جمل أخرى')}</button><button type="button" class="hw2-link" data-a="listen">🔊 ${T('Read them aloud', 'اقرأها بصوت')}</button><button type="button" class="hw2-btn" data-a="tophoto">${T('I’ve written them', 'لقد كتبتها')}</button></div>`;
+      return;
+    }
+    if (s === 'photo') {
+      b.innerHTML = `<div class="hw2-drop ${st.canvas ? 'has-img' : ''}">${st.canvas ? '<canvas class="hw2-prev" id="hwPrev"></canvas><div class="hw2-crop" id="hwCrop" hidden></div>' : `<p>${T('Take a photo of your page, or choose / drop an image (PNG, JPEG, WebP).', 'التقط صورة لصفحتك، أو اختر صورة أو أفلتها هنا.')}</p><p class="hw2-tip">${T('The camera only opens when you tap “Take a photo”.', 'لا تُفتح الكاميرا إلا عند الضغط على «التقط صورة».')}</p>`}</div>
+        <div class="hw2-row">
+          ${st.canvas ? `<button type="button" class="hw2-ghost" data-a="rotl" aria-label="${T('Rotate left', 'تدوير لليسار')}">↺</button><button type="button" class="hw2-ghost" data-a="rotr" aria-label="${T('Rotate right', 'تدوير لليمين')}">↻</button><button type="button" class="hw2-ghost" data-a="crop">${st.cropping ? T('Apply crop', 'طبّق القص') : T('Crop', 'قص')}</button><button type="button" class="hw2-ghost" data-a="retake">${T('Retake', 'أعد الالتقاط')}</button><button type="button" class="hw2-ghost" data-a="remove">${T('Remove', 'إزالة')}</button><button type="button" class="hw2-btn" data-a="check">${T('Check this photo', 'افحص هذه الصورة')}</button>`
+            : `<label class="hw2-btn">📷 ${T('Take a photo', 'التقط صورة')}<input type="file" accept="image/*" capture="environment" data-file hidden></label><label class="hw2-ghost">${T('Choose an image', 'اختر صورة')}<input type="file" accept="image/png,image/jpeg,image/webp" data-file hidden></label><button type="button" class="hw2-link" data-a="back">${T('Back to the sentences', 'عودة للجمل')}</button>`}
+        </div>${st.err ? `<p class="hw2-err" role="alert">${esc(st.err)}</p>` : ''}`;
+      if (st.canvas) drawPreview();
+      return;
+    }
+    if (s === 'check') {
+      const q = st.q;
+      b.innerHTML = `<div class="hw2-checks"><h3>${q.ok ? T('The photo looks good enough to read.', 'الصورة جيدة بما يكفي للقراءة.') : T('This photo isn’t clear enough to read reliably.', 'هذه الصورة ليست واضحة بما يكفي للقراءة بثقة.')}</h3>
+        <ul>${q.checks.map(c => `<li class="${c.ok ? 'is-ok' : c.essential ? 'is-bad' : 'is-warn'}"><span>${c.ok ? '✓' : c.essential ? '✕' : '!'}</span>${esc(T({ light: 'Lighting', glare: 'No glare', contrast: 'Ink stands out from the paper', sharp: 'Sharp focus', amount: 'Enough writing in view', size: 'Writing large enough', rotation: 'Page the right way up', tilt: 'Page fairly straight', cropped: 'Nothing cut off at the edges', background: 'Plain background' }[c.id], { light: 'الإضاءة', glare: 'بلا وهج', contrast: 'الحبر يبرز عن الورق', sharp: 'وضوح التركيز', amount: 'كتابة كافية', size: 'حجم كتابة كافٍ', rotation: 'الصفحة في الاتجاه الصحيح', tilt: 'الصفحة مستقيمة تقريباً', cropped: 'لا شيء مقطوع عند الحواف', background: 'خلفية سادة' }[c.id]))}${c.ok ? '' : `<small>${esc(P(c.msg))}</small>`}</li>`).join('')}</ul>
+        ${q.ok ? '' : `<p class="hw2-tip">${T('We won’t try to read an unclear photo — that would only produce guesses. You can try again whenever you’re ready.', 'لن نحاول قراءة صورة غير واضحة — فذلك ينتج تخمينات فقط. يمكنك المحاولة مجدداً متى شئت.')}</p>`}</div>
+        <div class="hw2-row"><button type="button" class="hw2-ghost" data-a="retake">${T('Retake the photo', 'أعد التصوير')}</button>${q.ok ? `<button type="button" class="hw2-btn" data-a="read">${T('Read my writing', 'اقرأ كتابتي')}</button>` : ''}</div>`;
+      return;
+    }
+    if (s === 'reading') {
+      b.innerHTML = `<div class="hw2-reading"><div class="hw2-quill" aria-hidden="true"></div><p>${T('Reading your page on this device…', 'نقرأ صفحتك على هذا الجهاز…')}</p><div class="hw2-bar"><i style="width:${Math.round(st.progress * 100)}%"></i></div><small>${T('The first time takes a little longer while the reading model loads from this website.', 'المرة الأولى أبطأ قليلاً أثناء تحميل نموذج القراءة من هذا الموقع.')}</small></div>`;
+      return;
+    }
+    if (s === 'result') {
+      const r = st.ocr, map = set().map(l => HW.wordMap(l, r.text, st.lang));
+      const head = { clear: [T('Most of your writing was recognised.', 'تم التعرف على معظم كتابتك.'), T('The software read most of the sentences. Differences may be the software’s, not yours.', 'قرأ البرنامج معظم الجمل. قد تكون الاختلافات من البرنامج لا منك.')], partial: [T('Some words were difficult to recognise.', 'كان التعرف على بعض الكلمات صعباً.'), T('Part of the page was read; some words weren’t. That is common with handwriting — this software is built mainly for printed text.', 'قُرئ جزء من الصفحة ولم تُقرأ بعض الكلمات. هذا شائع مع الكتابة اليدوية — فهذا البرنامج مصمم أساساً للنص المطبوع.')], inconclusive: [T('This result isn’t conclusive.', 'هذه النتيجة غير حاسمة.'), T('The software couldn’t read enough of the page to say anything useful. That says more about the software than about your writing — joined-up and personal writing styles are hard for it.', 'لم يستطع البرنامج قراءة ما يكفي من الصفحة. هذا يقول عن البرنامج أكثر مما يقول عن كتابتك — فأساليب الكتابة المتصلة والشخصية صعبة عليه.')] }[r.outcome];
+      b.innerHTML = `<div class="hw2-result hw2-result--${r.outcome}">
+        <div class="hw2-badge" aria-hidden="true">${r.outcome === 'clear' ? '✓' : r.outcome === 'partial' ? '◐' : '?'}</div>
+        <h3>${head[0]}</h3><p>${head[1]}</p>
+        <div class="hw2-stats"><div><b>${r.rates.matched}/${r.rates.words}</b><span>${T('expected words recognised', 'كلمات متوقعة مقروءة')}</span></div><div><b>${Math.round(r.conf)}%</b><span>${T('software confidence', 'ثقة البرنامج')}</span></div><div><b>${T('Good', 'جيدة')}</b><span>${T('photo quality', 'جودة الصورة')}</span></div></div>
+        <div class="hw2-words" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><b>${T('What the software recognised', 'ما تعرّف عليه البرنامج')}</b>${map.map(line => `<p>${line.map(x => `<span class="${x.found ? 'is-found' : 'is-missed'}">${esc(x.w)}</span>`).join(' ')}</p>`).join('')}<small>${T('Highlighted words weren’t matched by the software — that’s about recognition, not about whether they were written correctly.', 'الكلمات المظللة لم يطابقها البرنامج — هذا عن القراءة الآلية، لا عن صحة الكتابة.')}</small>
+          <details><summary>${T('Show the raw recognised text', 'اعرض النص المقروء كما هو')}</summary><pre>${esc(r.text.trim() || '—')}</pre></details></div>
+        <p class="hw2-tip">${T('Recognition uses Tesseract (open-source, running in this page). Measured on synthetic, font-rendered samples it reads clear print-like writing well, Arabic less reliably, and joined-up writing much less reliably. Its accuracy on real student handwriting has not been validated.', 'يستخدم التعرف برنامج Tesseract مفتوح المصدر داخل هذه الصفحة. في عيّنات اصطناعية قرأ الكتابة الواضحة جيداً، والعربية بدقة أقل، والكتابة المتصلة بضعف. لم تُقيَّم دقته على كتابة طلاب حقيقية.')}</p>
+        <div class="hw2-row"><button type="button" class="hw2-ghost" data-a="again">${T('Try again', 'حاول مجدداً')}</button><button type="button" class="hw2-ghost" data-a="other2">${T('Try different sentences', 'جرّب جملاً أخرى')}</button><a class="hw2-ghost" href="student.html#handoff" data-a="sas">${T('Talk to Student Accessibility Services', 'تحدث مع خدمات الطلبة ذوي الإعاقة')}</a><button type="button" class="hw2-btn" data-a="discard">${T('Discard and finish', 'احذف وأنهِ')}</button></div>
+        <p class="hw2-privacy">🔒 ${T('Nothing from this check was saved. Discard deletes the photo and this result from memory now.', 'لم يُحفظ شيء من هذا الفحص. «احذف» يمسح الصورة والنتيجة من الذاكرة الآن.')}</p></div>`;
+    }
   }
-  function peek() { const p = $('#hwPeek', root); if (!p) return; p.hidden = false; clearTimeout(peek.t); peek.t = setTimeout(() => { p.hidden = true; }, 4000); }
 
-  function onChange(e) {
-    if (e.target.id === 'hwOk') { $('#hwStart', root).disabled = !e.target.checked; $('#hwSkip', root).disabled = !e.target.checked; }
-    if (e.target.id === 'hwFile' && e.target.files[0]) loadFile(e.target.files[0]);
-  }
-  function onClick(e) {
-    if (e.target.closest('[data-hw-close]')) return close();
-    const lg = e.target.closest('[data-lang]'); if (lg) { st.lang = lg.dataset.lang; root.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('is-on', b === lg)); return; }
-    const g = e.target.closest('[data-go]'); if (g) { if (g.hasAttribute('data-nospell')) st.nospell = true; if (g.dataset.go === 'result') finish(); if (g.dataset.go === 'photo') { st.err = null; } return go(g.dataset.go); }
-    const pl = e.target.closest("[data-hw-play]"); if (pl) return speak(pl.dataset.hwPlay === "slow");
-    if (e.target.closest('[data-peek]')) return peek();
-    if (e.target.closest('[data-next]')) { try { speechSynthesis.cancel(); } catch (err) { /* none */ } if (st.i + 1 < sentences().length) { st.i++; st.plays = 0; return render(); } return go('photo'); }
-    const sm = e.target.closest('[data-sample]'); if (sm) { st.source = 'sample'; st.img = HW.sample(sm.dataset.sample, 3 + Math.floor(Math.random() * 20)); return go('scan'); }
-    const w = e.target.closest('[data-w]'); if (w) { const k = w.dataset.w; st.missed.has(k) ? st.missed.delete(k) : st.missed.add(k); w.classList.toggle('is-miss'); $('#hwMissN', root).textContent = st.missed.size + ' ' + T('marked', 'محددة'); return; }
-    if (e.target.closest('[data-save]')) return save();
-  }
-
-  // photo → grayscale, downscaled; the file never leaves the tab
-  function loadFile(file) {
-    if (!/^image\//.test(file.type)) { st.err = T('That doesn’t look like an image.', 'لا يبدو هذا صورة.'); return render(); }
+  /* ---------- image handling ---------- */
+  function load(file) {
+    st.err = '';
+    if (!/^image\//.test(file.type)) { st.err = T('That file isn’t an image. Please choose a photo of your page.', 'هذا الملف ليس صورة. اختر صورة لصفحتك.'); return render(); }
+    if (file.size > 25e6) { st.err = T('That image is larger than 25 MB. Please choose a smaller one.', 'الصورة أكبر من ٢٥ ميغابايت.'); return render(); }
     const url = URL.createObjectURL(file), im = new Image();
-    im.onload = () => {
-      const max = 1400, k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
-      const W = Math.round(im.naturalWidth * k), H = Math.round(im.naturalHeight * k);
-      const c = document.createElement('canvas'); c.width = W; c.height = H;
-      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0, W, H);
-      URL.revokeObjectURL(url);
-      const d = g.getImageData(0, 0, W, H).data, gray = new Uint8Array(W * H);
-      for (let i = 0, p = 0; i < d.length; i += 4, p++) gray[p] = (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000;
-      st.img = { gray, width: W, height: H }; st.source = 'photo';
-      go('scan');
-    };
-    im.onerror = () => { URL.revokeObjectURL(url); st.err = T('That image couldn’t be opened. Try a JPG or PNG.', 'تعذر فتح الصورة. جرّب JPG أو PNG.'); render(); };
+    im.onload = () => { const k = Math.min(1, 2400 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); st.canvas = c; st.rot = 0; st.crop = null; render(); };
+    im.onerror = () => { URL.revokeObjectURL(url); st.err = T('This image couldn’t be opened. Try a JPEG or PNG.', 'تعذر فتح الصورة. جرّب JPEG أو PNG.'); render(); };
     im.src = url;
   }
-  function paint(canvas, img) {
-    const { gray, width: W, height: H } = img;
-    canvas.width = W; canvas.height = H;
-    const g = canvas.getContext('2d'), id = g.createImageData(W, H);
-    for (let p = 0, i = 0; p < gray.length; p++, i += 4) { const v = gray[p]; id.data[i] = v; id.data[i + 1] = v * 0.985; id.data[i + 2] = v * 0.94; id.data[i + 3] = 255; }
-    g.putImageData(id, 0, 0);
-    return g;
+  // the working image after rotation and crop
+  function working() {
+    const src = st.canvas, r = ((st.rot % 360) + 360) % 360, sw = r % 180 ? src.height : src.width, sh = r % 180 ? src.width : src.height;
+    const c = document.createElement('canvas'); c.width = sw; c.height = sh; const g = c.getContext('2d');
+    g.translate(sw / 2, sh / 2); g.rotate(r * Math.PI / 180); g.drawImage(src, -src.width / 2, -src.height / 2);
+    if (!st.crop) return c;
+    const { x, y, w, h } = st.crop, o = document.createElement('canvas'); o.width = Math.round(w * sw); o.height = Math.round(h * sh);
+    o.getContext('2d').drawImage(c, x * sw, y * sh, w * sw, h * sh, 0, 0, o.width, o.height); return o;
   }
-  function runScan() {
-    const cv = $('#hwCanvas', root);
-    paint(cv, st.img);
-    const msgs = [T('Evening out the lighting…', 'موازنة الإضاءة…'), T('Finding lines of writing…', 'العثور على أسطر الكتابة…'), T('Measuring letters, spacing and slant…', 'قياس الحروف والتباعد والميل…')];
-    let k = 0; const tick = setInterval(() => { const t = $('#hwScanT', root); if (!t) return clearInterval(tick); k = Math.min(msgs.length - 1, k + 1); t.textContent = msgs[k]; }, 650);
-    setTimeout(() => {
-      clearInterval(tick);
-      if (!st) return;
-      st.res = HW.analyse(st.img, { normalize: true });
-      if (!st.res.ok) {
-        const why = st.res.quality.issues[0];
-        st.err = ({ empty: T('I couldn’t find any writing. Try a closer photo with darker ink.', 'لم أجد كتابة. جرّب صورة أقرب بحبر أغمق.'), dark: T('The photo is too dark or shadowed. Try brighter light, without the phone’s shadow.', 'الصورة داكنة جداً أو مظللة. جرّب إضاءة أقوى دون ظل الهاتف.'), contrast: T('The writing is too faint. Try a darker pen or better light.', 'الكتابة باهتة جداً. جرّب قلماً أغمق أو إضاءة أفضل.'), short: T('I need at least two lines of writing to measure anything — all three sentences is best.', 'أحتاج سطرين على الأقل لأقيس شيئاً — والجمل الثلاث أفضل.') })[why] || T('That photo couldn’t be measured.', 'تعذر قياس الصورة.');
-        st.img = null;
-        return go('photo');
+  function drawPreview() {
+    const cv = $('#hwPrev'), w = working(); cv.width = w.width; cv.height = w.height; cv.getContext('2d').drawImage(w, 0, 0);
+    const box = $('#hwCrop'); if (!st.cropping) return;
+    box.hidden = false; let drag = null; st.cropDraft = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
+    const place = () => { const r = cv.getBoundingClientRect(), pr = cv.parentElement.getBoundingClientRect(), d = st.cropDraft; Object.assign(box.style, { left: (r.left - pr.left + d.x * r.width) + 'px', top: (r.top - pr.top + d.y * r.height) + 'px', width: d.w * r.width + 'px', height: d.h * r.height + 'px' }); };
+    place();
+    cv.parentElement.onpointerdown = e => { const r = cv.getBoundingClientRect(); drag = [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+    cv.parentElement.onpointermove = e => { if (!drag) return; const r = cv.getBoundingClientRect(), x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)); st.cropDraft = { x: Math.min(drag[0], x), y: Math.min(drag[1], y), w: Math.max(0.05, Math.abs(x - drag[0])), h: Math.max(0.05, Math.abs(y - drag[1])) }; place(); };
+    cv.parentElement.onpointerup = () => { drag = null; };
+  }
+  const grayOf = c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height); return { gray: HW.toGray(d.data, c.width, c.height), width: c.width, height: c.height }; };
+  function loadScript(src) { return new Promise((res, rej) => { if (window.Tesseract) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); }); }
+  async function recognise() {
+    st.step = 'reading'; st.progress = 0.02; render();
+    try {
+      await loadScript(VENDOR + 'tesseract.min.js');
+      if (!worker || workerLang !== st.lang) {
+        if (worker) await worker.terminate();
+        worker = await Tesseract.createWorker(st.lang === 'ar' ? 'ara' : 'eng', 1, { workerPath: VENDOR + 'worker.min.js', corePath: VENDOR + 'core', langPath: VENDOR + 'lang', gzip: true, workerBlobURL: false, logger: m => { if (m.progress != null && st.step === 'reading') { st.progress = (/recogniz/.test(m.status) ? 0.4 : 0) + m.progress * 0.6; const i = root.querySelector('.hw2-bar i'); if (i) i.style.width = Math.round(st.progress * 100) + '%'; } } });
+        workerLang = st.lang;
       }
-      go('spell');
-    }, reduce ? 50 : 2100);
+      const img = grayOf(working()), prep = HW.prepare(img, st.q.stats.skew);
+      const c = document.createElement('canvas'); c.width = prep.width; c.height = prep.height; const d = c.getContext('2d').createImageData(prep.width, prep.height);
+      for (let i = 0; i < prep.gray.length; i++) { const v = prep.gray[i]; d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
+      c.getContext('2d').putImageData(d, 0, 0);
+      const { data } = await worker.recognize(c);
+      const rates = HW.errorRates(set().join(' '), data.text, st.lang);
+      st.ocr = { text: data.text, conf: data.confidence || 0, rates, outcome: HW.outcome(rates, data.confidence || 0) };
+      st.step = 'result';
+    } catch (e) {
+      console.error('ERLY handwriting: recognition failed', e);
+      st.step = 'photo'; st.err = T('The reading software couldn’t start on this device, so nothing was analysed. Your photo is still here — you can try again.', 'تعذر تشغيل برنامج القراءة على هذا الجهاز، لذلك لم يُحلَّل شيء. صورتك ما زالت هنا.');
+    }
+    render();
   }
-  function finish() {
-    const total = sentences().reduce((a, d) => a + d.tricky.length, 0);
-    st.summary = HW.summary(st.res, st.nospell ? null : { missed: st.missed.size, total });
+
+  /* ---------- events ---------- */
+  function onClick(e) {
+    const lb = e.target.closest('[data-lang]'); if (lb) { st.lang = lb.dataset.lang; st.set = 0; return render(); }
+    const a = (e.target.closest('[data-a]') || {}).dataset; if (!a || !a.a) return;
+    const k = a.a;
+    if (k === 'close') return close();
+    if (k === 'start') { if (!still() && !st.anim && e.target.closest('.hw2-btn')) { st.anim = true; root.querySelector('.hw2-intro').classList.add('is-leaving'); return setTimeout(() => { st.step = 'write'; render(); }, 650); } st.step = 'write'; return render(); }
+    if (k === 'other' || k === 'other2') { st.set++; discard(); st.step = 'write'; return render(); }
+    if (k === 'listen') { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(set().join(' … ')); u.lang = st.lang === 'ar' ? 'ar' : 'en-GB'; u.rate = 0.85; speechSynthesis.speak(u); } catch (er) { /* no speech */ } return; }
+    if (k === 'tophoto' || k === 'back') { st.step = k === 'back' ? 'write' : 'photo'; return render(); }
+    if (k === 'rotl' || k === 'rotr') { st.rot += k === 'rotl' ? -90 : 90; st.crop = null; return render(); }
+    if (k === 'crop') { if (st.cropping) { st.crop = st.cropDraft; st.cropping = false; } else st.cropping = true; return render(); }
+    if (k === 'retake' || k === 'remove' || k === 'again') { discard(); st.cropping = false; st.err = ''; st.step = 'photo'; return render(); }
+    if (k === 'check') { st.cropping = false; st.q = HW.quality(grayOf(working())); st.step = 'check'; return render(); }
+    if (k === 'read') return recognise();
+    if (k === 'discard') { discard(); close(); ERLY.toast && ERLY.toast(T('Photo and result discarded.', 'تم حذف الصورة والنتيجة.')); return; }
+    if (k === 'sas') { discard(); close(); return; }
   }
-  function drawResult() {
-    const cv = $('#hwCanvas', root); if (!cv || !st.img || !st.res || !st.res.ok) return;
-    const g = paint(cv, st.img), r = st.res;
-    const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-    const teal = css('--teal') || '#146A63', acc = css('--accent') || '#C1502B';
-    const lw = Math.max(2, r.size.W / 400);
-    const items = [];
-    r.ann.lines.forEach(L => items.push(() => { g.strokeStyle = teal; g.lineWidth = lw; g.setLineDash([lw * 4, lw * 3]); g.beginPath(); g.moveTo(L.x0, L.a + L.b * L.x0); g.lineTo(L.x1, L.a + L.b * L.x1); g.stroke(); g.setLineDash([]); }));
-    r.ann.flagged.forEach(f => items.push(() => { g.strokeStyle = acc; g.lineWidth = lw; g.strokeRect(f.x0 - 4, f.y0 - 4, f.x1 - f.x0 + 8, f.y1 - f.y0 + 8); g.fillStyle = acc + '22'; g.fillRect(f.x0 - 4, f.y0 - 4, f.x1 - f.x0 + 8, f.y1 - f.y0 + 8); }));
-    if (reduce) return items.forEach(f => f());
-    items.forEach((f, k) => setTimeout(() => { if (st && st.step === 'result') f(); }, 200 + k * 90));
-  }
-  function save() {
-    const S = st.summary, r = st.res;
-    const rec = { at: Date.now(), level: S.level, spelling: S.spelling, evidence: S.evidence, metrics: r && r.ok ? r.metrics.map(m => ({ id: m.id, band: m.band })) : [], lang: st.lang };
-    try { localStorage.setItem(KEY, JSON.stringify(rec)); } catch (e) { /* private mode */ }
-    ERLY.toast && ERLY.toast(T('Saved to your profile. The photo was not kept.', 'حُفظ في ملفك. لم تُحفظ الصورة.'));
-    const sum = S; st.img = null;
-    close();
-    if (window.FUN && FUN.confetti) FUN.confetti(document.body, 30);
-    setTimeout(() => {
-      const C = ERLY.companion;
-      if (C && C.open) C.open();
-      ERLY.emit('hand:done', { summary: sum, record: rec });
-    }, 400);
-  }
+  function onChange(e) { const i = e.target.closest('[data-file]'); if (i && i.files && i.files[0]) { load(i.files[0]); i.value = ''; } }
+
+  ERLY.on && ERLY.on('hand:open', open);
+  window.ERLY.handwriting = { open, close, state: () => st, _working: () => (st && st.canvas ? working() : null) };
 })();
 document.addEventListener('click', e => { if (e.target.closest('[data-hand-open]')) window.ERLY && ERLY.emit('hand:open', { from: 'page' }); });

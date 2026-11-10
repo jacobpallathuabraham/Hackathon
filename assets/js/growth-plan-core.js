@@ -82,7 +82,7 @@
       acts: [A('switch', 6, B('Switch!', 'بدّل!'), B('Notice the cost of switching — then batch similar work.', 'لاحظ كلفة التبديل ثم جمّع الأعمال المتشابهة.'), 'game:switch'),
         A('sprint', 25, B('Two focus blocks with phone away', 'جلستا تركيز والهاتف بعيداً'), B('Short, protected blocks beat long, distracted ones.', 'الجلسات القصيرة المحمية أفضل من الطويلة المشتتة.'), 'self'),
         A('listen', 6, B('Listen & Tap', 'استمع واضغط'), B('Practise holding multi-step instructions.', 'تدرّب على الاحتفاظ بتعليمات متعددة.'), 'game:listen'),
-        A('check5', 10, B('A Daily Quest check-in', 'فحص من المهمة اليومية'), B('A quick look at how the week is going.', 'نظرة سريعة على سير الأسبوع.'), 'checkins'),
+        A('check5', 10, B('A Learning Game of your choice', 'لعبة تعلّم من اختيارك'), B('Any short game — for practice and fun, not a test.', 'أي لعبة قصيرة — للتدريب والمتعة لا للاختبار.'), 'games'),
         A('indep', 20, B('Self-directed topic: choose, learn, explain', 'موضوع ذاتي: اختر وتعلّم واشرح'), B('Pick something from your module and teach it back to Noor.', 'اختر شيئاً من مادتك واشرحه لنور.'), 'noor'),
         A('rev5', 10, B('Weekly review', 'المراجعة الأسبوعية'), B('What protects your focus?', 'ما الذي يحمي تركيزك؟'), 'review', 'review')] },
     { n: 6, name: B('Review and future planning', 'المراجعة والتخطيط للمستقبل'), aim: B('Keep what worked, and plan how you’ll study from here.', 'احتفظ بما نجح وخطّط لكيف ستدرس من الآن.'), colour: '#38bdf8',

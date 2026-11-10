@@ -808,3 +808,73 @@ A strong model needs the Claude server. It is ready to deploy, but needs an Anth
 Without it, Noor uses its built-in knowledge, a small on-device model, or the rate-limited free service, and says so. Image understanding works only with the server.
 
 Not implemented (needs a backend or a product decision): retrieval over course documents (embeddings and a vector index), server-side accounts and authentication (the sign-in is a client-side demo), and cross-device sync.
+
+## v12: Learning Games replace the Daily Quest, Handwriting Check v2, Noor answers that stay on topic
+
+### Learning Games (replaces the Daily Quest)
+- The Daily Quest is gone from the student dashboard, the navigation, Noor and the Growth Plan. Its place is **Learning Games** (`games.html`): the nav link, the dashboard section (`#games`, which keeps a `#checkins` anchor so old links still land), Noor ("take me to the games") and the Growth Plan's week-5 activity all point there. `checkins.html` now redirects to `games.html`. Earlier Daily Quest results are left untouched in the browser (`erly-checkins-v1`); nothing new is written there.
+- 12 games in 10 categories: Read & Reason and Sentence Flow (reading comprehension), Word Builder (vocabulary), Glow Sequence and Chunk It (memory), Plan It (planning), Switch! (focus), Listen & Tap (listening), **Story Spark** (writing), Rotate 3D (spatial), **Pattern Seeker** (patterns), **Tower Shift** (problem-solving, Tower of Hanoi). The bold ones and Read & Reason are new.
+- Every game has an intro screen with how-to-play steps, then pause / skip / restart / stop, a completion screen with strategies, an optional "what helped" reflection, and Play again / Try another game. There are no countdowns, rankings or leaderboards.
+- The page has an animated hero (CSS only, paused under reduced motion), category filters with their own colour and icon, the duration and difficulty on every card, recent activity, and achievements that reward **taking part only**, never accuracy or speed. A "Return to dashboard" link is there too.
+- The games don't test, detect or diagnose anything, and nothing feeds the analyser. Activity stays in `erly-games-v1` on the device and can be cleared. Story Spark text is never stored.
+
+### Handwriting Check v2
+What the old version did (audit): it used no text recognition. It measured "features" (size, spacing, slant…) from the photo, combined them with self-reported spelling, stored a "level" in `erly-hand-v1`, and fed that to the analyser and Growth Plan as evidence. That inferred something about the student from their handwriting, so v12 **removes all of it**: the stored levels are deleted on load, the analyser and Growth Plan no longer read them, and Noor no longer comments on handwriting results.
+
+The new flow (`assets/js/handwriting.js` pure pipeline + `assets/js/hand-ui.js` interface):
+1. **Intro.** A signature-style transition writes "Your handwriting, your pace." (SVG stroke + reveal). It is skippable, static under reduced motion, and decorative only (the text is in `aria-label`). The intro also explains what the check does and what it cannot do.
+2. **Notebook.** Three sentences to copy (English or Arabic; different sets available; optional read-aloud).
+3. **Photo.** "Take a photo" uses a file input with `capture`, so the camera opens only when the student taps it; `getUserMedia` is never called. Upload or drag-and-drop also work. The preview offers rotate, crop, retake and remove.
+4. **Photo-quality checks.** Lighting, glare, contrast (ink vs paper, Otsu), sharpness (Laplacian variance relative to ink), amount of writing (connected components), writing size, sideways page (projection profiles), tilt (auto-straightened), writing cut off at the edges, and busy background. If an essential check fails, the student gets the reason and a retake request, and **no recognition is attempted**.
+5. **Recognition.** [Tesseract.js](https://github.com/naptha/tesseract.js) 7.0.0 (Apache-2.0) with the `eng` / `ara` LSTM models, vendored in `assets/vendor/tesseract/` and running **in the page** (WebAssembly). The image is straightened, binarised and trimmed first.
+6. **Result.** Clear / partial / **inconclusive**, the words that were and weren't recognised, the software's confidence, the raw text, the stated limits, and these actions: Try again, Try different sentences, Talk to SAS, Discard.
+
+Privacy, verified by tests (`tests/e2e/handwriting.e2e.js`):
+- During recognition every request goes to this site (scripts, model files). The only outside request is the Caveat display font from Google Fonts, fetched when the check opens.
+- No request ever carries the image.
+- Nothing is written to local or session storage.
+- Discard and close clear the photo and the result from memory.
+
+Options considered for recognition:
+- **Cloud handwriting OCR** (Google, Azure, AWS) reads handwriting much better, but needs an API key behind a server and would upload the photo. Rejected for now.
+- **Transformer models in the browser** (TrOCR via Transformers.js) read single lines and are hundreds of MB. Not tested here.
+- **Tesseract** is built for print, but it is free, local, and supports English and Arabic. That is what ships, and its limits are stated in the interface.
+
+**Measured evaluation** (`tests/eval/handwriting-eval.js` → `docs/handwriting-eval.json`). The images are **synthetic**: the prompt sentences rendered in 6 handwriting-style English fonts and 3 Arabic fonts (OFL, `tests/fixtures/fonts`), each under 8 conditions. These are **not** real student handwriting, and accuracy on real handwriting has **not** been measured.
+
+| | Images | Rejected by the quality checks | Mean CER (accepted) | Mean WER (accepted) | Clear / partial / inconclusive |
+|---|---|---|---|---|---|
+| English | 48 | 28 | 0.128 | 0.254 | 15 / 1 / 4 |
+| Arabic | 24 | 13 | 0.161 | 0.512 | 6 / 5 / 0 |
+
+- **Rejection:** all 36 deliberately bad images (blurred, dim, cropped, sideways) were rejected, and none of the 27 clean, tilted or mixed-condition images were.
+- **English by condition:** clean 0.094 CER, tilted 8° 0.102 CER. Tiny writing was mostly rejected (4/6), and the 2 that got through read badly (0.385 CER).
+- **Hardest cases:** the joined cursive font (Homemade Apple) came out inconclusive at about 0.5 CER, and Arabic word error stays around 0.5.
+- **Speed:** median recognition time was about 0.15 s per page after the model loads.
+- **Mixed Arabic + English on one page:** not tested, and not claimed.
+
+### Noor
+- **Root causes of the reported problems:**
+  - When the free AI service was rate-limited, Noor fell back to a fuzzy knowledge-base match. That is how an engine question got a "presentation anxiety" answer.
+  - Noor also showed the service's cooldown text.
+  - "How mechanical engines work" matched no built-in composition, and no AI planner was available, so no visual was built.
+  - Narrow table cells split words across lines.
+- **Fixes:**
+  - The free-tier wait is now silent, and 429 responses are retried.
+  - Every fallback answer must pass a topic-relevance check, or it is not shown.
+  - On failure Noor says "Noor is temporarily unable to complete this request. Your message is still here — please try again shortly.", puts the message back in the box, and offers Try again.
+  - Provider error text is never shown.
+  - The engine visual now matches many phrasings.
+  - New built-in compositions: atom (conceptual Bohr model, labelled as such), speed–distance–time (live sliders), digestive system and water cycle.
+  - "Show me X visually" now opens a new visual instead of being read as "highlight X" in the one on screen.
+  - Tables keep whole words and become stacked cards on phones.
+- **Verified** by `tests/e2e/noor-v12.e2e.js`, with a fake model server, so the browser pipeline is tested but not a real model:
+  - engine (four strokes in order; piston, valves and crankshaft labelled; replay);
+  - photosynthesis;
+  - binary search (step forward and back);
+  - speed–distance–time (changing a value redraws the graph);
+  - atom;
+  - the relevance sequence engines → photosynthesis → binary search → presentation anxiety → engines;
+  - the failure path;
+  - tables at 390 px.
+- **Still not done** (needs a backend or a product decision): multi-provider routing; retrieval over licensed sources (RAG); building visuals for topics outside the built-in set, which needs the AI planner (the Claude server).

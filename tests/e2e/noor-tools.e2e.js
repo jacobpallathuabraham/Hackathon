@@ -150,8 +150,8 @@ const MOCKS = () => {
   await page.click('#ncEnd'); await page.waitForTimeout(500);
 
   // navigation tool
-  await page.fill('#cmpText', 'take me to the daily quest'); await page.press('#cmpText', 'Enter');
-  await page.waitForURL(/checkins\.html/, { timeout: 8000 });
+  await page.fill('#cmpText', 'take me to the learning games'); await page.press('#cmpText', 'Enter');
+  await page.waitForURL(/games\.html/, { timeout: 8000 });
   await page.close();
 
   /* ---------- iPad: tap to talk ---------- */

@@ -1,0 +1,916 @@
+{
+ "date": "2026-11-10T10:35:41.687Z",
+ "note": "Synthetic, font-rendered handwriting-style text; not real student handwriting.",
+ "summary": {
+  "en": {
+   "images": 48,
+   "rejected": 28,
+   "meanCER": 0.128,
+   "meanWER": 0.254,
+   "recognised": 15,
+   "partial": 1,
+   "inconclusive": 4,
+   "byCondition": {
+    "clean": {
+     "n": 6,
+     "rejected": 0,
+     "cer": 0.094,
+     "wer": 0.184
+    },
+    "tilt8": {
+     "n": 6,
+     "rejected": 0,
+     "cer": 0.102,
+     "wer": 0.207
+    },
+    "small": {
+     "n": 6,
+     "rejected": 4,
+     "cer": 0.385,
+     "wer": 0.744
+    },
+    "blur": {
+     "n": 6,
+     "rejected": 6,
+     "cer": null,
+     "wer": null
+    },
+    "dim": {
+     "n": 6,
+     "rejected": 6,
+     "cer": null,
+     "wer": null
+    },
+    "cropped": {
+     "n": 6,
+     "rejected": 6,
+     "cer": null,
+     "wer": null
+    },
+    "sideways": {
+     "n": 6,
+     "rejected": 6,
+     "cer": null,
+     "wer": null
+    },
+    "mixed": {
+     "n": 6,
+     "rejected": 0,
+     "cer": 0.103,
+     "wer": 0.207
+    }
+   }
+  },
+  "ar": {
+   "images": 24,
+   "rejected": 13,
+   "meanCER": 0.161,
+   "meanWER": 0.512,
+   "recognised": 6,
+   "partial": 5,
+   "inconclusive": 0,
+   "byCondition": {
+    "clean": {
+     "n": 3,
+     "rejected": 0,
+     "cer": 0.238,
+     "wer": 0.53
+    },
+    "tilt8": {
+     "n": 3,
+     "rejected": 0,
+     "cer": 0.137,
+     "wer": 0.494
+    },
+    "small": {
+     "n": 3,
+     "rejected": 1,
+     "cer": 0.128,
+     "wer": 0.538
+    },
+    "blur": {
+     "n": 3,
+     "rejected": 3,
+     "cer": null,
+     "wer": null
+    },
+    "dim": {
+     "n": 3,
+     "rejected": 3,
+     "cer": null,
+     "wer": null
+    },
+    "cropped": {
+     "n": 3,
+     "rejected": 3,
+     "cer": null,
+     "wer": null
+    },
+    "sideways": {
+     "n": 3,
+     "rejected": 3,
+     "cer": null,
+     "wer": null
+    },
+    "mixed": {
+     "n": 3,
+     "rejected": 0,
+     "cer": 0.13,
+     "wer": 0.494
+    }
+   }
+  }
+ },
+ "results": [
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.011,
+   "wer": 0.059,
+   "conf": 89,
+   "outcome": "clear",
+   "ms": 282,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden emells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.011,
+   "wer": 0.059,
+   "conf": 86,
+   "outcome": "clear",
+   "ms": 153,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden emells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "small",
+   "accepted": false,
+   "issues": [
+    "size"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Caveat",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.011,
+   "wer": 0.059,
+   "conf": 86,
+   "outcome": "clear",
+   "ms": 252,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden emells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 95,
+   "outcome": "clear",
+   "ms": 133,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden smells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 94,
+   "outcome": "clear",
+   "ms": 140,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden smells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "small",
+   "accepted": false,
+   "issues": [
+    "size"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Patrick_Hand",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 94,
+   "outcome": "clear",
+   "ms": 154,
+   "text": "Good ideas grow with patience. Please return the book by Friday. The garden smells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.011,
+   "wer": 0.059,
+   "conf": 87,
+   "outcome": "clear",
+   "ms": 192,
+   "text": "Good ideas grow with patience. Please return the book by Friday, The garden amells of fresh mint,"
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 85,
+   "outcome": "clear",
+   "ms": 157,
+   "text": "Good ideas grow with patience. Please return the book by Friday, The garden smells of fresh mint,"
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "small",
+   "accepted": false,
+   "issues": [
+    "size"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Indie_Flower",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 84,
+   "outcome": "clear",
+   "ms": 178,
+   "text": "Good ideas grow with patience. Please return the book by Friday, The garden smells of fresh mint,"
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 93,
+   "outcome": "clear",
+   "ms": 263,
+   "text": "Rain fell softly over the quiet city. She wrote three notes before lunch. The train leaves at half past nine."
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 92,
+   "outcome": "clear",
+   "ms": 209,
+   "text": "Rain fell softly over the quiet city. She wrote three notes before lunch. The train leaves at half past nine."
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "small",
+   "accepted": false,
+   "issues": [
+    "size"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Kalam",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0,
+   "wer": 0,
+   "conf": 91,
+   "outcome": "clear",
+   "ms": 145,
+   "text": "Rain fell softly over the quiet city. She wrote three notes before lunch. The train leaves at half past nine."
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.064,
+   "wer": 0.235,
+   "conf": 73,
+   "outcome": "clear",
+   "ms": 131,
+   "text": "God ideas grow with patience. Please veturn the bik by Friday The aprden smells of fresh mint."
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.043,
+   "wer": 0.235,
+   "conf": 70,
+   "outcome": "clear",
+   "ms": 162,
+   "text": "God ideas grow with patience. Please veturn the bok by Friday. The garden smells of Frech mint,"
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "small",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.223,
+   "wer": 0.588,
+   "conf": 41,
+   "outcome": "partial",
+   "ms": 92,
+   "text": "Goud eas grows vin patience. Plots. return fro bak by Fidey The garden sels of fresh win"
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Shadows_Into_Light",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.043,
+   "wer": 0.235,
+   "conf": 70,
+   "outcome": "clear",
+   "ms": 124,
+   "text": "God ideas grow with patience. Please veturn the bok by Friday. The garden smells of Frech mint,"
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.481,
+   "wer": 0.75,
+   "conf": 47,
+   "outcome": "inconclusive",
+   "ms": 151,
+   "text": "Ae wonole nee nolea before lunch Fe Crain leaves al half paal nine"
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.557,
+   "wer": 0.95,
+   "conf": 44,
+   "outcome": "inconclusive",
+   "ms": 168,
+   "text": "he vonsle Gree nolea before bunt Fe Crain leave al falyf paalnire."
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "small",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.547,
+   "wer": 0.9,
+   "conf": 29,
+   "outcome": "inconclusive",
+   "ms": 136,
+   "text": "her wnate Uae role before Luck, Ae Luain loaves at hodf pastnines"
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "en",
+   "font": "Homemade_Apple",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.566,
+   "wer": 0.95,
+   "conf": 45,
+   "outcome": "inconclusive",
+   "ms": 186,
+   "text": "he vonsle Gree noloa before bunt Fe Crain leave al falf pool ire."
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.253,
+   "wer": 0.667,
+   "conf": 48,
+   "outcome": "partial",
+   "ms": 111,
+   "text": "فطل الطر ببددء على الدينة. كتبت تالدت مالدوئات قبل الفاء. يفادر اروبار في التاسعة وارصجف."
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.31,
+   "wer": 0.867,
+   "conf": 55,
+   "outcome": "partial",
+   "ms": 138,
+   "text": "فطل الطد ببددء عاى السيئنة. لتبت تالداث مالدوظئات بل الفراء. يقادر اروّطبار في التاسعة دارصف."
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "small",
+   "accepted": false,
+   "issues": [
+    "size"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Aref_Ruqaa",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.287,
+   "wer": 0.867,
+   "conf": 52,
+   "outcome": "partial",
+   "ms": 144,
+   "text": "فطل الطر ببددء عاى السيئنة. لتبت تالدث ملدوظئات بل الفراء. يقادر اروبار في التاسعة دارصف."
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.41,
+   "wer": 0.462,
+   "conf": 82,
+   "outcome": "partial",
+   "ms": 106,
+   "text": "أحضر قلما وبعض الورق. نلتقى قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.051,
+   "wer": 0.231,
+   "conf": 77,
+   "outcome": "clear",
+   "ms": 144,
+   "text": "تفتح المكتبة مبكرا يو الاشين. أحضر قلما وبعض الورق. لتقي قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "small",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.064,
+   "wer": 0.308,
+   "conf": 64,
+   "outcome": "clear",
+   "ms": 70,
+   "text": "تفتح المكتبة مبكرا يوم الاين أحضر قلا وبعض الررق» للتقي قرب البوابة الرئيسية»"
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Amiri",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.051,
+   "wer": 0.231,
+   "conf": 77,
+   "outcome": "clear",
+   "ms": 145,
+   "text": "تفتح المكتبة مبكرا يو الاشين. أحضر قلما وبعض الورق. لتقي قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "clean",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.051,
+   "wer": 0.462,
+   "conf": 77,
+   "outcome": "clear",
+   "ms": 124,
+   "text": "تفتع المكتبة مبكرايوم الأثنين. أحضرقلما وبعض الورق. تلتقي قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "tilt8",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.051,
+   "wer": 0.385,
+   "conf": 82,
+   "outcome": "clear",
+   "ms": 124,
+   "text": "تفتح المكتبة مبكرايوم الأثنين. أمضرقلما وبعض الورق. تلتقي قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "small",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.192,
+   "wer": 0.769,
+   "conf": 40,
+   "outcome": "partial",
+   "ms": 77,
+   "text": "تفتج المكتب مبكراي» ثنيز أمضرقلما وبع لورق. تلتقو قرب البوابة الرئيسية."
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "blur",
+   "accepted": false,
+   "issues": [
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "dim",
+   "accepted": false,
+   "issues": [
+    "light",
+    "contrast",
+    "sharp"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "cropped",
+   "accepted": false,
+   "issues": [
+    "cropped"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "sideways",
+   "accepted": false,
+   "issues": [
+    "rotation"
+   ]
+  },
+  {
+   "lang": "ar",
+   "font": "Reem_Kufi",
+   "cond": "mixed",
+   "accepted": true,
+   "issues": [],
+   "cer": 0.051,
+   "wer": 0.385,
+   "conf": 81,
+   "outcome": "clear",
+   "ms": 170,
+   "text": "تفتح المكتبة مبكرايوم الأثنين. أمضرقلما وبعض الورق. تلتقي قرب البوابة الرئيسية."
+  }
+ ]
+}

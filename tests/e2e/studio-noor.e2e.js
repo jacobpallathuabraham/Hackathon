@@ -121,14 +121,15 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   assert.match(await page.textContent('#cmpLog'), /Spain won the 2010 World Cup/);
   assert.match(await page.textContent('#cmpMode'), /Noor Online/);
   assert.ok(posted && !/sam@uni\.ae/.test(posted) && /\[email\]/.test(posted), 'emails are removed before sending');
-  // a second question right away: the free service needs ~30 s, so Noor answers another way at once
-  await page.route('https://en.wikipedia.org/**', r => r.fulfill({ status: 200, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: r.request().url().includes('/summary/') ? JSON.stringify({ title: 'Photosynthesis', extract: 'Photosynthesis is how plants turn light into chemical energy.', content_urls: { desktop: { page: 'https://en.wikipedia.org/wiki/Photosynthesis' } } }) : JSON.stringify({ query: { search: [{ title: 'Photosynthesis' }] } }) }));
-  const t0 = Date.now();
+  // a second question right away: the free service needs ~30 s between requests. v12: Noor waits quietly
+  // (no provider "cooling down" text, no unrelated stand-in answer) and then answers the question asked.
+  await page.unroute('https://text.pollinations.ai/**');
+  await page.route('https://text.pollinations.ai/**', r => r.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: 'data: {"choices":[{"delta":{"content":"Photosynthesis is how plants turn light "}}]}\n\ndata: {"choices":[{"delta":{"content":"into chemical energy."}}]}\n\ndata: [DONE]\n\n' }));
   await page.fill('#cmpText', 'what is photosynthesis'); await page.press('#cmpText', 'Enter');
-  await page.waitForSelector('.cchips [data-id="fu:retry"]', { timeout: 6000 });
-  assert.ok(Date.now() - t0 < 6000, 'no long wait');
-  assert.match(await page.textContent('#cmpLog'), /plants turn light into chemical energy/);
-  await page.unroute('https://en.wikipedia.org/**');
+  await page.waitForTimeout(1500);
+  assert.doesNotMatch(await page.textContent('#cmpLog'), /cooling|free AI service|rate limit|try again in \d/i, 'no provider wait text');
+  await page.waitForFunction(() => /plants turn light into chemical energy/.test(document.querySelector('#cmpLog').textContent), null, { timeout: 45000 });
+  assert.doesNotMatch(await page.locator('.cmsg--ai').last().textContent(), /World Cup/, 'the answer is about the question asked');
   await page.unroute('https://text.pollinations.ai/**');
 
   /* ---------- Noor: the AI brain (model mocked) ---------- */

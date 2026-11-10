@@ -43,12 +43,31 @@
   }
 
   const CATS = {
-    reading: ['Reading & language', 'القراءة واللغة', '#f97316'],
-    memory: ['Memory', 'الذاكرة', '#a855f7'],
-    planning: ['Planning', 'التخطيط', '#22c55e'],
-    attention: ['Attention', 'الانتباه', '#eab308'],
-    spatial: ['Spatial', 'المكاني', '#38bdf8'],
-    listening: ['Listening', 'الاستماع', '#ec4899']
+    reading: ['Reading comprehension', 'فهم المقروء', '#f97316', '📖'],
+    vocab: ['Vocabulary & language', 'المفردات واللغة', '#fb7185', '🔤'],
+    memory: ['Memory', 'الذاكرة', '#a855f7', '🧠'],
+    planning: ['Planning', 'التخطيط', '#22c55e', '🗺️'],
+    attention: ['Focus & attention', 'التركيز والانتباه', '#eab308', '🎯'],
+    listening: ['Listening', 'الاستماع', '#ec4899', '🎧'],
+    writing: ['Writing & creativity', 'الكتابة والإبداع', '#14b8a6', '✍️'],
+    spatial: ['Spatial & 3D', 'المكاني وثلاثي الأبعاد', '#38bdf8', '🧊'],
+    pattern: ['Pattern recognition', 'التعرّف على الأنماط', '#6366f1', '🔷'],
+    problem: ['Problem-solving', 'حل المشكلات', '#84cc16', '🧩']
+  };
+  // how to play — shown on each game's intro screen
+  const HOW = {
+    words: [['Read the meaning at the top.', 'اقرأ المعنى في الأعلى.'], ['Tap word parts to fill the slots in order; tap a slot to take a part back.', 'اضغط أجزاء الكلمة لملء الخانات بالترتيب؛ اضغط خانة لإرجاع الجزء.'], ['Press Check to see what each part means.', 'اضغط تحقق لترى معنى كل جزء.']],
+    order: [['Read all the sentences first.', 'اقرأ كل الجمل أولاً.'], ['Tap them in the order that makes a logical paragraph.', 'اضغطها بالترتيب الذي يكوّن فقرة منطقية.'], ['Signal words like “Then” and “Therefore” are clues.', 'كلمات الربط مثل «ثم» و«لذلك» مفاتيح.']],
+    comprehend: [['Read the short passage at your own pace — it stays on screen.', 'اقرأ النص القصير بإيقاعك — يبقى على الشاشة.'], ['Choose the best answer to the question.', 'اختر أفضل إجابة للسؤال.'], ['Every answer shows where in the text the evidence is.', 'كل إجابة تبيّن موضع الدليل في النص.']],
+    sequence: [['Watch the pads light up one by one.', 'شاهد الأزرار تضيء واحداً تلو الآخر.'], ['Then tap them in the same order.', 'ثم اضغطها بنفس الترتيب.'], ['Sequences grow slowly as you go.', 'تطول التسلسلات تدريجياً.']],
+    chunk: [['A row of digits appears for a few seconds.', 'يظهر صف من الأرقام لثوانٍ.'], ['Type them back in order.', 'اكتبها بالترتيب.'], ['Some rounds show them in chunks — notice whether that helps.', 'بعض الجولات تعرضها مجزأة — لاحظ إن كان ذلك يساعد.']],
+    plan: [['A real study goal appears with its tasks.', 'يظهر هدف دراسي حقيقي مع مهامه.'], ['Tap the tasks in the order you would do them.', 'اضغط المهام بالترتيب الذي ستنجزها به.'], ['Any order works as long as each task comes after what it needs.', 'أي ترتيب يصلح ما دامت كل مهمة بعد ما تحتاجه.']],
+    switch: [['Look at the rule word: SHAPE or COLOUR.', 'انظر إلى كلمة القاعدة: الشكل أو اللون.'], ['Answer with the left or right button (or F / J keys).', 'أجب بالزر الأيسر أو الأيمن (أو مفتاحي F / J).'], ['Accuracy matters, not speed. There is no countdown.', 'الدقة هي المهمة لا السرعة. لا يوجد عدّ تنازلي.']],
+    rotate: [['Look at the 3D shape on the left.', 'انظر إلى الشكل ثلاثي الأبعاد على اليسار.'], ['Decide: is the other shape the same one turned, or a mirror image?', 'قرّر: هل الشكل الآخر هو نفسه مُدار، أم صورة مرآة؟'], ['On Gentle, a slider lets you turn the right-hand shape.', 'في المستوى الهادئ يتيح لك منزلق تدوير الشكل الأيمن.']],
+    listen: [['Read (or listen to) an instruction like “tap the blue circle”.', 'اقرأ (أو استمع إلى) تعليمات مثل «اضغط الدائرة الزرقاء».'], ['Tap the shapes it describes, in order.', 'اضغط الأشكال الموصوفة بالترتيب.'], ['Sound is off unless you turn it on; the text is always shown then.', 'الصوت مطفأ ما لم تشغّله؛ ويُعرض النص عندها.']],
+    spark: [['Pick up the picture prompt and three spark words.', 'خذ فكرة الصورة وثلاث كلمات محفّزة.'], ['Jot quick notes (who, where, what happens) if you like, then write a few sentences.', 'دوّن ملاحظات سريعة (من، أين، ماذا يحدث) إن أردت، ثم اكتب بضع جمل.'], ['There is no marking. Your writing is not saved or sent anywhere.', 'لا يوجد تقييم. كتابتك لا تُحفظ ولا تُرسل إلى أي مكان.']],
+    pattern: [['Look at the sequence of numbers or shapes.', 'انظر إلى تسلسل الأرقام أو الأشكال.'], ['Work out the rule and choose what comes next.', 'استنتج القاعدة واختر ما يأتي بعد ذلك.'], ['The rule is explained after every answer.', 'تُشرح القاعدة بعد كل إجابة.']],
+    hanoi: [['Move the whole tower to the right-hand peg.', 'انقل البرج كله إلى العمود الأيمن.'], ['Tap a peg to lift its top disc, then tap another peg to place it.', 'اضغط عموداً لرفع قرصه العلوي، ثم اضغط عموداً آخر لوضعه.'], ['A larger disc can never go on a smaller one. Take as many moves as you need.', 'لا يوضع قرص أكبر على أصغر. خذ ما تحتاجه من حركات.']]
   };
 
   /* ---------------- the games ---------------- */
@@ -58,7 +77,7 @@
 
   /* 1 · Word Builder (reading) */
   GAMES.push({
-    id: 'words', cat: 'reading', mins: 4, title: ['Word Builder', 'بنّاء الكلمات'], blurb: ['Build academic words from their parts — prefixes, roots and suffixes.', 'ابنِ كلمات أكاديمية من أجزائها: السوابق والجذور واللواحق.'],
+    id: 'words', cat: 'vocab', mins: 4, title: ['Word Builder', 'بنّاء الكلمات'], blurb: ['Build academic words from their parts — prefixes, roots and suffixes.', 'ابنِ كلمات أكاديمية من أجزائها: السوابق والجذور واللواحق.'],
     tips: [['Split long words into parts: “in-vis-ible” is three meaningful pieces, not twelve letters.', 'قسّم الكلمات الطويلة إلى أجزاء ذات معنى.'], ['Learning ten common roots (port, dict, vis, tract, graph…) unlocks hundreds of words.', 'تعلّم عشرة جذور شائعة يفتح مئات الكلمات.'], ['When you meet a new term in a reading, guess its meaning from its parts, then check.', 'خمّن معنى المصطلح الجديد من أجزائه ثم تحقق.']],
     rounds(lv, n) { const pool = D.words.filter(w => (lv === 1 ? w[3] === 1 : lv === 2 ? w[3] <= 2 : w[3] >= 2)); return pickN(pool.length >= n ? pool : D.words, n); },
     play(stage, w, ctx) {
@@ -331,6 +350,122 @@
     }
   });
 
+
+  /* 9 · Read & Reason (reading comprehension) */
+  GAMES.push({
+    id: 'comprehend', cat: 'reading', mins: 5, title: ['Read & Reason', 'اقرأ واستنتج'], blurb: ['Read a short academic passage, then find the answer and the evidence for it.', 'اقرأ نصاً أكاديمياً قصيراً ثم جد الإجابة ودليلها.'],
+    tips: [['Read the question first, then read the passage looking for that idea.', 'اقرأ السؤال أولاً ثم ابحث عن فكرته في النص.'], ['Main-idea questions: ask “what is every sentence building towards?”', 'أسئلة الفكرة الرئيسية: إلامَ تبني كل الجمل؟'], ['Point to the sentence that proves your answer — if you can’t, re-read.', 'أشر إلى الجملة التي تثبت إجابتك.']],
+    rounds(lv, n) { const all = []; D.passages.forEach(P => P.qs.forEach(q => { if (lv === 1 ? q[4] <= 2 : lv === 2 ? true : q[4] >= 2) all.push({ P, q }); })); return pickN(all, Math.min(n, all.length)); },
+    play(stage, r, ctx) {
+      return new Promise(done => {
+        const [q, opts, ans, why] = r.q;
+        stage.innerHTML = `<article class="gp-passage"><b>${esc(r.P.title)}</b><p>${esc(r.P.text)}</p></article>` + head(esc(q), '') +
+          `<div class="gp-opts">${opts.map((o, i) => `<button type="button" class="gp-sent" data-o="${i}">${esc(o)}</button>`).join('')}</div>`;
+        stage.onclick = e => {
+          const b = e.target.closest('[data-o]'); if (!b) return; const ok = +b.dataset.o === ans;
+          stage.querySelectorAll('[data-o]').forEach(x => { x.disabled = true; if (+x.dataset.o === ans) x.classList.add('is-ok'); else if (x === b) x.classList.add('is-no'); });
+          stage.insertAdjacentHTML('beforeend', `<p class="gp-explain">${esc(why)}</p>`); stage.onclick = null; tone(ok ? 660 : 300, 120);
+          ctx.feedback(ok); done({ ok, part: ok ? 1 : 0 });
+        };
+      });
+    }
+  });
+
+  /* 10 · Story Spark (writing & creative expression) — nothing written is stored or sent */
+  GAMES.push({
+    id: 'spark', cat: 'writing', mins: 6, title: ['Story Spark', 'شرارة القصة'], blurb: ['A picture prompt and three spark words — plan quickly, then write a mini-story. No marking.', 'فكرة مصوّرة وثلاث كلمات محفّزة — خطّط بسرعة ثم اكتب قصة قصيرة. بلا تقييم.'],
+    tips: [['Plan in 60 seconds: who, where, what goes wrong, how it ends.', 'خطّط في دقيقة: من، أين، ما المشكلة، كيف تنتهي.'], ['Write first, fix later — drafting and editing are different jobs.', 'اكتب أولاً ثم صحّح لاحقاً.'], ['If starting is hard, say the first sentence aloud, then type it.', 'إن صعب البدء، قل الجملة الأولى بصوت ثم اكتبها.']],
+    rounds(lv, n) { return pickN(D.stories, Math.min(3, n)); },
+    play(stage, st, ctx) {
+      return new Promise(done => {
+        const [emoji, en, ar, words] = st, need = ctx.level === 1 ? 2 : ctx.level === 2 ? 3 : 5;
+        stage.innerHTML = `<div class="gp-spark"><div class="gp-spark__pic" aria-hidden="true">${emoji}</div><div><b>${esc(T(en, ar))}</b><p class="gp-spark__words">${words.map(w => `<span>${esc(w)}</span>`).join('')}</p></div></div>
+          <details class="gp-spark__plan"><summary>${T('Quick plan (optional)', 'خطة سريعة (اختيارية)')}</summary><div>${[['Who?', 'من؟'], ['Where?', 'أين؟'], ['What happens?', 'ماذا يحدث؟']].map(x => `<label>${T(x[0], x[1])}<input class="gp-input" maxlength="80"></label>`).join('')}</div></details>
+          <label class="gp-spark__lbl" for="gpSpark">${T(`Write at least ${need} sentences. Try to use the spark words.`, `اكتب ${need} جمل على الأقل. حاول استخدام الكلمات المحفّزة.`)}</label>
+          <textarea id="gpSpark" class="gp-input gp-spark__ta" rows="6" spellcheck="true"></textarea>
+          <div class="gp-row"><span class="gp-total" data-count>0 ${T('sentences', 'جمل')}</span><button type="button" class="gp-btn" data-done disabled>${T('I’m done', 'انتهيت')}</button></div>
+          <p class="gp-tip">${T('Your writing stays in this window only — it is not saved, scored or sent anywhere.', 'كتابتك تبقى في هذه النافذة فقط — لا تُحفظ ولا تُقيَّم ولا تُرسل.')}</p>`;
+        const ta = stage.querySelector('textarea'), btn = stage.querySelector('[data-done]'), cnt = stage.querySelector('[data-count]');
+        const count = () => (ta.value.match(/[^.!?؟]*[\p{L}\p{N}][^.!?؟]*[.!?؟]+/gu) || []).length + (/[\p{L}]{2,}[^.!?؟]*$/u.test(ta.value.trim()) && !/[.!?؟]\s*$/.test(ta.value.trim()) ? 1 : 0);
+        ta.oninput = () => { const c = count(); cnt.textContent = `${c} ${T('sentences', 'جمل')}`; btn.disabled = c < 1; };
+        btn.onclick = () => {
+          const c = count(), used = words.filter(w => new RegExp('\\b' + w, 'i').test(ta.value)).length;
+          stage.querySelectorAll('textarea,input,button').forEach(x => { x.disabled = true; });
+          stage.insertAdjacentHTML('beforeend', `<p class="gp-explain">${T(`You wrote ${c} sentence${c === 1 ? '' : 's'} and used ${used} of 3 spark words. Every story counts — there’s no right answer here.`, `كتبت ${c} جمل واستخدمت ${used} من ٣ كلمات محفّزة. كل قصة تُحتسب — لا توجد إجابة صحيحة هنا.`)}</p>`);
+          ctx.feedback(true); done({ ok: true, part: 1, sentences: c });
+        };
+        setTimeout(() => ta.focus(), 50);
+      });
+    }
+  });
+
+  /* 11 · Pattern Seeker (pattern recognition) */
+  const SH = { circle: '●', square: '■', triangle: '▲', star: '★', diamond: '◆' };
+  function makePattern(lv) {
+    const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const kinds = lv === 1 ? ['add', 'shape2', 'mul'] : lv === 2 ? ['add', 'mul', 'shape3', 'alt', 'square'] : ['alt', 'square', 'fib', 'grow', 'shape3', 'mul'];
+    const k = kinds[R(0, kinds.length - 1)];
+    let seq, next, rule;
+    if (k === 'add') { const a = R(1, 20), d = R(2, 9); seq = [0, 1, 2, 3, 4].map(i => a + d * i); next = a + d * 5; rule = [`Add ${d} each time.`, `أضف ${d} في كل مرة.`]; }
+    else if (k === 'mul') { const a = R(1, 4), m = R(2, 3); seq = [0, 1, 2, 3].map(i => a * m ** i); next = a * m ** 4; rule = [`Multiply by ${m} each time.`, `اضرب في ${m} في كل مرة.`]; }
+    else if (k === 'alt') { const a = R(2, 10), p = R(3, 7), q = R(1, 3); seq = [a]; for (let i = 1; i < 6; i++) seq.push(seq[i - 1] + (i % 2 ? p : -q)); next = seq[5] + p; rule = [`Alternately add ${p} and subtract ${q}.`, `أضف ${p} ثم اطرح ${q} بالتناوب.`]; }
+    else if (k === 'square') { const o = R(1, 3); seq = [0, 1, 2, 3, 4].map(i => (i + o) ** 2); next = (5 + o) ** 2; rule = ['Square numbers: 1², 2², 3²… (the gaps grow by 2).', 'أعداد مربعة: الفروق تزيد بمقدار ٢.']; }
+    else if (k === 'fib') { const a = R(1, 3), b = R(2, 5); seq = [a, b]; for (let i = 2; i < 6; i++) seq.push(seq[i - 1] + seq[i - 2]); next = seq[4] + seq[5]; rule = ['Each number is the sum of the two before it.', 'كل عدد هو مجموع العددين السابقين.']; }
+    else if (k === 'grow') { const a = R(1, 5); seq = [a]; for (let i = 1; i < 5; i++) seq.push(seq[i - 1] + i); next = seq[4] + 5; rule = ['The gap grows by one each time: +1, +2, +3…', 'الفرق يزيد واحداً كل مرة: +١، +٢، +٣…']; }
+    else { const keys = Object.keys(SH), n = k === 'shape2' ? 2 : 3, unit = pickN(keys, n), len = n === 2 ? 5 : 7; seq = Array.from({ length: len }, (_, i) => unit[i % n]); next = unit[len % n]; rule = [`A repeating unit of ${n} shapes.`, `وحدة متكررة من ${n} أشكال.`];
+      const opts = shuffle([next].concat(pickN(keys.filter(x => x !== next), 3))); return { seq: seq.map(x => SH[x]), opts: opts.map(x => SH[x]), ans: SH[next], rule }; }
+    const wrong = new Set(); const cand = [next + 1, next - 1, next + (seq[seq.length - 1] - seq[seq.length - 2]), next * 2, next + 2, next - 2, seq[seq.length - 1] * 2];
+    for (const c of cand) if (c !== next && c > 0 && wrong.size < 3) wrong.add(c);
+    return { seq, opts: shuffle([next, ...wrong]), ans: next, rule };
+  }
+  GAMES.push({
+    id: 'pattern', cat: 'pattern', mins: 4, title: ['Pattern Seeker', 'باحث الأنماط'], blurb: ['Spot the rule in a sequence of numbers or shapes and pick what comes next.', 'اكتشف القاعدة في تسلسل أرقام أو أشكال واختر التالي.'],
+    tips: [['Write the gaps between numbers underneath — the rule often hides there.', 'اكتب الفروق بين الأعداد تحتها — القاعدة غالباً هناك.'], ['If gaps aren’t constant, check whether they grow, alternate or multiply.', 'إن لم تكن الفروق ثابتة، تحقّق: هل تكبر أم تتناوب أم تتضاعف؟'], ['For shapes, find the smallest unit that repeats.', 'في الأشكال، جد أصغر وحدة تتكرر.']],
+    rounds(lv, n) { return Array.from({ length: n }, () => makePattern(lv)); },
+    play(stage, r, ctx) {
+      return new Promise(done => {
+        stage.innerHTML = head(T('What comes next?', 'ما التالي؟'), '') + `<div class="gp-pattern">${r.seq.map(x => `<span>${x}</span>`).join('')}<span class="is-q">?</span></div>
+          <div class="gp-opts gp-opts--4">${r.opts.map(o => `<button type="button" class="gp-sent gp-sent--big" data-o="${o}">${o}</button>`).join('')}</div>`;
+        stage.onclick = e => {
+          const b = e.target.closest('[data-o]'); if (!b) return; const ok = String(b.dataset.o) === String(r.ans);
+          stage.querySelectorAll('[data-o]').forEach(x => { x.disabled = true; if (String(x.dataset.o) === String(r.ans)) x.classList.add('is-ok'); else if (x === b) x.classList.add('is-no'); });
+          stage.querySelector('.is-q').textContent = r.ans; stage.insertAdjacentHTML('beforeend', `<p class="gp-explain">${L(r.rule)}</p>`); stage.onclick = null; tone(ok ? 660 : 300, 120);
+          ctx.feedback(ok); done({ ok, part: ok ? 1 : 0 });
+        };
+      });
+    }
+  });
+
+  /* 12 · Tower Shift (problem-solving: Tower of Hanoi) */
+  GAMES.push({
+    id: 'hanoi', cat: 'problem', mins: 6, title: ['Tower Shift', 'نقل البرج'], blurb: ['Move a tower of discs peg by peg — break a big problem into smaller ones.', 'انقل برجاً من الأقراص عموداً بعد عمود — قسّم المشكلة الكبيرة إلى أصغر.'],
+    tips: [['Break it down: to move 4 discs, first move the top 3 out of the way.', 'قسّمها: لنقل ٤ أقراص انقل الثلاثة العليا جانباً أولاً.'], ['When stuck, ask “what must be true just before the goal?” and work backwards.', 'عند التعثر اسأل: ماذا يجب أن يتحقق قبل الهدف مباشرة؟'], ['The same move-the-subproblem idea works for essays and projects.', 'فكرة تقسيم المشكلة تصلح للمقالات والمشاريع.']],
+    rounds(lv, n) { const d = lv === 1 ? [3, 3] : lv === 2 ? [3, 4] : [4, 5]; return Array.from({ length: Math.min(2, n) }, (_, i) => d[i]); },
+    play(stage, discs, ctx) {
+      return new Promise(done => {
+        const pegs = [Array.from({ length: discs }, (_, i) => discs - i), [], []], best = 2 ** discs - 1;
+        let held = null, moves = 0, msg = '';
+        function draw(won) {
+          stage.innerHTML = head(T(`Move all ${discs} discs to the right-hand peg`, `انقل الأقراص الـ${discs} إلى العمود الأيمن`), T(`Fewest possible: ${best} moves — but any number is fine.`, `أقل عدد ممكن: ${best} حركة — لكن أي عدد مقبول.`)) +
+            `<div class="gp-hanoi" dir="ltr">${pegs.map((p, i) => `<button type="button" class="gp-peg ${held === i ? 'is-held' : ''}" data-peg="${i}" aria-label="${T('Peg', 'عمود')} ${i + 1}: ${p.length ? p.join(', ') : T('empty', 'فارغ')}" ${won ? 'disabled' : ''}><i class="gp-peg__rod"></i>${p.map((d, k) => `<span class="gp-disc ${held === i && k === p.length - 1 ? 'is-up' : ''}" style="--w:${30 + d * 12}%;--h:${d * 47}">${d}</span>`).join('')}</button>`).join('')}</div>
+            <div class="gp-row"><span class="gp-total">${T('Moves', 'الحركات')}: ${moves}</span><span class="gp-tipline" aria-live="polite">${msg}</span></div>`;
+        }
+        draw();
+        stage.onclick = e => {
+          const b = e.target.closest('[data-peg]'); if (!b) return; const i = +b.dataset.peg;
+          if (held == null) { if (pegs[i].length) { held = i; msg = ''; tone(520, 60); } }
+          else if (held === i) held = null;
+          else { const d = pegs[held][pegs[held].length - 1], top = pegs[i][pegs[i].length - 1];
+            if (top && top < d) { msg = T('A bigger disc can’t go on a smaller one — try another peg.', 'لا يوضع قرص أكبر على أصغر — جرّب عموداً آخر.'); tone(260, 90); }
+            else { pegs[i].push(pegs[held].pop()); moves++; msg = ''; tone(440 + i * 80, 70); }
+            held = null; }
+          if (pegs[2].length === discs) { draw(true); stage.onclick = null; stage.insertAdjacentHTML('beforeend', `<p class="gp-explain">${moves === best ? T('Solved in the fewest possible moves!', 'حُلّت بأقل عدد ممكن من الحركات!') : T(`Solved in ${moves} moves. The shortest route is ${best} — the trick is always moving the smaller tower out of the way first.`, `حُلّت في ${moves} حركة. أقصر طريق ${best} — السر نقل البرج الأصغر جانباً أولاً.`)}</p>`); ctx.feedback(true); return done({ ok: true, part: Math.min(1, best / moves), moves }); }
+          draw();
+        };
+      });
+    }
+  });
+
   /* ---------------- hub UI ---------------- */
   const app = document.getElementById('gamesApp'); if (!app) return;
   const ART = {
@@ -341,15 +476,41 @@
     plan: '<svg viewBox="0 0 120 80"><path d="M20 60 L45 40 L70 48 L100 18" class="ga-path"/><circle cx="20" cy="60" r="6"/><circle cx="45" cy="40" r="6"/><circle cx="70" cy="48" r="6" class="ga-b"/><circle cx="100" cy="18" r="6"/></svg>',
     switch: '<svg viewBox="0 0 120 80"><g class="ga-swap"><circle cx="40" cy="40" r="16" style="fill:#3b82f6"/><rect x="66" y="24" width="32" height="32" rx="4" style="fill:#f97316"/></g></svg>',
     rotate: '<svg viewBox="0 0 120 80"><g class="ga-spin"><path d="M60 14l22 12v26L60 64 38 52V26z" class="ga-b"/><path d="M60 14l22 12-22 12-22-12z"/><path d="M60 38v26" /></g></svg>',
-    listen: '<svg viewBox="0 0 120 80"><path d="M30 32h10l14-12v40L40 48H30z"/><path d="M66 28c6 6 6 18 0 24M76 20c11 11 11 29 0 40" class="ga-wave"/></svg>'
+    listen: '<svg viewBox="0 0 120 80"><path d="M30 32h10l14-12v40L40 48H30z"/><path d="M66 28c6 6 6 18 0 24M76 20c11 11 11 29 0 40" class="ga-wave"/></svg>',
+    comprehend: '<svg viewBox="0 0 120 80"><path d="M20 18h36c4 0 4 4 4 4v44s0-4-4-4H20z" class="ga-b"/><path d="M100 18H64c-4 0-4 4-4 4v44s0-4 4-4h36z"/><g class="ga-stack"><rect x="68" y="28" width="24" height="4" rx="2" style="fill:#fff"/><rect x="68" y="38" width="20" height="4" rx="2" style="fill:#fff"/><rect x="68" y="48" width="24" height="4" rx="2" style="fill:#fff"/></g></svg>',
+    spark: '<svg viewBox="0 0 120 80"><path d="M24 60l10-3 40-40-7-7-40 40z" class="ga-b"/><path d="M80 58c8-4 16-4 22 0" class="ga-path"/><g class="ga-float"><circle cx="86" cy="22" r="4"/><circle cx="98" cy="34" r="3"/><circle cx="78" cy="36" r="2.5"/></g></svg>',
+    pattern: '<svg viewBox="0 0 120 80"><g class="ga-pads"><circle cx="18" cy="40" r="9" style="--d:0s"/><rect x="34" y="31" width="18" height="18" rx="3" style="--d:.4s"/><path d="M68 49l9-18 9 18z" style="--d:.8s"/><circle cx="102" cy="40" r="9" style="--d:1.2s"/></g></svg>',
+    hanoi: '<svg viewBox="0 0 120 80"><rect x="10" y="66" width="100" height="5" rx="2"/><rect x="28" y="22" width="3" height="44"/><rect x="59" y="22" width="3" height="44"/><rect x="90" y="22" width="3" height="44"/><g class="ga-float"><rect x="14" y="56" width="32" height="9" rx="4" class="ga-b"/><rect x="18" y="46" width="24" height="9" rx="4"/><rect x="22" y="36" width="16" height="9" rx="4" class="ga-b"/></g></svg>'
   };
   const seg = (k, items) => `<div class="gm-seg" role="radiogroup" aria-label="${k}">${items.map(([v, en, ar]) => `<button type="button" role="radio" aria-checked="${String(db.settings[k]) === String(v)}" data-set="${k}:${v}">${T(en, ar)}</button>`).join('')}</div>`;
   function stats(id) { const s = db.sessions.filter(x => x.g === id); return { n: s.length, last: s[s.length - 1], acc: s.slice(-8).map(x => x.n ? x.ok / x.n : 0) }; }
   const spark = a => { if (a.length < 2) return ''; const w = 80, h = 22; return `<svg class="gm-spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${a.map((v, i) => `${(i / (a.length - 1)) * w},${h - 2 - v * (h - 4)}`).join(' ')}"/></svg>`; };
+  const LVNAME = { gentle: ['Gentle', 'هادئ'], standard: ['Standard', 'عادي'], stretch: ['Stretch', 'تحدٍّ'] };
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? T('just now', 'الآن') : m < 60 ? T(`${m} min ago`, `قبل ${m} د`) : m < 1440 ? T(`${Math.round(m / 60)} h ago`, `قبل ${Math.round(m / 60)} س`) : T(`${Math.round(m / 1440)} d ago`, `قبل ${Math.round(m / 1440)} يوم`); };
+  // achievements reward taking part only — never accuracy, speed or rank
+  function badges() {
+    const S = db.sessions, cats = new Set(S.map(x => (GAMES.find(g => g.id === x.g) || {}).cat).filter(Boolean)), days = new Set(S.map(x => new Date(x.at).toDateString())).size, mins = S.reduce((a, x) => a + (x.mins || 1), 0);
+    return [
+      ['first', '🌱', ['First step', 'الخطوة الأولى'], ['Played your first game', 'لعبت أول لعبة'], S.length >= 1],
+      ['explorer', '🧭', ['Explorer', 'المستكشف'], ['Tried 3 different categories', 'جرّبت ٣ فئات مختلفة'], cats.size >= 3],
+      ['curious', '🌈', ['Curious mind', 'عقل فضولي'], ['Tried every category', 'جرّبت كل الفئات'], cats.size >= Object.keys(CATS).length],
+      ['steady', '🔁', ['Steady practice', 'تدريب منتظم'], ['Played on 3 different days', 'لعبت في ٣ أيام مختلفة'], days >= 3],
+      ['ten', '⏱️', ['Twenty minutes', 'عشرون دقيقة'], ['20 minutes of practice in total', '٢٠ دقيقة تدريب إجمالاً'], mins >= 20],
+      ['writer', '✍️', ['Storyteller', 'الراوي'], ['Finished a Story Spark', 'أنهيت شرارة القصة'], S.some(x => x.g === 'spark')],
+      ['solver', '🧩', ['Tower builder', 'باني الأبراج'], ['Moved a whole tower in Tower Shift', 'نقلت برجاً كاملاً'], S.some(x => x.g === 'hanoi')]
+    ];
+  }
+  function journey() {
+    const recent = db.sessions.slice(-4).reverse(), B = badges(), got = B.filter(b => b[4]).length;
+    return `<section class="gm-journey" aria-label="${T('Your activity', 'نشاطك')}">
+      <div class="gm-recent"><b>${T('Recent activity', 'النشاط الأخير')}</b>${recent.length ? `<ul>${recent.map(x => { const g = GAMES.find(y => y.id === x.g); return g ? `<li style="--c:${CATS[g.cat][2]}"><i aria-hidden="true">${CATS[g.cat][3]}</i><span>${L(g.title)}<small>${x.n} ${T('rounds', 'جولات')} · ${ago(x.at)}</small></span><button type="button" class="gm-mini" data-play="${g.id}">${T('Again', 'مجدداً')}</button></li>` : ''; }).join('')}</ul>` : `<p>${T('Nothing yet — pick any game below. Your activity is kept only on this device.', 'لا شيء بعد — اختر أي لعبة أدناه. يُحفظ نشاطك على هذا الجهاز فقط.')}</p>`}</div>
+      <div class="gm-badges"><b>${T('Achievements', 'الإنجازات')} <small>${got}/${B.length} · ${T('for taking part, not for scores', 'للمشاركة لا للنتائج')}</small></b><ul>${B.map(([id, ic, t, d, on]) => `<li class="${on ? 'is-on' : ''}" data-badge="${id}" title="${esc(L(d))}"><i aria-hidden="true">${ic}</i><span>${L(t)}<small>${L(d)}</small></span></li>`).join('')}</ul></div>
+    </section>`;
+  }
   function render() {
     const S = db.settings;
     const list = GAMES.filter(g => S.cat === 'all' || g.cat === S.cat);
-    app.innerHTML = `
+    app.innerHTML = journey() + `
       <section class="gm-set" aria-label="${T('Game settings', 'إعدادات الألعاب')}">
         <div><b>${T('Difficulty', 'الصعوبة')}</b>${seg('level', [['gentle', 'Gentle', 'هادئ'], ['standard', 'Standard', 'عادي'], ['stretch', 'Stretch', 'تحدٍّ']])}</div>
         <div><b>${T('Length', 'المدة')}</b>${seg('length', [['short', '5 rounds', '٥ جولات'], ['medium', '8 rounds', '٨ جولات'], ['long', '12 rounds', '١٢ جولة']])}</div>
@@ -359,7 +520,8 @@
       <div class="gm-cats" role="tablist" aria-label="${T('Categories', 'الفئات')}">${[['all', 'All', 'الكل']].concat(Object.keys(CATS).map(k => [k, CATS[k][0], CATS[k][1]])).map(([k, en, ar]) => `<button type="button" role="tab" aria-selected="${S.cat === k}" data-set="cat:${k}" style="--c:${CATS[k] ? CATS[k][2] : 'var(--accent)'}">${T(en, ar)}</button>`).join('')}<button type="button" class="gm-progbtn" data-prog>${T('My progress', 'تقدّمي')}</button></div>
       <div class="gm-grid">${list.map((g, i) => { const st = stats(g.id); return `<article class="gm-card" style="--c:${CATS[g.cat][2]};--i:${i}" data-g="${g.id}">
         <div class="gm-art" aria-hidden="true">${ART[g.id]}</div>
-        <span class="gm-cat">${L(CATS[g.cat])} · ~${g.mins} min</span>
+        <span class="gm-cat"><i aria-hidden="true">${CATS[g.cat][3]}</i> ${L(CATS[g.cat])}</span>
+        <span class="gm-meta">~${g.mins} min · ${T('Difficulty', 'الصعوبة')}: ${L(LVNAME[db.settings.level] || LVNAME.standard)}</span>
         <h3>${L(g.title)}</h3><p>${L(g.blurb)}</p>
         <div class="gm-foot"><button type="button" class="gm-play" data-play="${g.id}">${T('Play', 'العب')} <span aria-hidden="true">→</span></button>${st.n ? `<small>${T('Played', 'لُعبت')} ${st.n}×</small>${spark(st.acc)}` : ''}</div>
       </article>`; }).join('')}</div>`;
@@ -374,12 +536,13 @@
   /* ---------------- player ---------------- */
   let live = null; // the round on screen (read by the end-to-end tests)
   function play(game) {
+    live = null;
     const n = ROUNDS[db.settings.length] || 8, level = LV[db.settings.level] || 2;
     const rounds = game.rounds(level, n);
     const dlg = document.createElement('div');
     dlg.className = 'gm-player'; dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-label', L(game.title)); dlg.style.setProperty('--c', CATS[game.cat][2]);
     dlg.innerHTML = `<div class="gm-p__box">
-      <header class="gm-p__h"><div><span>${L(CATS[game.cat])}</span><b>${L(game.title)}</b></div><div class="gm-p__tools"><span class="gm-p__round" aria-live="polite"></span><button type="button" data-c="pause">${T('Pause', 'إيقاف مؤقت')}</button><button type="button" data-c="skip">${T('Skip', 'تخطَّ')}</button><button type="button" data-c="stop">${T('Stop', 'إنهاء')}</button></div></header>
+      <header class="gm-p__h"><div><span>${L(CATS[game.cat])}</span><b>${L(game.title)}</b></div><div class="gm-p__tools"><span class="gm-p__round" aria-live="polite"></span><button type="button" data-c="pause">${T('Pause', 'إيقاف مؤقت')}</button><button type="button" data-c="skip">${T('Skip', 'تخطَّ')}</button><button type="button" data-c="again">${T('Restart', 'إعادة')}</button><button type="button" data-c="stop">${T('Stop', 'إنهاء')}</button></div></header>
       <div class="gm-p__bar"><i></i></div>
       <div class="gm-p__stage"></div>
       <div class="gm-p__fb" aria-live="assertive"></div>
@@ -407,12 +570,14 @@
       if (k === 'stop') finish(true);
       if (k === 'again') { close(); play(game); }
       if (k === 'close') close();
+      if (k === 'other') { const pool = GAMES.filter(g => g.id !== game.id), tried = new Set(db.sessions.map(x => x.g)), fresh = pool.filter(g => !tried.has(g.id)); close(); play((fresh.length ? fresh : pool)[Math.floor(Math.random() * (fresh.length ? fresh : pool).length)]); }
       if (k === 'helped') { c.classList.toggle('is-on'); const last = db.sessions[db.sessions.length - 1]; if (last) { last.helped = [...dlg.querySelectorAll('[data-c="helped"].is-on')].map(b => b.dataset.h); save(); } }
     });
     const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); if (dlg.querySelector('.gm-p__end')) close(); else setPause(!paused); } };
     addEventListener('keydown', onKey);
     function close() { dead = true; if (skipR && !skipR.used) { skipR.used = true; skipR.res({ skipped: true }); } cleanups.forEach(f => { try { f(); } catch (e) { /* already gone */ } }); removeEventListener('keydown', onKey); if (window.speechSynthesis) speechSynthesis.cancel(); dlg.classList.remove('is-in'); document.documentElement.classList.remove('gm-open'); setTimeout(() => dlg.remove(), still() ? 0 : 260); render(); const b = app.querySelector(`[data-play="${game.id}"]`); if (b) b.focus(); }
     async function loop() {
+      await intro(); if (dead) return; cleanups = [];
       while (idx < rounds.length && !dead) {
         dlg.querySelector('.gm-p__round').textContent = `${T('Round', 'الجولة')} ${idx + 1} / ${rounds.length}`;
         dlg.querySelector('.gm-p__bar i').style.width = (idx / rounds.length * 100) + '%';
@@ -429,6 +594,17 @@
       }
       if (!dead) finish(false);
     }
+    function intro() {
+      return new Promise(res => {
+        dlg.querySelector('.gm-p__round').textContent = T('How to play', 'طريقة اللعب');
+        stage.innerHTML = `<div class="gm-intro"><div class="gm-intro__art" aria-hidden="true">${ART[game.id]}</div><h3>${L(game.title)}</h3><p>${L(game.blurb)}</p>
+          <ol>${(HOW[game.id] || []).map(h => `<li>${L(h)}</li>`).join('')}</ol>
+          <p class="gm-intro__meta">~${game.mins} min · ${rounds.length} ${T('rounds', 'جولات')} · ${L(LVNAME[db.settings.level] || LVNAME.standard)} · ${T('pause, skip or stop any time', 'أوقف أو تخطَّ أو أنهِ متى شئت')}</p>
+          <div class="gp-row gp-row--c"><button type="button" class="gp-btn" data-start>${T('Start', 'ابدأ')} <span aria-hidden="true">→</span></button></div></div>`;
+        const b = stage.querySelector('[data-start]'); b.onclick = () => res(); setTimeout(() => b.focus(), 60);
+        ctx.cleanup(() => res());
+      });
+    }
     function finish(stopped) {
       if (dlg.querySelector('.gm-p__end')) return;
       const done = results.filter(r => !r.skipped), ok = done.filter(r => r.ok).length, part = done.reduce((s, r) => s + (r.part || 0), 0);
@@ -444,7 +620,7 @@
         <div class="gm-end__tips"><b>${T('Strategies worth trying', 'استراتيجيات تستحق التجربة')}</b><ul>${game.tips.map(t => `<li>${L(t)}</li>`).join('')}</ul></div>
         <div class="gm-end__helped"><b>${T('What helped today? (optional, saved on this device)', 'ما الذي ساعدك اليوم؟ (اختياري، يُحفظ على هذا الجهاز)')}</b><div>${[['slow', 'Going slower', 'التمهّل'], ['aloud', 'Saying it aloud', 'القول بصوت'], ['chunk', 'Grouping / chunking', 'التجميع'], ['picture', 'Picturing it', 'التخيّل'], ['break', 'Taking a pause', 'أخذ استراحة']].map(([h, en, ar]) => `<button type="button" data-c="helped" data-h="${h}">${T(en, ar)}</button>`).join('')}</div></div>
         <p class="gm-end__note">${T('This was practice, not a test. Scores show how today’s rounds went — they are not a measure of ability and are never used to label anyone.', 'كان هذا تدريباً لا اختباراً. النتائج تعكس جولات اليوم فقط، وليست مقياساً للقدرة ولا تُستخدم لتصنيف أي شخص.')}</p>
-        <div class="gp-row gp-row--c"><button type="button" class="gp-btn" data-c="again">${T('Play again', 'العب مجدداً')}</button><button type="button" class="gp-btn gp-btn--ghost" data-c="close">${T('Back to games', 'العودة للألعاب')}</button></div></div>`;
+        <div class="gp-row gp-row--c"><button type="button" class="gp-btn" data-c="again">${T('Play again', 'العب مجدداً')}</button><button type="button" class="gp-btn gp-btn--ghost" data-c="other">${T('Try another game', 'جرّب لعبة أخرى')}</button><button type="button" class="gp-btn gp-btn--ghost" data-c="close">${T('Back to games', 'العودة للألعاب')}</button></div></div>`;
       fb.textContent = '';
       dlg.querySelector('[data-c="again"]').focus();
     }

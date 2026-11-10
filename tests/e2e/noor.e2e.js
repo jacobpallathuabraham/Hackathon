@@ -1,5 +1,5 @@
 // Optional end-to-end check of Noor's knowledge chat, interview, voice call,
-// video check-in, proactive notice and the Daily Quest page.
+// video check-in, proactive notice and the old Daily Quest address (now Learning Games).
 //   python3 -m http.server 8765 &   then   NODE_PATH=$(npm root -g) node tests/e2e/noor.e2e.js
 'use strict';
 const assert = require('node:assert/strict');
@@ -63,10 +63,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.waitForTimeout(400);
   assert.match(await page.textContent('.cmp-invite'), /trouble understanding/);
 
-  // Daily Quest page
-  await page.goto(BASE + 'checkins.html'); await page.waitForTimeout(1500);
-  assert.equal(await page.locator('.q-node').count(), 5);
-  assert.equal(await page.locator('.q-card').count(), 2);
+  // the old Daily Quest address now leads to Learning Games (v12)
+  await page.goto(BASE + 'checkins.html'); await page.waitForURL(/games\.html/, { timeout: 8000 }); await page.waitForTimeout(800);
+  assert.equal(await page.locator('.gm-card').count(), 12);
   assert.deepEqual(errors, []);
   console.log('noor e2e: all checks passed');
   await browser.close();

@@ -23,8 +23,8 @@ const SHOT = process.env.ERLY_SHOTS;
   // intake
   await page.click('[data-next]');
   const sug = await page.locator('.gx-area.is-on').evaluateAll(els => els.map(e => e.dataset.area));
-  assert.deepEqual(sug.sort(), ['reading', 'writing'], 'pre-selected from evidence');
-  await page.click('[data-area="writing"]'); await page.click('[data-area="attention"]');
+  assert.deepEqual(sug.sort(), [], 'nothing pre-selected: old handwriting “levels” are never used as evidence (v12)');
+  await page.click('[data-area="reading"]'); await page.click('[data-area="attention"]');
   await page.click('[data-next]');
   await page.click('[data-goal="reading:1"]'); await page.click('[data-next]');
   await page.click('[data-min="10"]'); await page.click('[data-next]');

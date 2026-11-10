@@ -1,0 +1,1 @@
+Fonts from Google Fonts, SIL Open Font License 1.1 (https://openfontlicense.org). Used only to render synthetic handwriting-style test images for tests/eval/handwriting-eval.js; not served to students.

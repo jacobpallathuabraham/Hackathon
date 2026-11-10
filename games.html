@@ -10,12 +10,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=11">
-  <link rel="stylesheet" href="assets/css/accents.css?v=11">
-  <link rel="stylesheet" href="assets/css/erly.css?v=11">
-  <link rel="stylesheet" href="assets/css/companion.css?v=11">
-  <link rel="stylesheet" href="assets/css/checkins.css?v=11">
-  <link rel="stylesheet" href="assets/css/games.css?v=11">
+  <link rel="stylesheet" href="assets/css/style.css?v=12">
+  <link rel="stylesheet" href="assets/css/accents.css?v=12">
+  <link rel="stylesheet" href="assets/css/erly.css?v=12">
+  <link rel="stylesheet" href="assets/css/companion.css?v=12">
+  <link rel="stylesheet" href="assets/css/checkins.css?v=12">
+  <link rel="stylesheet" href="assets/css/games.css?v=12">
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
   <script>
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -31,14 +31,14 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=11">
-  <link rel="stylesheet" href="assets/css/v9.css?v=11">
-  <link rel="stylesheet" href="assets/css/companion-holo.css?v=11">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=12">
+  <link rel="stylesheet" href="assets/css/v9.css?v=12">
+  <link rel="stylesheet" href="assets/css/companion-holo.css?v=12">
 </head>
 <body class="quest-page games-page">
   <div class="q-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <header class="q-top">
-    <a class="q-back" href="student.html"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
+    <a class="q-back" href="student.html"><span aria-hidden="true">←</span> <span data-i18n="gm.back">Dashboard</span></a>
     <a href="student.html" class="brand" aria-label="ERLY home">
       <img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
       <span class="brand__word brand__word--caps">ERLY</span>
@@ -56,19 +56,23 @@
 
   <main class="q-main" id="main">
     <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
-    <div class="q-head gm-head">
-      <p class="kicker"><span data-i18n="gm.kicker">Learning Games · practice, not a test</span></p>
-      <h1 class="q-title" data-i18n="gm.title">Play with the skills behind studying.</h1>
-      <p class="q-lead" data-i18n="gm.lead">Short, optional activities for reading, memory, planning, attention, spatial thinking and listening. Pick what you like, change the difficulty any time, pause or stop whenever you want — nothing is lost and nothing counts against you.</p>
-      <p class="gm-bound" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span data-i18n="gm.bound">These games are for practice and enjoyment. They do not test, detect or diagnose anything (including dyslexia, ADHD or any other condition), and your results are never used to label you. No camera or microphone is used. Your scores stay on this device unless you clear them.</span></p>
-    </div>
+    <section class="gm-hero gm-head" aria-labelledby="gmTitle">
+      <div>
+        <p class="kicker"><span data-i18n="gm.kicker">Learning Games · practice, not a test</span></p>
+        <h1 class="q-title" id="gmTitle" data-i18n="gm.title">Learning Games</h1>
+        <p class="q-lead" data-i18n="gm.lead">Twelve short, optional games across ten areas of studying: reading, vocabulary, memory, planning, focus, listening, writing, spatial thinking, patterns and problem-solving. Pick what you like, change the difficulty any time, pause or stop whenever you want — nothing is lost and nothing counts against you.</p>
+        <p class="gm-bound" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span data-i18n="gm.bound">These games are for practice and enjoyment. They do not test, detect or diagnose anything (including dyslexia, ADHD or any other condition), and your results are never used to label you. No camera or microphone is used. Your scores stay on this device unless you clear them.</span></p>
+        <a class="gm-hero__dash" href="student.html"><span aria-hidden="true">←</span> <span data-i18n="gm.dash">Return to dashboard</span></a>
+      </div>
+      <div class="gm-orbit" aria-hidden="true"><div class="gm-orbit__ring"><span style="--c:#f97316;--a:-90deg">📖</span><span style="--c:#fb7185;--a:-18deg">🔤</span><span style="--c:#a855f7;--a:54deg">🧠</span><span style="--c:#22c55e;--a:126deg">🗺️</span><span style="--c:#eab308;--a:198deg">🎯</span></div><div class="gm-orbit__ring gm-orbit__ring--2"><span style="--c:#ec4899;--a:-54deg">🎧</span><span style="--c:#14b8a6;--a:18deg">✍️</span><span style="--c:#38bdf8;--a:90deg">🧊</span><span style="--c:#6366f1;--a:162deg">🔷</span><span style="--c:#84cc16;--a:234deg">🧩</span></div><div class="gm-orbit__core">🎮</div></div>
+    </section>
     <div id="gamesApp"></div>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/js/icons.js?v=11"></script>
-  <script src="assets/js/i18n.js?v=11"></script>
+  <script src="assets/js/icons.js?v=12"></script>
+  <script src="assets/js/i18n.js?v=12"></script>
   <script>
     (function () {
       const bus = {}; let tt;
@@ -85,11 +89,11 @@
       });
     })();
   </script>
-  <script src="assets/js/accent.js?v=11"></script>
-  <script src="assets/js/games-data.js?v=11"></script>
-  <script src="assets/js/games.js?v=11"></script>
-  <script src="assets/js/theme-fx.js?v=11"></script>
-  <script src="assets/js/ambient.js?v=11" defer></script>
-  <script src="assets/js/a11y.js?v=11"></script>
+  <script src="assets/js/accent.js?v=12"></script>
+  <script src="assets/js/games-data.js?v=12"></script>
+  <script src="assets/js/games.js?v=12"></script>
+  <script src="assets/js/theme-fx.js?v=12"></script>
+  <script src="assets/js/ambient.js?v=12" defer></script>
+  <script src="assets/js/a11y.js?v=12"></script>
 </body>
 </html>

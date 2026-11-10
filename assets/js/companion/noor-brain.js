@@ -49,6 +49,16 @@
     return out;
   }
   const ASP_N = { what: ['Overview', 'نظرة عامة'], signs: ['Signs', 'العلامات'], assess: ['Assessment', 'التقييم'], support: ['What helps', 'ما يساعد'], similar: ['Look-alikes', 'ما يشبهه'], myths: ['Myths', 'خرافات'], faq: ['Quick fact', 'معلومة سريعة'], simple: ['In short', 'باختصار'], compare: ['Comparison', 'مقارنة'], list: ['Topics', 'المواضيع'], done: ['', ''] };
+  // does a fallback answer actually address the question? (a cheap content-word overlap; AI answers are not filtered by this)
+  const STOP = new Set('about above after again against also among another anything because been before being below between both could does doing down during each explain from have having here how into itself just like make more most much need only other over please same should show some such tell than that their them then there these they this those through under until very want were what when where which while whom whose why will with would your you could provide give help visual representation work works working'.split(' '));
+  const stem = w => w.toLowerCase().replace(/[^a-z\u0600-\u06ff]/g, '').replace(/(ies|ing|ed|es|s)$/, '').slice(0, 6);
+  function relevant(q, answer) {
+    const qw = [...new Set(String(q).toLowerCase().split(/[^a-z\u0600-\u06ff]+/).filter(w => w.length >= 4 && !STOP.has(w)).map(stem))].filter(Boolean);
+    if (!qw.length) return true; // nothing specific to check against
+    const aw = new Set(String(answer).toLowerCase().split(/[^a-z\u0600-\u06ff]+/).filter(w => w.length >= 4).map(stem));
+    const hit = qw.filter(w => aw.has(w)).length;
+    return hit / qw.length >= (qw.length >= 3 ? 0.34 : 0.5);
+  }
   async function sayKB(a) {
     const asp = ASP_N[a.aspect] || ['', ''];
     const tp = a.topic && K.topicById(a.topic);
@@ -104,6 +114,7 @@
     if (tr && tr.pdf) { history.push({ role: 'user', text }); await C.tools.pdfLocal(tr); return offerChips([{ id: 'brain', en: 'Explain it with AI', ar: 'اشرحيها بالذكاء الاصطناعي' }, { id: 'fu:quiz', en: 'Quiz me on this page', ar: 'اختبريني في هذه الصفحة' }]); }
     history.push({ role: 'user', text });
     if (await skill(text)) { captureReply(); return; }
+    if (a.kind === 'answer' && !relevant(text, pick(a.en, a.ar) + ' ' + (a.topic ? pick(...(K.topicById(a.topic) || { title: ['', ''] }).title) : ''))) a = Object.assign({}, a, { kind: 'unknown' }); // never answer a different question
     remember(a);
     if (a.kind === 'answer') await sayKB(a);
     else if (a.kind === 'unknown' && U.ai) {
@@ -142,6 +153,7 @@
       await say('I couldn’t reach the internet from here, so I can’t look that up right now. Try again in a moment, or ask me about studying, exams or the readings.', 'لم أستطع الوصول إلى الإنترنت من هنا، لذا لا أستطيع البحث الآن. حاول بعد قليل، أو اسألني عن المذاكرة أو الاختبارات أو القراءات.');
       return false;
     }
+    if (!relevant(q, hit.title + ' ' + hit.text)) { await say('I couldn’t find a reliable answer to that just now, so I won’t guess. Please try again shortly, or rephrase the question.', 'لم أجد إجابة موثوقة الآن، لذلك لن أخمّن. حاول مجدداً بعد قليل أو أعد صياغة السؤال.'); return false; }
     const md = `${note ? note + '\n\n' : ''}### ${hit.title}\n${hit.text}\n\n_Source: [Wikipedia](${hit.url})_`;
     await mdSay(md, md, { tag: T('Looked up on Wikipedia', 'من ويكيبيديا') });
     history.push({ role: 'assistant', text: hit.text });
@@ -156,7 +168,7 @@
     const ai = U.ai, voiceMode = !!C.inCall;
     const R = ERLY.reader;
     const reading = (tr && tr.reading) || U.attached() || (R && R.isOpen() && READING_Q.test(text) ? R.contextFor() : null);
-    const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) || /\b(erly|noor|sas|support pact|reading studio|growth plan|check-?ins?|daily quest|start-?ramp|insight|signals?)\b/i.test(text) ? K.context(text, lang()) : '';
+    const kb = ['answer', 'self-check', 'reflect', 'feeling'].includes(a.kind) || /\b(erly|noor|sas|support pact|reading studio|growth plan|check-?ins?|daily quest|learning games?|start-?ramp|insight|signals?)\b/i.test(text) ? K.context(text, lang()) : '';
     if (tr && tr.tools) C.tools.trace(tr.tools);
     const strong = ai.canSee && ai.canSee(); // a large-context server model gets more of the conversation verbatim
     const vz = C.tools && C.tools.visual && C.tools.visual.current(), vsc = vz && vz.scene;
@@ -196,7 +208,7 @@
       out = await ai.generate(msgs, { voice: voiceMode, onStatus: st => {
         if (!st.busy) return;
         let left = st.busy; clearInterval(busyT);
-        const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T(`Noor Online is busy (free service, one message at a time) — trying again in ${left}s…`, `نور أونلاين مشغول (خدمة مجانية، رسالة واحدة في كل مرة) — سأحاول مجدداً بعد ${left} ث…`)}</p>`; };
+        const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T('Noor is working on your answer…', 'نور تعمل على إجابتك…')}</p>`; };
         show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>'; } else show(); }, 1000);
       }, onToken: t => { clearInterval(busyT); if (!latest) ERLY.emit('noor:first-token'); askVisual(t); t = clean(t); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
       clearInterval(busyT);
@@ -220,19 +232,16 @@
         if (U.restoreImages) U.restoreImages(images, text);
         ERLY.emit('noor:turn-end'); return true;
       }
-      if (ai.state().tier === 'online') {
-        const msg = String(e && e.message || '');
-        const secs = +(msg.match(/^busy:(\d+)/) || [])[1] || 0;
-        retryQ = text;
-        const note = secs ? T(`_The free AI service is cooling down for ${secs} s (it allows about one message every 30 seconds), so here’s a quick answer meanwhile. Tap “Ask the AI again” for the full answer._`, `_خدمة الذكاء المجانية تستريح ${secs} ث (تسمح برسالة كل ٣٠ ثانية تقريباً)، لذا إليك إجابة سريعة الآن. اضغط «اسأل الذكاء مجدداً» للإجابة الكاملة._`)
-          : T('_The AI service didn’t answer quickly enough, so here’s a quick answer instead._', '_لم تُجب خدمة الذكاء بسرعة كافية، لذا إليك إجابة سريعة._');
+      if (ai.state().tier === 'online' || ai.state().tier === 'cloud') {
+        // one clear outcome: a fallback only if it really answers THIS question; otherwise say so and offer a retry
         history.push({ role: 'user', text });
+        retryQ = text;
         const quick = K.answer(text, lang(), kctx);
-        if (quick.kind === 'answer') { await mdSay(note, note, { speak: false }); await sayKB(quick); }
-        else if (!(await wikiAnswer(text, note))) { history.pop(); retryChip(secs); ERLY.emit('noor:turn-end'); return true; }
-        retryChip(secs);
-        ERLY.emit('noor:turn-end');
-        return true;
+        if (quick.kind === 'answer' && relevant(text, pick(quick.en, quick.ar))) { await sayKB(quick); retryChip(0); ERLY.emit('noor:turn-end'); return true; }
+        await say('Noor is temporarily unable to complete this request. Your message is still here — please try again shortly.', 'لا تستطيع نور إكمال هذا الطلب مؤقتاً. رسالتك ما زالت هنا — حاول مجدداً بعد قليل.');
+        history.pop();
+        const box = U.$('#cmpText'); if (box && !box.value) { box.value = text; U.composer && U.composer(); }
+        retryChip(0); ERLY.emit('noor:turn-end'); return true;
       }
       bubble('ai', T('My AI brain didn’t answer this time, so here’s my built-in answer.', 'لم يُجب عقلي الذكي هذه المرة، لذا إليك إجابتي المدمجة.'), { text: true, cls: 'cmsg--note' });
       return false;
@@ -252,7 +261,7 @@
   }
   let retryQ = '';
   function retryChip(secs) {
-    offerChips([{ id: 'fu:retry', en: secs ? `Ask the AI again (in ${secs}s)` : 'Ask the AI again', ar: 'اسأل الذكاء مجدداً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
+    offerChips([{ id: 'fu:retry', en: 'Try again', ar: 'حاول مجدداً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
     if (secs) setTimeout(() => { const b = document.querySelector('.cchips [data-id="fu:retry"] span'); if (b) b.textContent = pick('Ask the AI again — ready', 'اسأل الذكاء مجدداً — جاهز'); }, secs * 1000);
   }
   function finishReply(m, md, q, stopped) {
@@ -385,7 +394,7 @@
     if (id === 'brain') return U.openBrain();
     if (id === 'fu:timer') { if (ERLY.reader && ERLY.reader.isOpen()) ERLY.reader.act('timer'); return freeText('pomodoro focus timer', { silentUser: true }); }
     if (id === 'fu:cards') return freeText('flashcards', { silentUser: true });
-    if (id === 'fu:retry' && retryQ) return freeText(retryQ, { silentUser: true });
+    if (id === 'fu:retry' && retryQ) { const bx = U.$('#cmpText'); if (bx && bx.value.trim() === retryQ.trim()) { bx.value = ''; U.composer && U.composer(); } return freeText(retryQ, { silentUser: true }); }
     if (id.startsWith('fu:')) return freeText(pick(c.en, c.ar), { silentUser: true });
     if (id === 'no-thanks') return say('No problem at all. I’m here whenever you want.', 'لا مشكلة إطلاقاً. أنا هنا متى أردت.');
   }
@@ -450,7 +459,6 @@
     await say(r.headline[0], r.headline[1], { html: card, sayText: pick(...r.headline) });
     const next = [];
     if (r.level === 'strong' || r.level === 'some') next.push({ id: 'kb:assessment:what', en: 'How do I get assessed?', ar: 'كيف أحصل على تقييم؟' }, { id: 'summary', en: 'Put this in my summary for SAS', ar: 'ضعه في ملخصي لخدمات الطلبة' });
-    if ((iv.area === 'reading' || iv.area === 'writing') && (r.level === 'strong' || r.level === 'some')) next.unshift({ id: 'hand', en: 'Check my handwriting too', ar: 'افحصي كتابتي أيضاً' });
     if (r.level === 'strong' || r.level === 'some') next.push({ id: 'growth', en: 'Start a Growth Plan for this', ar: 'ابدئي خطة نمو لهذا' });
     if (tp) next.push({ id: `kb:${tp.id}:support`, en: 'More about what helps', ar: 'المزيد عما يساعد' });
     next.push({ id: 'hard', en: 'Talk about another area', ar: 'لنتحدث عن مجال آخر' });
@@ -478,7 +486,7 @@
           <button type="button" class="btn btn--xs ${o.level === 'some' || o.level === 'strong' ? 'btn--accent' : 'btn--ghost'}" data-iv="${o.area}">${r ? T('Talk it through again', 'لنتحدث عنه مجدداً') : T('Talk it through', 'لنتحدث عنه')}</button>
         </div>`;
       }).join('') : ''}</div>
-      <div class="ccard__btns"><button type="button" class="btn btn--xs btn--ghost" data-hand>${ICON('pen')} ${T('Handwriting check', 'فحص الكتابة اليدوية')}</button><a class="btn btn--xs btn--ghost" href="checkins.html">${ICON('target')} ${T('Do today’s check-ins', 'أنجز فحوصات اليوم')}</a><a class="btn btn--xs btn--ghost" href="#videos" data-close-cmp>${ICON('volume')} ${T('Lecture videos', 'فيديوهات المحاضرات')}</a></div>
+      <div class="ccard__btns"><button type="button" class="btn btn--xs btn--ghost" data-hand>${ICON('pen')} ${T('Handwriting check', 'فحص الكتابة اليدوية')}</button><a class="btn btn--xs btn--ghost" href="games.html">${ICON('target')} ${T('Learning Games', 'ألعاب التعلّم')}</a><a class="btn btn--xs btn--ghost" href="#videos" data-close-cmp>${ICON('volume')} ${T('Lecture videos', 'فيديوهات المحاضرات')}</a></div>
       <p class="muted cmp-small">${T('Evidence levels decide when Noor offers to talk — they are not a diagnosis, and never a percentage.', 'مستويات الدلائل تحدد متى تعرض نور الحديث — وليست تشخيصاً، ولا نسبة مئوية أبداً.')}</p>`;
     pane.onclick = e => {
       const b = e.target.closest('[data-iv]');
@@ -487,14 +495,6 @@
       if (e.target.closest('[data-hand]')) ERLY.emit('hand:open', { from: 'profile' });
     };
   }
-
-  ERLY.on && ERLY.on('hand:done', async res => {
-    if (!res || !res.summary) return;
-    const S = res.summary;
-    const lines = [S.head, S.spl, S.note].filter(Boolean);
-    await say(lines.map(x => x[0]).join('\n'), lines.map(x => x[1]).join('\n'), { tag: T('Handwriting check', 'فحص الكتابة'), speak: false });
-    offerChips([{ id: 'growth', en: 'Build these skills (Growth Plan)', ar: 'ابنِ هذه المهارات (خطة النمو)' }, { id: 'profile', en: 'See my profile', ar: 'اعرض ملفي' }, { id: 'kb:dysgraphia:what', en: 'What is dysgraphia?', ar: 'ما عسر الكتابة؟' }, { id: 'kb:sas:what', en: 'What happens at SAS?', ar: 'ماذا يحدث في خدمات الطلبة؟' }]);
-  });
 
   /* ---------------- proactive notices ---------------- */
   const NOTICE = {

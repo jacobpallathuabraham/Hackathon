@@ -26,7 +26,6 @@
     const out = new Set();
     try { const tr = JSON.parse(localStorage.getItem('erly-track-v2') || '{}'); if (tr.status === 'ended' && tr.summary) (tr.summary.flaggedAreas || []).forEach(a => out.add({ reading: 'reading', language: 'reading', executive: 'attention', strain: 'wellbeing' }[a])); } catch (e) { /* none */ }
     try { const an = JSON.parse(localStorage.getItem('erly-analyser-v1') || '{}'); Object.entries(an.interviews || {}).forEach(([a, r]) => { if (r && (r.level === 'some' || r.level === 'strong') && G.AREAS[a]) out.add(a); }); } catch (e) { /* none */ }
-    try { const hw = JSON.parse(localStorage.getItem('erly-hand-v1') || 'null'); if (hw && hw.level === 'several') out.add('writing'); if (hw && hw.spelling === 'notable') out.add('reading'); } catch (e) { /* none */ }
     out.delete(undefined);
     return [...out];
   }

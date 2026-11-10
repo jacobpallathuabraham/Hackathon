@@ -220,7 +220,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
         abort = () => ctrl && ctrl.abort();
         let first = false, tooSlow = false;
-        const slow = setTimeout(() => { if (!first && ctrl) { tooSlow = true; ctrl.abort(); } }, 25000);
+        const slow = setTimeout(() => { if (!first && ctrl) { tooSlow = true; ctrl.abort(); } }, 65000); // includes the free tier's own ≤30 s queue
         try { await onlineGenerate(messages, o, ctrl, d => { first = true; push(d); }); }
         catch (e) { if (tooSlow) throw new Error('slow'); throw e; }
         finally { clearTimeout(slow); }
@@ -249,8 +249,8 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       const free = svc.url === ONLINE_DEFAULT.url; // the free tier allows about one message every 30 s
       if (free) {
         const left = Math.ceil((30000 - (Date.now() - onlineAt)) / 1000);
-        if (left > 5) throw new Error('busy:' + left); // don't make the student wait: answer another way now
-        if (left > 0) { o.onStatus && o.onStatus({ busy: left }); await wait(left * 1000); }
+        // the free tier allows about one request every 30 s: wait for it quietly (bounded) instead of failing the question
+        if (left > 0) { o.onStatus && o.onStatus({ busy: left }); await wait(left * 1000); if (ctrl && ctrl.signal.aborted) return; }
         onlineAt = Date.now();
       }
       // a message may carry images (content parts); emails and numbers are removed from every text part
@@ -270,7 +270,7 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         }
         if (r.status === 402 || r.status === 429 || r.status === 503) {
           const secs = Math.min(60, Math.max(2, +(r.headers.get('retry-after') || 0) || 30));
-          if (secs > 5 || tries > 1) { onlineAt = Date.now() - 30000 + secs * 1000; throw new Error('busy:' + secs); }
+          if (secs > 35 || tries > 1) { onlineAt = Date.now() - 30000 + secs * 1000; throw new Error('busy:' + secs); }
           o.onStatus && o.onStatus({ busy: secs });
           await wait(secs * 1000);
           continue;

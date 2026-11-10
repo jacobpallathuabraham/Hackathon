@@ -14,7 +14,7 @@ test('markdown renders lists, headings, code, tables and links', () => {
   assert.match(h, /<h4>Plan<\/h4>/);
   assert.match(h, /<ol><li[^>]*>Read<\/li><li[^>]*><strong>Test<\/strong> yourself<ul><li>flashcards<\/li><\/ul><\/li><\/ol>/);
   assert.match(h, /<pre><code>let a = 1 &lt; 2;<\/code><\/pre>/);
-  assert.match(h, /<th>Day<\/th>.*<td>Review<\/td>/);
+  assert.match(h, /<th>Day<\/th>.*<td data-label="Task">Review<\/td>/);
   assert.match(h, /<a href="https:\/\/example.org" target="_blank" rel="noopener noreferrer">SAS<\/a>/);
 });
 test('an unfinished code fence still renders while streaming', () => {

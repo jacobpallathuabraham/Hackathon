@@ -138,7 +138,7 @@
       <header class="a11y__h"><div><b id="a11yTitle">${T('Accessibility', 'سهولة الوصول')}</b><small>${T('Your choices, saved only on this device.', 'اختياراتك، محفوظة على هذا الجهاز فقط.')}</small></div><button type="button" class="a11y__x" data-a="close" aria-label="${T('Close', 'إغلاق')}">✕</button></header>
       <div class="a11y__tabs" role="tablist" aria-label="${T('Settings groups', 'مجموعات الإعدادات')}">${TABS.map(([k, en, ar]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${st.tab === k}">${T(en, ar)}</button>`).join('')}</div>
       <div class="a11y__pane" role="tabpanel">${pane()}</div>
-      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>ERLY v11 · Alt+A</span></footer>`;
+      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>ERLY v12 · Alt+A</span></footer>`;
     if (focusKey) { const f = panel.querySelector(`[data-k="${focusKey}"], [data-tab="${focusKey}"][aria-selected="true"], [data-size="${focusKey}"]`); if (f) f.focus(); }
   }
   function voices() { try { const l = (html.lang || 'en').slice(0, 2); return (speechSynthesis.getVoices() || []).filter(v => v.lang && v.lang.slice(0, 2) === l).slice(0, 30); } catch (e) { return []; } }
@@ -202,7 +202,7 @@
   if (window.I18N && I18N.onChange) I18N.onChange(() => { if (panel) { render(); btn.setAttribute('aria-label', T('Accessibility settings (Alt+A)', 'إعدادات سهولة الوصول (Alt+A)')); } });
   addEventListener('resize', () => apply(), { passive: true });
   // Back/Forward restores pages from the browser's memory exactly as they were left — including a
-  // full-screen leaving animation (the Growth Plan seedling, the Daily Quest rocket, a sign-out fade).
+  // full-screen leaving animation (the Growth Plan seedling, the Learning Games rocket, a sign-out fade).
   // That made pages look frozen after pressing Back. Clear any such leftovers on restore.
   addEventListener('pageshow', e => {
     if (!e.persisted) return;

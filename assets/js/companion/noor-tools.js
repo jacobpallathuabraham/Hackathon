@@ -122,7 +122,7 @@
   /* ---------------- navigation ---------------- */
   const PLACES = [
     [/reading studio|library|\bpdf\b|\breading(s)?\b|my book/i, 'studio', ['the Reading Studio', 'استوديو القراءة']],
-    [/daily quest|check-?ins?|\bgames?\b|\bquest\b/i, 'checkins', ['the Daily Quest', 'المهمة اليومية']],
+    [/learning games?|daily quest|check-?ins?|\bgames?\b|\bquest\b/i, 'games', ['Learning Games', 'ألعاب التعلّم']],
     [/growth plan|\bskills? plan\b/i, 'growth', ['your Growth Plan', 'خطة النمو']],
     [/insight/i, '#insight', ['your insight', 'رؤيتك']],
     [/support pact|tracking/i, '#tracking', ['the Support Pact', 'ميثاق الدعم']],
@@ -136,7 +136,7 @@
   ];
   function go(where) {
     if (where === 'studio') { U.closePanel && U.closePanel(); R.openLibrary(); return; }
-    if (where === 'checkins') { location.href = 'checkins.html'; return; }
+    if (where === 'games') { location.href = 'games.html'; return; }
     if (where === 'growth') { location.href = 'support.html'; return; }
     if (where === 'hand') { ERLY.emit('hand:open', { from: 'noor' }); return; }
     if (where.startsWith('tab:')) { U.setTab(where.slice(4)); return; }
@@ -333,6 +333,8 @@
   const LEVELS = ['quick', 'ug', 'adv', 'pg', 'research'], LEVEL_N = { quick: 'a quick overview', ug: 'undergraduate', adv: 'advanced undergraduate', pg: 'postgraduate', research: 'research-oriented' };
   async function editVisual(t) {
     const VS = ERLY.vspec, it = VS.editIntent(t); if (!it || !vis) return null;
+    // “show me binary search visually” is a new visual, not “highlight binary search” in the one on screen
+    if (it.kind === 'highlight' && /^\s*(please |can you |could you )?show me\b/i.test(t) && (VS.explicit(t) || VS.plan(t))) { const cur = String((vis.scene && vis.scene.title && vis.scene.title[0]) || '').toLowerCase(), want = String(it.m[4] || '').toLowerCase().replace(/\b(visually|visual|diagram|please)\b/g, '').trim(); if (!want || !cur.includes(want.split(' ')[0])) return null; }
     const spec = vis.scene && vis.scene.spec;
     let r = spec ? VS.edit(spec, t) : null;
     if (!spec) { // a hand-built scene: it can be animated, rotated (if 3D) and focused, not re-specified
@@ -412,7 +414,9 @@
     // unless the student turned “Suggest visuals” on in Companion Studio → Talk.
     const VS = ERLY.vspec;
     if (VS && vis) { const r = await editVisual(t); if (r) return r; }
-    const want = VS && VS.explicit(t);
+    // explicit requests, plus questions that are clearly about how something looks or fits together, when an accurate visual exists
+    const CLEARLY = /^(please )?(show me|explain (the )?(structure|anatomy|parts|layout|relationship)|what does .{2,40} look like|how (is|are) .{2,40} (structured|arranged|connected))\b/i;
+    const want = VS && (VS.explicit(t) || (CLEARLY.test(t) && (U.store.prefs().vs || {}).visualMode !== 'ask' && VS.plan(t) ? 'visual' : null));
     if (want) { lastQ = t; await buildVisual({ question: t, want }); if (/^(draw|plot|graph|sketch|chart|visuali[sz]e|animate|simulate|make|show)\b[^?]{0,80}$/i.test(t) && vis) return { done: true }; }
     else if (VS && (U.store.prefs().vs || {}).suggestVisuals && !/^(what is|calculate)\s+[\d(]/i.test(t)) { const kind = VS.offerable(t, U.ai && U.ai.ready()); if (kind) showOffer(t, kind); }
     if (!want) lastQ = t;

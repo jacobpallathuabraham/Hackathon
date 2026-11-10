@@ -499,3 +499,22 @@ html.q-arrive .quest-page { animation: qArrive .9s cubic-bezier(.2, .7, .2, 1) b
 .ck-art-seats { display: grid; grid-template-columns: repeat(4, 12px); gap: 4px; padding: 8px; border-radius: 10px; background: var(--surface); }
 .ck-art-seats i { width: 12px; height: 12px; border-radius: 3px 3px 2px 2px; background: var(--bg-2); border: 1px solid var(--line); }
 .ck-art-seats i.is-on { background: var(--accent); border-color: transparent; animation: ckSeat .4s ease-out both; animation-delay: calc(var(--k) * 60ms); }
+
+/* v12 — Learning Games on the dashboard */
+.anchor-alias { position: absolute; top: 0; }
+#games { position: relative; }
+.lg-home { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.lg-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.lg-tile { display: grid; gap: 2px; padding: 14px; border-radius: 18px; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c); transition: transform .25s, box-shadow .25s; }
+.lg-tile:hover, .lg-tile:focus-visible { transform: translateY(-3px); box-shadow: 0 16px 30px -20px var(--c); }
+.lg-tile i { font-style: normal; font-size: 24px; }
+.lg-tile b { font-size: 14px; }
+.lg-tile small { color: var(--muted); font-size: 12.5px; }
+.lg-side { padding: 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; }
+.lg-side b { display: block; margin: 0 0 6px; }
+.lg-side ul { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.lg-side i { font-style: normal; }
+.lg-side small, .lg-side p { color: var(--muted); }
+.lg-side p { margin: 0 0 12px; font-size: 13px; }
+.lg-ctas { display: grid; gap: 12px; }
+@media (max-width: 820px) { .lg-home { grid-template-columns: 1fr; } }

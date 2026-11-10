@@ -193,7 +193,7 @@
         const head = cells(l); i += 2;
         const rows = [];
         while (i < lines.length && isTableRow(lines[i])) rows.push(cells(lines[i++]));
-        out.push(`<div class="md-table"><table><thead><tr>${head.map(c => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${head.map((_, k) => `<td>${inline(r[k] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
+        out.push(`<div class="md-table"><table><thead><tr>${head.map(c => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${head.map((_, k) => `<td data-label="${esc(head[k].replace(/[*_`]/g, ''))}">${inline(r[k] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`);
         continue;
       }
       if (/^\s*>/.test(l)) {

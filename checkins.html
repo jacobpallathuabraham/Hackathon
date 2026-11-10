@@ -1,96 +1,16 @@
 <!doctype html>
-<html lang="en" dir="ltr" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="robots" content="noindex, follow">
+  <meta name="robots" content="noindex">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Daily Quest · ERLY</title>
-  <meta name="description" content="ERLY Daily Quest: two short, game-like challenges a day across every part of studying, guided by Noor.">
-  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=11">
-  <link rel="stylesheet" href="assets/css/accents.css?v=11">
-  <link rel="stylesheet" href="assets/css/erly.css?v=11">
-  <link rel="stylesheet" href="assets/css/companion.css?v=11">
-  <link rel="stylesheet" href="assets/css/checkins.css?v=11">
-  <script>
-    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
-    (function () {
-      try {
-        var t = localStorage.getItem('erly-theme');
-        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.dataset.theme = t;
-        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
-        if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
-        if (sessionStorage.getItem('erly-warp') === '1') { document.documentElement.classList.add('q-arrive'); sessionStorage.removeItem('erly-warp'); }
-      } catch (e) {}
-    })();
-  </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=11">
-  <link rel="stylesheet" href="assets/css/v9.css?v=11">
-  <link rel="stylesheet" href="assets/css/companion-holo.css?v=11">
+  <title>Learning Games · ERLY</title>
+  <!-- v12: the Daily Quest was replaced by Learning Games. Old links land here and move on;
+       earlier Daily Quest results stay in this browser's storage untouched. -->
+  <meta http-equiv="refresh" content="0; url=games.html">
+  <script>location.replace('games.html' + location.search);</script>
 </head>
-<body class="quest-page">
-  <div class="q-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-  <header class="q-top">
-    <a class="q-back" href="student.html#checkins"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
-    <a href="student.html" class="brand" aria-label="ERLY home">
-      <img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
-      <span class="brand__word brand__word--caps">ERLY</span>
-    </a>
-    <div class="q-top__tools">
-      <button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button>
-      <div data-accent-picker></div>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
-        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-  </header>
-
-  <main class="q-main" id="main">
-    <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
-    <div class="q-head">
-      <p class="kicker"><span data-i18n="q.kicker">Daily Quest · with Noor</span></p>
-      <h1 class="q-title" data-i18n="q.title">Two short challenges a day. Five days. Every part of studying.</h1>
-      <p class="q-lead" data-i18n="q.lead">Each challenge has a friendly time limit and Noor talks you through it. Spread over the week, they give a far more reliable picture than one long test — and the results stay yours.</p>
-    </div>
-    <div id="checkins-app" data-mode="quest"></div>
-  </main>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script src="assets/js/icons.js?v=11"></script>
-  <script src="assets/js/i18n.js?v=11"></script>
-  <script src="assets/js/fun.js?v=11"></script>
-  <script>
-    // a slim version of the main site's shared bus for this standalone page
-    (function () {
-      const bus = {};
-      let tt;
-      window.ERLY = {
-        on(e, f) { (bus[e] = bus[e] || []).push(f); }, emit(e, d) { (bus[e] || []).forEach(f => f(d)); },
-        toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('is-on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('is-on'), 2600); }
-      };
-      I18N.apply(I18N.lang);
-      document.getElementById('langToggle').addEventListener('click', () => I18N.apply(I18N.lang === 'ar' ? 'en' : 'ar'));
-      document.getElementById('themeToggle').addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('erly-theme', next); } catch (e) {}
-      });
-    })();
-  </script>
-  <script src="assets/js/accent.js?v=11"></script>
-  <script src="assets/js/indicators.js?v=11"></script>
-  <script src="assets/js/companion/voice.js?v=11"></script>
-  <script src="assets/js/checkins-score.js?v=11"></script>
-  <script src="assets/js/checkins.js?v=11"></script>
-  <script src="assets/js/theme-fx.js?v=11"></script>
-  <script src="assets/js/ambient.js?v=11" defer></script>
-  <script src="assets/js/a11y.js?v=11"></script>
-  <script src="assets/js/companion/holo.js?v=11" defer></script>
+<body>
+  <p>The Daily Quest is now <a href="games.html">Learning Games</a>.</p>
 </body>
 </html>

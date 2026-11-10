@@ -43,7 +43,7 @@
     const vs = Object.values(D.videos);
     return { videosWithFriction: vs.filter(v => v.episodes > 0).length, episodes: vs.reduce((a, v) => a + (v.episodes || 0), 0), slowdowns: vs.reduce((a, v) => a + (v.slowdowns || 0), 0), restarts: vs.reduce((a, v) => a + (v.restarts || 0), 0), transcript: vs.reduce((a, v) => a + (v.transcript || 0), 0) };
   }
-  function handwriting() { try { return JSON.parse(localStorage.getItem('erly-hand-v1') || 'null'); } catch (e) { return null; } }
+  function handwriting() { return null; } // v12: the Handwriting Check no longer produces evidence of anything (it only reports recognition and photo quality)
   const profile = () => E.profile({ checkins: checkinSources(), tracker: tracker(), video: videoSummary(), reading: D.reading, handwriting: handwriting() });
 
   function check() {
