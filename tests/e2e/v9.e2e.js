@@ -36,21 +36,16 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   assert.equal(rapid.t, 'light', '7 rapid clicks from dark end on light'); assert.equal(rapid.s, 'light', 'choice persisted');
   assert.doesNotMatch(rapid.c, /vt-theme|tfx-fade/, 'no stuck transition classes'); assert.equal(rapid.r, 0, 'no leftover rings');
 
-  /* ---------- ambient backgrounds ---------- */
-  const amb = await p.evaluate(() => [...document.querySelectorAll('.amb:not(.cmp .amb)')].map(a => ({ k: a.dataset.ambient, run: a.__amb && a.__amb.running(), vis: a.getBoundingClientRect().top < innerHeight })));
-  assert.ok(amb.length >= 4, 'hero + three ink sections have ambient backgrounds');
-  assert.ok(amb.filter(a => a.vis).every(a => a.run), 'visible backgrounds animate ' + JSON.stringify(amb));
-  assert.ok(amb.filter(a => !a.vis).every(a => !a.run), 'off-screen backgrounds are paused');
-  const heroPx = await p.evaluate(() => document.querySelector('.hero .amb').__amb.auroraScale() < 0.5);
-  assert.ok(heroPx, 'aurora renders below screen resolution (cheap)');
+  /* ---------- ambient backgrounds: switched off in v10.1 (they cost ~40 fps on tablets) ---------- */
+  const amb = await p.evaluate(() => [...document.querySelectorAll('.amb')].map(a => ({ shown: getComputedStyle(a).display !== 'none', run: !!(a.__amb && a.__amb.running()), canvas: !!a.querySelector('canvas') })));
+  assert.ok(amb.every(a => !a.shown && !a.run && !a.canvas), 'no background canvases drawn or animated ' + JSON.stringify(amb));
 
   /* ---------- holo companion ---------- */
   await p.click('.cmp-launch'); await p.waitForTimeout(800);
   const holo = await p.evaluate(() => { const panel = document.querySelector('.cmp'); const a = panel.querySelector(':scope > .amb'); return { amb: !!a, kind: a && a.dataset.ambient, run: a && a.__amb && a.__amb.running(), border: getComputedStyle(panel).borderTopColor }; });
-  assert.ok(holo.amb && holo.kind === 'holo' && holo.run, 'holo scanning grid runs inside the open panel');
+  assert.ok(holo.amb && holo.kind === 'holo' && !holo.run, 'the holo scanning grid no longer animates');
   assert.match(holo.border, /rgba?\(56, 189, 248/, 'luminous cyan panel edge');
   await p.click('#cmpClose'); await p.waitForTimeout(500);
-  assert.equal(await p.evaluate(() => document.querySelector('.cmp > .amb').__amb.running()), false, 'stops when the panel closes');
 
   /* ---------- accessibility control centre ---------- */
   await p.keyboard.press('Alt+a'); await p.waitForTimeout(250);
@@ -61,7 +56,6 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   ['a11y-zoom', 'a11y-contrast', 'a11y-still', 'a11y-font', 'a11y-spacing', 'a11y-links', 'a11y-focus'].forEach(c => assert.match(cls, new RegExp(c), c));
   assert.equal(await p.evaluate(() => getComputedStyle(document.body).zoom), '1.25');
   assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.hero h1')).opacity), '1', 'stopping animations never hides content');
-  assert.equal(await p.evaluate(() => document.querySelector('.hero .amb').__amb.running()), false, 'stop animations pauses the backgrounds');
   const panelBox = await p.locator('#a11yPanel').boundingBox();
   assert.ok(panelBox.y >= 0 && panelBox.y + panelBox.height <= 800, 'panel stays on screen at 125% text');
   await p.evaluate(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('.hero h1')); getSelection().removeAllRanges(); getSelection().addRange(r); });

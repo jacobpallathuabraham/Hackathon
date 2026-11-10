@@ -30,7 +30,10 @@
   }
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
+  const ERLY_AMBIENT_OFF = true;
   function mount(host, kinds, opts) {
+    // v10.1: backgrounds are off (see v9.css) — nothing is drawn and no animation loop runs
+    if (ERLY_AMBIENT_OFF) { const stub = { running: () => false, kinds: [], auroraScale: () => 0, destroy() {} }; if (host) host.__amb = stub; return stub; }
     opts = opts || {};
     if (!host || host.__amb) return host && host.__amb;
     kinds = String(kinds || host.dataset.ambient || 'aurora').split(/\s+/);

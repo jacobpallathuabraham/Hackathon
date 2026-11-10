@@ -3,7 +3,10 @@
    scrollbars and selection. Everything here respects reduced motion. */
 
 /* ---------- ambient animated backgrounds (ambient.js) ---------- */
-.amb { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: layout paint; }
+/* v10.1: the canvas backgrounds are switched off. Even drawn once, they made the browser re-composite
+   the whole page on every frame (home page ~17 fps vs ~56 fps without them under iPad-like conditions). */
+.amb { display: none !important; }
+.amb--off { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: layout paint; }
 .amb--page { position: fixed; }
 .amb__cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 /* aurora canvases are rendered small and scaled up — the browser's smoothing turns them into soft light */

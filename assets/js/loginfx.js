@@ -15,7 +15,7 @@
   function rgb(h, a) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return `rgba(150,140,130,${a})`; const n = parseInt(m[1], 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
   function colours() { col = { a: css('--accent') || '#C1502B', b: css('--teal') || '#146A63', c: css('--s4') || '#5B4B8A', ink: css('--ink') || '#1B1915', dark: document.documentElement.dataset.theme === 'dark' }; }
   function size() {
-    dpr = Math.min(1.75, devicePixelRatio || 1);
+    dpr = 1; // v10.1: 1× pixels — a full-screen canvas at 1.75× was the main cost on tablets
     W = innerWidth;
     // use the larger of the viewport and the screen so the mobile URL bar never forces a resize
     H = Math.max(innerHeight, (screen && screen.height) || 0);
@@ -99,7 +99,11 @@
       g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(s.x - s.vx * 14, s.y - s.vy * 14); g.stroke();
     }
   }
+  let lastDraw = 0;
   function frame(t) {
+    // v10.1: 24 fps is plenty for a slow background and leaves the rest of each frame free
+    if (t - lastDraw < 41) { raf = requestAnimationFrame(frame); return; }
+    lastDraw = t;
     g.clearRect(0, 0, W, H);
     mouse.x += (mouse.tx - mouse.x) * .08; mouse.y += (mouse.ty - mouse.y) * .08;
     const vh = innerHeight, al = col.dark ? .16 : .13;

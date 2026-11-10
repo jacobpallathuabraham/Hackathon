@@ -169,3 +169,7 @@ html.gm-open { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .gm-art *, .gm-card, .gm-burst i { animation: none !important; } }
 html.a11y-still .gm-art *, html.a11y-still .gm-burst i { animation: none !important; }
+/* v10.1: card illustrations only move while you hover (8 looping animations slowed the page on tablets) */
+.gm-art * { animation-play-state: paused !important; }
+@media (hover: hover) { .gm-card:hover .gm-art * { animation-play-state: running !important; } }
+.gm-set, .gm-bound { backdrop-filter: none; }
