@@ -127,6 +127,41 @@
     if (history.length > 40) history.splice(0, history.length - 40); // older turns are summarised for the model (ai.js buildMessages)
     offerChips(a.chips && a.chips.length ? a.chips : [{ id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }, { id: 'kb:assessment:what', en: 'How do assessments work?', ar: 'كيف تعمل التقييمات؟' }]);
   }
+  /* ---- v13: conversation identity, research, validation ---- */
+  // one conversation per browser tab (session isolation); every turn gets an ID so a late reply to an
+  // older message can never land under a newer one
+  const convId = (() => { try { let c = sessionStorage.getItem('noor-conv'); if (!c) { c = 'conv-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); sessionStorage.setItem('noor-conv', c); } return c; } catch (e) { return 'conv-' + Date.now().toString(36); } })();
+  let turnSeq = 0;
+  const RS = window.ERLY_RESEARCH, VAL = window.ERLY_VALIDATE;
+  const gatewayURL = () => { const c = window.ERLY_AI_CONFIG || {}; return c.gateway && c.gateway.url ? c.gateway.url.replace(/\/$/, '') : null; };
+  // open sources are contacted only after the student agreed to online help, or turned research on
+  const researchAllowed = () => { const pr = (U.store.prefs() || {}).research; if (pr === 'off') return false; if (pr === 'on') return true; const t = U.ai && U.ai.state().tier; return t === 'online' || t === 'cloud'; };
+  const KNOWLEDGE_SKIP = ['feeling', 'reflect', 'self-check'];
+  const wantsResearch = (text, a) => RS && researchAllowed() && !KNOWLEDGE_SKIP.includes(a && a.kind) && String(text).trim().length > 8 && !/\b(erly|noor|sas|support pact|growth plan|learning games?|handwriting check)\b/i.test(text);
+  async function research(text, onStatus) {
+    try {
+      onStatus && onStatus();
+      const r = await RS.retrieve(text, { lang: lang(), gateway: gatewayURL(), timeoutMs: 6500 });
+      const UU = ERLY.noorUsage; if (UU) Object.entries(r.status).forEach(([src, stt]) => UU.research(src, stt));
+      return r;
+    } catch (e) { return null; }
+  }
+  const EVIDENCE = { live: ['Live sources', 'مصادر مباشرة'], retrieved: ['Retrieved sources', 'مصادر مسترجعة'], 'retrieved-not-live': ['Sources (may be out of date)', 'مصادر (قد تكون قديمة)'], none: ['General model knowledge', 'معرفة عامة للنموذج'], quoted: ['Quoted from sources', 'مقتبس من المصادر'] };
+  const evidenceTag = k => `<span class="cev cev--${k}">${esc(pick(...EVIDENCE[k]))}</span>`;
+  // the AI-free answer (zero-budget tier 2): sources quoted with citations, or their own pros and cons
+  function quotedAnswer(text, res) {
+    if (!res || !res.passages.length) return null;
+    const note = RS.freshnessNote(res, lang());
+    const rows = RS.compareFromSources(res);
+    if (rows && rows.some(r => r.pros.length || r.cons.length || r.intro)) {
+      const cite = x => `[${x.p.title}](${x.p.url})`;
+      let md = (note ? `> ${note}\n\n` : '') + rows.map(r => `### ${r.opt}\n${r.intro ? r.intro.s + ' — ' + cite(r.intro) + '\n' : ''}${r.pros.length ? '\n**Advantages (as the source describes them)**\n' + r.pros.map(x => `- ${x.s} — ${cite(x)}`).join('\n') : ''}${r.cons.length ? '\n\n**Disadvantages / criticism (as the source describes them)**\n' + r.cons.map(x => `- ${x.s} — ${cite(x)}`).join('\n') : ''}${!r.pros.length && !r.cons.length ? '\n_The source has no advantages/disadvantages section for this option, so I won’t make one up._' : ''}`).join('\n\n');
+      return md + '\n\n_These points are quoted from the sources, not judged by Noor. Which option suits you depends on what matters most to you._';
+    }
+    const x = RS.extractive(text, res); if (!x) return null;
+    return (note ? `> ${note}\n\n` : '') + x.md;
+  }
+
   // a one-tap, informed choice to answer with Noor Online (or just a Wikipedia lookup)
   function onlineCard(q) {
     const svc = U.ai.online();
@@ -134,17 +169,28 @@
     card.className = 'ccard conline';
     card.innerHTML = `<b>${ICON('globe')} ${T('Answer this with Noor Online?', 'أجيب عن هذا بنور أونلاين؟')}</b>
       <p>${T(`Your question and the recent chat go to ${esc(svc.name)}, a free AI service. Emails and numbers are removed first; your name, profile and tracking are never sent. Please don’t share anything private.`, `يُرسل سؤالك والمحادثة الأخيرة إلى ${esc(svc.name)}، وهي خدمة ذكاء اصطناعي مجانية. تُحذف عناوين البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو بيانات التتبع أبداً. لا تشارك أي شيء خاص.`)}</p>
-      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Turn on & answer', 'شغّل وأجب')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search Wikipedia', 'ابحث في ويكيبيديا فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
+      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Turn on & answer', 'شغّل وأجب')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search open sources', 'ابحث في المصادر المفتوحة فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
     card.addEventListener('click', async e => {
       const b = e.target.closest('[data-o]'); if (!b) return;
       card.remove();
       if (b.dataset.o === 'on') { U.ai.useOnline(); ERLY.toast && ERLY.toast(T('Noor Online is on — ask me anything.', 'نور أونلاين مفعّل — اسألني أي شيء.')); history.pop(); history.pop(); return freeText(q, { silentUser: true }); }
-      if (b.dataset.o === 'wiki') return wikiAnswer(q);
+      if (b.dataset.o === 'wiki') { try { U.store.setPref('research', 'on'); } catch (er) { /* prefs unavailable */ } return wikiAnswer(q); }
       offerChips([{ id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
     });
     U.$('#cmpLog').appendChild(card); U.scrollLog();
   }
   async function wikiAnswer(q, note) {
+    if (RS) { // v13: several open sources, ranked passages, citations
+      U.setStatus('thinking');
+      const res = await RS.retrieve(q, { lang: lang(), gateway: gatewayURL(), timeoutMs: 7000 }).catch(() => null);
+      U.setStatus('idle');
+      const md = res && relevant(q, res.passages.map(p => p.title + ' ' + p.text).join(' ')) ? quotedAnswer(q, res) : null;
+      if (!md) { await say('I couldn’t find a reliable source for that just now, so I won’t guess. Try rephrasing, or ask again shortly.', 'لم أجد مصدراً موثوقاً لذلك الآن، لذلك لن أخمّن. أعد الصياغة أو حاول بعد قليل.'); return false; }
+      await mdSay((note ? note + '\n\n' : '') + md, (note ? note + '\n\n' : '') + md, { tag: T('Quoted from open sources', 'مقتبس من مصادر مفتوحة') });
+      history.push({ role: 'assistant', text: md.slice(0, 1500) });
+      offerChips([{ id: 'fu:simpler', en: 'Explain it more simply', ar: 'اشرحيها بشكل أبسط' }, { id: 'fu:example', en: 'Give me an example', ar: 'أعطيني مثالاً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
+      return true;
+    }
     U.setStatus('thinking');
     let hit = null;
     try { hit = await U.ai.lookup(q, lang()); } catch (e) { hit = null; }
@@ -173,7 +219,19 @@
     const strong = ai.canSee && ai.canSee(); // a large-context server model gets more of the conversation verbatim
     const vz = C.tools && C.tools.visual && C.tools.visual.current(), vsc = vz && vz.scene;
     const visual = vsc ? `an interactive visual "${vsc.title[0]}" (${vsc.subject[0]}) with steps: ${vsc.stages.map((st, i) => `${i + 1}. ${st.title[0]}`).join('; ')}${vsc.spec && vsc.spec.params && (vsc.spec.params.elements || vsc.spec.params.objects) ? '; labelled parts: ' + (vsc.spec.params.elements || vsc.spec.params.objects).map(e => e.label).filter(Boolean).slice(0, 30).join(', ') : ''}${vz.stageIndex != null ? `; currently showing step ${vz.stageIndex + 1}` : ''}` : '';
-    const msgs = AIX.buildMessages(history, text, { visual, lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 });
+    const myTurn = ++turnSeq, turnId = 't' + myTurn + '-' + Date.now().toString(36);
+    // privacy: personal memory (preferences, goals, profile) stays on the device when the AI runs outside it
+    const external = ['online', 'cloud'].includes(ai.state().tier);
+    const prevQs = history.filter(h => h.role === 'user').map(h => h.text);
+    // research first, so the answer can cite real sources
+    let res = null;
+    if (!images && !reading && !voiceMode && wantsResearch(text, a)) {
+      res = await research(text, () => U.setStatus('thinking'));
+      if (myTurn !== turnSeq) return true; // the student already moved on
+      if (res && (!res.passages.length || !relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) && !res.plan.compare)) res = Object.assign({}, res, { passages: [], evidence: res.plan.freshness === 'live' ? 'retrieved-not-live' : 'none' });
+    }
+    const srcOpts = res ? { sources: res.passages.length ? res.passages : null, freshNote: RS.freshnessNote(res, lang()), compare: res.plan.compare, compareAspect: res.plan.aspect } : {};
+    const msgs = AIX.buildMessages(history, text, Object.assign({ visual, lang: lang(), voice: voiceMode, care: voiceMode && C.callMode !== 'chat', reading, kb, memory: C.tools && !external ? C.tools.memoryPrompt() : '', images, keep: strong ? 30 : 10 }, srcOpts));
     history.push({ role: 'user', text: images && images.length ? text + ` [${images.length} image(s) attached]` : text });
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';
@@ -205,13 +263,27 @@
     };
     let out = '';
     try {
-      out = await ai.generate(msgs, { voice: voiceMode, onStatus: st => {
+      const genOpts = { voice: voiceMode, conversationId: convId, turnId, lang: lang(), task: res && res.plan.compare ? 'compare' : res ? 'research' : 'chat', onStatus: st => {
         if (!st.busy) return;
         let left = st.busy; clearInterval(busyT);
         const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T('Noor is working on your answer…', 'نور تعمل على إجابتك…')}</p>`; };
         show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>'; } else show(); }, 1000);
-      }, onToken: t => { clearInterval(busyT); if (!latest) ERLY.emit('noor:first-token'); askVisual(t); t = clean(t); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } });
+      }, onToken: t => { clearInterval(busyT); if (!latest) ERLY.emit('noor:first-token'); askVisual(t); t = clean(t); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } };
+      out = await ai.generate(msgs, genOpts);
       clearInterval(busyT);
+      // validation: the answer must be about THIS question; one controlled regeneration, then a clear error
+      if (VAL && !stopped) {
+        let v = VAL.check(text, out, prevQs);
+        if (!v.ok) {
+          body.innerHTML = `<p class="cmsg__busy">${ICON('reset')} ${T('That answer didn’t match your question — asking once more…', 'لم تطابق الإجابة سؤالك — أسأل مرة أخرى…')}</p>`;
+          latest = '';
+          const again = msgs.slice(); const last = again[again.length - 1];
+          again[again.length - 1] = Object.assign({}, last, { content: typeof last.content === 'string' ? `Answer exactly this question, and nothing from earlier topics: ${last.content}` : last.content });
+          out = await ai.generate(again, genOpts);
+          v = VAL.check(text, out, prevQs);
+          if (!v.ok) { const er = new Error('invalid-answer'); er.code = 'invalid'; throw er; }
+        }
+      }
     } catch (e) {
       cancelAnimationFrame(raf); clearInterval(busyT);
       U.setGenerating(null); U.setBusy(false); U.setStatus('idle');
@@ -238,6 +310,15 @@
         retryQ = text;
         const quick = K.answer(text, lang(), kctx);
         if (quick.kind === 'answer' && relevant(text, pick(quick.en, quick.ar))) { await sayKB(quick); retryChip(0); ERLY.emit('noor:turn-end'); return true; }
+        // the device's own limit (configurable) — say so plainly; nothing was sent
+        if (e && /^local-cap/.test(e.code || '')) bubble('ai', /day/.test(e.code) ? T('You’ve reached today’s daily limit of AI questions on this device, so nothing was sent. It resets tomorrow; built-in answers, sources, visuals and calculations still work.', 'وصلت إلى الحد اليومي لأسئلة الذكاء الاصطناعي على هذا الجهاز، لذلك لم يُرسل شيء. يُعاد ضبطه غداً؛ وما زالت الإجابات المدمجة والمصادر والمرئيات تعمل.') : T('That’s a lot of AI questions in one minute, so this one wasn’t sent — wait a moment and press Try again.', 'أسئلة كثيرة للذكاء الاصطناعي في دقيقة واحدة، لذلك لم يُرسل هذا السؤال — انتظر قليلاً واضغط «حاول مجدداً».'), { text: true, cls: 'cmsg--note' });
+        // zero-budget tier 2: the sources retrieved for this question, quoted (never an unrelated cached answer)
+        const qa = res && res.passages.length && relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) ? quotedAnswer(text, res) : null;
+        if (qa) {
+          const intro = T('The AI couldn’t answer just now, so here is what the sources say (quoted, not written by the AI):', 'تعذّر على الذكاء الاصطناعي الإجابة الآن، فإليك ما تقوله المصادر (مقتبس، لم يكتبه الذكاء الاصطناعي):');
+          await mdSay(intro + '\n\n' + qa, intro + '\n\n' + qa, { tag: pick(...EVIDENCE.quoted) });
+          retryChip(0); ERLY.emit('noor:turn-end'); return true;
+        }
         await say('Noor is temporarily unable to complete this request. Your message is still here — please try again shortly.', 'لا تستطيع نور إكمال هذا الطلب مؤقتاً. رسالتك ما زالت هنا — حاول مجدداً بعد قليل.');
         history.pop();
         const ref = (e && e.requestId) || ai.state().lastRequestId;
@@ -249,7 +330,16 @@
       return false;
     }
     cancelAnimationFrame(raf);
+    if (myTurn !== turnSeq) { m.remove(); history.pop(); U.setGenerating(null); U.setBusy(false); return true; } // a newer message took over
     askVisual(out); out = clean(out).trim();
+    let ev = 'none';
+    if (res && res.passages.length) {
+      const v = RS.verifyCitations(out, res.passages);
+      out = v.text + (v.cited.length ? RS.sourcesMarkdown(res.passages, v.cited) : RS.sourcesMarkdown(res.passages).replace('**Sources**', '**Sources consulted**'));
+      ev = res.evidence;
+    } else if (res && res.plan.freshness === 'live') ev = 'retrieved-not-live';
+    const tagEl = m.querySelector('.cmsg__tag'); if (tagEl) tagEl.insertAdjacentHTML('beforeend', ' ' + evidenceTag(ev));
+    m.dataset.evidence = ev; m.dataset.turn = turnId;
     if (C.inCall) { const rest = out.slice(spoken).trim(); if (rest) ERLY.emit('noor:said', { text: MD.toText(rest), speak: true }); }
     finishReply(m, out, text, false);
     history.push({ role: 'assistant', text: out });

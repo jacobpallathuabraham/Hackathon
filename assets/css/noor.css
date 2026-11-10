@@ -402,3 +402,9 @@ html.erly-big body { zoom: 1.12; }
   .md-table td { border: 0; padding: 3px 0; display: grid; grid-template-columns: minmax(7ch, 38%) 1fr; gap: 8px; }
   .md-table td::before { content: attr(data-label); font-weight: 700; color: var(--muted); }
 }
+
+/* v13 — where an answer's facts came from */
+.cev { display: inline-block; margin-inline-start: 6px; padding: 1px 8px; border-radius: 999px; font: 600 10.5px var(--f-mono, monospace); letter-spacing: .02em; vertical-align: 1px; border: 1px solid currentColor; opacity: .9; }
+.cev--live { color: #15803d; } .cev--retrieved { color: #1d4ed8; } .cev--quoted { color: #7c3aed; }
+.cev--retrieved-not-live { color: #b45309; } .cev--none { color: var(--muted, #6b7280); }
+:root[data-theme="dark"] .cev--live { color: #4ade80; } :root[data-theme="dark"] .cev--retrieved { color: #93c5fd; } :root[data-theme="dark"] .cev--quoted { color: #c4b5fd; } :root[data-theme="dark"] .cev--retrieved-not-live { color: #fbbf24; }

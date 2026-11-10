@@ -36,7 +36,9 @@
   let cfg = S.config(store.thresholds());
   const llm = window.ERLY_LLM.create({ endpoint: (window.ERLY_AI_CONFIG || {}).endpoint || '', getConsent: () => store.consent('llm') });
   // Noor's brain: built-in by default; on-device or cloud AI only when the student turns it on (ai.js)
-  const ai = window.ERLY_AI ? window.ERLY_AI.create({ online: () => (window.ERLY_AI_CONFIG || {}).online, cloud: {
+  // v13: one usage manager per device (counts only; limits from ERLY_AI_CONFIG.limits)
+  try { if (window.ERLY_USAGE && !ERLY.noorUsage) ERLY.noorUsage = window.ERLY_USAGE.create(localStorage, (window.ERLY_AI_CONFIG || {}).limits || {}); } catch (e) { /* storage blocked */ }
+  const ai = window.ERLY_AI ? window.ERLY_AI.create({ online: () => { const c = window.ERLY_AI_CONFIG || {}; if (c.gateway && c.gateway.url) return { name: c.gateway.name || 'Noor AI', site: c.gateway.site || 'the ERLY gateway', url: c.gateway.url.replace(/\/$/, '') + '/v1/chat/completions', get: '', model: 'auto', vision: c.gateway.vision !== false, gateway: true }; return c.online; }, cloud: {
     configured: () => llm.configured, consent: () => store.consent('llm'),
     chat: async (messages, o) => {
       const sys = messages[0].content, last = messages[messages.length - 1].content;
