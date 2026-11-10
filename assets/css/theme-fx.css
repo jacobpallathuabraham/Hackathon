@@ -169,3 +169,30 @@ html.tfx-lang-in body { animation: tfxBodyIn .6s cubic-bezier(.15, .85, .25, 1);
 :root:not([data-theme="dark"]) .acu-news-sub input { border-color: #C9D4E3; background: #fff; color: var(--navy); }
 :root:not([data-theme="dark"]) .acu-foot__bar { border-top-color: rgba(14, 27, 44, .1); }
 :root:not([data-theme="dark"]) .acu-top { background: #fff; color: #A9720F; box-shadow: 0 12px 30px rgba(14, 27, 44, .18); }
+
+/* ===== v14 theme switch: "dusk / dawn" ===== */
+html.vt-dusk::view-transition-group(root) { animation-duration: .6s; }
+html.vt-dusk::view-transition-old(root), html.vt-dusk::view-transition-new(root) { mix-blend-mode: normal; animation-duration: .6s; animation-timing-function: cubic-bezier(.4, 0, .2, 1); }
+html.vt-dusk::view-transition-old(root) { animation-name: tfxDuskOut; }
+html.vt-dusk::view-transition-new(root) { animation-name: tfxDuskIn; }
+@keyframes tfxDuskOut { to { opacity: 0; filter: blur(2px) saturate(.9); } }
+@keyframes tfxDuskIn { from { opacity: 0; } }
+/* one soft band of light crosses the screen — warm into light mode, cool into dark mode */
+.tfx-sheen { position: fixed; inset: -20%; pointer-events: none; z-index: 2147483000; opacity: 0; animation: tfxSheen .85s cubic-bezier(.4, 0, .2, 1) forwards; }
+.tfx-sheen--light { background: linear-gradient(115deg, transparent 38%, rgba(255, 236, 200, .28) 48%, rgba(255, 250, 240, .38) 50%, rgba(255, 236, 200, .28) 52%, transparent 62%); }
+.tfx-sheen--dark { background: linear-gradient(115deg, transparent 38%, rgba(99, 102, 241, .18) 48%, rgba(125, 211, 252, .26) 50%, rgba(99, 102, 241, .18) 52%, transparent 62%); }
+@keyframes tfxSheen { 0% { opacity: 0; transform: translateX(-45%); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateX(45%); } }
+/* fallback veil */
+.tfx-veil { position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; opacity: 0; transition: opacity .22s ease; }
+.tfx-veil.is-on { opacity: .85; }
+.tfx-veil--dark { background: #0e1120; } .tfx-veil--light { background: #F4EFE6; }
+/* the button: sun and moon morph into each other in place (no flying icons) */
+#themeToggle { position: relative; }
+#themeToggle .i-sun, #themeToggle .i-moon { display: block !important; transition: transform .5s cubic-bezier(.34, 1.4, .64, 1), opacity .3s ease; }
+#themeToggle .i-moon { position: absolute; inset: 0; margin: auto; opacity: 0; transform: rotate(-90deg) scale(.4); }
+[data-theme="dark"] #themeToggle .i-sun { opacity: 0; transform: rotate(90deg) scale(.4); }
+[data-theme="dark"] #themeToggle .i-moon { opacity: 1; transform: none; }
+/* the old effects are retired */
+.tfx-orb, .tfx-ring, .tfx-wash { display: none !important; }
+#themeToggle.tfx-spin svg, #themeToggle.tfx-spin { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .tfx-sheen { display: none; } #themeToggle .i-sun, #themeToggle .i-moon { transition: none; } }

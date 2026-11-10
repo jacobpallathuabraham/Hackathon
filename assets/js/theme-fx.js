@@ -3,8 +3,8 @@
    Each page keeps its own #themeToggle / #langToggle handler (it knows what to
    redraw: charts, Noor, the studio). This file catches the click first, then
    replays it inside a View Transition so the change animates:
-     - theme: the new theme spreads out in a circle from the button, with a
-       sun or moon that rises and fades;
+     - theme: "dusk / dawn" — a soft cross-fade of the whole page with one gentle
+       diagonal sheen of light; the button's sun and moon morph into each other;
      - language: the page glides out one way and the new language glides in
        from the reading direction (right-to-left for Arabic), with a short
        "العربية" / "English" badge.
@@ -50,49 +50,26 @@
   catch (e) { canMask = !!(window.CSS && CSS.supports && CSS.supports('mask-image', 'radial-gradient(#000, transparent)')) && /already/i.test(String(e && e.message)); }
   let active = null;
   function switchTheme(btn) {
-    const { x, y, radius } = origin(btn);
     const toDark = html.dataset.theme !== 'dark';
-    html.style.setProperty('--tfx-x', x + 'px');
-    html.style.setProperty('--tfx-y', y + 'px');
     if (active) { try { active.skipTransition(); } catch (e) { /* already done */ } active = null; }
     if (reduce()) return replay(btn);
-    const glyph = () => { const g = badge('tfx-orb ' + (toDark ? 'tfx-orb--moon' : 'tfx-orb--sun'), toDark ? MOON : SUN, 1300); g.style.left = x + 'px'; g.style.top = y + 'px'; };
-    btn.classList.remove('tfx-spin'); void btn.offsetWidth; btn.classList.add('tfx-spin');
+    html.classList.toggle('tfx-to-dark', toDark);
     if (canVT) {
-      const dur = Math.round(Math.min(1150, 700 + radius * 0.22)); // larger screens get a little longer, never sluggish
-      const feather = Math.max(70, Math.min(160, radius * 0.08));
-      let ring = null;
-      html.classList.add('vt-theme'); html.classList.toggle('vt-mask', canMask); html.classList.toggle('vt-to-dark', toDark);
-      html.style.setProperty('--tfx-f', feather + 'px');
+      // "dusk / dawn": the whole page cross-fades softly while a gentle diagonal light sweeps across once
+      html.classList.add('vt-dusk');
       const t = active = document.startViewTransition(() => {
-        replay(btn); glyph();
-        ring = document.createElement('div');
-        ring.className = 'tfx-ring ' + (toDark ? 'tfx-ring--dark' : 'tfx-ring--light');
-        ring.setAttribute('aria-hidden', 'true');
-        ring.style.left = x + 'px'; ring.style.top = y + 'px';
-        document.body.appendChild(ring);
+        replay(btn);
+        const sheen = badge('tfx-sheen ' + (toDark ? 'tfx-sheen--dark' : 'tfx-sheen--light'), '', 900);
+        sheen.style.transform = '';
       });
       // a transition aborted by a rapid second click or a page change is harmless: the theme still switches
       [t.ready, t.finished, t.updateCallbackDone].forEach(pr => pr && pr.catch(() => {}));
-      t.ready.then(() => {
-        const ease = 'cubic-bezier(.62,0,.22,1)';
-        if (canMask) html.animate({ '--tfx-r': ['0px', (radius + feather + 20) + 'px'] }, { duration: dur, easing: ease, pseudoElement: '::view-transition-new(root)' });
-        else html.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, { duration: dur, easing: ease, pseudoElement: '::view-transition-new(root)' });
-        html.animate({ filter: ['brightness(1) saturate(1)', toDark ? 'brightness(.62) saturate(.85)' : 'brightness(1.12) saturate(1.05)'], transform: ['scale(1)', 'scale(.982)'] },
-          { duration: dur, easing: 'cubic-bezier(.4,0,.6,1)', pseudoElement: '::view-transition-old(root)' });
-        // the ring is a 1024px glowing circle scaled to ride the reveal's edge (soft upscaling adds glow)
-        const end = (radius + feather * 0.5 + 20) / (0.966 * 512); // ring core sits mid-feather
-        html.animate([{ transform: 'scale(.02)', opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0.95, offset: 0.72 }, { transform: `scale(${end})`, opacity: 0 }],
-          { duration: dur, easing: ease, pseudoElement: '::view-transition-new(tfx-ring)', fill: 'both' });
-      }).catch(() => {});
-      t.finished.catch(() => {}).finally(() => { if (ring) ring.remove(); html.classList.remove('vt-theme', 'vt-mask', 'vt-to-dark'); if (active === t) active = null; });
+      t.finished.catch(() => {}).finally(() => { html.classList.remove('vt-dusk', 'tfx-to-dark'); if (active === t) active = null; });
     } else {
-      html.classList.add('tfx-fade');
-      const wash = badge('tfx-wash', '', 900);
-      wash.style.setProperty('--r', radius + 'px');
-      wash.style.background = toDark ? 'radial-gradient(circle at var(--tfx-x) var(--tfx-y), #1c2340, #0e1120 70%)' : 'radial-gradient(circle at var(--tfx-x) var(--tfx-y), #fff7e6, #F4EFE6 70%)';
-      requestAnimationFrame(() => { replay(btn); glyph(); });
-      setTimeout(() => html.classList.remove('tfx-fade'), 700);
+      // no View Transitions: a short full-screen veil in the new background colour, then gone
+      const veil = badge('tfx-veil ' + (toDark ? 'tfx-veil--dark' : 'tfx-veil--light'), '', 700);
+      requestAnimationFrame(() => { veil.classList.add('is-on'); setTimeout(() => { replay(btn); veil.classList.remove('is-on'); }, 220); });
+      setTimeout(() => html.classList.remove('tfx-to-dark'), 720);
     }
   }
 

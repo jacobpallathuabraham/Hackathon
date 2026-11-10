@@ -30,7 +30,7 @@
 .vz-lbl--s { font-size: 13px; }
 .vz-lbl--d { fill: #3b1d00; stroke: none; }
 .vz-svg [data-k] { transition: opacity .45s ease, filter .45s ease; }
-.vz-svg .is-dim { opacity: .28; }
+.vz-svg .is-dim { opacity: .45; }
 .vz-svg .is-hi { filter: drop-shadow(0 0 8px rgba(124,58,237,.55)); }
 .vz-svg .vz-callout { transition: opacity .5s ease; }
 .vz-pulse { animation: vzPulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
@@ -136,7 +136,7 @@
 .vs-diagram .vs-ntxt { display: grid; place-items: center; height: 100%; text-align: center; font: 600 13px/1.25 var(--f-body, system-ui); color: #1f1640; padding: 2px; }
 .vs-diagram .vs-elab { font: 600 11px var(--f-body, system-ui); fill: #5b4a8a; }
 .vs-diagram .is-hi rect { fill: #ede9fe; stroke-width: 3.5; }
-.vs-diagram .is-dim { opacity: .35; }
+.vs-diagram .is-dim { opacity: .45; }
 .vs-diagram g { transition: opacity .3s; }
 /* the consent offer */
 .cvoffer { margin: 8px 0 10px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(124,58,237,.35); background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(14,165,233,.08)); }
@@ -153,3 +153,29 @@
 .cvoffer--call .cvoffer__b button[data-vo="yes"] { background: #22d3ee; color: #04131c; }
 .cvoffer--call.is-done { display: none; }
 @media (prefers-color-scheme: dark) { .cvoffer__b button { background: transparent; color: #ddd6fe; } }
+
+/* v14 — adjustable, smoother visual panel */
+.vz__zoom { display: inline-flex; gap: 2px; }
+.vz__zoom .vz__ic { min-width: 30px; padding: 0 8px; }
+.vz__zl { font: 600 11px var(--f-mono, ui-monospace, monospace) !important; min-width: 48px !important; }
+.vz__stage { --vz-z: 1; }
+.vz__stage { --vz-x: 0px; --vz-y: 0px; }
+.vz__stage > :not(.vz-gl) { transform: translate(var(--vz-x), var(--vz-y)) scale(var(--vz-z)); transform-origin: 50% 50%; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.vz__stage.is-zoomed { cursor: grab; touch-action: none; }
+.vz__stage.is-panning { cursor: grabbing; }
+.vz__stage.is-panning > :not(.vz-gl) { transition: none; }
+/* diagrams always fit the panel: whole diagram visible, zoom in for detail */
+.vz__stage > .vs-mermaid { position: absolute; inset: 0; min-height: 0; overflow: hidden; padding: 14px; }
+.vz__stage > .vs-mermaid svg { width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100%; }
+.vz__cap.is-step .vz__t, .vz__cap.is-step .vz__p { animation: vzStepIn .42s cubic-bezier(.2,.8,.2,1) both; }
+.vz__cap.is-step .vz__p { animation-delay: .05s; }
+@keyframes vzStepIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.vz__dots button { transition: background-color .3s ease, color .3s ease, transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease; }
+.vz__dots button.is-on { transform: scale(1.08); }
+.vz .vs-node, .vz [class*="node"] rect, .vz [class*="node"] circle, .vz [class*="node"] polygon { transition: opacity .4s ease, filter .4s ease; }
+.vz__var input[type=range] { accent-color: var(--vz-acc); }
+::view-transition-group(erly-vz) { animation-duration: .42s; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+@media (max-width: 560px) { .vz__zl { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vz__stage > *, .vz__cap.is-step .vz__t, .vz__cap.is-step .vz__p, .vz__dots button { transition: none !important; animation: none !important; }
+}

@@ -268,6 +268,8 @@
       const A = axes(x0, x1, y0, y1, W, H, pad);
       drawGrid(g, A, x0, x1, y0, y1, W, H, pad, P.xlabel, P.ylabel);
       const bits = [];
+      // everything plotted stays inside the axes
+      g.save(); g.beginPath(); g.rect(Math.min(A.X(x0), A.X(x1)) - 1, Math.min(A.Y(y0), A.Y(y1)) - 1, Math.abs(A.X(x1) - A.X(x0)) + 2, Math.abs(A.Y(y1) - A.Y(y0)) + 2); g.clip();
       // shaded area (definite integral)
       if (P.area) {
         const a = val(P.area[0]), b = val(P.area[1]), lo = Math.min(a, b), hi = Math.max(a, b);
@@ -291,6 +293,7 @@
         const x = env[P.tangentAt], y = fx[0](x), m = deriv(fx[0], x);
         if (isFinite(y) && isFinite(m)) { g.strokeStyle = '#10b981'; g.lineWidth = 2; g.beginPath(); g.moveTo(A.X(x0), A.Y(y + m * (x0 - x))); g.lineTo(A.X(x1), A.Y(y + m * (x1 - x))); g.stroke(); dot(x, y, '#10b981', `slope = ${fmt(m)}`); bits.push(`f(${fmt(x)}) = ${fmt(y)}, f′(${fmt(x)}) = ${fmt(m)}`); }
       }
+      g.restore();
       readout = bits.join(' · '); api.status(readout);
     }
     return { stage() { draw(); }, tick() {}, set(k, v) { env[k] = v; draw(); }, state: () => Object.assign({ readout }, env), redraw: draw };
@@ -772,7 +775,7 @@
     await draw();
     // follow the site theme
     mo = new MutationObserver(() => draw()); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    const focus = labels => wrap.querySelectorAll('g.node, g.entityBox, g[id^="entity"], .mindmap-node, .actor, .stateGroup, g.classGroup').forEach(g => { const on = !labels.length || labels.some(l => g.textContent.toLowerCase().includes(String(l).toLowerCase())); g.style.opacity = on ? 1 : 0.28; g.style.transition = 'opacity .3s'; });
+    const focus = labels => wrap.querySelectorAll('g.node, g.entityBox, g[id^="entity"], .mindmap-node, .actor, .stateGroup, g.classGroup').forEach(g => { const on = !labels.length || labels.some(l => g.textContent.toLowerCase().includes(String(l).toLowerCase())); g.style.opacity = on ? 1 : 0.5; g.style.transition = 'opacity .45s ease'; g.style.transition = 'opacity .3s'; });
     return { stage(i) { const st = spec.steps[i] || {}; focus(st.focus || []); }, tick() {}, state: () => ({ rendered: ok, nodes, kind: 'mermaid', type: (spec.params.code.match(MERMAID_TYPES) || [''])[0] }), destroy() { if (mo) mo.disconnect(); } };
   };
 
@@ -782,8 +785,10 @@
     const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'vs-svg vs-timeline'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', spec.alt || spec.title);
     box.appendChild(svg);
     const x = i => 60 + i * (W - 120) / Math.max(1, E.length - 1);
-    svg.innerHTML = `<line x1="40" x2="${W - 40}" y1="${H / 2}" y2="${H / 2}" stroke="currentColor" stroke-opacity=".35" stroke-width="3"/>` + E.map((e, i) => { const up = i % 2 === 0, y = up ? H / 2 - 70 : H / 2 + 70; return `<g class="vs-node" data-id="t${i}"><line x1="${x(i)}" x2="${x(i)}" y1="${H / 2}" y2="${y + (up ? 26 : -26)}" stroke="currentColor" stroke-opacity=".3"/><circle cx="${x(i)}" cy="${H / 2}" r="9" fill="#38bdf8"/><text x="${x(i)}" y="${y - 6}" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${esc(e.when)}</text><text x="${x(i)}" y="${y + 12}" text-anchor="middle" font-size="12" fill="currentColor" opacity=".85">${esc(e.label.length > 26 ? e.label.slice(0, 25) + '…' : e.label)}</text></g>`; }).join('');
-    const focus = ids => svg.querySelectorAll('.vs-node').forEach(g => { const on = !ids.length || ids.includes(g.dataset.id); g.style.opacity = on ? 1 : .3; g.querySelector('circle').setAttribute('r', ids.includes(g.dataset.id) ? 13 : 9); });
+    // the end labels anchor inward so they never run off the edge
+    const anc = i => (E.length > 2 && i === 0 ? 'start' : E.length > 2 && i === E.length - 1 ? 'end' : 'middle');
+    svg.innerHTML = `<line x1="40" x2="${W - 40}" y1="${H / 2}" y2="${H / 2}" stroke="currentColor" stroke-opacity=".35" stroke-width="3"/>` + E.map((e, i) => { const up = i % 2 === 0, y = up ? H / 2 - 70 : H / 2 + 70; return `<g class="vs-node" data-id="t${i}"><line x1="${x(i)}" x2="${x(i)}" y1="${H / 2}" y2="${y + (up ? 26 : -26)}" stroke="currentColor" stroke-opacity=".3"/><circle cx="${x(i)}" cy="${H / 2}" r="9" fill="#38bdf8"/><text x="${x(i)}" y="${y - 6}" text-anchor="${anc(i)}" font-size="13" font-weight="700" fill="currentColor">${esc(e.when)}</text><text x="${x(i)}" y="${y + 12}" text-anchor="${anc(i)}" font-size="12" fill="currentColor" opacity=".85">${esc(e.label.length > 26 ? e.label.slice(0, 25) + '…' : e.label)}</text></g>`; }).join('');
+    const focus = ids => svg.querySelectorAll('.vs-node').forEach(g => { const on = !ids.length || ids.includes(g.dataset.id); g.style.opacity = on ? 1 : .5; g.style.transition = 'opacity .45s ease'; g.querySelector('circle').setAttribute('r', ids.includes(g.dataset.id) ? 13 : 9); });
     return { stage(i) { const st = spec.steps[i] || {}; focus(st.focus && st.focus.length ? st.focus : ['t' + i]); }, tick() {}, state: () => ({ events: E.length }) };
   };
 
@@ -929,7 +934,21 @@
       async mount(box, api) {
         const sc = await mount(box, api);
         const st = sc.stage.bind(sc);
-        sc.stage = i => { const s = spec.steps[i]; if (s && s.set) Object.keys(s.set).forEach(k => { api.setVar(k, s.set[k]); sc.set && sc.set(k, s.set[k]); }); st(i); };
+        // a step's slider values glide to their new settings (eased, ~0.5 s) instead of jumping
+        let glide = 0;
+        const still = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+        sc.stage = i => {
+          const s = spec.steps[i]; const keys = s && s.set ? Object.keys(s.set) : [];
+          cancelAnimationFrame(glide);
+          const cur = (sc.state && sc.state()) || {};
+          const from = {}; keys.forEach(k => { from[k] = isFinite(+cur[k]) ? +cur[k] : s.set[k]; });
+          const put = f => keys.forEach(k => { const v = from[k] + (s.set[k] - from[k]) * f; api.setVar(k, v); sc.set && sc.set(k, v); });
+          if (!keys.length || still() || typeof requestAnimationFrame !== 'function') { put(1); st(i); return; }
+          const t0 = performance.now(), D = 520, ease = t => 1 - Math.pow(1 - t, 3);
+          st(i);
+          const tick = now => { const t = Math.min(1, (now - t0) / D); put(ease(t)); if (t < 1) glide = requestAnimationFrame(tick); };
+          glide = requestAnimationFrame(tick);
+        };
         return sc;
       }
     };
@@ -942,7 +961,7 @@
     [/cellular respiration|krebs|citric acid cycle|electron transport chain|how (do )?cells (make|produce) (atp|energy)/i, () => D('Cellular respiration', 'Biology', 'flow', [['glu', 'Glycolysis (cytoplasm)', 'Glucose is split into 2 pyruvate, giving a net 2 ATP and 2 NADH. No oxygen needed.'], ['link', 'Link reaction', 'In the mitochondrion each pyruvate becomes acetyl-CoA, releasing CO₂ and making NADH.'], ['krebs', 'Krebs cycle', 'Acetyl-CoA is oxidised; per glucose the cycle yields 2 ATP, 6 NADH, 2 FADH₂ and releases CO₂.'], ['etc', 'Electron transport chain', 'NADH and FADH₂ pass electrons along proteins in the inner membrane, pumping H⁺ ions across it. Oxygen is the final electron acceptor, forming water.'], ['atp', 'ATP synthase', 'H⁺ flowing back through ATP synthase drives most ATP production (roughly 26–34 ATP per glucose; ~30–32 in total).']], [['glu', 'link', 'pyruvate'], ['link', 'krebs', 'acetyl-CoA'], ['krebs', 'etc', 'NADH, FADH₂'], ['etc', 'atp', 'H⁺ gradient']], 'Flow diagram of aerobic respiration from glycolysis to ATP synthase.')],
     [/protein synthesis|transcription and translation|gene expression|how (are )?proteins (made|synthesi[sz]ed)|central dogma/i, () => D('Protein synthesis', 'Molecular biology', 'flow', [['dna', 'DNA (nucleus)', 'The gene’s template strand is read 3′→5′.'], ['tx', 'Transcription', 'RNA polymerase builds a complementary pre-mRNA strand 5′→3′.'], ['proc', 'mRNA processing', 'In eukaryotes introns are spliced out, a 5′ cap and poly-A tail are added.'], ['ribo', 'Translation (ribosome)', 'The ribosome reads codons (3 bases); tRNAs bring the matching amino acids.'], ['prot', 'Polypeptide → protein', 'The chain folds (and may be modified) into a functional protein.']], [['dna', 'tx'], ['tx', 'proc', 'pre-mRNA'], ['proc', 'ribo', 'mature mRNA'], ['ribo', 'prot', 'amino acids']], 'From DNA to protein: transcription, processing and translation.')],
     [/sql|database query|query (execution|processing)|how (does|do) (a )?(database|query)/i, () => D('How a SQL query is evaluated', 'Computer science', 'flow', [['from', 'FROM / JOIN', 'Choose the tables and combine rows that match the join condition.'], ['where', 'WHERE', 'Keep only the rows that satisfy the condition (before grouping).'], ['group', 'GROUP BY', 'Collect rows into groups that share the grouping values.'], ['having', 'HAVING', 'Filter whole groups using aggregates such as COUNT or SUM.'], ['select', 'SELECT', 'Compute the output columns and aggregates.'], ['order', 'ORDER BY / LIMIT', 'Sort the result and keep the requested number of rows.']], [['from', 'where'], ['where', 'group'], ['group', 'having'], ['having', 'select'], ['select', 'order']], 'Logical order of evaluation of a SQL SELECT statement. (The optimiser may execute it differently but must give the same result.)')],
-    [/tcp|three.way handshake|how (does )?the internet (send|deliver)/i, () => D('TCP three-way handshake', 'Computer networks', 'flow', [['c1', 'Client: SYN', 'The client picks an initial sequence number x and sends SYN.'], ['s1', 'Server: SYN-ACK', 'The server acknowledges x+1 and sends its own sequence number y.'], ['c2', 'Client: ACK', 'The client acknowledges y+1. The connection is ESTABLISHED.'], ['data', 'Data transfer', 'Both sides send data; every byte is numbered and acknowledged; lost segments are retransmitted.']], [['c1', 's1', 'SYN'], ['s1', 'c2', 'SYN-ACK'], ['c2', 'data', 'ACK']], 'The three messages that open a reliable TCP connection.')],
+    [/tcp(?!\s*\/\s*ip)|three.way handshake|how (does )?the internet (send|deliver)/i, () => D('TCP three-way handshake', 'Computer networks', 'flow', [['c1', 'Client: SYN', 'The client picks an initial sequence number x and sends SYN.'], ['s1', 'Server: SYN-ACK', 'The server acknowledges x+1 and sends its own sequence number y.'], ['c2', 'Client: ACK', 'The client acknowledges y+1. The connection is ESTABLISHED.'], ['data', 'Data transfer', 'Both sides send data; every byte is numbered and acknowledged; lost segments are retransmitted.']], [['c1', 's1', 'SYN'], ['s1', 'c2', 'SYN-ACK'], ['c2', 'data', 'ACK']], 'The three messages that open a reliable TCP connection.')],
     [/action potential|nerve impulse|how (do )?neurons? (fire|signal|communicate)/i, () => D('The action potential', 'Physiology', 'cycle', [['rest', 'Resting potential (≈ −70 mV)', 'Na⁺/K⁺ pumps and leak channels keep the inside negative.'], ['dep', 'Depolarisation', 'A stimulus reaches threshold (≈ −55 mV); voltage-gated Na⁺ channels open and Na⁺ rushes in.'], ['peak', 'Peak (≈ +30 mV)', 'Na⁺ channels inactivate; voltage-gated K⁺ channels open.'], ['rep', 'Repolarisation', 'K⁺ flows out and the inside becomes negative again.'], ['hyp', 'Hyperpolarisation', 'K⁺ channels close slowly, briefly overshooting below rest (refractory period).']], [['rest', 'dep'], ['dep', 'peak'], ['peak', 'rep'], ['rep', 'hyp'], ['hyp', 'rest']], 'The cycle of membrane potential changes in a neuron.')],
     [/research (method|process|design)|scientific method|how (to|do i) (design|plan) (a |an )?(study|experiment)/i, () => D('The research process', 'Research methods', 'flow', [['q', 'Research question', 'A focused, answerable question grounded in the literature.'], ['h', 'Hypothesis / aims', 'A testable prediction (quantitative) or clear aims (qualitative).'], ['d', 'Design & sampling', 'Choose the design (experiment, survey, case study…), sample, variables, ethics approval.'], ['c', 'Data collection', 'Collect data consistently; record procedures so the study can be replicated.'], ['a', 'Analysis', 'Statistical tests or thematic analysis appropriate to the data and design.'], ['i', 'Interpretation & limits', 'Answer the question, discuss validity, reliability and limitations, and suggest further work.']], [['q', 'h'], ['h', 'd'], ['d', 'c'], ['c', 'a'], ['a', 'i']], 'Main stages of an empirical research study.')],
     [/stack (and|vs\.?|versus) heap|memory (allocation|management)|how (does )?memory (allocation )?work/i, () => D('Stack vs heap memory', 'Computer science', 'hub', [['mem', 'Process memory', 'A running program’s address space.'], ['stack', 'Stack', 'Function call frames: parameters, local variables, return addresses. Allocated/freed automatically (LIFO); fast; limited size.'], ['heap', 'Heap', 'Dynamically allocated objects (malloc/new). Lives until freed or garbage-collected; flexible size; slower allocation.'], ['code', 'Code (text)', 'The compiled machine instructions; usually read-only.'], ['data', 'Static data', 'Global and static variables, allocated for the whole run.'], ['gc', 'Garbage collector', 'In managed languages (Java, Python, JS) unreachable heap objects are reclaimed automatically.']], [['mem', 'stack'], ['mem', 'heap'], ['mem', 'code'], ['mem', 'data'], ['heap', 'gc', 'reclaims']], 'The main regions of a program’s memory and what lives in each.')],
@@ -957,7 +976,7 @@
       params: { scale: 'schematic', caption: 'Orbit order and relative orbital periods are real; sizes and distances are compressed so everything fits.', layers: [{ id: 'inner', label: 'Inner (rocky) planets' }, { id: 'outer', label: 'Outer (giant) planets' }],
         objects: [{ id: 'sun', shape: 'sphere', pos: [0, 0, 0], size: [2.2], color: '#fbbf24', emissive: true, label: 'Sun', detail: 'A G-type star holding 99.8% of the Solar System’s mass.' }].concat(PLANETS.map(([n, c, rad, yr, d], i) => ({ id: n.toLowerCase(), shape: 'sphere', pos: [3.6 + i * 2.1, 0, 0], size: [0.28 + Math.log10(1 + rad) * 0.55], color: c, label: n, detail: d, layer: i < 4 ? 'inner' : 'outer', anim: { type: 'orbit', around: 'sun', radius: 3.6 + i * 2.1, period: 6 * Math.pow(yr, 0.5) } }))) },
       steps: [{ title: 'The Sun at the centre', text: 'Everything orbits the Sun, which holds almost all the mass. Drag to rotate, scroll to zoom.', focus: ['sun'] }, { title: 'The rocky inner planets', text: 'Mercury, Venus, Earth and Mars are small and rocky.', focus: ['mercury', 'venus', 'earth', 'mars'] }, { title: 'The giant outer planets', text: 'Jupiter and Saturn are gas giants; Uranus and Neptune are ice giants.', focus: ['jupiter', 'saturn', 'uranus', 'neptune'] }, { title: 'Farther means slower', text: 'Kepler’s third law: the farther a planet is, the longer its year (T² ∝ a³). Watch the inner planets lap the outer ones.' }] })],
-    [/four[- ]stroke|4[- ]stroke|internal combustion|combustion engine|mechanical engines?|(car|petrol|gasoline|motor|vehicle) engines?|how (do |does )?(an? )?engines? work|\bengines? work|piston engine|otto cycle/i, () => ({
+    [/four[- ]stroke|4[- ]stroke|internal combustion|combustion engine|mechanical engines?|(car|petrol|gasoline|motor|vehicle) engines?|how (do |does )?(an? )?engines? work|(?<!jet )\bengines? work|piston engine|otto cycle/i, () => ({
       kind: 'scene2d', title: 'How a four-stroke engine works', subject: 'Mechanical engineering', alt: 'A petrol (gasoline) piston engine — the most common kind of car engine — cycling through intake, compression, power and exhaust.',
       params: { scale: 'schematic', caption: 'One cycle = two crankshaft turns (720°).', layers: [{ id: 'flow', label: 'Gas flow' }],
         elements: [
@@ -1109,6 +1128,8 @@
     const e = m[1].trim().replace(/\.$/, '');
     try { compile(e, letter === 'z' ? ['x', 'y'] : ['x']); return e; } catch (err) { return null; }
   }
+  const LIBRARY = [];
+  function addLibrary(list) { (list || []).forEach(e => { if (Array.isArray(e) && e[0] instanceof RegExp && e[1] && !LIBRARY.includes(e)) LIBRARY.push(e); }); return LIBRARY.length; }
   function plan(question) {
     const q = String(question || ''), t = q.toLowerCase();
     let spec = null;
@@ -1116,6 +1137,8 @@
     // curated diagrams first (specific vocabulary)
     for (const [re, mk] of COMPOSED) if (re.test(q)) { spec = mk(); break; }
     if (!spec) for (const [re, mk] of DIAGRAMS) if (re.test(q)) { spec = mk(); break; }
+    // Noor's reviewed visual library (visual-library.js) — after the curated diagrams, never over a hand-built scene
+    if (!spec && LIBRARY.length && !(window.ERLY && ERLY.visuals && ERLY.visuals.detect(q))) for (const [re, sp] of LIBRARY) if (re.test(q)) { spec = JSON.parse(JSON.stringify(sp)); break; }
     const zf = !spec && exprFrom(q, 'z');
     const yf = !spec && !zf && exprFrom(q, 'y');
     if (spec) { /* done */ }
@@ -1338,5 +1361,6 @@ Use 2–6 steps of accurate, university-level explanation for THIS question. Cho
   }
 
   window.ERLY = window.ERLY || {};
-  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, explicit, edit, editIntent, chartFrom, toScene, truss, beamCalc, frames, outlineMap, loadMermaid, KINDS, renderers: R, diagrams: DIAGRAMS.length };
+  ERLY.vspec = { compile, validate, plan, aiPlan, offerable, explicit, edit, editIntent, chartFrom, toScene, truss, beamCalc, frames, outlineMap, loadMermaid, addLibrary, library: () => LIBRARY.slice(), KINDS, renderers: R, diagrams: DIAGRAMS.length };
+  if (window.ERLY_VISUAL_LIBRARY) addLibrary(window.ERLY_VISUAL_LIBRARY);
 })();

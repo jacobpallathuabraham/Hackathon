@@ -107,7 +107,7 @@
               <button type="button" class="cmp__mini" id="cmpPause" aria-label="${T('Pause speaking', 'إيقاف مؤقت')}" disabled>${PAUSE}</button>
               <button type="button" class="cmp__mini" id="cmpRepeat" aria-label="${T('Repeat the last reply', 'كرّر آخر رد')}">${REPEAT}</button>
               <button type="button" class="cmp__mini" id="cmpSkip" aria-label="${T('Skip this sentence', 'تخطَّ هذه الجملة')}" disabled>${SKIP}</button>
-              <button type="button" class="cmp__mini" id="cmpMute" aria-pressed="${store.prefs().muted}" aria-label="${T('Speak replies aloud', 'قراءة الردود بصوت')}">${ICON(store.prefs().muted ? 'mute' : 'volume')}</button>
+              <button type="button" class="cmp__mini" id="cmpMute" aria-pressed="${store.prefs().readAloud === true}" aria-label="${T('Read replies aloud', 'قراءة الردود بصوت')}" title="${T('Read replies aloud (off)', 'قراءة الردود بصوت')}">${ICON(store.prefs().readAloud === true ? 'volume' : 'mute')}</button>
               <button type="button" class="cmp__mini" id="cmpVoiceSet" aria-expanded="false" aria-controls="cmpVSet" aria-label="${T('Choose Noor’s voice', 'اختر صوت نور')}">${ICON('headphones')}</button>
               <span class="cmp__vhint" id="cmpVHint"></span>
               <button type="button" class="btn btn--xs cmp__conv" id="cmpConv"></button>
@@ -318,12 +318,44 @@
       panel.hidden = false;
       launch.setAttribute('aria-expanded', 'true');
       document.documentElement.classList.add('cmp-on');
-      panel.classList.remove('is-out'); requestAnimationFrame(() => panel.classList.add('is-in'));
+      panel.classList.remove('is-out'); requestAnimationFrame(() => { panel.classList.add('is-in', 'is-opening'); setTimeout(() => panel.classList.remove('is-opening'), 700); });
       if (!$('#cmpLog').children.length) greeting = greet();
       if (ai && !ai.ready() && ai.state().status === 'idle' && !openPanel.resumed) { openPanel.resumed = true; ai.resume(); }
     }
     if (t) setTab(t);
-    setTimeout(() => { const f = tab === 'chat' ? $('#cmpText') : $(`#cmpTab-${tab}`); f && f.focus({ preventScroll: true }); }, reduce ? 0 : 260);
+    // touch devices: never focus the text box by script — iPad Safari would scroll the page and pop up the keyboard
+    if (!matchMedia('(pointer: coarse)').matches) setTimeout(() => { const f = tab === 'chat' ? $('#cmpText') : $(`#cmpTab-${tab}`); f && f.focus({ preventScroll: true }); }, reduce ? 0 : 260);
+    lockPage(true);
+  }
+  // scrolling inside Noor never moves the page: if nothing under the finger/wheel can scroll that way, the gesture stops here
+  function containScroll(root) {
+    const canScroll = (el, dy) => {
+      for (; el && el !== root.parentNode; el = el.parentElement) {
+        const cs = getComputedStyle(el);
+        if (!/(auto|scroll)/.test(cs.overflowY) || el.scrollHeight <= el.clientHeight + 1) continue;
+        if (dy < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true;
+        // this scroller is at its edge: let the next scroller inside the panel take it
+      }
+      return false; // nothing inside the panel can scroll that way: never chain to the page
+    };
+    root.addEventListener('wheel', e => { if (!e.ctrlKey && !canScroll(e.target, e.deltaY)) e.preventDefault(); }, { passive: false });
+    let ty = 0;
+    root.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive: true });
+    root.addEventListener('touchmove', e => { if (e.touches.length !== 1) return; const dy = ty - e.touches[0].clientY; if (e.target.closest('input[type="range"], canvas, .vz')) return; if (!canScroll(e.target, dy)) e.preventDefault(); }, { passive: false });
+  }
+  // while Noor is open the page behind stays still (iOS ignores overflow:hidden alone, so the body is pinned in place)
+  let lockedY = null;
+  function lockPage(on) {
+    const H = document.documentElement, B = document.body;
+    const small = innerWidth <= 1100 || matchMedia('(pointer: coarse)').matches;
+    if (on && small && lockedY == null) {
+      lockedY = scrollY;
+      H.classList.add('cmp-lock'); B.style.top = -lockedY + 'px';
+    } else if (!on && lockedY != null) {
+      const y = lockedY; lockedY = null;
+      H.classList.remove('cmp-lock'); B.style.top = '';
+      H.style.scrollBehavior = 'auto'; scrollTo(0, y); requestAnimationFrame(() => { H.style.scrollBehavior = ''; });
+    }
   }
   function closePanel() {
     if (panel.hidden) return;
@@ -331,6 +363,7 @@
     panel.classList.remove('is-in'); panel.classList.add('is-out');
     launch.setAttribute('aria-expanded', 'false');
     document.documentElement.classList.remove('cmp-on');
+    lockPage(false);
     setTimeout(() => { panel.classList.remove('is-out'); if (!panel.classList.contains('is-in')) panel.hidden = true; }, reduce ? 0 : 300);
     launch.focus({ preventScroll: true });
   }
@@ -412,10 +445,12 @@
     });
     $('#cmpAttach').addEventListener('click', e => { if (e.target.closest('[data-unattach]')) attach(null); });
     $('#cmpMic').addEventListener('click', micClick);
+    containScroll(panel);
     $('#cmpMute').addEventListener('click', () => {
-      const m = !store.prefs().muted; store.setPref('muted', m);
-      if (m) voice.stop();
-      const b = $('#cmpMute'); b.setAttribute('aria-pressed', m); b.innerHTML = ICON(m ? 'mute' : 'volume');
+      const on = store.prefs().readAloud !== true; store.setPref('readAloud', on);
+      if (!on) voice.stop();
+      const b = $('#cmpMute'); b.setAttribute('aria-pressed', on); b.innerHTML = ICON(on ? 'volume' : 'mute'); b.title = on ? T('Read replies aloud (on)', 'القراءة بصوت مفعّلة') : T('Read replies aloud (off)', 'القراءة بصوت متوقفة');
+      announce(on ? T('Noor will read replies aloud', 'ستقرأ نور الردود بصوت') : T('Replies won’t be read aloud', 'لن تُقرأ الردود بصوت'));
       announce(m ? T('Spoken replies off', 'الردود الصوتية متوقفة') : T('Spoken replies on', 'الردود الصوتية مفعّلة'));
     });
     $('#cmpVoiceSet').addEventListener('click', () => {
@@ -475,12 +510,14 @@
     voice.speak(pick('Hey! This is how I sound. If you like it, I’ll keep using this voice whenever we chat.', 'أهلاً! هكذا يبدو صوتي. إن أعجبك، سأستخدم هذا الصوت كلما تحدثنا.'), { lang: lang() });
   }
   if (window.speechSynthesis && typeof speechSynthesis.addEventListener === 'function') speechSynthesis.addEventListener('voiceschanged', () => { if ($('#cmpVSet') && !$('#cmpVSet').hidden) fillVoices(); });
+  // "Noor is thinking": an orb with orbiting sparks and a light sweeping across the word
+  function thinking(label) { return `<span class="cthink" role="status"><span class="cthink__orb" aria-hidden="true"><i></i><i></i><i></i></span><span class="cthink__txt">${label || T('Thinking', 'أفكّر')}</span></span>`; }
   function announce(t) { const a = $('#cmpAnnounce'); if (a) { a.textContent = ''; setTimeout(() => { a.textContent = t; }, 30); } }
   let lastSpoken = '';
   function speak(text, force) {
     if (ERLY.companion && ERLY.companion.inCall) return; // the voice call speaks for itself
     lastSpoken = text;
-    if (!voice.supported.tts || (store.prefs().muted && !force) || R.isReading()) return;
+    if (!voice.supported.tts || (!force && store.prefs().readAloud !== true) || R.isReading()) return; // replies are spoken only when switched on, or when asked
     voice.speak(text, { lang: lang() });
   }
 
@@ -506,12 +543,21 @@
     if (!near && !followNext) { const n = $('#cmpNewMsg'); if (n) n.hidden = false; return; } // reading older messages: don't move, offer a jump instead
     followNext = false;
     if (instant) { l.scrollTop = l.scrollHeight; return; }
+    if (!l.__erlyGrab) {
+      // the reader always wins: any wheel, touch or key in the log stops a follow-scroll that is still gliding
+      l.__erlyGrab = true;
+      const grab = () => { if (l.__erlyFollow) { l.__erlyFollow = false; l.scrollTo({ top: l.scrollTop, behavior: 'instant' }); } };
+      ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(t => l.addEventListener(t, grab, { passive: true, capture: true }));
+      l.addEventListener('scrollend', () => { l.__erlyFollow = false; });
+    }
+    l.__erlyFollow = !reduce;
+    clearTimeout(l.__erlyFollowT); l.__erlyFollowT = setTimeout(() => { l.__erlyFollow = false; }, 900);
     l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
   }
   async function aiSays(en, ar, o = {}) {
     const typing = document.createElement('div');
     typing.className = 'cmsg cmsg--ai cmsg--typing';
-    typing.innerHTML = '<div class="cmsg__b"><span></span><span></span><span></span></div>';
+    typing.innerHTML = `<div class="cmsg__b">${thinking()}</div>`;
     $('#cmpLog').appendChild(typing); scrollLog();
     setStatus('thinking');
     await wait(reduce ? 0 : Math.min(650, 220 + (en || '').length * 2));
@@ -1347,6 +1393,6 @@
     _nudge: kind => showNudge(kind),
     _nudgeReset: () => { nud.lastAny = 0; nud.last = {}; nud.muted.clear(); ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { nud[k].length = 0; }); hideNudge(); },
     // internals shared with noor-brain.js and call.js (same feature, split for size)
-    _ui: { restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
+    _ui: { thinking, restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
 })();

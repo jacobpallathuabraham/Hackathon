@@ -955,3 +955,53 @@ message, a retry, a support reference — never an unrelated or invented answer.
 * Keyed sources (TMDB, YouTube, NASA, FRED, Semantic Scholar…) are registered, not connected.
 * No document index / vector store: retrieval is per question from open APIs.
 * Usage counters in the gateway are per instance (KV free plan: 1,000 writes/day).
+
+## v14: smoother Noor, thinking animation, quieter voice, 120 new visuals, new theme transition
+
+### Noor chat
+- **Thinking animation:** while Noor is thinking, the bubble shows a spinning ring with a pulsing core, two sparks orbiting it, and a shimmering label. The label changes with the stage: "Thinking", then "Checking sources", then "Working on your answer". It replaces the three static dots, which a "freeze while writing" rule had been stopping. Reduced-motion users get a calm pulse.
+- **Opening the panel:**
+  - The panel eases in and out.
+  - The welcome cards stagger in only when the panel opens, not on every message.
+  - On touch devices the text box is no longer focused automatically, so the page doesn't jump and the keyboard doesn't pop up.
+- **No page scrolling behind the chat:** on phones and tablets the page behind is locked while Noor is open and restored to the same position on close. Scrolling inside the chat no longer scrolls the website.
+- **No zoom on iPad:** the message box uses 16px text, so iPad Safari no longer zooms in when you tap it.
+- **Quiet by default:** Noor doesn't read answers aloud unless you ask in your message ("read it aloud", "say it out loud") or turn on the speaker button in the panel. Voice-call mode still speaks.
+
+### Visuals
+- **Visual library:** `assets/js/companion/visual-library.js` adds 120 reviewed visuals across:
+  - biology, chemistry, physics and maths;
+  - computer science, economics and business;
+  - earth science and history;
+  - learning science and writing;
+  - health, engineering and language.
+- **Visual types:** flowcharts, mind maps, sequence and state diagrams (Mermaid), timelines with well-established dates, and interactive graphs with sliders, using exact formulas.
+- **Validation:** every entry passes the same validator as AI-made visuals. The library is checked after Noor's hand-built scenes and curated diagrams, so those keep priority.
+- **Adjustable:**
+  - zoom − / 100% / + controls;
+  - drag to pan when zoomed;
+  - Enlarge animates between sizes;
+  - diagrams always fit the panel.
+- **Smoother:**
+  - each step's slider values glide to their new settings (about 0.5 s, eased);
+  - captions ease in;
+  - unfocused parts fade to 50% instead of 28%, so they stay readable.
+- **Fixes:**
+  - graphs are clipped to their axes;
+  - timeline end labels no longer run off the edge;
+  - long chains are drawn top-to-bottom so the text is readable.
+
+### Theme and page transitions
+- **Theme switch:** light ↔ dark is now a short cross-fade (0.6 s) with a soft diagonal sheen. The sun icon morphs into the moon. The falling sun/moon orb and ring are gone. Promises from the browser's transition API are always handled, so it doesn't throw errors. Without View Transitions, a fading veil is used instead.
+- **Page and button transitions:**
+  - page-to-page navigation fades the old page out and lifts the new one in;
+  - buttons, chips, tabs and cards get smooth hover and press feedback;
+  - all of it is turned off for reduced motion.
+
+### Tests
+- `tests/unit/visual-library.test.js` checks that:
+  - there are at least 100 visuals and every one validates with no dropped parts;
+  - the Mermaid code stays in the safe subset;
+  - ordinary chat (including "transformer model" and "python generator") doesn't trigger a library visual;
+  - typical questions reach the right visual.
+- `tests/e2e/visual-library.e2e.js` renders all 120 visuals in Chromium and checks for nodes, events or curves, with no page errors.

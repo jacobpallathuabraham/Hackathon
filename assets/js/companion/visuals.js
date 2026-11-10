@@ -597,7 +597,7 @@
     const tl = x => T(x[0], x[1]);
     el.innerHTML = `
       <header class="vz__h"><div><span class="vz__sub">${esc(tl(S.subject))} · ${T('interactive visual', 'شرح مرئي تفاعلي')}</span><b>${esc(tl(S.title))}</b></div>
-        <div class="vz__hb"><button type="button" class="vz__ic" data-v="guide" title="${T('Guided tour (narrated)', 'جولة مرشدة (بالصوت)')}">${T('▶ Guide me', '▶ اشرح لي')}</button><button type="button" class="vz__ic" data-v="max" aria-label="${T('Enlarge', 'تكبير')}">⤢</button><button type="button" class="vz__ic" data-v="close" aria-label="${T('Close visual', 'إغلاق')}">✕</button></div></header>
+        <div class="vz__hb"><button type="button" class="vz__ic" data-v="guide" title="${T('Guided tour (narrated)', 'جولة مرشدة (بالصوت)')}">${T('▶ Guide me', '▶ اشرح لي')}</button><span class="vz__zoom" role="group" aria-label="${T('Zoom', 'تكبير وتصغير')}"><button type="button" class="vz__ic" data-v="zout" aria-label="${T('Zoom out', 'تصغير')}">−</button><button type="button" class="vz__ic vz__zl" data-v="z1" aria-label="${T('Reset zoom', 'إعادة الحجم')}">100%</button><button type="button" class="vz__ic" data-v="zin" aria-label="${T('Zoom in', 'تكبير')}">+</button></span><button type="button" class="vz__ic" data-v="max" aria-label="${T('Enlarge', 'تكبير')}">⤢</button><button type="button" class="vz__ic" data-v="close" aria-label="${T('Close visual', 'إغلاق')}">✕</button></div></header>
       <div class="vz__stage" tabindex="0" aria-live="polite"></div>
       <div class="vz__formula" hidden></div>
       <div class="vz__cap"><div class="vz__dots">${S.stages.map((s, i) => `<button type="button" data-st="${i}" aria-label="${T('Step', 'خطوة')} ${i + 1}: ${esc(tl(s.title))}">${i + 1}</button>`).join('')}</div><b class="vz__t"></b><p class="vz__p"></p><small class="vz__status" aria-live="polite"></small></div>
@@ -606,10 +606,24 @@
     host.appendChild(el);
     requestAnimationFrame(() => el.classList.add('is-in'));
     const stage = el.querySelector('.vz__stage');
-    let scene = null, idx = 0, playing = !reduce, speed = 1, raf = 0, last = performance.now(), dead = false, autoT = null, touring = false;
+    // drag to pan while zoomed (a short tap still reaches the diagram underneath)
+    const pan = { x: 0, y: 0, on: false, sx: 0, sy: 0, ox: 0, oy: 0, moved: false };
+    stage.addEventListener('pointerdown', e => { if (!stage.classList.contains('is-zoomed') || e.target.closest('.vz-gl, input, button')) return; Object.assign(pan, { on: true, sx: e.clientX, sy: e.clientY, ox: pan.x, oy: pan.y, moved: false }); });
+    stage.addEventListener('pointermove', e => {
+      if (!pan.on) return; const dx = e.clientX - pan.sx, dy = e.clientY - pan.sy;
+      if (!pan.moved && Math.hypot(dx, dy) < 5) return;
+      if (!pan.moved) { pan.moved = true; stage.classList.add('is-panning'); try { stage.setPointerCapture(e.pointerId); } catch (err) {} }
+      const lim = (v, d) => Math.max(-d, Math.min(d, v)), r = stage.getBoundingClientRect();
+      pan.x = lim(pan.ox + dx, r.width * (zoom - 1) / 2 + 40); pan.y = lim(pan.oy + dy, r.height * (zoom - 1) / 2 + 40);
+      stage.style.setProperty('--vz-x', pan.x + 'px'); stage.style.setProperty('--vz-y', pan.y + 'px'); e.preventDefault();
+    });
+    const endPan = () => { if (!pan.on) return; pan.on = false; stage.classList.remove('is-panning'); };
+    stage.addEventListener('pointerup', endPan); stage.addEventListener('pointercancel', endPan);
+    stage.addEventListener('click', e => { if (pan.moved) { e.stopPropagation(); e.preventDefault(); pan.moved = false; } }, true);
+    let zoom = 1, scene = null, idx = 0, playing = !reduce, speed = 1, raf = 0, last = performance.now(), dead = false, autoT = null, touring = false;
     const api = {
       status: t => { el.querySelector('.vz__status').textContent = t || ''; },
-      setVar: (k, v) => { const i = el.querySelector(`[data-var="${k}"]`); if (!i) return; if (i.type === 'checkbox') i.checked = !!v; else { i.value = v; const o = i.parentElement.querySelector('output'); if (o) o.textContent = v; } },
+      setVar: (k, v) => { const i = el.querySelector(`[data-var="${k}"]`); if (!i) return; if (i.type === 'checkbox') i.checked = !!v; else { i.value = v; const o = i.parentElement.querySelector('output'); if (o) o.textContent = typeof v === 'number' ? String(+v.toFixed(3)) : v; } },
       formula: html => { const f = el.querySelector('.vz__formula'); f.hidden = !html; f.innerHTML = html || ''; }
     };
     function show(i, from) {
@@ -617,6 +631,8 @@
       const s = S.stages[idx];
       el.querySelector('.vz__t').textContent = `${idx + 1}. ${tl(s.title)}`;
       el.querySelector('.vz__p').textContent = tl(s.text);
+      // the caption eases in for each new step (restarted by re-adding the class)
+      const cap = el.querySelector('.vz__cap'); cap.classList.remove('is-step'); void cap.offsetWidth; cap.classList.add('is-step');
       el.querySelectorAll('.vz__dots button').forEach((b, k) => { b.classList.toggle('is-on', k === idx); b.classList.toggle('is-done', k < idx); b.setAttribute('aria-current', k === idx ? 'step' : 'false'); });
       if (scene) scene.stage(idx);
       ctrl.stageIndex = idx;
@@ -643,7 +659,17 @@
       if (v === 'prev') { stopTour(); show(idx - 1, 'user'); }
       if (v === 'replay') { stopTour(); show(0, 'user'); }
       if (v === 'play') { playing = !playing; b.textContent = playing ? '❚❚' : '▶'; b.setAttribute('aria-label', playing ? T('Pause', 'إيقاف مؤقت') : T('Play', 'تشغيل')); }
-      if (v === 'max') el.classList.toggle('is-max');
+      if (v === 'max') {
+        // enlarge / restore glides between the two sizes where the browser can animate it
+        const flip = () => { el.classList.toggle('is-max'); b.setAttribute('aria-pressed', String(el.classList.contains('is-max'))); };
+        if (document.startViewTransition && !reduce) { el.style.viewTransitionName = 'erly-vz'; try { const t = document.startViewTransition(flip); [t.ready, t.finished, t.updateCallbackDone].forEach(p => p && p.catch(() => {})); t.finished.catch(() => {}).finally(() => { el.style.viewTransitionName = ''; }); } catch (e) { el.style.viewTransitionName = ''; flip(); } } else flip();
+      }
+      if (v === 'zin' || v === 'zout' || v === 'z1') {
+        zoom = v === 'z1' ? 1 : Math.max(0.6, Math.min(2.5, Math.round((zoom + (v === 'zin' ? 0.25 : -0.25)) * 100) / 100));
+        if (zoom === 1) { pan.x = pan.y = 0; stage.style.setProperty('--vz-x', '0px'); stage.style.setProperty('--vz-y', '0px'); }
+        stage.style.setProperty('--vz-z', zoom); stage.classList.toggle('is-zoomed', zoom !== 1);
+        el.querySelector('.vz__zl').textContent = Math.round(zoom * 100) + '%';
+      }
       if (v === 'guide') { touring ? stopTour() : tour(); }
     });
     el.addEventListener('input', e => { const i = e.target.closest('[data-var]'); if (!i) return; const val = i.type === 'checkbox' ? (i.checked ? 1 : 0) : +i.value; const o = i.parentElement.querySelector('output'); if (o) o.textContent = val; if (scene && scene.set) scene.set(i.dataset.var, val); });

@@ -15,10 +15,13 @@
 
 /* ---------- page-to-page transitions (same-origin navigations) ---------- */
 @view-transition { navigation: auto; }
-::view-transition-old(root) { animation: v9PageOut .26s cubic-bezier(.4, 0, 1, 1) both; }
-::view-transition-new(root) { animation: v9PageIn .48s cubic-bezier(.16, 1, .3, 1) both; }
-@keyframes v9PageOut { to { opacity: 0; transform: translateY(-6px) scale(.995); } }
-@keyframes v9PageIn { from { opacity: 0; transform: translateY(10px) scale(.995); } }
+/* v14: a calm cross-fade with a few pixels of lift — no scaling, so text never shimmers */
+::view-transition-old(root) { animation: v9PageOut .28s cubic-bezier(.4, 0, .2, 1) both; }
+::view-transition-new(root) { animation: v9PageIn .42s cubic-bezier(.2, .8, .2, 1) .04s both; }
+@keyframes v9PageOut { to { opacity: 0; } }
+@keyframes v9PageIn { from { opacity: 0; transform: translateY(6px); } }
+html.vt-dusk::view-transition-old(root) { animation-name: tfxDuskOut; animation-duration: .6s; animation-delay: 0s; }
+html.vt-dusk::view-transition-new(root) { animation-name: tfxDuskIn; animation-duration: .6s; animation-delay: 0s; }
 /* (the theme switch uses its own clip/mask animation on the same pseudo-elements) */
 html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; }
 html.vt-lang::view-transition-old(root) { animation: tfxLangOut .42s cubic-bezier(.4, 0, 1, 1) both; }
@@ -30,6 +33,13 @@ html.vt-lang::view-transition-new(root) { animation: tfxLangIn .62s cubic-bezier
 :where(.btn, .acu-btn, .icon-btn, .acu-icon, button.chip, .cchips button, .q-btn):not(:disabled):active { transform: translateY(0) scale(.965); transition-duration: .06s; }
 :where(a, button, [role="button"], input, select, textarea, summary):focus-visible { outline: 2px solid var(--accent, #C1502B); outline-offset: 3px; }
 
+/* v14: every control eases — buttons, tabs, chips, cards and links (lowest specificity, so components keep their own motion) */
+:where(button, [role="button"], [role="tab"], .chip, .cmp__mini, .gm-card, .lg-tile, .hw-cta, .gp-btn, .gp-sent, .hw2-btn, .hw2-ghost, .uni-go, .uni-portal, .dcard) { transition: transform .22s cubic-bezier(.2, .8, .2, 1), box-shadow .25s ease, background-color .22s ease, border-color .22s ease, color .22s ease, opacity .22s ease; -webkit-tap-highlight-color: transparent; }
+:where(button, [role="button"], [role="tab"], .chip, .cmp__mini, .gp-btn, .gp-sent, .hw2-btn, .hw2-ghost):not(:disabled):active { transform: scale(.97); transition-duration: .08s; }
+:where(.gm-card, .lg-tile, .hw-cta, .uni-portal):active { transform: scale(.985); transition-duration: .1s; }
+:where(a) { transition: color .2s ease, opacity .2s ease, text-decoration-color .2s ease; }
+html { scroll-behavior: smooth; }
+
 /* ---------- scrollbars + selection ---------- */
 html { scrollbar-color: color-mix(in srgb, var(--ink, #1B1915) 28%, transparent) transparent; scrollbar-width: thin; }
 ::selection { background: color-mix(in srgb, var(--accent, #C1502B) 28%, transparent); }
@@ -38,6 +48,8 @@ html { scrollbar-color: color-mix(in srgb, var(--ink, #1B1915) 28%, transparent)
   @view-transition { navigation: none; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
   :where(.btn, .acu-btn, .icon-btn, .acu-icon, button.chip, .cchips button, .q-btn) { transition: none; }
+  :where(button, [role="button"], [role="tab"], .chip, .cmp__mini, .gm-card, .lg-tile, .hw-cta, .gp-btn, .gp-sent, .hw2-btn, .hw2-ghost, .uni-go, .uni-portal, .dcard) { transition: none; }
+  html { scroll-behavior: auto; }
   :where(.btn, .acu-btn, .q-btn):hover, :where(.btn, .acu-btn, .icon-btn, .acu-icon, button.chip, .cchips button, .q-btn):active { transform: none; }
 }
 

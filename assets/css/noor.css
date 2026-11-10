@@ -263,8 +263,9 @@ html.erly-big body { zoom: 1.12; }
 }
 [dir="rtl"] .cmp.is-in { animation-name: cmpOpenRtl; }
 @keyframes cmpOpenRtl { 0% { opacity: 0; transform: translate(-40px, 60px) scale(.55); filter: blur(10px); clip-path: circle(8% at 8% 96%); } 55% { opacity: 1; filter: blur(0); clip-path: circle(140% at 8% 96%); } 100% { opacity: 1; transform: none; clip-path: circle(150% at 8% 96%); } }
-.cmp.is-in .cmp__head, .cmp.is-in .cmp__tabs, .cmp.is-in .cmp__log > *, .cmp.is-in .cmp__dock { animation: cmpRise .6s cubic-bezier(.2, .9, .3, 1) both; }
-.cmp.is-in .cmp__head { animation-delay: .12s; } .cmp.is-in .cmp__tabs { animation-delay: .18s; } .cmp.is-in .cmp__log > * { animation-delay: .24s; } .cmp.is-in .cmp__dock { animation-delay: .3s; }
+/* the staggered entrance plays once, while opening — not on every message added later */
+.cmp.is-opening .cmp__head, .cmp.is-opening .cmp__tabs, .cmp.is-opening .cmp__dock { animation: cmpRise .45s cubic-bezier(.2, .8, .2, 1) both; }
+.cmp.is-opening .cmp__head { animation-delay: .06s; } .cmp.is-opening .cmp__tabs { animation-delay: .1s; } .cmp.is-opening .cmp__dock { animation-delay: .14s; }
 @keyframes cmpRise { from { opacity: 0; transform: translateY(14px); } }
 .cmp::before { content: ""; position: absolute; inset: -40% -20% auto; height: 70%; pointer-events: none; z-index: 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), transparent), radial-gradient(closest-side at 70% 40%, color-mix(in srgb, #7B5CFF 18%, transparent), transparent); filter: blur(30px); opacity: 0; }
 .cmp.is-in::before { animation: cmpAura 1.6s ease-out .1s both; }
@@ -416,3 +417,60 @@ html.erly-big body { zoom: 1.12; }
 .vs-compose .vs-c.is-on > text:first-child, .vs-compose .vs-c.is-focus > text:first-child { stroke: none; font-weight: 700; fill: var(--accent, #c1502b); }
 .conline__age { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 4px 0 8px; }
 .conline__age.is-need { color: #b45309; font-weight: 600; }
+
+/* ===== v14 — smooth Noor ===== */
+/* opening: a light, GPU-only rise (no blur, clip or overshoot — those stuttered on iPad) */
+.cmp.is-in { animation: cmpOpen2 .42s cubic-bezier(.2, .8, .2, 1) both !important; will-change: transform, opacity; }
+[dir="rtl"] .cmp.is-in { animation-name: cmpOpen2 !important; }
+@keyframes cmpOpen2 { from { opacity: 0; transform: translateY(18px) scale(.975); } to { opacity: 1; transform: none; } }
+.cmp.is-out { animation: cmpClose2 .26s cubic-bezier(.4, 0, 1, 1) both !important; }
+@keyframes cmpClose2 { to { opacity: 0; transform: translateY(12px) scale(.985); } }
+.cmp.is-in::before { animation-duration: .9s; }
+/* new messages ease in once, softly */
+.cmp__log > .cmsg { animation: cmsgIn .32s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes cmsgIn { from { opacity: 0; transform: translateY(6px); } }
+/* iPad/iPhone Safari zooms into inputs under 16px — that was the jump when tapping the box */
+.cmp__input input, #cmpText { font-size: 16px !important; }
+/* scrolling stays inside Noor */
+.cmp, .cmp__log, .cmp__pane { overscroll-behavior: contain; }
+.cmp__log { -webkit-overflow-scrolling: touch; }
+/* the page behind is pinned while Noor is open on touch / smaller screens */
+html.cmp-lock, html.cmp-lock body { overflow: hidden; }
+html.cmp-lock body { position: fixed; left: 0; right: 0; width: 100%; }
+
+/* "Noor is thinking": orb with orbiting sparks + a light sweeping across the word (exempt from the
+   rule that freezes animation inside a message while it is being written) */
+.cthink { display: inline-flex; align-items: center; gap: 12px; padding: 6px 2px; }
+.cthink__orb { position: relative; width: 24px; height: 24px; flex: none; }
+.cthink__orb::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, #22d3ee, #6366f1, #a855f7, #ec4899, #22d3ee); -webkit-mask: radial-gradient(circle, transparent 6.5px, #000 7.5px); mask: radial-gradient(circle, transparent 6.5px, #000 7.5px); }
+.cthink__orb::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f0f9ff, #38bdf8 60%, #6366f1); box-shadow: 0 0 12px rgba(56, 189, 248, .7); }
+.cthink__orb i { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #a5f3fc; box-shadow: 0 0 6px #67e8f9; }
+.cthink__txt { font-weight: 600; font-size: 14px; letter-spacing: .01em; background: linear-gradient(90deg, var(--muted, #8b93a7) 0%, var(--muted, #8b93a7) 38%, var(--ink, #111) 50%, var(--muted, #8b93a7) 62%, var(--muted, #8b93a7) 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+:root[data-theme="dark"] .cthink__txt, .cmp .cthink__txt { background-image: linear-gradient(90deg, #7c8aa5 0%, #7c8aa5 38%, #e0f2fe 50%, #7c8aa5 62%, #7c8aa5 100%); }
+.cthink__txt::after { content: "…"; }
+.cthink .cthink__orb::before, .cmsg.is-writing .md .cthink .cthink__orb::before { animation: cthinkSpin 1.2s linear infinite !important; }
+.cthink .cthink__orb::after, .cmsg.is-writing .md .cthink .cthink__orb::after { animation: cthinkPulse 1.6s ease-in-out infinite !important; }
+.cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__orb i { animation: cthinkOrbit 1.8s cubic-bezier(.5, 0, .5, 1) infinite !important; opacity: 1 !important; }
+.cthink .cthink__orb i:nth-child(2), .cmsg.is-writing .md .cthink .cthink__orb i:nth-child(2) { animation-delay: -.6s !important; }
+.cthink .cthink__orb i:nth-child(3), .cmsg.is-writing .md .cthink .cthink__orb i:nth-child(3) { animation-delay: -1.2s !important; }
+.cthink .cthink__txt, .cmsg.is-writing .md .cthink .cthink__txt { animation: cthinkShine 1.9s linear infinite !important; }
+@keyframes cthinkSpin { to { transform: rotate(360deg); } }
+@keyframes cthinkPulse { 0%, 100% { transform: scale(.85); opacity: .85; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes cthinkOrbit { from { transform: rotate(0deg) translateX(17px) scale(.6); } 50% { transform: rotate(180deg) translateX(17px) scale(1); } to { transform: rotate(360deg) translateX(17px) scale(.6); } }
+@keyframes cthinkShine { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+.cmsg--typing .cmsg__b { display: block; padding: 10px 14px; }
+@media (prefers-reduced-motion: reduce) {
+  .cthink .cthink__orb::before, .cthink .cthink__orb i, .cthink .cthink__txt, .cmsg.is-writing .md .cthink .cthink__orb::before, .cmsg.is-writing .md .cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__txt { animation: none !important; }
+  .cthink .cthink__orb::after { animation: cthinkPulse 2.4s ease-in-out infinite !important; }
+  .cthink__orb i { display: none; }
+  .cmp.is-in, .cmp.is-out, .cmp__log > .cmsg { animation: none !important; }
+}
+/* sparks orbit via the independent `rotate` property on a zero-size pivot (the "freeze while writing" rule
+   pins `transform`, not `rotate`), with the spark itself drawn as ::before */
+.cthink__orb i { width: 0 !important; height: 0 !important; margin: 0 !important; background: none !important; box-shadow: none !important; }
+.cthink__orb i::before { content: ""; position: absolute; left: 14px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: #a5f3fc; box-shadow: 0 0 6px #67e8f9; }
+.cthink__orb i:nth-child(2)::before { width: 3px; height: 3px; left: 15px; background: #c4b5fd; box-shadow: 0 0 6px #a78bfa; }
+.cthink__orb i:nth-child(3)::before { width: 3px; height: 3px; left: 13px; background: #f9a8d4; box-shadow: 0 0 6px #f472b6; }
+.cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__orb i { animation: cthinkOrbit2 1.8s cubic-bezier(.45, .05, .55, .95) infinite !important; }
+@keyframes cthinkOrbit2 { from { rotate: 0deg; } to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__orb i { animation: none !important; } }

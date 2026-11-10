@@ -226,16 +226,16 @@
     const prevQs = history.filter(h => h.role === 'user').map(h => h.text);
     const m = document.createElement('div');
     m.className = 'cmsg cmsg--ai cmsg--md is-writing';
-    m.innerHTML = `<span class="cmsg__tag">${ICON('chip')} ${esc(pick(ai.label().en, ai.label().ar))}${reading ? ` · ${ICON('file')} ${esc(reading.title)}` : ''}</span><div class="cmsg__b md"><span class="cdots"><i></i><i></i><i></i></span></div>`;
+    m.innerHTML = `<span class="cmsg__tag">${ICON('chip')} ${esc(pick(ai.label().en, ai.label().ar))}${reading ? ` · ${ICON('file')} ${esc(reading.title)}` : ''}</span><div class="cmsg__b md">${U.thinking()}</div>`;
     U.$('#cmpLog').appendChild(m); U.scrollLog();
     const body = m.querySelector('.cmsg__b');
     U.setStatus('thinking'); U.setBusy(true);
     // research first, so the answer can cite real sources
     let res = null;
     if (!images && !reading && !voiceMode && wantsResearch(text, a)) {
-      body.innerHTML = `<p class="cmsg__busy">${ICON('globe')} ${T('Checking sources…', 'أتحقق من المصادر…')}</p>`;
+      body.innerHTML = U.thinking(T('Checking sources', 'أتحقق من المصادر'));
       res = await research(text, () => U.setStatus('thinking'));
-      body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>';
+      body.innerHTML = U.thinking();
       if (myTurn !== turnSeq) { m.remove(); U.setBusy(false); return true; } // the student already moved on
       if (res && (!res.passages.length || !relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) && !res.plan.compare)) res = Object.assign({}, res, { passages: [], evidence: res.plan.freshness === 'live' ? 'retrieved-not-live' : 'none' });
     }
@@ -269,8 +269,8 @@
       const genOpts = { voice: voiceMode, conversationId: convId, turnId, lang: lang(), task: res && res.plan.compare ? 'compare' : res ? 'research' : 'chat', onStatus: st => {
         if (!st.busy) return;
         let left = st.busy; clearInterval(busyT);
-        const show = () => { body.innerHTML = `<p class="cmsg__busy">${ICON('clock')} ${T('Noor is working on your answer…', 'نور تعمل على إجابتك…')}</p>`; };
-        show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = '<span class="cdots"><i></i><i></i><i></i></span>'; } else show(); }, 1000);
+        const show = () => { if (!body.querySelector('.cthink')) body.innerHTML = U.thinking(T('Working on your answer', 'أعمل على إجابتك')); };
+        show(); busyT = setInterval(() => { left--; if (left <= 0) { clearInterval(busyT); body.innerHTML = U.thinking(); } else show(); }, 1000);
       }, onToken: t => { clearInterval(busyT); if (!latest) ERLY.emit('noor:first-token'); askVisual(t); t = clean(t); latest = t; if (!raf) raf = requestAnimationFrame(paint); speakPart(t); } };
       out = await ai.generate(msgs, genOpts);
       clearInterval(busyT);
@@ -279,7 +279,7 @@
       if (VAL && !stopped && !reading) {
         let v = VAL.check(text, out, prevQs);
         if (!v.ok) {
-          body.innerHTML = `<p class="cmsg__busy">${ICON('reset')} ${T('That answer didn’t match your question — asking once more…', 'لم تطابق الإجابة سؤالك — أسأل مرة أخرى…')}</p>`;
+          body.innerHTML = U.thinking(T('That answer drifted off-topic — asking once more', 'انحرفت الإجابة — أسأل مرة أخرى'));
           latest = '';
           const again = msgs.slice(); const last = again[again.length - 1];
           again[again.length - 1] = Object.assign({}, last, { content: typeof last.content === 'string' ? `Answer exactly this question, and nothing from earlier topics: ${last.content}` : last.content });
@@ -350,12 +350,13 @@
     if (history.length > 40) history.splice(0, history.length - 40); // older turns are summarised for the model (ai.js buildMessages)
     U.setGenerating(null); U.setBusy(false);
     U.setStatus(U.voice.state().speaking ? 'speaking' : 'idle');
-    if (!C.inCall) U.speak(MD.toText(out).slice(0, 700));
+    if (!C.inCall) U.speak(MD.toText(out).slice(0, 700), ASK_ALOUD.test(text));
     ERLY.emit('noor:turn-end');
     if (!C.inCall) offerChips(a.kind === 'self-check' || a.kind === 'reflect' ? (a.chips || []) : followUps(reading));
     return true;
   }
   let retryQ = '';
+  const ASK_ALOUD = /\b(read (it|this|that|the answer|your answer)? ?(out )?(aloud|out loud)|say it( out loud| aloud)?|speak (it|the answer|your answer)|read (it )?to me|tell me out loud)\b|اقرأ(ها|ه)? بصوت|بصوت عال/i;
   function retryChip(secs) {
     offerChips([{ id: 'fu:retry', en: 'Try again', ar: 'حاول مجدداً' }, { id: 'brain', en: 'Noor’s brain', ar: 'عقل نور' }]);
     if (secs) setTimeout(() => { const b = document.querySelector('.cchips [data-id="fu:retry"] span'); if (b) b.textContent = pick('Ask the AI again — ready', 'اسأل الذكاء مجدداً — جاهز'); }, secs * 1000);
