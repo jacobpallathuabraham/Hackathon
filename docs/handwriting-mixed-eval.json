@@ -1,0 +1,84 @@
+{
+ "date": "2026-11-10T13:58:52.206Z",
+ "note": "Synthetic mixed Arabic + English pages (font-rendered), not real handwriting. CER per language, scored against that language's lines only.",
+ "summary": {
+  "eng": {
+   "enCER": 0.47,
+   "arCER": 0.986
+  },
+  "ara": {
+   "enCER": 0.918,
+   "arCER": 0.982
+  },
+  "ara+eng": {
+   "enCER": 0.098,
+   "arCER": 0.397
+  }
+ },
+ "rows": [
+  {
+   "fonts": "Patrick_Hand+Amiri",
+   "accepted": true,
+   "eng": {
+    "en": 0.367,
+    "ar": 0.961
+   },
+   "ara": {
+    "en": 0.9,
+    "ar": 1
+   },
+   "ara+eng": {
+    "en": 0.05,
+    "ar": 0.176
+   }
+  },
+  {
+   "fonts": "Kalam+Aref_Ruqaa",
+   "accepted": true,
+   "eng": {
+    "en": 0.296,
+    "ar": 1
+   },
+   "ara": {
+    "en": 0.887,
+    "ar": 1
+   },
+   "ara+eng": {
+    "en": 0.211,
+    "ar": 0.821
+   }
+  },
+  {
+   "fonts": "Caveat+Reem_Kufi",
+   "accepted": true,
+   "eng": {
+    "en": 0.565,
+    "ar": 1
+   },
+   "ara": {
+    "en": 0.984,
+    "ar": 1
+   },
+   "ara+eng": {
+    "en": 0.081,
+    "ar": 0.216
+   }
+  },
+  {
+   "fonts": "Indie_Flower+Amiri",
+   "accepted": true,
+   "eng": {
+    "en": 0.65,
+    "ar": 0.982
+   },
+   "ara": {
+    "en": 0.9,
+    "ar": 0.929
+   },
+   "ara+eng": {
+    "en": 0.05,
+    "ar": 0.375
+   }
+  }
+ ]
+}

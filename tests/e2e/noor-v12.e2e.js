@@ -9,7 +9,7 @@ const { chromium } = require('playwright');
 const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 const SHOT = process.env.ERLY_SHOTS;
 
-let mode = 'ok';
+let mode = 'ok', flaky = 0; const ids = [];
 const ANSWERS = [
   [/engine/i, 'A four-stroke engine repeats intake, compression, power and exhaust; the piston turns the crankshaft.'],
   [/photosynthesis/i, 'Photosynthesis uses light energy to turn carbon dioxide and water into glucose and oxygen.'],
@@ -22,6 +22,9 @@ const srv = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
   let raw = ''; req.on('data', c => { raw += c; });
   req.on('end', () => {
+    if (flaky > 0) { flaky--; res.writeHead(502, cors); return res.end('bad gateway'); }
+    try { const j = JSON.parse(raw); if (j.request_id) ids.push(j.request_id); } catch (e) { /* ignore */ }
+    if (mode === 'midfail') { res.writeHead(200, Object.assign({ 'content-type': 'text/event-stream' }, cors)); res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: 'The compression stroke squeezes ' } }] })}\n\n`); return setTimeout(() => res.end(`data: ${JSON.stringify({ error: 'upstream', request_id: ids[ids.length - 1] })}\n\ndata: [DONE]\n\n`), 300); }
     if (mode === 'fail') { res.writeHead(500, Object.assign({ 'content-type': 'application/json' }, cors)); return res.end('{"error":{"message":"upstream provider overloaded, cooling down"}}'); }
     const body = JSON.parse(raw), last = body.messages[body.messages.length - 1];
     const q = Array.isArray(last.content) ? last.content.map(p => p.text || '').join(' ') : last.content;
@@ -45,7 +48,7 @@ const srv = http.createServer((req, res) => {
   const settle = () => p.waitForFunction(() => !document.querySelector('.cmp.is-gen') && !document.querySelector('.cmsg.is-writing') && !document.querySelector('.cmsg--typing'), null, { timeout: 30000 });
   const ask = async q => { await p.fill('#cmpText', q); await p.press('#cmpText', 'Enter'); await p.waitForTimeout(400); await settle(); await p.waitForTimeout(500); };
   const vis = () => p.evaluate(() => { const v = ERLY.companion.tools.visual.current(); return v ? { title: v.scene.title[0], kind: v.scene.spec ? v.scene.spec.kind : 'scene', state: v.state() } : null; });
-  const lastAI = () => p.locator('.cmsg--ai').last().textContent();
+  const lastAI = () => p.locator('.cmsg--ai:not(.cmsg--note)').last().textContent();
   const stepTitle = () => p.textContent('.vz.is-in .vz__t');
 
   // A · "how mechanical engines work" — Noor decides the format and builds it, with stages and replay
@@ -106,6 +109,17 @@ const srv = http.createServer((req, res) => {
   mode = 'ok';
   await p.locator('button:has-text("Try again")').last().click(); await p.waitForTimeout(400); await settle(); await p.waitForTimeout(400);
   assert.doesNotMatch(await lastAI(), /temporarily unable/, 'H: retry works once the service is back');
+
+  // I · a flaky connection to your own server is retried with backoff before anything is shown
+  flaky = 2; ids.length = 0;
+  await ask('How does binary search work?'); assert.match(await lastAI(), /halves a sorted list/, 'I: answered after two failed attempts');
+  assert.ok(ids.length >= 1 && /^nr-[a-z0-9]{6,}$/.test(ids[0]), 'I: every request carries a request ID: ' + ids[0]);
+  // J · the server fails mid-answer: no half answer presented as complete; standard message + a support reference
+  mode = 'midfail';
+  await ask('Why does the compression stroke heat the gas?');
+  assert.match(await lastAI(), /temporarily unable/, 'J: standard failure message');
+  assert.match(await p.textContent('#cmpLog'), new RegExp('Support reference: ' + ids[ids.length - 1]), 'J: the reference the server logged is shown');
+  mode = 'ok';
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log('Noor v12 acceptance e2e: all checks passed');

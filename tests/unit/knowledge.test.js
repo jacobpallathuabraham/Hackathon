@@ -94,3 +94,17 @@ test('grounding context includes up to two topics', () => {
   const c = K.context('dyslexia vs adhd', 'en');
   assert.match(c, /Dyslexia/); assert.match(c, /ADHD/);
 });
+
+test('v12: Noor explains Learning Games and the Handwriting Check — and never links the check to a condition', () => {
+  const K = require('../../assets/js/companion/knowledge.js');
+  const at = q => K.answer(q, 'en');
+  assert.equal(at('what are the learning games').topic, 'learning-games');
+  assert.equal(at('tell me about tower shift').topic, 'learning-games');
+  assert.equal(at('what happened to the daily quest').topic, 'learning-games');
+  assert.equal(K.answer('ما هي ألعاب التعلّم', 'ar').topic, 'learning-games');
+  assert.equal(at('how does the handwriting check work').topic, 'handwriting-check');
+  const d = at('can the handwriting check detect dysgraphia');
+  assert.equal(d.topic, 'handwriting-check'); assert.match(d.en, /never suggests any condition|can’t/);
+  assert.match(at('do the games test for adhd').en, /don’t test, detect or diagnose/);
+  assert.equal(at('what is dysgraphia').topic, 'dysgraphia', 'condition questions still go to the condition');
+});

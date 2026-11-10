@@ -9,6 +9,7 @@ const { chromium } = require('playwright');
 const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 const SHOT = process.env.ERLY_SHOTS;
 const FONT = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 'Patrick_Hand.ttf')).toString('base64');
+const FONT_AR = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 'Amiri.ttf')).toString('base64');
 
 (async () => {
   const b = await chromium.launch();
@@ -81,6 +82,31 @@ const FONT = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'fonts', 'Pa
   await p.click('.hw2 [data-a="discard"]'); await p.waitForTimeout(400);
   assert.equal(await p.evaluate(() => { const s = ERLY.handwriting.state(); return !!(s.canvas || s.ocr); }), false, 'photo and result discarded');
   assert.equal(await p.isVisible('.hw2'), false);
+
+  // 4b · experimental mixed Arabic + English page: labelled experimental, read with both models, honest result
+  await p.click('#games [data-hand-open]'); await p.click('.hw2 [data-lang="mix"]'); await p.click('.hw2-link[data-a="start"]');
+  assert.match(await p.textContent('.hw2-book'), /Experimental/);
+  await p.click('.hw2 [data-a="tophoto"]');
+  const mixed = await p.evaluate(async ({ FONT, FONT_AR }) => {
+    for (const [n, b] of [['PH', FONT], ['AM', FONT_AR]]) if (!document.fonts.check(`40px ${n}`)) { const f = new FontFace(n, `url(data:font/ttf;base64,${b})`); await f.load(); document.fonts.add(f); }
+    const lines = ERLY_HAND.PROMPTS.mix[0], c = document.createElement('canvas'); c.width = 1400; c.height = 1000; const g = c.getContext('2d');
+    g.fillStyle = '#f7f3ea'; g.fillRect(0, 0, 1400, 1000); g.fillStyle = '#1d2433';
+    lines.forEach((l, i) => { const ar = /[\u0600-\u06FF]/.test(l); g.font = ar ? '58px AM' : '58px PH'; g.direction = ar ? 'rtl' : 'ltr'; g.textAlign = ar ? 'right' : 'left'; g.fillText(l, ar ? 1280 : 120, 300 + i * 150); });
+    return c.toDataURL('image/jpeg', 0.92).split(',')[1];
+  }, { FONT, FONT_AR });
+  await upload(mixed); await p.click('.hw2 [data-a="check"]'); await p.waitForSelector('.hw2 [data-a="read"]'); await p.click('.hw2 [data-a="read"]');
+  await p.waitForSelector('.hw2-result', { timeout: 120000 });
+  assert.match(await p.textContent('.hw2-result'), /Mixed pages are experimental/);
+  assert.ok(await p.locator('.hw2-words .is-found').count() >= 6, 'mixed: English words recognised');
+  await p.click('.hw2 [data-a="discard"]'); await p.waitForTimeout(400);
+
+  // keyboard: focus moves into the dialog, Tab stays inside, Escape closes and focus returns to the opener
+  await p.focus('#games [data-hand-open]'); await p.keyboard.press('Enter'); await p.waitForSelector('.hw2.is-on'); await p.waitForTimeout(200);
+  assert.ok(await p.evaluate(() => document.querySelector('.hw2__panel').contains(document.activeElement)), 'focus moved into the dialog');
+  for (let i = 0; i < 12; i++) await p.keyboard.press('Tab');
+  assert.ok(await p.evaluate(() => document.querySelector('.hw2__panel').contains(document.activeElement)), 'Tab stays inside the dialog');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+  assert.ok(await p.evaluate(() => document.activeElement && document.activeElement.matches('[data-hand-open]')), 'focus returns to the button that opened it');
 
   // 5 · Arabic prompts, RTL notebook; mobile layout
   await p.setViewportSize({ width: 390, height: 844 });

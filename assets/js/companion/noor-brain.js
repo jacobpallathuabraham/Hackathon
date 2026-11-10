@@ -240,6 +240,8 @@
         if (quick.kind === 'answer' && relevant(text, pick(quick.en, quick.ar))) { await sayKB(quick); retryChip(0); ERLY.emit('noor:turn-end'); return true; }
         await say('Noor is temporarily unable to complete this request. Your message is still here — please try again shortly.', 'لا تستطيع نور إكمال هذا الطلب مؤقتاً. رسالتك ما زالت هنا — حاول مجدداً بعد قليل.');
         history.pop();
+        const ref = (e && e.requestId) || ai.state().lastRequestId;
+        if (ref) bubble('ai', T(`Support reference: ${ref}`, `مرجع الدعم: ${ref}`), { text: true, cls: 'cmsg--note' });
         const box = U.$('#cmpText'); if (box && !box.value) { box.value = text; U.composer && U.composer(); }
         retryChip(0); ERLY.emit('noor:turn-end'); return true;
       }

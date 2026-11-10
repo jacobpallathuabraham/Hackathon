@@ -61,6 +61,9 @@ export function effortFor(lastText, hints) {
   return 'medium';
 }
 
+// a request ID the browser sent (shown to the student as a support reference) or a fresh one
+export function requestId(body) { const id = body && body.request_id; return typeof id === 'string' && /^[A-Za-z0-9-]{6,40}$/.test(id) ? id : 'srv-' + Math.random().toString(36).slice(2, 10); }
+
 // body → { system, messages, effort } (throws BadRequest on invalid input)
 export function buildRequest(body) {
   const msgs = Array.isArray(body && body.messages) ? body.messages : [];

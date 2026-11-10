@@ -26,7 +26,7 @@
 // and every safety rule stay in the browser's rule engine.
 import http from 'node:http';
 import Anthropic from '@anthropic-ai/sdk';
-import { buildRequest, streamAnswer, chunk, BadRequest } from './noor-core.mjs';
+import { buildRequest, streamAnswer, chunk, BadRequest, requestId } from './noor-core.mjs';
 
 const PORT = Number(process.env.PORT || 8787);
 const ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:8765';
@@ -119,14 +119,15 @@ function streamChat(req, res) {
   req.on('data', c => { size += c.length; if (size > 24 * 1024 * 1024) { dead = true; send(res, 413, { error: 'too-large' }); req.destroy(); } else raw += c; });
   req.on('end', async () => {
     if (dead) return;
-    let request;
-    try { request = buildRequest(JSON.parse(raw)); } catch (e) { return send(res, 400, { error: e instanceof BadRequest ? e.message : 'bad-json' }); }
-    res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'access-control-allow-origin': ORIGIN, 'cache-control': 'no-store' });
+    let request, body;
+    try { body = JSON.parse(raw); request = buildRequest(body); } catch (e) { return send(res, 400, { error: e instanceof BadRequest ? e.message : 'bad-json' }); }
+    const rid = requestId(body);
+    res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'access-control-allow-origin': ORIGIN, 'access-control-expose-headers': 'x-request-id', 'x-request-id': rid, 'cache-control': 'no-store' });
     const ac = new AbortController(); res.on('close', () => ac.abort()); // the student pressed Stop
     try { await streamAnswer(client, request, process.env, text => res.write(chunk(text)), ac.signal); }
     catch (err) {
-      if (!ac.signal.aborted) console.error('noor chat:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err.message); // never log the student's text
-      if (!ac.signal.aborted) res.write(`data: ${JSON.stringify({ error: err instanceof Anthropic.RateLimitError ? 'rate-limited' : 'upstream' })}\n\n`);
+      if (!ac.signal.aborted) console.error('noor chat:', rid, err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err.message); // never log the student's text
+      if (!ac.signal.aborted) res.write(`data: ${JSON.stringify({ error: err instanceof Anthropic.RateLimitError ? 'rate-limited' : 'upstream', request_id: rid })}\n\n`);
     }
     res.end('data: [DONE]\n\n');
   });

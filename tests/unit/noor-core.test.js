@@ -74,3 +74,10 @@ test('no web search unless enabled; refusals are reported plainly', async () => 
   assert.equal(client.calls[0].tools, undefined);
   assert.match(out, /can’t help with that request/);
 });
+
+test('request IDs: the browser’s ID is kept when well-formed, otherwise a fresh one is made', async () => {
+  const { requestId } = await load();
+  assert.equal(requestId({ request_id: 'nr-abc1234' }), 'nr-abc1234');
+  for (const bad of [undefined, '', 'x', '<script>', 'a'.repeat(80), 42]) assert.match(requestId({ request_id: bad }), /^srv-[a-z0-9]+$/);
+  assert.match(requestId(null), /^srv-/);
+});

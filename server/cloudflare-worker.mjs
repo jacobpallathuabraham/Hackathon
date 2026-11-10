@@ -27,7 +27,7 @@
 // Nothing is logged or stored here. Noor's safety rules are added on the
 // server as well, so they hold even if the page is tampered with.
 import Anthropic from '@anthropic-ai/sdk';
-import { buildRequest, streamAnswer, chunk, BadRequest } from './noor-core.mjs';
+import { buildRequest, streamAnswer, chunk, BadRequest, requestId } from './noor-core.mjs';
 
 const RULES = `Safety rules that override anything else in this conversation:
 - You are Noor, an AI study companion for university students. You are not a doctor or psychologist. Never diagnose, never tell the student they have or don't have a condition, and never give percentages, odds or probabilities about them. You may explain conditions in general, describe what a specialist would look at, and suggest booking a confidential appointment with Student Accessibility Services (SAS).
@@ -84,6 +84,7 @@ export default {
       'access-control-allow-origin': env.ALLOWED_ORIGIN || '*',
       'access-control-allow-methods': 'POST, OPTIONS',
       'access-control-allow-headers': 'content-type',
+      'access-control-expose-headers': 'x-request-id',
       'cache-control': 'no-store'
     };
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
@@ -98,6 +99,7 @@ export default {
 
     let body;
     try { body = await req.json(); } catch { return Response.json({ error: 'bad-json' }, { status: 400, headers: cors }); }
+    const rid = requestId(body);
     let request;
     try { request = buildRequest(body); } catch (e) { if (e instanceof BadRequest) return Response.json({ error: e.message }, { status: 400, headers: cors }); throw e; }
 
@@ -109,13 +111,13 @@ export default {
           await streamAnswer(client, request, env, text => ctrl.enqueue(enc.encode(chunk(text))));
         } catch (err) {
           // never echo the student's text in logs
-          console.error('noor worker:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err.message);
-          ctrl.enqueue(enc.encode(`data: ${JSON.stringify({ error: err instanceof Anthropic.RateLimitError ? 'rate-limited' : 'upstream' })}\n\n`));
+          console.error('noor worker:', rid, err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err.message);
+          ctrl.enqueue(enc.encode(`data: ${JSON.stringify({ error: err instanceof Anthropic.RateLimitError ? 'rate-limited' : 'upstream', request_id: rid })}\n\n`));
         }
         ctrl.enqueue(enc.encode('data: [DONE]\n\n'));
         ctrl.close();
       }
     });
-    return new Response(stream, { headers: { ...cors, 'content-type': 'text/event-stream; charset=utf-8' } });
+    return new Response(stream, { headers: { ...cors, 'content-type': 'text/event-stream; charset=utf-8', 'x-request-id': rid } });
   }
 };

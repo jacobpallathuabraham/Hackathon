@@ -359,12 +359,13 @@
     play(stage, r, ctx) {
       return new Promise(done => {
         const [q, opts, ans, why] = r.q;
-        stage.innerHTML = `<article class="gp-passage"><b>${esc(r.P.title)}</b><p>${esc(r.P.text)}</p></article>` + head(esc(q), '') +
-          `<div class="gp-opts">${opts.map((o, i) => `<button type="button" class="gp-sent" data-o="${i}">${esc(o)}</button>`).join('')}</div>`;
+        // the passages are English academic texts: keep them left-to-right even when the page is in Arabic
+        stage.innerHTML = `<div dir="ltr" lang="en"><article class="gp-passage"><b>${esc(r.P.title)}</b><p>${esc(r.P.text)}</p></article>` + head(esc(q), '') +
+          `<div class="gp-opts">${opts.map((o, i) => `<button type="button" class="gp-sent" data-o="${i}">${esc(o)}</button>`).join('')}</div></div>`;
         stage.onclick = e => {
           const b = e.target.closest('[data-o]'); if (!b) return; const ok = +b.dataset.o === ans;
           stage.querySelectorAll('[data-o]').forEach(x => { x.disabled = true; if (+x.dataset.o === ans) x.classList.add('is-ok'); else if (x === b) x.classList.add('is-no'); });
-          stage.insertAdjacentHTML('beforeend', `<p class="gp-explain">${esc(why)}</p>`); stage.onclick = null; tone(ok ? 660 : 300, 120);
+          stage.insertAdjacentHTML('beforeend', `<p class="gp-explain" dir="ltr" lang="en">${esc(why)}</p>`); stage.onclick = null; tone(ok ? 660 : 300, 120);
           ctx.feedback(ok); done({ ok, part: ok ? 1 : 0 });
         };
       });

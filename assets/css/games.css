@@ -248,3 +248,5 @@ html.a11y-still .gm-art *, html.a11y-still .gm-burst i { animation: none !import
 }
 @media (prefers-reduced-motion: reduce) { .gm-orbit__ring, .gm-orbit__ring span { animation: none !important; } }
 html.a11y-still .gm-orbit__ring, html.a11y-still .gm-orbit__ring span { animation: none !important; }
+/* English game content on an Arabic page: each line takes its direction from its own text, so punctuation stays put */
+.gm-p__stage .gp-sent, .gm-p__stage .gp-built li, .gm-p__stage .gp-q b, .gm-p__stage .gp-q small, .gm-p__stage .gp-explain, .gm-p__stage .gp-passage p { unicode-bidi: plaintext; }

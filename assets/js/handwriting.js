@@ -37,6 +37,11 @@
     ar: [
       ['تفتح المكتبة مبكرا يوم الاثنين.', 'أحضر قلما وبعض الورق.', 'نلتقي قرب البوابة الرئيسية.'],
       ['هطل المطر بهدوء على المدينة.', 'كتبت ثلاث ملاحظات قبل الغداء.', 'يغادر القطار في التاسعة والنصف.']
+    ],
+    // mixed pages (experimental): English and Arabic lines on one page, read with both models together
+    mix: [
+      ['The library opens early on Monday.', 'تفتح المكتبة مبكرا يوم الاثنين.', 'Bring a pen and some paper.'],
+      ['Rain fell softly over the quiet city.', 'كتبت ثلاث ملاحظات قبل الغداء.', 'The train leaves at half past nine.']
     ]
   };
 

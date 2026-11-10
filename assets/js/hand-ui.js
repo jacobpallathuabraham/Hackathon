@@ -37,16 +37,29 @@
     root.addEventListener('change', onChange);
     root.addEventListener('dragover', e => { if (e.target.closest('.hw2-drop')) e.preventDefault(); });
     root.addEventListener('drop', e => { const z = e.target.closest('.hw2-drop'); if (!z) return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) load(f); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root && !root.hidden) close(); });
+    document.addEventListener('keydown', e => {
+      if (!root || root.hidden) return;
+      if (e.key === 'Escape') return close();
+      if (e.key === 'Tab') { // keep keyboard focus inside the dialog
+        const f = [...root.querySelectorAll('.hw2__panel button:not([disabled]), .hw2__panel a[href], .hw2__panel label.hw2-btn, .hw2__panel label.hw2-ghost, .hw2__panel summary')].filter(x => x.offsetParent);
+        if (!f.length) return; const i = f.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+    });
+    // file inputs live inside labels: make the labels keyboard-operable
+    root.addEventListener('keydown', e => { const l = e.target.closest('label.hw2-btn, label.hw2-ghost'); if (l && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); const i = l.querySelector('input'); if (i) i.click(); } });
   }
-  function open() { mount(); st = fresh(); root.hidden = false; document.body.classList.add('hw-lock'); requestAnimationFrame(() => root.classList.add('is-on')); render(); }
+  let opener = null;
+  function open() { opener = document.activeElement; mount(); st = fresh(); root.hidden = false; document.body.classList.add('hw-lock'); requestAnimationFrame(() => root.classList.add('is-on')); render(); }
   function discard() { if (st) { st.canvas = null; st.q = null; st.ocr = null; st.crop = null; } }
-  function close() { if (!root) return; discard(); root.classList.remove('is-on'); document.body.classList.remove('hw-lock'); try { speechSynthesis.cancel(); } catch (e) { /* none */ } setTimeout(() => { root.hidden = true; }, still() ? 0 : 250); if (worker) { worker.terminate(); worker = null; workerLang = null; } }
+  function close() { if (!root) return; discard(); root.classList.remove('is-on'); document.body.classList.remove('hw-lock'); try { speechSynthesis.cancel(); } catch (e) { /* none */ } setTimeout(() => { root.hidden = true; }, still() ? 0 : 250); if (opener && opener.focus && document.contains(opener)) { try { opener.focus(); } catch (er) { /* gone */ } } if (worker) { worker.terminate(); worker = null; workerLang = null; } }
 
   /* ---------- screens ---------- */
   const set = () => HW.PROMPTS[st.lang][st.set % HW.PROMPTS[st.lang].length];
   function stepDots(k) { root.querySelectorAll('.hw2__steps li').forEach(li => { const order = ['write', 'photo', 'check', 'result']; li.classList.toggle('is-on', li.dataset.s === k); li.classList.toggle('is-done', order.indexOf(li.dataset.s) < order.indexOf(k)); }); }
-  function render() {
+  // after each step, move keyboard/screen-reader focus to the step's main action
+  function render() { draw(); requestAnimationFrame(() => { if (!root || root.hidden) return; const t = root.querySelector('#hwBody .hw2-btn:not([disabled]), #hwBody button:not([disabled])'); if (t && !root.contains(document.activeElement) || (t && document.activeElement === document.body)) t.focus({ preventScroll: true }); else if (t && st._step !== st.step) t.focus({ preventScroll: true }); st._step = st.step; }); }
+  function draw() {
     const b = $('#hwBody'); const s = st.step;
     stepDots(s === 'intro' ? '' : s === 'write' ? 'write' : s === 'photo' ? 'photo' : s === 'check' || s === 'reading' ? 'check' : 'result');
     if (s === 'intro') {
@@ -63,7 +76,7 @@
           <div><b>${T('What it cannot do', 'ما لا يستطيعه')}</b><ul><li>${T('Judge your handwriting, spelling or ability', 'الحكم على خطك أو إملائك أو قدرتك')}</li><li>${T('Detect dyslexia, dysgraphia, ADHD or any condition', 'اكتشاف عسر القراءة أو الكتابة أو أي حالة')}</li><li>${T('Replace a conversation with a specialist', 'أن يحل محل الحديث مع مختص')}</li></ul></div>
         </div>
         <p class="hw2-privacy">🔒 ${T('Your photo stays on this device: it is read inside this page, never uploaded or saved, and is deleted when you press Discard or close this window.', 'تبقى صورتك على هذا الجهاز: تُقرأ داخل هذه الصفحة ولا تُرفع ولا تُحفظ، وتُحذف عند الضغط على حذف أو إغلاق النافذة.')}</p>
-        <div class="hw2-row"><div class="hw2-seg" role="radiogroup" aria-label="${T('Language', 'اللغة')}"><button type="button" role="radio" aria-checked="${st.lang === 'en'}" data-lang="en">English</button><button type="button" role="radio" aria-checked="${st.lang === 'ar'}" data-lang="ar">العربية</button></div>
+        <div class="hw2-row"><div class="hw2-seg" role="radiogroup" aria-label="${T('Language', 'اللغة')}"><button type="button" role="radio" aria-checked="${st.lang === 'en'}" data-lang="en">English</button><button type="button" role="radio" aria-checked="${st.lang === 'ar'}" data-lang="ar">العربية</button><button type="button" role="radio" aria-checked="${st.lang === 'mix'}" data-lang="mix">${T('Mixed (experimental)', 'مختلط (تجريبي)')}</button></div>
           <button type="button" class="hw2-btn" data-a="start">${T('Open the notebook', 'افتح الدفتر')}</button>${still() ? '' : `<button type="button" class="hw2-link" data-a="start">${T('Skip animation', 'تخطَّ الحركة')}</button>`}</div>
       </div>`;
       return;
@@ -71,7 +84,7 @@
     if (s === 'write') {
       b.innerHTML = `<div class="hw2-book" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><div class="hw2-page">
           <p class="hw2-k">${T('On a sheet of paper, copy these three sentences — one per line, at your own pace', 'على ورقة، انسخ هذه الجمل الثلاث — كل جملة في سطر، بإيقاعك')}</p>
-          <ol class="hw2-lines">${set().map(l => `<li>${esc(l)}</li>`).join('')}</ol>
+          <ol class="hw2-lines">${set().map(l => `<li dir="auto">${esc(l)}</li>`).join('')}</ol>${st.lang === 'mix' ? `<p class="hw2-tip">${T('Experimental: on our synthetic test pages the English lines were read well but the Arabic lines only partly, and results varied a lot between pages.', 'تجريبي: في صفحات الاختبار الاصطناعية قُرئت الأسطر الإنجليزية جيداً والعربية جزئياً فقط، وتفاوتت النتائج كثيراً بين الصفحات.')}</p>` : ''}
           <p class="hw2-tip">${T('Tips: dark pen, plain paper, good light. There’s no time limit and no right or wrong way to write.', 'نصائح: قلم داكن، ورق سادة، إضاءة جيدة. لا وقت محدد ولا طريقة صحيحة أو خاطئة للكتابة.')}</p>
         </div></div>
         <div class="hw2-row"><button type="button" class="hw2-link" data-a="other">${T('Different sentences', 'جمل أخرى')}</button><button type="button" class="hw2-link" data-a="listen">🔊 ${T('Read them aloud', 'اقرأها بصوت')}</button><button type="button" class="hw2-btn" data-a="tophoto">${T('I’ve written them', 'لقد كتبتها')}</button></div>`;
@@ -81,7 +94,7 @@
       b.innerHTML = `<div class="hw2-drop ${st.canvas ? 'has-img' : ''}">${st.canvas ? '<canvas class="hw2-prev" id="hwPrev"></canvas><div class="hw2-crop" id="hwCrop" hidden></div>' : `<p>${T('Take a photo of your page, or choose / drop an image (PNG, JPEG, WebP).', 'التقط صورة لصفحتك، أو اختر صورة أو أفلتها هنا.')}</p><p class="hw2-tip">${T('The camera only opens when you tap “Take a photo”.', 'لا تُفتح الكاميرا إلا عند الضغط على «التقط صورة».')}</p>`}</div>
         <div class="hw2-row">
           ${st.canvas ? `<button type="button" class="hw2-ghost" data-a="rotl" aria-label="${T('Rotate left', 'تدوير لليسار')}">↺</button><button type="button" class="hw2-ghost" data-a="rotr" aria-label="${T('Rotate right', 'تدوير لليمين')}">↻</button><button type="button" class="hw2-ghost" data-a="crop">${st.cropping ? T('Apply crop', 'طبّق القص') : T('Crop', 'قص')}</button><button type="button" class="hw2-ghost" data-a="retake">${T('Retake', 'أعد الالتقاط')}</button><button type="button" class="hw2-ghost" data-a="remove">${T('Remove', 'إزالة')}</button><button type="button" class="hw2-btn" data-a="check">${T('Check this photo', 'افحص هذه الصورة')}</button>`
-            : `<label class="hw2-btn">📷 ${T('Take a photo', 'التقط صورة')}<input type="file" accept="image/*" capture="environment" data-file hidden></label><label class="hw2-ghost">${T('Choose an image', 'اختر صورة')}<input type="file" accept="image/png,image/jpeg,image/webp" data-file hidden></label><button type="button" class="hw2-link" data-a="back">${T('Back to the sentences', 'عودة للجمل')}</button>`}
+            : `<label class="hw2-btn" tabindex="0">📷 ${T('Take a photo', 'التقط صورة')}<input type="file" accept="image/*" capture="environment" data-file hidden></label><label class="hw2-ghost" tabindex="0">${T('Choose an image', 'اختر صورة')}<input type="file" accept="image/png,image/jpeg,image/webp" data-file hidden></label><button type="button" class="hw2-link" data-a="back">${T('Back to the sentences', 'عودة للجمل')}</button>`}
         </div>${st.err ? `<p class="hw2-err" role="alert">${esc(st.err)}</p>` : ''}`;
       if (st.canvas) drawPreview();
       return;
@@ -99,15 +112,15 @@
       return;
     }
     if (s === 'result') {
-      const r = st.ocr, map = set().map(l => HW.wordMap(l, r.text, st.lang));
+      const r = st.ocr, map = set().map(l => HW.wordMap(l, r.text, st.lang === 'mix' ? 'ar' : st.lang));
       const head = { clear: [T('Most of your writing was recognised.', 'تم التعرف على معظم كتابتك.'), T('The software read most of the sentences. Differences may be the software’s, not yours.', 'قرأ البرنامج معظم الجمل. قد تكون الاختلافات من البرنامج لا منك.')], partial: [T('Some words were difficult to recognise.', 'كان التعرف على بعض الكلمات صعباً.'), T('Part of the page was read; some words weren’t. That is common with handwriting — this software is built mainly for printed text.', 'قُرئ جزء من الصفحة ولم تُقرأ بعض الكلمات. هذا شائع مع الكتابة اليدوية — فهذا البرنامج مصمم أساساً للنص المطبوع.')], inconclusive: [T('This result isn’t conclusive.', 'هذه النتيجة غير حاسمة.'), T('The software couldn’t read enough of the page to say anything useful. That says more about the software than about your writing — joined-up and personal writing styles are hard for it.', 'لم يستطع البرنامج قراءة ما يكفي من الصفحة. هذا يقول عن البرنامج أكثر مما يقول عن كتابتك — فأساليب الكتابة المتصلة والشخصية صعبة عليه.')] }[r.outcome];
       b.innerHTML = `<div class="hw2-result hw2-result--${r.outcome}">
         <div class="hw2-badge" aria-hidden="true">${r.outcome === 'clear' ? '✓' : r.outcome === 'partial' ? '◐' : '?'}</div>
         <h3>${head[0]}</h3><p>${head[1]}</p>
         <div class="hw2-stats"><div><b>${r.rates.matched}/${r.rates.words}</b><span>${T('expected words recognised', 'كلمات متوقعة مقروءة')}</span></div><div><b>${Math.round(r.conf)}%</b><span>${T('software confidence', 'ثقة البرنامج')}</span></div><div><b>${T('Good', 'جيدة')}</b><span>${T('photo quality', 'جودة الصورة')}</span></div></div>
-        <div class="hw2-words" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><b>${T('What the software recognised', 'ما تعرّف عليه البرنامج')}</b>${map.map(line => `<p>${line.map(x => `<span class="${x.found ? 'is-found' : 'is-missed'}">${esc(x.w)}</span>`).join(' ')}</p>`).join('')}<small>${T('Highlighted words weren’t matched by the software — that’s about recognition, not about whether they were written correctly.', 'الكلمات المظللة لم يطابقها البرنامج — هذا عن القراءة الآلية، لا عن صحة الكتابة.')}</small>
+        <div class="hw2-words" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><b>${T('What the software recognised', 'ما تعرّف عليه البرنامج')}</b>${map.map(line => `<p dir="auto">${line.map(x => `<span class="${x.found ? 'is-found' : 'is-missed'}">${esc(x.w)}</span>`).join(' ')}</p>`).join('')}<small>${T('Highlighted words weren’t matched by the software — that’s about recognition, not about whether they were written correctly.', 'الكلمات المظللة لم يطابقها البرنامج — هذا عن القراءة الآلية، لا عن صحة الكتابة.')}</small>
           <details><summary>${T('Show the raw recognised text', 'اعرض النص المقروء كما هو')}</summary><pre>${esc(r.text.trim() || '—')}</pre></details></div>
-        <p class="hw2-tip">${T('Recognition uses Tesseract (open-source, running in this page). Measured on synthetic, font-rendered samples it reads clear print-like writing well, Arabic less reliably, and joined-up writing much less reliably. Its accuracy on real student handwriting has not been validated.', 'يستخدم التعرف برنامج Tesseract مفتوح المصدر داخل هذه الصفحة. في عيّنات اصطناعية قرأ الكتابة الواضحة جيداً، والعربية بدقة أقل، والكتابة المتصلة بضعف. لم تُقيَّم دقته على كتابة طلاب حقيقية.')}</p>
+        <p class="hw2-tip">${T('Recognition uses Tesseract (open-source, running in this page). Measured on synthetic, font-rendered samples it reads clear print-like writing well, Arabic less reliably, and joined-up writing much less reliably. Its accuracy on real student handwriting has not been validated.', 'يستخدم التعرف برنامج Tesseract مفتوح المصدر داخل هذه الصفحة. في عيّنات اصطناعية قرأ الكتابة الواضحة جيداً، والعربية بدقة أقل، والكتابة المتصلة بضعف. لم تُقيَّم دقته على كتابة طلاب حقيقية.')}${st.lang === 'mix' ? ' ' + T('Mixed pages are experimental: Arabic lines are read much less reliably than English ones.', 'الصفحات المختلطة تجريبية: تُقرأ الأسطر العربية بدقة أقل بكثير من الإنجليزية.') : ''}</p>
         <div class="hw2-row"><button type="button" class="hw2-ghost" data-a="again">${T('Try again', 'حاول مجدداً')}</button><button type="button" class="hw2-ghost" data-a="other2">${T('Try different sentences', 'جرّب جملاً أخرى')}</button><a class="hw2-ghost" href="student.html#handoff" data-a="sas">${T('Talk to Student Accessibility Services', 'تحدث مع خدمات الطلبة ذوي الإعاقة')}</a><button type="button" class="hw2-btn" data-a="discard">${T('Discard and finish', 'احذف وأنهِ')}</button></div>
         <p class="hw2-privacy">🔒 ${T('Nothing from this check was saved. Discard deletes the photo and this result from memory now.', 'لم يُحفظ شيء من هذا الفحص. «احذف» يمسح الصورة والنتيجة من الذاكرة الآن.')}</p></div>`;
     }
@@ -150,7 +163,7 @@
       await loadScript(VENDOR + 'tesseract.min.js');
       if (!worker || workerLang !== st.lang) {
         if (worker) await worker.terminate();
-        worker = await Tesseract.createWorker(st.lang === 'ar' ? 'ara' : 'eng', 1, { workerPath: VENDOR + 'worker.min.js', corePath: VENDOR + 'core', langPath: VENDOR + 'lang', gzip: true, workerBlobURL: false, logger: m => { if (m.progress != null && st.step === 'reading') { st.progress = (/recogniz/.test(m.status) ? 0.4 : 0) + m.progress * 0.6; const i = root.querySelector('.hw2-bar i'); if (i) i.style.width = Math.round(st.progress * 100) + '%'; } } });
+        worker = await Tesseract.createWorker(st.lang === 'ar' ? 'ara' : st.lang === 'mix' ? 'ara+eng' : 'eng', 1, { workerPath: VENDOR + 'worker.min.js', corePath: VENDOR + 'core', langPath: VENDOR + 'lang', gzip: true, workerBlobURL: false, logger: m => { if (m.progress != null && st.step === 'reading') { st.progress = (/recogniz/.test(m.status) ? 0.4 : 0) + m.progress * 0.6; const i = root.querySelector('.hw2-bar i'); if (i) i.style.width = Math.round(st.progress * 100) + '%'; } } });
         workerLang = st.lang;
       }
       const img = grayOf(working()), prep = HW.prepare(img, st.q.stats.skew);
@@ -158,7 +171,7 @@
       for (let i = 0; i < prep.gray.length; i++) { const v = prep.gray[i]; d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
       c.getContext('2d').putImageData(d, 0, 0);
       const { data } = await worker.recognize(c);
-      const rates = HW.errorRates(set().join(' '), data.text, st.lang);
+      const rates = HW.errorRates(set().join(' '), data.text, st.lang === 'mix' ? 'ar' : st.lang);
       st.ocr = { text: data.text, conf: data.confidence || 0, rates, outcome: HW.outcome(rates, data.confidence || 0) };
       st.step = 'result';
     } catch (e) {

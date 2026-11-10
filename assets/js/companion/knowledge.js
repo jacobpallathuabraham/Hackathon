@@ -206,7 +206,7 @@
       id: 'erly', area: 'general',
       keys: ['erly', 'noor', 'what do you track', 'privacy', 'data', 'who are you', 'what can you do', 'are you a doctor', 'إيرلي', 'نور', 'الخصوصية', 'البيانات', 'من أنت', 'ماذا تفعلين'],
       title: B('About ERLY and Noor', 'عن إيرلي ونور'),
-      what: B('I’m Noor, ERLY’s AI study companion. I can explain learning differences, help you with readings and videos, guide you through check-in activities, and — if you want — ask you questions to understand what feels hard and point you to the right support. I’m not a doctor and I can’t diagnose. Everything stays on this device unless you choose to share it.', 'أنا نور، رفيقة الدراسة الذكية في إيرلي. يمكنني شرح اختلافات التعلّم، ومساعدتك في القراءات والفيديوهات، وإرشادك في أنشطة الفحص، وإن أردت أسألك أسئلة لفهم ما يصعب عليك وتوجيهك إلى الدعم المناسب. لست طبيبة ولا أستطيع التشخيص. كل شيء يبقى على هذا الجهاز ما لم تختر مشاركته.'),
+      what: B('I’m Noor, ERLY’s AI study companion. I can explain learning differences, help you with readings and videos, point you to the Learning Games and the Handwriting Check, and — if you want — ask you questions to understand what feels hard and point you to the right support. I’m not a doctor and I can’t diagnose. Everything stays on this device unless you choose to share it.', 'أنا نور، رفيقة الدراسة الذكية في إيرلي. يمكنني شرح اختلافات التعلّم، ومساعدتك في القراءات والفيديوهات، وإرشادك في أنشطة الفحص، وإن أردت أسألك أسئلة لفهم ما يصعب عليك وتوجيهك إلى الدعم المناسب. لست طبيبة ولا أستطيع التشخيص. كل شيء يبقى على هذا الجهاز ما لم تختر مشاركته.'),
       signs: [], similar: B('', ''), assess: B('', ''), support: B('', ''), myths: B('', '')
     }
   ];
@@ -257,8 +257,10 @@
   function find(text) {
     // a named condition beats a general topic: "how do I get tested for ADHD" is about ADHD
     const r = rank(text);
+    // …except a question about an ERLY feature by name (“can the Handwriting Check detect dysgraphia?”): its own answer explains it honestly
+    const feat = r.find(x => x.topic.feature);
     const cond = r.find(x => x.topic.area !== 'general'), gen = r.find(x => x.topic.area === 'general');
-    return cond || gen || null;
+    return feat || cond || gen || null;
   }
   function aspect(text) { const hit = ASPECTS.find(([, re]) => re.test(text)); return hit ? hit[0] : 'what'; }
   function faq(text) {

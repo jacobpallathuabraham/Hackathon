@@ -257,17 +257,24 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
       const clean = messages.map(m => ({ role: m.role, content: m.role !== 'user' ? m.content : Array.isArray(m.content) ? m.content.map(p => (p.type === 'text' ? { type: 'text', text: redact(p.text) } : p)) : redact(m.content) }));
       const hasImages = clean.some(m => Array.isArray(m.content) && m.content.some(p => p.type === 'image_url'));
       if (hasImages && !svc.vision) throw new Error('no-vision');
-      const body = JSON.stringify({ model: svc.model, messages: clean, stream: true, temperature: o.voice ? 0.6 : 0.5, private: true, referrer: 'erly' });
+      // every request carries an ID: the server logs it, and the student sees it as a support reference if it fails
+      const rid = 'nr-' + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+      st.lastRequestId = free ? null : rid;
+      const body = JSON.stringify(Object.assign({ model: svc.model, messages: clean, stream: true, temperature: o.voice ? 0.6 : 0.5, private: true, referrer: 'erly' }, free ? {} : { request_id: rid }));
       const signal = ctrl ? ctrl.signal : undefined;
-      let tries = 0, lastErr = null;
-      while (tries++ < 2) {
+      let tries = 0, lastErr = null, backoff = 0;
+      while (tries++ < (free ? 2 : 3)) {
         let r;
         try {
           r = await fetchFn(svc.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body, signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
         } catch (e) {
           if (e && e.name === 'AbortError') return;
-          lastErr = e; break; // blocked POST → try the GET form below
+          lastErr = e;
+          // your own server: a dropped connection is retried with backoff (nothing has been shown yet)
+          if (!free && tries < 3) { await wait(800 * 2 ** backoff++); if (ctrl && ctrl.signal.aborted) return; continue; }
+          break; // free service: a blocked POST → try the GET form below
         }
+        if (!free && r.status >= 500 && tries < 3) { lastErr = new Error('online-' + r.status); await wait(800 * 2 ** backoff++); if (ctrl && ctrl.signal.aborted) return; continue; }
         if (r.status === 402 || r.status === 429 || r.status === 503) {
           const secs = Math.min(60, Math.max(2, +(r.headers.get('retry-after') || 0) || 30));
           if (secs > 35 || tries > 1) { onlineAt = Date.now() - 30000 + secs * 1000; throw new Error('busy:' + secs); }
@@ -290,7 +297,9 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
               if (!line.startsWith('data:')) continue;
               const data = line.slice(5).trim();
               if (data === '[DONE]') return;
-              try { const j = JSON.parse(data); const d = j.choices && j.choices[0] && ((j.choices[0].delta && j.choices[0].delta.content) || (j.choices[0].message && j.choices[0].message.content)); if (d) push(d); } catch (e) { /* keep-alive or partial line */ }
+              let j = null; try { j = JSON.parse(data); } catch (e) { /* keep-alive or partial line */ }
+              if (j && j.error) { const er = new Error('upstream'); er.requestId = j.request_id || rid; throw er; } // the server failed mid-answer: never present a cut-off reply as complete
+              try { const d = j && j.choices && j.choices[0] && ((j.choices[0].delta && j.choices[0].delta.content) || (j.choices[0].message && j.choices[0].message.content)); if (d) push(d); } catch (e) { /* keep-alive or partial line */ }
             }
           }
           return;

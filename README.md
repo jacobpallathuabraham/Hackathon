@@ -851,7 +851,16 @@ Options considered for recognition:
 - **English by condition:** clean 0.094 CER, tilted 8° 0.102 CER. Tiny writing was mostly rejected (4/6), and the 2 that got through read badly (0.385 CER).
 - **Hardest cases:** the joined cursive font (Homemade Apple) came out inconclusive at about 0.5 CER, and Arabic word error stays around 0.5.
 - **Speed:** median recognition time was about 0.15 s per page after the model loads.
-- **Mixed Arabic + English on one page:** not tested, and not claimed.
+- **Mixed Arabic + English on one page** (`tests/eval/handwriting-mixed-eval.js` → `docs/handwriting-mixed-eval.json`; 4 synthetic pages, each with 2 English and 2 Arabic lines, each language scored against its own lines). Character error (CER) by model:
+
+  | Model | English lines | Arabic lines |
+  |---|---|---|
+  | English model only | 0.47 | 0.99 |
+  | Arabic model only | 0.92 | 0.98 |
+  | Both together (`ara+eng`) | 0.098 | 0.397 |
+
+  Arabic varied a lot from page to page (0.18–0.82). Mixed pages are therefore offered only as **"Mixed (experimental)"**, which uses `ara+eng` and tells the student the measured limitation before and after.
+- The dialog moves focus to each step's main action, keeps Tab inside, closes on Escape, and returns focus to the button that opened it. Its photo buttons work from the keyboard.
 
 ### Noor
 - **Root causes of the reported problems:**
@@ -877,4 +886,18 @@ Options considered for recognition:
   - the relevance sequence engines → photosynthesis → binary search → presentation anxiety → engines;
   - the failure path;
   - tables at 390 px.
+- **Reliability plumbing:**
+  - Every request to your own AI server carries a request ID (`nr-…`), which the server logs with any error. The Cloudflare worker and Node proxy both read it and return it in `x-request-id`.
+  - A dropped connection or a 5xx before any text arrives is retried twice, with backoff of 0.8 s and then 1.6 s.
+  - If the server fails mid-answer, it sends an error event. The browser no longer shows the cut-off text as if it were complete: Noor gives the standard message plus a "Support reference" matching the server log.
+  - All of this is verified in `noor-v12.e2e.js`.
+- **Noor explains ERLY's own features:**
+  - Learning Games: what each game practises, and that they never test or diagnose.
+  - The Handwriting Check: how it works, what "inconclusive" means, and that it cannot detect dysgraphia or dyslexia.
+  - A question naming one of these features gets that feature's answer, even when it mentions a condition. "Can the Handwriting Check detect dysgraphia?" is answered by the Handwriting Check entry, which says it can't.
+- **Rendering engines evaluated, not installed blindly:**
+  - Visuals use ERLY's own validated SVG/canvas renderers plus three.js (already vendored) for 3D.
+  - Maths is rendered by the built-in TeX subset in `md.js`.
+  - Mermaid (about 1 MB), Plotly (about 3.5 MB) and D3 would add weight without adding a kind of visual the spec engine lacks. A diagram language would also need its own sanitising, so none were added.
+- **Arabic layout:** game text in English (reading passages, sentences, plans) keeps its own direction on an Arabic page, so punctuation no longer jumps to the wrong end.
 - **Still not done** (needs a backend or a product decision): multi-provider routing; retrieval over licensed sources (RAG); building visuals for topics outside the built-in set, which needs the AI planner (the Claude server).

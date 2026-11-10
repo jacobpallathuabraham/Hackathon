@@ -126,6 +126,7 @@ test('word map marks which expected words were recognised', () => {
 test('prompts: three sentences per set, in English and Arabic', () => {
   for (const lang of ['en', 'ar']) { assert.ok(HW.PROMPTS[lang].length >= 2); HW.PROMPTS[lang].forEach(s => assert.equal(s.length, 3)); }
   assert.ok(HW.PROMPTS.ar.flat().every(l => /[؀-ۿ]/.test(l)));
+  HW.PROMPTS.mix.forEach(set => { assert.equal(set.length, 3); assert.ok(set.some(l => /[\u0600-\u06FF]/.test(l)) && set.some(l => /[A-Za-z]/.test(l)), 'mixed sets have both scripts'); });
 });
 
 test('no diagnostic language, no handwriting judgement, no network in the pipeline or its interface', () => {
