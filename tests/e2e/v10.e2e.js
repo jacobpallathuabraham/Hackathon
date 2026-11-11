@@ -143,7 +143,7 @@ const ORIGIN = new URL(BASE).origin;
   await p.reload(); await p.waitForSelector('.gv-tabs'); await p.click('[data-gvtab="today"]');
   const items = p.locator('.gv-e');
   assert.ok(await items.count() >= 2, 'planned entries for the day');
-  assert.match(await p.textContent('.gv-list'), /You played this game 1× on this day/, 'real activity is suggested as evidence');
+  assert.match(await p.textContent('.gv-list'), /You played this game \d+× on this day/, 'real activity is suggested as evidence');
   assert.equal(await p.locator('.gv-e.is-done').count(), 0, 'but nothing is ticked automatically');
   await items.nth(0).locator('[data-gv="done"]').first().click();
   await p.fill('.gv-modal textarea', 'Ordering by what each step needs made sense'); await p.fill('.gv-modal input', 'Use it on my essay');

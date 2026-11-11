@@ -142,7 +142,11 @@ There is one central system on every page. Preferences are saved in this browser
   - Noor's read-aloud preference is written correctly;
   - on a 390 px phone, the panel fits and its buttons are at least 32 px.
 - `tests/e2e/v9.e2e.js` (updated): checks that the theme switch is a growing-circle animation on the new view, and that rapid clicks leave no leftovers.
-- The full end-to-end suite (23 suites): see the commit message for the result of this run.
+- **Full end-to-end suite, 23 suites:**
+  - 21 passed in the full run.
+  - `noor-tools` timed out under the load of the full run and passes when run on its own.
+  - `v10` failed because of the date, not because of v15. The previous version (v14) fails the same way today. The planner correctly counts every game session played on the planned day, but the test expected exactly "1×", which only holds on days other than the planned Wednesday. The assertion now accepts the real count, and `v10` passes.
+- **Page sweep:** 11 pages × light and dark × 1366 and 390 px. No page errors, no console errors and no horizontal overflow. The only outside servers contacted were `fonts.googleapis.com` and `fonts.gstatic.com`.
 - axe-core: 10 pages × 2 themes, with 0 serious or critical violations after the fixes.
 - Keyboard: on every page, the first Tab reaches the skip link, Enter moves focus to the main content, and 25 further Tabs all show a visible focus ring.
 - Arabic: student, games, Growth Plan and Handwriting are fully right-to-left at 1280 and 390 px, with no horizontal overflow, and the accessibility button moves to the right.
@@ -153,5 +157,6 @@ There is one central system on every page. Preferences are saved in this browser
 - **Screen readers** (VoiceOver, NVDA): I couldn't run them here. ARIA roles, names and live regions were checked automatically, not by listening.
 - **Arabic on the login page:** the login page is English-only. Adding it needs a translation pass.
 - **Full design-system overhaul** (one token set across the 21 CSS files): not attempted in this pass. The fixes above are targeted.
+- **Google Fonts:** every page loads its fonts from Google, which receives the visitor's IP address. To make no outside requests at all, host the fonts on the site.
 - **Legal:** the PDPL wording (Federal Decree-Law 45/2021) needs review by a qualified UAE privacy lawyer. Nothing here is legal certification.
 - **Sign-in** is a prototype. Real authentication needs a server; GitHub Pages is static hosting.
