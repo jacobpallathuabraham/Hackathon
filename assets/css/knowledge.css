@@ -28,7 +28,7 @@
 :root[data-theme="dark"] .kq-st--integrated { color: #4ade80; } :root[data-theme="dark"] .kq-st--integrated-gateway { color: #93c5fd; } :root[data-theme="dark"] .kq-st--researched { color: #fbbf24; } :root[data-theme="dark"] .kq-st--fail { color: #fca5a5; }
 .kq-filter { display: flex; flex-wrap: wrap; gap: 6px; }
 .kq-filter button { border: 1px solid var(--line, #e5e5e5); background: none; color: inherit; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; cursor: pointer; }
-.kq-filter button[aria-checked="true"] { background: var(--accent, #c1502b); border-color: var(--accent, #c1502b); color: #fff; }
+.kq-filter button[aria-checked="true"] { background: var(--accent, #BA4A26); border-color: var(--accent, #BA4A26); color: #fff; }
 .kq-domains { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 10px; }
 .kq-group h3 { margin: 0 0 8px; font-size: 15px; }
 .kq-dom { padding: 9px 11px; border-radius: 12px; border: 1px solid var(--line, #e5e5e5); margin-bottom: 6px; display: grid; gap: 2px; }

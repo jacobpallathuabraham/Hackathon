@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Acubins University · Abu Dhabi | Official website</title>
-  <meta name="description" content="Acubins University, Abu Dhabi — programmes, admissions, research, campus life and student services. Sign in to the university portal, or as a student, faculty member or counselor.">
+  <meta name="description" content="Acubins University (a fictional university created for the ERLY hackathon demo) — programmes, admissions, research, campus life and student services. Sign in to the university portal, or as a student, faculty member or counselor.">
   <meta name="theme-color" content="#0E1B2C">
   <link rel="canonical" href="https://jacobpallathuabraham.github.io/Hackathon/">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -24,7 +24,7 @@
   <meta name="google-site-verification" content="YOUR-CODE"> -->
   <script type="application/ld+json">
   {"@context":"https://schema.org","@graph":[
-    {"@type":"CollegeOrUniversity","@id":"https://jacobpallathuabraham.github.io/Hackathon/#university","name":"Acubins University","alternateName":["Acubins","ACUBINS UNIVERSITY"],"url":"https://jacobpallathuabraham.github.io/Hackathon/","logo":"https://jacobpallathuabraham.github.io/Hackathon/assets/img/erly-mark.svg","image":"https://jacobpallathuabraham.github.io/Hackathon/assets/img/og-acubins.png","description":"Acubins University in Abu Dhabi — programmes, admissions, research, campus life and student services, including ERLY, a consent-first study companion from Student Accessibility Services.","address":{"@type":"PostalAddress","addressLocality":"Abu Dhabi","addressCountry":"AE"}},
+    {"@type":"CollegeOrUniversity","@id":"https://jacobpallathuabraham.github.io/Hackathon/#university","name":"Acubins University","description":"A fictional university created for the ERLY hackathon demo. It is not a real institution and claims no accreditation, ranking or partnership.","alternateName":["Acubins","ACUBINS UNIVERSITY"],"url":"https://jacobpallathuabraham.github.io/Hackathon/","logo":"https://jacobpallathuabraham.github.io/Hackathon/assets/img/erly-mark.svg","image":"https://jacobpallathuabraham.github.io/Hackathon/assets/img/og-acubins.png","description":"Acubins University in Abu Dhabi — programmes, admissions, research, campus life and student services, including ERLY, a consent-first study companion from Student Accessibility Services.","address":{"@type":"PostalAddress","addressLocality":"Abu Dhabi","addressCountry":"AE"}},
     {"@type":"WebSite","@id":"https://jacobpallathuabraham.github.io/Hackathon/#website","name":"Acubins University","url":"https://jacobpallathuabraham.github.io/Hackathon/","publisher":{"@id":"https://jacobpallathuabraham.github.io/Hackathon/#university"},"inLanguage":["en","ar"]}
   ]}
   </script>
@@ -32,11 +32,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=14">
-  <link rel="stylesheet" href="assets/css/portal.css?v=14">
-  <link rel="stylesheet" href="assets/css/accents.css?v=14">
-  <link rel="stylesheet" href="assets/css/campus.css?v=14">
-  <link rel="stylesheet" href="assets/css/gateway.css?v=14">
+  <link rel="stylesheet" href="assets/css/style.css?v=15">
+  <link rel="stylesheet" href="assets/css/portal.css?v=15">
+  <link rel="stylesheet" href="assets/css/accents.css?v=15">
+  <link rel="stylesheet" href="assets/css/campus.css?v=15">
+  <link rel="stylesheet" href="assets/css/gateway.css?v=15">
   <script>
     // every fresh visit starts the demo from scratch (display preferences are kept)
     (function () {
@@ -57,8 +57,8 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=14">
-  <link rel="stylesheet" href="assets/css/v9.css?v=14">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=15">
+  <link rel="stylesheet" href="assets/css/v9.css?v=15">
 </head>
 <body class="acu">
   <!-- intro: the crest draws itself, then the curtain lifts -->
@@ -74,7 +74,7 @@
 
   <div class="acu-util">
     <div class="acu-wrap acu-util__in">
-      <span class="mono">Fall 2026 applications close <b id="utilDeadline">Nov 30</b></span>
+      <span class="mono"><span id="utilCycle">Spring 2027</span> applications close <b id="utilDeadline">15 Dec</b></span>
       <nav aria-label="Quick links"><a href="#admissions">Apply</a><a href="#map">Visit</a><a href="#events">Events</a><a href="#services">Student services</a><a href="#contact">Contact</a></nav>
     </div>
   </div>
@@ -132,7 +132,7 @@
     <!-- QUICK LINKS -->
     <section class="acu-quick acu-wrap" aria-label="Quick links">
       <a href="#programs" class="rv"><span>01</span><b>Find a programme</b> <small>120+ degrees</small></a>
-      <a href="#admissions" class="rv"><span>02</span><b>Apply</b> <small>Deadline Nov 30</small></a>
+      <a href="#admissions" class="rv"><span>02</span><b>Apply</b> <small id="quickDeadline">Deadline 15 Dec</small></a>
       <a href="#scholar" class="rv"><span>03</span><b>Scholarships</b> <small>Up to 100%</small></a>
       <a href="#map" class="rv"><span>04</span><b>Visit campus</b> <small>Map & tours</small></a>
     </section>
@@ -176,11 +176,12 @@
     </section>
 
     <!-- MARQUEE -->
-    <section class="acu-marq" aria-label="Accreditations and partners"><div class="acu-marq__track" id="marq"></div></section>
+    <section class="acu-marq" aria-label="About this demo"><div class="acu-marq__track" id="marq"></div></section>
 
     <!-- STATS -->
     <section class="acu-sec acu-stats-sec">
       <div class="acu-wrap acu-stats" id="stats"></div>
+      <p class="acu-wrap acu-illus mono">Illustrative figures for a fictional university — not real statistics.</p>
     </section>
 
     <!-- PROGRAMMES -->
@@ -189,7 +190,7 @@
         <header class="acu-head acu-head--row rv"><div><p class="acu-kick">Study</p><h2 class="acu-h2">Find your programme</h2></div>
           <div class="acu-finder"><label class="acu-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="progQ" placeholder="Search programmes, e.g. AI, nursing…" aria-label="Search programmes"></label></div>
         </header>
-        <div class="acu-tabs rv" role="tablist" id="progTabs"><button class="is-on" data-lv="all">All</button><button data-lv="ug">Undergraduate</button><button data-lv="pg">Master’s</button><button data-lv="phd">PhD</button><i class="acu-tabs__ink"></i></div>
+        <div class="acu-tabs rv" role="group" aria-label="Programme level" id="progTabs"><button class="is-on" aria-pressed="true" data-lv="all">All</button><button data-lv="ug">Undergraduate</button><button data-lv="pg">Master’s</button><button data-lv="phd">PhD</button><i class="acu-tabs__ink"></i></div>
         <div class="acu-colfilter rv" id="colFilter"></div>
         <div class="acu-progs" id="progGrid"></div>
         <p class="acu-empty" id="progEmpty" hidden></p>
@@ -199,7 +200,7 @@
     <!-- ADMISSIONS -->
     <section class="acu-sec acu-adm" id="admissions">
       <div class="acu-wrap">
-        <header class="acu-head rv"><p class="acu-kick acu-kick--light">Admissions · Fall 2026</p><h2 class="acu-h2">Five steps to Acubins</h2></header>
+        <header class="acu-head rv"><p class="acu-kick acu-kick--light" id="admCycle">Admissions · Spring 2027</p><h2 class="acu-h2">Five steps to Acubins</h2></header>
         <div class="acu-countdown rv" id="countdown"></div>
         <ol class="acu-steps" id="steps">
           <li class="rv"><i>1</i><b>Create your account</b><p>Start an online application in ten minutes.</p></li>
@@ -294,7 +295,7 @@
       <div class="acu-wrap acu-split">
         <div class="rv"><p class="acu-kick">Questions</p><h2 class="acu-h2">Frequently asked</h2>
           <div class="acu-faq" id="faq">
-            <details><summary>When is the application deadline?</summary><p>Fall 2026 applications close on November 30. Spring applications close on December 15.</p></details>
+            <details><summary>When is the application deadline?</summary><p id="faqDeadline">Spring (January) intake: applications close on 15 December. Fall (August) intake: applications close on 30 June. These are illustrative dates for a fictional university.</p></details>
             <details><summary>What English score do I need?</summary><p>IELTS 6.0, TOEFL iBT 79 or EmSAT English 1250 for most undergraduate programmes.</p></details>
             <details><summary>Is support available for students with learning differences?</summary><p>Yes. Student Accessibility Services offers confidential support, exam accommodations and ERLY, a consent-first study companion. Sign in through Option 2 to explore it.</p></details>
             <details><summary>Can I live on campus?</summary><p>Yes — residences are available for first-year and international students, with separate halls for men and women.</p></details>
@@ -327,13 +328,13 @@
 
   <div class="portal-warp" id="warp" aria-hidden="true"><div class="portal-warp__inner"><span class="portal-warp__logo" id="warpLogo"></span><p id="warpK">Acubins University</p><b id="warpT">Opening</b></div></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="assets/js/icons.js?v=14"></script>
-  <script src="assets/js/campus-data.js?v=14"></script>
-  <script src="assets/js/fun.js?v=14"></script>
-  <script src="assets/js/gateway-data.js?v=14"></script>
-  <script src="assets/js/gateway.js?v=14"></script>
-  <script src="assets/js/theme-fx.js?v=14"></script>
-  <script src="assets/js/ambient.js?v=14" defer></script>
-  <script src="assets/js/a11y.js?v=14"></script>
+  <script src="assets/js/icons.js?v=15"></script>
+  <script src="assets/js/campus-data.js?v=15"></script>
+  <script src="assets/js/fun.js?v=15"></script>
+  <script src="assets/js/gateway-data.js?v=15"></script>
+  <script src="assets/js/gateway.js?v=15"></script>
+  <script src="assets/js/theme-fx.js?v=15"></script>
+  <script src="assets/js/ambient.js?v=15" defer></script>
+  <script src="assets/js/a11y.js?v=15"></script>
 </body>
 </html>

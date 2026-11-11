@@ -99,7 +99,8 @@
   }
 
   /* ---------------- marquee + stats ---------------- */
-  const partners = ['CAA Accredited', 'QS ★★★★★', 'AACSB Business', 'ABET Engineering', 'Abu Dhabi Dept. of Education & Knowledge', 'Cleveland Clinic Abu Dhabi', 'Masdar City', 'Mubadala', 'Etihad Aviation Training', 'ADNOC', 'Microsoft AI Lab', 'UNESCO Chair in Inclusive Education'];
+  // a fictional university: no real accreditations, rankings or partner organisations are named or implied
+  const partners = ['Fictional university · ERLY hackathon demo', 'No accreditation, ranking or partnership is claimed', 'Programmes, fees, people and news are illustrative', 'ERLY, the Reading Studio, Noor and the Growth Plan are the working prototype'];
   $('#marq').innerHTML = [...partners, ...partners].map(p => `<span>${esc(p)}</span>`).join('<i>✦</i>');
   const total = window.CAMPUS ? window.CAMPUS.COLLEGES.reduce((a, c) => a + c.students, 0) : 12480;
   const STATS = [[total, '', 'students from 90 countries'], [120, '+', 'degree programmes'], [412, '', 'faculty members'], [94, '%', 'graduates employed in 6 months'], [180, '+', 'student clubs'], [62, 'M', 'AED research funding']];
@@ -111,7 +112,7 @@
   let level = 'all', college = 'all', q = '';
   $('#colFilter').innerHTML = `<button class="is-on" data-col="all">All colleges</button>` + Object.entries(U.colleges).map(([k, n]) => `<button data-col="${k}">${esc(n)}</button>`).join('');
   const HUE = { eng: 210, cs: 15, bus: 45, med: 345, arts: 275 };
-  function setLevel(lv) { level = lv; $$('#progTabs button').forEach(b => b.classList.toggle('is-on', b.dataset.lv === lv)); ink(); renderProgs(); }
+  function setLevel(lv) { level = lv; $$('#progTabs button').forEach(b => { b.classList.toggle('is-on', b.dataset.lv === lv); b.setAttribute('aria-pressed', String(b.dataset.lv === lv)); }); ink(); renderProgs(); }
   function ink() { const on = $('#progTabs .is-on'), i = $('.acu-tabs__ink'); if (on && i) { i.style.width = on.offsetWidth + 'px'; i.style.transform = `translateX(${on.offsetLeft}px)`; } }
   function renderProgs() {
     const list = U.programs.filter(p => (level === 'all' || p.level === level) && (college === 'all' || p.college === college) && (!q || (p.name + ' ' + p.blurb + ' ' + p.careers.join(' ') + ' ' + U.colleges[p.college]).toLowerCase().includes(q)));
@@ -125,8 +126,11 @@
   renderProgs(); addEventListener('resize', ink); setTimeout(ink, 300);
 
   /* ---------------- admissions countdown ---------------- */
-  const deadline = new Date(new Date().getFullYear(), 10, 30, 23, 59, 59);
-  if (deadline < new Date()) deadline.setFullYear(deadline.getFullYear() + 1);
+  // the next application deadline from today: Spring (January) intake closes 15 Dec, Fall (August) intake closes 30 Jun
+  const now0 = new Date(), Y = now0.getFullYear();
+  const cycles = [[new Date(Y, 5, 30, 23, 59, 59), 'Fall ' + Y, '30 Jun'], [new Date(Y, 11, 15, 23, 59, 59), 'Spring ' + (Y + 1), '15 Dec'], [new Date(Y + 1, 5, 30, 23, 59, 59), 'Fall ' + (Y + 1), '30 Jun']];
+  const [deadline, cycle, dl] = cycles.find(c => c[0] > now0);
+  [['#utilCycle', cycle], ['#utilDeadline', dl], ['#quickDeadline', 'Deadline ' + dl], ['#admCycle', 'Admissions · ' + cycle]].forEach(([sel, t]) => { const el = $(sel); if (el) el.textContent = t; });
   function tick() {
     const ms = Math.max(0, deadline - new Date()), d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60;
     $('#countdown').innerHTML = `<span class="mono">Applications close in</span>` + [[d, 'days'], [h, 'hours'], [m, 'minutes'], [s, 'seconds']].map(([v, l]) => `<div><b>${String(v).padStart(2, '0')}</b><small>${l}</small></div>`).join('');
@@ -215,7 +219,7 @@
     if (id === 'dining') return top + `<div class="acu-menu">${MENU.map(([n, h, items]) => `<div><b>${esc(n)}</b><small class="mono">${h}</small><ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('')}</div>`;
     if (id === 'gpa') return top + `<div class="acu-gpa" id="gpaRows">${[['MECH 210', 3, 'A-'], ['MATH 201', 3, 'B+'], ['ENGL 102', 3, 'A'], ['CS 120', 4, 'B']].map(r => gpaRow(...r)).join('')}</div><div class="acu-row"><button class="acu-btn acu-btn--sm acu-btn--glass2" data-addgpa>+ Add course</button><div class="acu-gpa__out">Semester GPA <b id="gpaOut">—</b></div></div>`;
     if (id === 'health') return top + `<div class="acu-cards2"><div><b>Health Clinic</b><p>Sun–Thu 08:00–20:00 · nurse on call 24/7</p><button class="acu-btn acu-btn--sm acu-btn--gold" data-appt>Book an appointment</button></div><div><b>Counselling</b><p>Free and confidential. Same-week appointments.</p><button class="acu-btn acu-btn--sm acu-btn--glass2" data-appt>Request a session</button></div><div class="is-urgent"><b>In crisis?</b><p>Call 999 for emergencies, or the 800 HOPE (800 4673) mental-health line.</p></div></div>`;
-    if (id === 'careers') return top + `<div class="acu-jobs">${[['Summer engineering intern', 'Masdar', 'Internship'], ['Junior data analyst', 'Mubadala', 'Graduate'], ['UX design intern', 'Careem', 'Internship'], ['Clinical research assistant', 'Cleveland Clinic AD', 'Part-time']].map(j => `<div><b>${j[0]}</b><small>${j[1]} · ${j[2]}</small><button class="acu-btn acu-btn--sm acu-btn--glass2" data-apply-job>Apply</button></div>`).join('')}</div><p class="acu-fine">CV reviews and mock interviews: Student Hub, weekdays.</p>`;
+    if (id === 'careers') return top + `<div class="acu-jobs">${[['Summer engineering intern', 'Renewable-energy firm', 'Internship'], ['Junior data analyst', 'Investment company', 'Graduate'], ['UX design intern', 'Ride-hailing start-up', 'Internship'], ['Clinical research assistant', 'Teaching hospital', 'Part-time']].map(j => `<div><b>${j[0]}</b><small>${j[1]} · ${j[2]}</small><button class="acu-btn acu-btn--sm acu-btn--glass2" data-apply-job>Apply</button></div>`).join('')}</div><p class="acu-fine">Example listings for a fictional university — no real employers. CV reviews and mock interviews: Student Hub, weekdays.</p>`;
     if (id === 'it') return top + `<form class="acu-ticket" id="ticket"><label><span>Issue</span><select><option>Wi-Fi (Acubins-Secure)</option><option>Password reset</option><option>Software licence</option><option>Printing</option></select></label><label><span>Describe it</span><textarea rows="3" placeholder="What happened?"></textarea></label><button class="acu-btn acu-btn--sm acu-btn--gold">Open a ticket</button></form><div class="acu-status"><span><i class="ok"></i>Wi-Fi</span><span><i class="ok"></i>Email</span><span><i class="warn"></i>Printing (Library L2)</span><span><i class="ok"></i>LMS</span></div>`;
     if (id === 'access') return top + `<p>Student Accessibility Services supports students with disabilities, learning differences, health conditions and mental-health needs — confidentially. Services include exam accommodations, assistive technology, note-taking support, and <b>ERLY</b>, a consent-first study companion that helps you notice study friction early.</p><div class="acu-row"><a class="acu-btn acu-btn--gold acu-btn--sm" href="login.html">Sign in as a student</a><span class="acu-fine">Option 2 on this page</span></div>`;
     return top;
@@ -292,7 +296,7 @@
   });
 
   /* ---------------- map ---------------- */
-  $('#campusMap').innerHTML = `<svg viewBox="0 0 100 90" role="img" aria-label="Campus map"><defs><pattern id="grass" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".35" class="gr"/></pattern></defs><rect width="100" height="90" rx="4" class="map-bg"/><rect width="100" height="90" rx="4" fill="url(#grass)"/><path class="map-road" d="M0 50 H100 M40 0 V90 M64 50 C70 40 80 38 100 36"/><circle class="map-plaza" cx="40" cy="50" r="6"/>${U.buildings.map((b, i) => `<g class="map-b" data-b="${b.id}" tabindex="0" role="button" aria-label="${esc(b.name)}" style="--i:${i}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="1.6"/><text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 1}">${esc(b.short)}</text></g>`).join('')}<g class="map-pin" id="mapPin" opacity="0"><path d="M0 0c-3-4-5-6-5-9a5 5 0 0 1 10 0c0 3-2 5-5 9z"/><circle cy="-9" r="2" class="pin-dot"/></g></svg>`;
+  $('#campusMap').innerHTML = `<svg viewBox="0 0 100 90" role="group" aria-label="Campus map"><defs><pattern id="grass" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".35" class="gr"/></pattern></defs><rect width="100" height="90" rx="4" class="map-bg"/><rect width="100" height="90" rx="4" fill="url(#grass)"/><path class="map-road" d="M0 50 H100 M40 0 V90 M64 50 C70 40 80 38 100 36"/><circle class="map-plaza" cx="40" cy="50" r="6"/>${U.buildings.map((b, i) => `<g class="map-b" data-b="${b.id}" tabindex="0" role="button" aria-label="${esc(b.name)}" style="--i:${i}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="1.6"/><text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 1}">${esc(b.short)}</text></g>`).join('')}<g class="map-pin" id="mapPin" opacity="0"><path d="M0 0c-3-4-5-6-5-9a5 5 0 0 1 10 0c0 3-2 5-5 9z"/><circle cy="-9" r="2" class="pin-dot"/></g></svg>`;
   function pickB(id) {
     const b = U.buildings.find(x => x.id === id); if (!b) return;
     $$('.map-b').forEach(x => x.classList.toggle('is-on', x.dataset.b === id));

@@ -13,7 +13,15 @@
   const D = C.load();
   function countUp(el, to, fmt) { fmt = fmt || (v => Math.round(v).toLocaleString('en-US')); if (reduce) { el.textContent = fmt(to); return; } const t0 = performance.now(); (function f(t) { const k = Math.min(1, (t - t0) / 1300), e = 1 - Math.pow(1 - k, 4); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(f); })(t0); }
 
-  $('#uniDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · Fall 2026, week 10';
+  // the term and teaching week from today's date (Fall starts the 4th Monday of August; Spring the 2nd Monday of January)
+  const termLabel = (d => {
+    const nthMon = (y, m, n) => { const x = new Date(y, m, 1); x.setDate(1 + ((8 - x.getDay()) % 7) + 7 * (n - 1)); return x; };
+    const y = d.getFullYear(), fall = nthMon(y, 7, 4), spring = nthMon(y, 0, 2), wk = s0 => Math.floor((d - s0) / 6048e5) + 1;
+    if (d >= fall) return `Fall ${y}, week ${wk(fall)}`;
+    if (d >= spring && d < new Date(y, 4, 20)) return `Spring ${y}, week ${wk(spring)}`;
+    return d < spring ? 'Winter break' : 'Summer term';
+  })(new Date());
+  $('#uniDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + termLabel;
   $('#themeToggle').addEventListener('click', () => { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('erly-theme', n); } catch (e) {} drawCharts(); });
   $('#logoutBtn').addEventListener('click', signOut);
   function signOut() { try { sessionStorage.removeItem('acubins-role'); localStorage.removeItem('acubins-session'); sessionStorage.setItem('acubins-bye', '1'); } catch (e) {} location.href = 'index.html'; }

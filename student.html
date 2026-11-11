@@ -14,20 +14,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=14">
-  <link rel="stylesheet" href="assets/css/portal.css?v=14">
-  <link rel="stylesheet" href="assets/css/accents.css?v=14">
-  <link rel="stylesheet" href="assets/css/erly.css?v=14">
-  <link rel="stylesheet" href="assets/css/realtrack.css?v=14">
-  <link rel="stylesheet" href="assets/css/hand.css?v=14">
-  <link rel="stylesheet" href="assets/css/companion.css?v=14">
-  <link rel="stylesheet" href="assets/css/studio.css?v=14">
-  <link rel="stylesheet" href="assets/css/noor.css?v=14">
-  <link rel="stylesheet" href="assets/css/voice.css?v=14">
-  <link rel="stylesheet" href="assets/css/visuals.css?v=14">
+  <link rel="stylesheet" href="assets/css/style.css?v=15">
+  <link rel="stylesheet" href="assets/css/portal.css?v=15">
+  <link rel="stylesheet" href="assets/css/accents.css?v=15">
+  <link rel="stylesheet" href="assets/css/erly.css?v=15">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=15">
+  <link rel="stylesheet" href="assets/css/hand.css?v=15">
+  <link rel="stylesheet" href="assets/css/companion.css?v=15">
+  <link rel="stylesheet" href="assets/css/studio.css?v=15">
+  <link rel="stylesheet" href="assets/css/noor.css?v=15">
+  <link rel="stylesheet" href="assets/css/voice.css?v=15">
+  <link rel="stylesheet" href="assets/css/visuals.css?v=15">
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
-  <link rel="stylesheet" href="assets/css/checkins.css?v=14">
-  <link rel="stylesheet" href="assets/css/videos.css?v=14">
+  <link rel="stylesheet" href="assets/css/checkins.css?v=15">
+  <link rel="stylesheet" href="assets/css/videos.css?v=15">
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -43,9 +43,9 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=14">
-  <link rel="stylesheet" href="assets/css/v9.css?v=14">
-  <link rel="stylesheet" href="assets/css/companion-holo.css?v=14">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=15">
+  <link rel="stylesheet" href="assets/css/v9.css?v=15">
+  <link rel="stylesheet" href="assets/css/companion-holo.css?v=15">
 </head>
 <body>
   <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
@@ -107,7 +107,7 @@
         <ul class="hero__facts reveal">
           <li><b data-i18n="h3.f1a">100</b><span data-i18n="h3.f1b">indicators across 10 domains</span></li>
           <li><b data-i18n="h3.f2a">14</b><span data-i18n="h3.f2b">days: one week to learn your normal, one to notice</span></li>
-          <li><b data-i18n="h2.f3a">0</b><span data-i18n="h2.f3b">bytes of raw tracking data leave your device (Noor’s optional online AI sends only what you type, after you agree)</span></li>
+          <li><b data-i18n="h2.f3a">0</b><span data-i18n="h2.f3b">bytes of tracking data leave your device — not even to Noor’s optional online AI</span></li>
         </ul>
       </div>
 
@@ -141,34 +141,34 @@
     <div class="wrap">
       <header class="section__head">
         <p class="kicker"><span class="num">01</span><span data-i18n="gap.kicker">The gap</span></p>
-        <h2 class="h2 reveal" data-i18n="gap.title">Two official numbers that can't both be the whole story.</h2>
+        <h2 class="h2 reveal" data-i18n="gap.title">Two different measurements — and the question they leave open.</h2>
       </header>
       <div class="gap">
         <article class="gap__stat reveal">
           <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">≈94</span><small>%</small></p>
-          <p class="gap__label" data-i18n="gap.a">of UAE Grade 12 students pass their final school exams (reported pass rate).</p>
-          <p class="gap__src mono" data-i18n="gap.asrc">Reported Grade 12 pass rate 94.4% (Khaleej Times) · not independently verified</p>
+          <p class="gap__label" data-i18n="gap.a">pass rate in Grade 12 end-of-year exams, Ministry of Education curriculum, 2021–22 (28,775 students in public and private MoE-curriculum schools).</p>
+          <p class="gap__src mono" data-i18n="gap.asrc">94.4% · reported by Khaleej Times, 29 June 2022, from Emirates Schools Establishment results · a pass rate, not a measure of reading difficulty</p>
           <div class="bar"><span style="--w:94%"></span></div>
         </article>
-        <div class="gap__vs reveal" aria-hidden="true"><span>vs</span></div>
+        <div class="gap__vs reveal" aria-hidden="true" title="different measurements"><span>≠</span></div>
         <article class="gap__stat gap__stat--hot reveal">
           <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">17.6</span><small>%</small></p>
-          <p class="gap__label" data-i18n="gap.b">of Emirati female students screened at UAE University showed dyslexic features — in Arabic <em>and</em> English.</p>
-          <p class="gap__src mono">Aboudan et al., 2011 · Int. J. English Linguistics 1(2):64 · 2007/08 UAEU sample</p>
+          <p class="gap__label" data-i18n="gap.b">of female Emirati students screened at UAE University in 2007/08 showed dyslexic <em>features</em> on a new screening test, in Arabic and English — not diagnoses.</p>
+          <p class="gap__src mono">Aboudan, Eapen &amp; Bayshak, 2011 · Int. J. English Linguistics 1(2):64–72 · doi:10.5539/ijel.v1n2p64 · pilot of the Emirates Dyslexia Indicator Test</p>
           <div class="bar bar--hot"><span style="--w:17.6%"></span></div>
         </article>
       </div>
       <div class="gap__foot">
-        <p class="gap__claim reveal" data-i18n="gap.claim">School exams measure whether you <em>can</em> read. University measures whether you can keep reading 40 dense pages a week, in your second language, at 1am. That is where masked difficulties surface — and where nobody is currently looking.</p>
+        <p class="gap__claim reveal" data-i18n="gap.claim">School exams measure whether you <em>can</em> read. University measures whether you can keep reading 40 dense pages a week, in your second language, at 1am. That is where difficulties a pass mark can hide may surface — and we could not find recent, published UAE university data on it.</p>
         <aside class="fineprint reveal">
           <p class="mono fineprint__h" data-i18n="gap.fp.h">Our own critique of our own evidence</p>
           <ul>
             <li data-i18n="gap.fp.1">2007/08 data — almost two decades old</li>
             <li data-i18n="gap.fp.2">One university, female students only</li>
             <li data-i18n="gap.fp.3">Screening features, not clinical diagnoses</li>
-            <li data-i18n="gap.fp.4">A pass rate and a trait prevalence aren’t the same metric — that’s the point: K-12 exams measure pass/fail, not reading strain</li>
+            <li data-i18n="gap.fp.4">A pass rate and a screening estimate are different measurements and can’t be compared directly; neither tells us how many university students struggle today</li>
           </ul>
-          <p data-i18n="gap.fp.p">That isn't a hole in the argument. It <em>is</em> the argument: the most-cited UAE university figure is 17 years old because no one has measured since. Our pilot produces the first current, consented dataset.</p>
+          <p data-i18n="gap.fp.p">So we don’t claim a current rate. We found no newer published UAE university figure (that is a search result, not proof none exists); a consented pilot would give a current, local picture — of study strain, not of diagnoses.</p>
         </aside>
       </div>
     </div>
@@ -500,7 +500,7 @@
         <article class="ds reveal"><span class="ds__src mono">Bayanat</span><h3 data-i18n="dt.d1">Grade 12 pass rates</h3><p data-i18n="dt.d1p">Used for one thing only: the gap evidence.</p><a href="https://bayanat.ae/en/Datasets/Dataset-info?id=mdozfIMTh5W4bcRf0g73X8m-c2QA0QfhY-zVp5znLNc" target="_blank" rel="noopener" class="link mono" data-i18n="dt.open">Open dataset ↗</a></article>
         <article class="ds reveal"><span class="ds__src mono">Bayanat</span><h3 data-i18n="dt.d2">Higher-education enrolment</h3><p data-i18n="dt.d2p">Denominators for impact sizing and SAS capacity.</p><a href="https://bayanat.ae/en/Datasets/Dataset-info?id=75OQ9yv9cXhUjtqAMRo0AD8zQ2AgcKV1rrg0PwyY-f0" target="_blank" rel="noopener" class="link mono" data-i18n="dt.open">Open dataset ↗</a></article>
         <article class="ds reveal"><span class="ds__src mono">J Glob Health</span><h3 data-i18n="dt.d3">Adult ADHD prevalence</h3><p data-i18n="dt.d3p">Song 2021 (2.58% persistent) and Vos &amp; Hartman 2022 (5.1% at 18–24).</p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9197091/" target="_blank" rel="noopener" class="link mono" data-i18n="dt.paper">Read paper ↗</a></article>
-        <article class="ds ds--never reveal"><span class="ds__src mono" data-i18n="dt.nv">Missing</span><h3 data-i18n="dt.d4">Current UAE university prevalence</h3><p data-i18n="dt2.d4p">Not public. The pilot creates the first current, consented dataset.</p></article>
+        <article class="ds ds--never reveal"><span class="ds__src mono" data-i18n="dt.nv">Missing</span><h3 data-i18n="dt.d4">Current UAE university prevalence</h3><p data-i18n="dt2.d4p">We found no recent published figure. A consented pilot would add current local data (of study strain, not diagnoses).</p></article>
       </div>
 
       <div class="plan plan--mt">
@@ -529,7 +529,7 @@
         <details class="reveal"><summary data-i18n="fq3.7q">Why not eye-tracking?</summary><p data-i18n="fq3.7a">Accuracy, biometrics under PDPL, and stigma. Confirmation is a human’s job with validated instruments.</p></details>
         <details class="reveal"><summary data-i18n="fq3.8q">Won’t university IT block it?</summary><p data-i18n="fq3.8a">The Grammarly defence: a student-owned extension on a personal browser needs zero IT procurement for v1.</p></details>
         <details class="reveal"><summary data-i18n="fq3.9q">Can high-schoolers really deploy on-device models?</summary><p data-i18n="fq3.9a">What is live today: the tracking and its statistics run in your browser (Demo mode feeds them synthetic LMS data; Real mode uses your own actions). What is planned: the local machine-learning models named in the architecture are part of the 90-day plan and are not running yet.</p></details>
-        <details class="reveal"><summary data-i18n="fq3.10q">The 17.6% study is old.</summary><p data-i18n="fq3.10a">We critique it on stage: 2007/08, one university, women only. That’s the argument — nobody has measured since. Our pilot creates current, consented data.</p></details>
+        <details class="reveal"><summary data-i18n="fq3.10q">The 17.6% study is old.</summary><p data-i18n="fq3.10a">Yes: 2007/08, one university, female students only, and a screening test being piloted — features, not diagnoses. We use it only as a reason to look again, with consent, not as today’s rate.</p></details>
       </div>
     </div>
   </section>
@@ -589,70 +589,70 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/js/icons.js?v=14"></script>
-  <script src="assets/js/i18n.js?v=14"></script>
-  <script src="assets/js/fun.js?v=14"></script>
-  <script src="assets/js/main.js?v=14"></script>
-  <script src="assets/js/accent.js?v=14"></script>
-  <script src="assets/js/indicators.js?v=14"></script>
-  <script src="assets/js/domain-art.js?v=14"></script>
-  <script src="assets/js/realtrack.js?v=14"></script>
-  <script src="assets/js/handwriting.js?v=14"></script>
-  <script src="assets/js/tracker.js?v=14"></script>
-  <script src="assets/js/study-tools.js?v=14"></script>
-  <script src="assets/js/studio-content.js?v=14"></script>
-  <script src="assets/js/studio.js?v=14"></script>
-  <script src="assets/js/companion/config.js?v=14"></script>
-  <script src="assets/js/companion/signals.js?v=14"></script>
-  <script src="assets/js/companion/dialogue.js?v=14"></script>
-  <script src="assets/js/companion/store.js?v=14"></script>
-  <script src="assets/js/companion/llm.js?v=14"></script>
-  <script src="assets/js/companion/md.js?v=14"></script>
-  <script src="assets/js/noor/research.js?v=14"></script>
-  <script src="assets/js/noor/validate.js?v=14"></script>
-  <script src="assets/js/noor/usage.js?v=14"></script>
-  <script src="assets/js/companion/ai.js?v=14"></script>
-  <script src="assets/js/companion/prosody.js?v=14"></script>
-  <script src="assets/js/companion/voicelib.js?v=14"></script>
-  <script src="assets/js/companion/voice.js?v=14"></script>
-  <script src="assets/js/companion/summary.js?v=14"></script>
-  <script src="assets/js/companion/kb-extra.js?v=14"></script>
-  <script src="assets/js/companion/knowledge.js?v=14"></script>
-  <script src="assets/js/companion/interview.js?v=14"></script>
-  <script src="assets/js/companion/evidence.js?v=14"></script>
-  <script src="assets/js/companion/ui.js?v=14"></script>
-  <script src="assets/js/companion/noor-brain.js?v=14"></script>
-  <script src="assets/js/companion/noor-tools.js?v=14"></script>
-  <script src="assets/js/companion/lipsync.js?v=14"></script>
-  <script src="assets/js/companion/photoreal.js?v=14"></script>
-  <script src="assets/js/companion/avatar.js?v=14"></script>
-  <script src="assets/js/companion/visuals.js?v=14"></script>
-  <script src="assets/js/companion/visual-spec.js?v=14"></script>
-  <script src="assets/js/companion/visual-library.js?v=14"></script>
-  <script src="assets/js/companion/audio-lesson.js?v=14"></script>
-  <script src="assets/js/companion/realtime.js?v=14"></script>
-  <script src="assets/js/companion/call.js?v=14"></script>
-  <script type="module" src="assets/js/companion/human3d.js?v=14"></script>
-  <script src="assets/js/checkins-score.js?v=14"></script>
-  <script src="assets/js/analyser.js?v=14"></script>
-  <script src="assets/js/ink-transition.js?v=14"></script>
-  <script src="assets/js/hand-ui.js?v=14"></script>
-  <script src="assets/js/growth-warp.js?v=14"></script>
-  <script src="assets/js/games-home.js?v=14"></script>
-  <script src="assets/js/videos.js?v=14"></script>
-  <script src="assets/js/insight.js?v=14"></script>
+  <script src="assets/js/icons.js?v=15"></script>
+  <script src="assets/js/i18n.js?v=15"></script>
+  <script src="assets/js/fun.js?v=15"></script>
+  <script src="assets/js/main.js?v=15"></script>
+  <script src="assets/js/accent.js?v=15"></script>
+  <script src="assets/js/indicators.js?v=15"></script>
+  <script src="assets/js/domain-art.js?v=15"></script>
+  <script src="assets/js/realtrack.js?v=15"></script>
+  <script src="assets/js/handwriting.js?v=15"></script>
+  <script src="assets/js/tracker.js?v=15"></script>
+  <script src="assets/js/study-tools.js?v=15"></script>
+  <script src="assets/js/studio-content.js?v=15"></script>
+  <script src="assets/js/studio.js?v=15"></script>
+  <script src="assets/js/companion/config.js?v=15"></script>
+  <script src="assets/js/companion/signals.js?v=15"></script>
+  <script src="assets/js/companion/dialogue.js?v=15"></script>
+  <script src="assets/js/companion/store.js?v=15"></script>
+  <script src="assets/js/companion/llm.js?v=15"></script>
+  <script src="assets/js/companion/md.js?v=15"></script>
+  <script src="assets/js/noor/research.js?v=15"></script>
+  <script src="assets/js/noor/validate.js?v=15"></script>
+  <script src="assets/js/noor/usage.js?v=15"></script>
+  <script src="assets/js/companion/ai.js?v=15"></script>
+  <script src="assets/js/companion/prosody.js?v=15"></script>
+  <script src="assets/js/companion/voicelib.js?v=15"></script>
+  <script src="assets/js/companion/voice.js?v=15"></script>
+  <script src="assets/js/companion/summary.js?v=15"></script>
+  <script src="assets/js/companion/kb-extra.js?v=15"></script>
+  <script src="assets/js/companion/knowledge.js?v=15"></script>
+  <script src="assets/js/companion/interview.js?v=15"></script>
+  <script src="assets/js/companion/evidence.js?v=15"></script>
+  <script src="assets/js/companion/ui.js?v=15"></script>
+  <script src="assets/js/companion/noor-brain.js?v=15"></script>
+  <script src="assets/js/companion/noor-tools.js?v=15"></script>
+  <script src="assets/js/companion/lipsync.js?v=15"></script>
+  <script src="assets/js/companion/photoreal.js?v=15"></script>
+  <script src="assets/js/companion/avatar.js?v=15"></script>
+  <script src="assets/js/companion/visuals.js?v=15"></script>
+  <script src="assets/js/companion/visual-spec.js?v=15"></script>
+  <script src="assets/js/companion/visual-library.js?v=15"></script>
+  <script src="assets/js/companion/audio-lesson.js?v=15"></script>
+  <script src="assets/js/companion/realtime.js?v=15"></script>
+  <script src="assets/js/companion/call.js?v=15"></script>
+  <script type="module" src="assets/js/companion/human3d.js?v=15"></script>
+  <script src="assets/js/checkins-score.js?v=15"></script>
+  <script src="assets/js/analyser.js?v=15"></script>
+  <script src="assets/js/ink-transition.js?v=15"></script>
+  <script src="assets/js/hand-ui.js?v=15"></script>
+  <script src="assets/js/growth-warp.js?v=15"></script>
+  <script src="assets/js/games-home.js?v=15"></script>
+  <script src="assets/js/videos.js?v=15"></script>
+  <script src="assets/js/insight.js?v=15"></script>
   <script src="assets/vendor/jspdf.umd.min.js" defer></script>
-  <script src="assets/js/report.js?v=14"></script>
-  <script src="assets/js/handoff.js?v=14"></script>
-  <script src="assets/js/ramp.js?v=14"></script>
-  <script src="assets/js/flow.js?v=14"></script>
-  <script src="assets/js/session.js?v=14"></script>
+  <script src="assets/js/report.js?v=15"></script>
+  <script src="assets/js/handoff.js?v=15"></script>
+  <script src="assets/js/ramp.js?v=15"></script>
+  <script src="assets/js/flow.js?v=15"></script>
+  <script src="assets/js/session.js?v=15"></script>
   <script>
     [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });
   </script>
-  <script src="assets/js/theme-fx.js?v=14"></script>
-  <script src="assets/js/ambient.js?v=14" defer></script>
-  <script src="assets/js/a11y.js?v=14"></script>
-  <script src="assets/js/companion/holo.js?v=14" defer></script>
+  <script src="assets/js/theme-fx.js?v=15"></script>
+  <script src="assets/js/ambient.js?v=15" defer></script>
+  <script src="assets/js/a11y.js?v=15"></script>
+  <script src="assets/js/companion/holo.js?v=15" defer></script>
 </body>
 </html>

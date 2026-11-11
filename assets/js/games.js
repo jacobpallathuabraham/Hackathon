@@ -518,7 +518,7 @@
         <div><b>${T('Graphics', 'الرسوميات')}</b>${seg('quality', [['high', 'High quality', 'جودة عالية'], ['low', 'Low-performance', 'أداء منخفض']])}</div>
         <div><b>${T('Sound', 'الصوت')}</b>${seg('sound', [[false, 'Off', 'إيقاف'], [true, 'On', 'تشغيل']])}</div>
       </section>
-      <div class="gm-cats" role="tablist" aria-label="${T('Categories', 'الفئات')}">${[['all', 'All', 'الكل']].concat(Object.keys(CATS).map(k => [k, CATS[k][0], CATS[k][1]])).map(([k, en, ar]) => `<button type="button" role="tab" aria-selected="${S.cat === k}" data-set="cat:${k}" style="--c:${CATS[k] ? CATS[k][2] : 'var(--accent)'}">${T(en, ar)}</button>`).join('')}<button type="button" class="gm-progbtn" data-prog>${T('My progress', 'تقدّمي')}</button></div>
+      <div class="gm-cats"><div role="tablist" aria-label="${T('Categories', 'الفئات')}" style="display:contents">${[['all', 'All', 'الكل']].concat(Object.keys(CATS).map(k => [k, CATS[k][0], CATS[k][1]])).map(([k, en, ar]) => `<button type="button" role="tab" aria-selected="${S.cat === k}" data-set="cat:${k}" style="--c:${CATS[k] ? CATS[k][2] : 'var(--accent)'}">${T(en, ar)}</button>`).join('')}</div><button type="button" class="gm-progbtn" data-prog>${T('My progress', 'تقدّمي')}</button></div>
       <div class="gm-grid">${list.map((g, i) => { const st = stats(g.id); return `<article class="gm-card" style="--c:${CATS[g.cat][2]};--i:${i}" data-g="${g.id}">
         <div class="gm-art" aria-hidden="true">${ART[g.id]}</div>
         <span class="gm-cat"><i aria-hidden="true">${CATS[g.cat][3]}</i> ${L(CATS[g.cat])}</span>

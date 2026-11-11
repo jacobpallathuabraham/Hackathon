@@ -1005,3 +1005,25 @@ message, a retry, a support reference — never an unrelated or invented answer.
   - ordinary chat (including "transformer model" and "python generator") doesn't trigger a library visual;
   - typical questions reach the right visual.
 - `tests/e2e/visual-library.e2e.js` renders all 120 visuals in Chromium and checks for nodes, events or curves, with no page errors.
+
+## v15: opening-circle theme switch, accuracy audit, accessibility overhaul
+
+The full findings are in [`docs/AUDIT-v15.md`](docs/AUDIT-v15.md). They cover the route inventory, the source-checked research claims, the privacy wording compared with the code, the axe-core results, the tests, and what is still open.
+
+- **Theme switch:** the new theme opens out in a circle from the button. It uses a View Transition, with a drawn-circle fallback for browsers without one, and switches instantly when reduced motion is on.
+- **Accuracy:**
+  - the fictional university is labelled as fictional;
+  - no real accreditations, rankings, partners or employers are implied;
+  - the admissions cycle and the portal's teaching week are worked out from today's date;
+  - the evidence claims match their sources;
+  - the online-AI disclosure lists exactly what is sent;
+  - the sign-in is described as a prototype.
+- **Accessibility:**
+  - read-aloud of the page or a selection, with the current sentence highlighted, and a player;
+  - focus mode and a large pointer;
+  - every change is announced, and the footer counts how many settings changed;
+  - skip links on every page;
+  - reduced motion also covers View Transitions;
+  - the axe-core serious and critical issues are fixed on all 10 pages in both themes.
+- **Bug fix:** the press effect used `transform`, which made centred buttons jump sideways on press; it now uses `scale`.
+- **New test:** `tests/e2e/a11y-centre.e2e.js`.

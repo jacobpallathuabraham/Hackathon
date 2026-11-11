@@ -127,7 +127,7 @@
   const go = id => () => $(id).scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
   function commands() {
     return [
-      { label: T('The gap: 94% vs 17.6%', 'الفجوة: ٩٤٪ مقابل ١٧٫٦٪'), hint: '01', run: go('#gap') },
+      { label: T('The gap: two different measurements', 'الفجوة: قياسان مختلفان'), hint: '01', run: go('#gap') },
       { label: T('How it works', 'آلية العمل'), hint: '02', run: go('#flow') },
       { label: T('Tracking — start or check', 'التتبّع — ابدأ أو راجع'), hint: '03', run: go('#tracking') },
       { label: T('Open the Reading Studio', 'افتح استوديو القراءة'), hint: '04', run: () => ERLY.openStudio && ERLY.openStudio() },
