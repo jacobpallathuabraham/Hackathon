@@ -3,8 +3,8 @@
    Each page keeps its own #themeToggle / #langToggle handler (it knows what to
    redraw: charts, Noor, the studio). This file catches the click first, then
    replays it inside a View Transition so the change animates:
-     - theme: "dusk / dawn" — a soft cross-fade of the whole page with one gentle
-       diagonal sheen of light; the button's sun and moon morph into each other;
+     - theme: "opening circle" — the new theme opens out in a circle from the
+       button, covering the page edge to edge; the sun and moon icons morph;
      - language: the page glides out one way and the new language glides in
        from the reading direction (right-to-left for Arabic), with a short
        "العربية" / "English" badge.
@@ -37,39 +37,42 @@
     return b;
   }
 
-  /* ---------------- theme: "eclipse" reveal ----------------
-     The new theme spreads out from the button with a feathered edge (an
-     animated radial mask, not a hard circle) while a luminous ring rides the
-     edge — warm gold into light, cyan-violet into dark — and the old theme
-     dims and recedes slightly. Clicking again mid-way finishes the running
-     switch at once and starts the next one, so rapid clicks never stack or
-     flicker. Without View Transitions: a soft colour cross-fade with a wash.
-     Reduced motion: an instant switch. */
-  let canMask = false;
-  try { CSS.registerProperty({ name: '--tfx-r', syntax: '<length>', inherits: true, initialValue: '0px' }); canMask = CSS.supports('mask-image', 'radial-gradient(#000, transparent)') || CSS.supports('-webkit-mask-image', 'radial-gradient(#000, transparent)'); }
-  catch (e) { canMask = !!(window.CSS && CSS.supports && CSS.supports('mask-image', 'radial-gradient(#000, transparent)')) && /already/i.test(String(e && e.message)); }
-  let active = null;
+  /* ---------------- theme: "opening circle" ----------------
+     The new theme is clipped to a circle centred on the button that grows to
+     the farthest corner (0.56–0.82 s, eased), so it always covers the whole
+     viewport. The old page stays still underneath: no fading, no blending,
+     nothing falls or flies. Reduced motion: an instant switch. */
+  let active = null, fallback = null;
+  const BG = { dark: '#0e1120', light: '#F4EFE6' };
+  const EASE = 'cubic-bezier(.65, .05, .25, 1)';
   function switchTheme(btn) {
     const toDark = html.dataset.theme !== 'dark';
+    // a click mid-switch finishes the running one at once, so rapid clicks never stack or flicker
     if (active) { try { active.skipTransition(); } catch (e) { /* already done */ } active = null; }
+    if (fallback) { fallback(); fallback = null; }
     if (reduce()) return replay(btn);
-    html.classList.toggle('tfx-to-dark', toDark);
+    const o = origin(btn);
+    const ms = Math.round(Math.min(820, Math.max(560, o.radius * 0.55)));
+    const from = `circle(0px at ${o.x}px ${o.y}px)`, to = `circle(${Math.ceil(o.radius) + 2}px at ${o.x}px ${o.y}px)`;
     if (canVT) {
-      // "dusk / dawn": the whole page cross-fades softly while a gentle diagonal light sweeps across once
-      html.classList.add('vt-dusk');
-      const t = active = document.startViewTransition(() => {
-        replay(btn);
-        const sheen = badge('tfx-sheen ' + (toDark ? 'tfx-sheen--dark' : 'tfx-sheen--light'), '', 900);
-        sheen.style.transform = '';
-      });
-      // a transition aborted by a rapid second click or a page change is harmless: the theme still switches
+      // "opening circle": the new theme opens out from the button over the old one
+      html.classList.add('vt-circle');
+      const t = active = document.startViewTransition(() => replay(btn));
       [t.ready, t.finished, t.updateCallbackDone].forEach(pr => pr && pr.catch(() => {}));
-      t.finished.catch(() => {}).finally(() => { html.classList.remove('vt-dusk', 'tfx-to-dark'); if (active === t) active = null; });
+      t.ready.then(() => {
+        html.animate({ clipPath: [from, to] }, { duration: ms, easing: EASE, fill: 'both', pseudoElement: '::view-transition-new(root)' });
+      }).catch(() => {});
+      t.finished.catch(() => {}).finally(() => { html.classList.remove('vt-circle'); if (active === t) active = null; });
     } else {
-      // no View Transitions: a short full-screen veil in the new background colour, then gone
-      const veil = badge('tfx-veil ' + (toDark ? 'tfx-veil--dark' : 'tfx-veil--light'), '', 700);
-      requestAnimationFrame(() => { veil.classList.add('is-on'); setTimeout(() => { replay(btn); veil.classList.remove('is-on'); }, 220); });
-      setTimeout(() => html.classList.remove('tfx-to-dark'), 720);
+      // no View Transitions: a circle in the new background colour opens out, the theme switches underneath, the circle fades
+      const veil = badge('tfx-circle', '', ms + 600);
+      veil.style.background = BG[toDark ? 'dark' : 'light'];
+      let done = false;
+      const finish = () => { if (done) return; done = true; replay(btn); veil.classList.add('is-out'); };
+      fallback = finish;
+      const a = veil.animate ? veil.animate({ clipPath: [from, to] }, { duration: ms, easing: EASE, fill: 'forwards' }) : null;
+      if (a) a.onfinish = () => { finish(); if (fallback === finish) fallback = null; };
+      else setTimeout(finish, 0);
     }
   }
 

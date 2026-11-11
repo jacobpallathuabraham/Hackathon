@@ -196,3 +196,12 @@ html.vt-dusk::view-transition-new(root) { animation-name: tfxDuskIn; }
 .tfx-orb, .tfx-ring, .tfx-wash { display: none !important; }
 #themeToggle.tfx-spin svg, #themeToggle.tfx-spin { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .tfx-sheen { display: none; } #themeToggle .i-sun, #themeToggle .i-moon { transition: none; } }
+
+/* v15 — "opening circle" theme switch: the new theme opens out from the button (clip-path animated from JS) */
+html.vt-circle::view-transition-group(root) { animation: none; }
+html.vt-circle::view-transition-old(root), html.vt-circle::view-transition-new(root) { animation: none !important; mix-blend-mode: normal; }
+html.vt-circle::view-transition-old(root) { z-index: 1; }
+html.vt-circle::view-transition-new(root) { z-index: 2; }
+.tfx-circle { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; clip-path: circle(0 at 50% 50%); transition: opacity .3s ease; }
+.tfx-circle.is-out { opacity: 0; }
+.tfx-sheen { display: none !important; }

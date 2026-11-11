@@ -20,22 +20,21 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   const p = await ctx.newPage(); watch(p);
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(1000);
 
-  /* ---------- dusk/dawn theme switch (v14: a soft cross-fade with a sheen; no falling sun or moon) ---------- */
+  /* ---------- opening-circle theme switch (v15: the new theme opens out in a circle from the button) ---------- */
   await p.click('#themeToggle');
   await p.waitForTimeout(150);
-  const mid = await p.evaluate(() => ({ cls: document.documentElement.className, orb: !!document.querySelector('.tfx-orb, .tfx-ring'), sheen: !!document.querySelector('.tfx-sheen'), anims: document.getAnimations().map(a => a.effect && a.effect.pseudoElement).filter(Boolean) }));
-  assert.match(mid.cls, /vt-dusk/, 'the switch runs as a view transition');
+  const mid = await p.evaluate(() => ({ cls: document.documentElement.className, orb: !!document.querySelector('.tfx-orb, .tfx-ring'), anims: document.getAnimations().filter(a => a.effect && a.effect.pseudoElement === '::view-transition-new(root)').map(a => a.effect.getKeyframes().map(k => k.clipPath)) }));
+  assert.match(mid.cls, /vt-circle/, 'the switch runs as a view transition');
   assert.ok(!mid.orb, 'no sun/moon orb or ring');
-  assert.ok(mid.sheen, 'the soft sheen sweeps across');
-  assert.ok(mid.anims.includes('::view-transition-new(root)') && mid.anims.includes('::view-transition-old(root)'), 'old and new themes cross-fade');
+  assert.ok(mid.anims.length && /circle\(0px at/.test(mid.anims[0][0]) && /circle\(\d+px at/.test(mid.anims[0][1]), 'the new theme opens as a growing circle: ' + JSON.stringify(mid.anims));
   await p.waitForTimeout(1400);
   assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark');
-  assert.equal(await p.evaluate(() => document.querySelectorAll('.tfx-sheen, .tfx-ring, .tfx-orb').length), 0, 'effects removed afterwards');
+  assert.equal(await p.evaluate(() => document.querySelectorAll('.tfx-circle, .tfx-ring, .tfx-orb').length), 0, 'effects removed afterwards');
   for (let i = 0; i < 7; i++) { await p.click('#themeToggle'); await p.waitForTimeout(70); } // rapid clicks
   await p.waitForTimeout(1600);
-  const rapid = await p.evaluate(() => ({ t: document.documentElement.dataset.theme, s: localStorage.getItem('erly-theme'), c: document.documentElement.className, r: document.querySelectorAll('.tfx-ring, .tfx-sheen, .tfx-veil').length }));
+  const rapid = await p.evaluate(() => ({ t: document.documentElement.dataset.theme, s: localStorage.getItem('erly-theme'), c: document.documentElement.className, r: document.querySelectorAll('.tfx-ring, .tfx-circle, .tfx-veil').length }));
   assert.equal(rapid.t, 'light', '7 rapid clicks from dark end on light'); assert.equal(rapid.s, 'light', 'choice persisted');
-  assert.doesNotMatch(rapid.c, /vt-dusk|tfx-to-dark|tfx-fade/, 'no stuck transition classes'); assert.equal(rapid.r, 0, 'no leftover effects');
+  assert.doesNotMatch(rapid.c, /vt-circle|vt-dusk|tfx-fade/, 'no stuck transition classes'); assert.equal(rapid.r, 0, 'no leftover effects');
 
   /* ---------- ambient backgrounds: switched off in v10.1 (they cost ~40 fps on tablets) ---------- */
   const amb = await p.evaluate(() => [...document.querySelectorAll('.amb')].map(a => ({ shown: getComputedStyle(a).display !== 'none', run: !!(a.__amb && a.__amb.running()), canvas: !!a.querySelector('canvas') })));

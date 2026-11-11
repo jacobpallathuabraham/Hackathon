@@ -20,8 +20,7 @@
 ::view-transition-new(root) { animation: v9PageIn .42s cubic-bezier(.2, .8, .2, 1) .04s both; }
 @keyframes v9PageOut { to { opacity: 0; } }
 @keyframes v9PageIn { from { opacity: 0; transform: translateY(6px); } }
-html.vt-dusk::view-transition-old(root) { animation-name: tfxDuskOut; animation-duration: .6s; animation-delay: 0s; }
-html.vt-dusk::view-transition-new(root) { animation-name: tfxDuskIn; animation-duration: .6s; animation-delay: 0s; }
+html.vt-circle::view-transition-old(root), html.vt-circle::view-transition-new(root) { animation: none !important; }
 /* (the theme switch uses its own clip/mask animation on the same pseudo-elements) */
 html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; }
 html.vt-lang::view-transition-old(root) { animation: tfxLangOut .42s cubic-bezier(.4, 0, 1, 1) both; }
