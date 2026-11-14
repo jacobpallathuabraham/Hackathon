@@ -204,7 +204,7 @@
         <div class="lab__hb">
           <button type="button" class="lab-ic" data-lab="explain" aria-pressed="true" title="${T('Explanation panel', 'لوحة الشرح')}">${T('Explain', 'اشرح')}</button>
           <div class="lab-menu"><button type="button" class="lab-ic" data-lab="export" aria-haspopup="true" aria-expanded="false">${T('Export', 'تصدير')}</button>
-            <div class="lab-menu__pop" hidden><button type="button" data-lab="png">${T('Image (PNG)', 'صورة PNG')}</button><button type="button" data-lab="json">${T('Model (JSON)', 'النموذج JSON')}</button><button type="button" data-lab="csv">${T('Data table (CSV)', 'جدول بيانات CSV')}</button><button type="button" data-lab="copy">${T('Copy result', 'نسخ النتيجة')}</button></div></div>
+            <div class="lab-menu__pop" hidden><button type="button" data-lab="png">${T('Image (PNG)', 'صورة PNG')}</button><button type="button" data-lab="json">${T('Model (JSON)', 'النموذج JSON')}</button><button type="button" data-lab="csv">${T('Data table (CSV)', 'جدول بيانات CSV')}</button><button type="button" data-lab="copy">${T('Copy result', 'نسخ النتيجة')}</button><a href="coverage.html" class="lab-menu__link">${T('What Noor can show (coverage)', 'ما يمكن لنور عرضه')}</a></div></div>
           <button type="button" class="lab-ic" data-lab="reset">${T('Reset', 'إعادة')}</button>
           <button type="button" class="lab-ic" data-lab="max" aria-pressed="false" aria-label="${T('Full screen', 'ملء الشاشة')}">⤢</button>
           <button type="button" class="lab-ic" data-lab="close" aria-label="${T('Close the lab', 'إغلاق المختبر')}">✕</button>
@@ -335,5 +335,19 @@
     const sum = current && current.inst.intro ? current.inst.intro() : '';
     return { kind: 'open', id: r.id, text: sum };
   }
+  // v17: what Noor would show for a question, without opening anything (used by the coverage page). Mirrors the
+  // decisions in handle(): a confident lab engine, unless the student asked for a picture of a curated scene
+  function predict(text) {
+    const LABWORDS = /\b(solve|factor\w*|simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;
+    const V = window.ERLY && ERLY.vspec; let pl = null; try { pl = V ? V.plan(text) : null; } catch (e) { pl = null; }
+    const top = candidates(text)[0];
+    const curated = pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind);
+    const wantsPicture = /\b(diagram|illustrat\w*|picture|tour|show me how)\b/i.test(text);
+    const why = /^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text);
+    if (top && !why && top.score >= 0.6 && !(curated && !top.reply && !LABWORDS.test(text) && (top.score < 0.88 || wantsPicture))) return { status: 'interactive', engine: top.id, score: top.score };
+    if (pl && pl.kind) return { status: ['diagram', 'mermaid', 'timeline', 'chart'].includes(pl.kind) ? 'diagram' : 'visual', kind: pl.kind, title: pl.title && (pl.title[0] || pl.title) };
+    return { status: 'explain' };
+  }
+  L.predict = predict;
   Object.assign(L, { register, open, close, command, route, candidates, handle, current: () => current, workspace: () => ws, state: () => (current && current.inst.state ? current.inst.state() : null) });
 })();

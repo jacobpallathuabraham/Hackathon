@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <title>Visual coverage · Noor</title>
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <script>
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (!r) location.replace('login.html?next=student'); } catch (e) {}
+    try { var t = localStorage.getItem('erly-theme'); if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css?v=17">
+  <link rel="stylesheet" href="assets/css/accents.css?v=17">
+  <link rel="stylesheet" href="assets/css/knowledge.css?v=17">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=17">
+  <link rel="stylesheet" href="assets/css/v9.css?v=17">
+  <style>
+    .cov-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; border: 1px solid var(--line); margin: 6px 0 0; }
+    .cov-bar i { display: block; height: 100%; }
+    .cov-s { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+    .cov-s::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .cov-s--interactive { color: #15803d; background: color-mix(in srgb, #16a34a 12%, transparent); }
+    .cov-s--visual { color: #1d4ed8; background: color-mix(in srgb, #2563eb 12%, transparent); }
+    .cov-s--diagram { color: #7e22ce; background: color-mix(in srgb, #9333ea 12%, transparent); }
+    .cov-s--explain { color: #92400e; background: color-mix(in srgb, #d97706 14%, transparent); }
+    :root[data-theme="dark"] .cov-s--interactive { color: #4ade80; } :root[data-theme="dark"] .cov-s--visual { color: #93c5fd; } :root[data-theme="dark"] .cov-s--diagram { color: #d8b4fe; } :root[data-theme="dark"] .cov-s--explain { color: #fcd34d; }
+    .cov-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+    .cov-filters select, .cov-filters input { min-height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 0 10px; font: inherit; font-size: 16px; }
+    .cov-probe { color: var(--muted); font-size: 12.5px; }
+    .cov-frame { position: absolute; width: 1280px; height: 800px; left: -10000px; top: 0; border: 0; visibility: hidden; }
+  </style>
+</head>
+<body class="kq">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="kq-top">
+    <a class="kq-back" href="student.html">← Dashboard</a>
+    <b>Noor visual coverage</b>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">◐</button>
+  </header>
+  <main class="kq-main" id="main">
+    <section class="kq-hero">
+      <h1>What Noor can show — measured, not claimed</h1>
+      <p>Each concept below has a real question a student might ask. When this page opens, every question is sent through Noor’s own routing in <em>this browser</em> (Noor Lab engines, the scene planner and the curated visual library) and the page records what would actually appear. Nothing here is typed in by hand, and nothing is sent anywhere.</p>
+      <p class="kq-note"><b>Interactive</b>: a computed, adjustable model. <b>Visual</b>: an interactive visual or animated scene. <b>Diagram</b>: a labelled diagram, flow or mind map. <b>Explanation only</b>: Noor answers in words (with an AI model when one is in use); no visual yet. This registry is a sample of concepts, not the whole of any curriculum.</p>
+    </section>
+    <section class="kq-cards" id="covCards" aria-label="Summary" aria-live="polite"><p class="kq-note">Measuring…</p></section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>By discipline</h2></div>
+      <div class="kq-table-wrap"><table class="kq-table" id="covDisc"><thead><tr><th>Discipline</th><th>Concepts</th><th>Interactive</th><th>Visual</th><th>Diagram</th><th>Explanation only</th><th>Mix</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Every concept</h2></div>
+      <div class="cov-filters"><label>Discipline <select id="covF"></select></label><label>Status <select id="covS"><option value="">All</option><option value="interactive">Interactive</option><option value="visual">Visual</option><option value="diagram">Diagram</option><option value="explain">Explanation only</option></select></label><label>Search <input id="covQ" type="search" placeholder="e.g. pulley"></label></div>
+      <div class="kq-table-wrap"><table class="kq-table" id="covAll"><thead><tr><th>Discipline</th><th>Level</th><th>Unit</th><th>Concept</th><th>What Noor shows</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <section class="kq-sec">
+      <div class="kq-sec__h"><h2>Staged plan for what isn’t covered yet</h2></div>
+      <ol class="kq-note" id="covPlan">
+        <li><b>Now (v17):</b> problem-to-scene engines for rotational mechanics, multi-charge electrostatics, area between curves, three organic mechanisms (SN1, SN2, E2), circuit topology, gear trains, ideal binary distillation, FM, the cardiac cycle and break-even analysis.</li>
+        <li><b>Next:</b> more mechanisms (electrophilic aromatic substitution, additions, carbonyl chemistry) from a checked mechanism data set; AC circuits with phasors; Fourier series; action potentials (Hodgkin–Huxley); enzyme kinetics; supply–demand with shifts.</li>
+        <li><b>Later:</b> non-ideal distillation (activity models, azeotropes); multi-body rotational problems with collisions; respiratory and renal models; accounting statements as interactive ledgers.</li>
+        <li><b>Not planned as models:</b> topics where a visual adds little or would mislead (law, ethics, literary analysis) stay as clear explanations and diagrams.</li>
+      </ol>
+    </section>
+  </main>
+  <iframe class="cov-frame" id="covFrame" title="Measurement frame" aria-hidden="true" tabindex="-1"></iframe>
+  <script src="assets/js/lab/curriculum.js?v=17"></script>
+  <script src="assets/js/coverage.js?v=17"></script>
+  <script src="assets/js/theme-fx.js?v=17"></script>
+  <script src="assets/js/a11y.js?v=17"></script>
+</body>
+</html>

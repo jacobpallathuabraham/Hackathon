@@ -133,3 +133,4 @@ html.a11y-still .lab { transition: none; } html.a11y-still .lab__note.is-on { an
   .lab__stage { grid-column: 2; grid-row: 1 / 3; }
   .lab__note { display: none; }
 }
+.lab-menu__pop .lab-menu__link { display: block; padding: 8px 12px; color: inherit; text-decoration: none; border-top: 1px solid var(--line); font-size: 13px; }

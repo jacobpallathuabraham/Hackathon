@@ -99,6 +99,7 @@
       destroy: () => { dead = true; cancelAnimationFrame(raf); Pl.destroy(); Gp && Gp.destroy(); ctx.stage.classList.remove('lab-split', 'lab-split--one'); }
     };
   }
+  L.harness = (ctx, def) => harness(ctx, def); // v17: shared with lab-problems.js (problem-to-scene engines)
   function reg(id, kind, title, match, def) { L.register({ id, family: 'physics', kind, title, match, async mount(ctx) { ctx.id = id; const d = typeof def === 'function' ? await def(ctx) : def; const h = harness(ctx, d); return h; } }); }
   const KIND = { mech: T('Physics · Mechanics', 'فيزياء · الميكانيكا'), elec: T('Physics · Electricity & magnetism', 'فيزياء · الكهرباء والمغناطيسية'), wave: T('Physics · Waves & optics', 'فيزياء · الموجات والبصريات'), heat: T('Physics · Thermodynamics', 'فيزياء · الديناميكا الحرارية'), space: T('Physics · Astronomy', 'فيزياء · الفلك'), modern: T('Physics · Modern physics', 'فيزياء · الفيزياء الحديثة') };
   const num1 = (t, re, d) => { const m = t.match(re); return m ? +m[1] : d; };
@@ -467,7 +468,7 @@
 
   /* ======================= waves ======================= */
   reg('waves', KIND.wave, T('Wave lab', 'مختبر الموجات'),
-    t => { if (!/\b(interference|superposition|standing waves?|harmonics?|doppler|wavelength|amplitude|diffraction|young'?s|double[- ]slit|sound waves?|transverse|longitudinal|wave (speed|frequency|motion|equation)|waves? (lab|simulation)|(show|simulate|draw|make)\b.*\bwaves?)\b/i.test(t) || /\belectromagnetic spectrum\b/i.test(t)) return null; return { score: 0.85, params: { set: { mode: /doppler/i.test(t) ? 'doppler' : /standing|harmonic|string/i.test(t) ? 'standing' : /interference|double[- ]slit|young|two sources|diffraction/i.test(t) ? 'interference' : 'super' } } }; },
+    t => { if (/\b(modulat\w*|am radio|fm radio)\b/i.test(t)) return null; if (!/\b(interference|superposition|standing waves?|harmonics?|doppler|wavelength|amplitude|diffraction|young'?s|double[- ]slit|sound waves?|transverse|longitudinal|wave (speed|frequency|motion|equation)|waves? (lab|simulation)|(show|simulate|draw|make)\b.*\bwaves?)\b/i.test(t) || /\belectromagnetic spectrum\b/i.test(t)) return null; return { score: 0.85, params: { set: { mode: /doppler/i.test(t) ? 'doppler' : /standing|harmonic|string/i.test(t) ? 'standing' : /interference|double[- ]slit|young|two sources|diffraction/i.test(t) ? 'interference' : 'super' } } }; },
     {
       defaults: { mode: 'super', f1: 1, f2: 1.2, A1: 1, A2: 1, ph: 0, lam: 1.2, d: 3, n: 2, Ls: 6, vs: 0.5, c: 3 },
       selects: [{ key: 'mode', label: T('Experiment', 'التجربة'), options: [['super', T('Superposition of two waves', 'تراكب موجتين')], ['interference', T('Two-source interference', 'تداخل مصدرين')], ['standing', T('Standing wave on a string', 'موجة موقوفة')], ['doppler', T('Doppler effect', 'تأثير دوبلر')]], num: false, rebuild: true }],
@@ -594,7 +595,7 @@
 
   /* ======================= radioactive decay ======================= */
   reg('decay', KIND.modern, T('Radioactive decay', 'التحلل الإشعاعي'),
-    t => (/\b(radioactiv\w*|half[- ]li(fe|ves)|nuclear decay|decay (constant|curve)|carbon[- ]14|isotopes?)\b/i.test(t) ? { score: 0.92, params: { set: { half: num1(t, /half[- ]life of\s*(\d+(?:\.\d+)?)/i, 5) } } } : null),
+    t => (/\b(radioactiv\w*|half[- ]li(fe|ves)|nuclear decay|decay (constant|curve)|carbon[- ]14|isotopes?)\b/i.test(t) && !/\b(drug|dose|pharmaco\w*|plasma|elimination|medicine|medication)\b/i.test(t) ? { score: 0.92, params: { set: { half: num1(t, /half[- ]life of\s*(\d+(?:\.\d+)?)/i, 5) } } } : null),
     {
       defaults: { N0: 900, half: 5, seed: 7 }, h: 1 / 50, every: 1, tWindow: 25,
       params: [{ key: 'N0', label: T('starting nuclei N₀', 'عدد الأنوية'), unit: '', min: 100, max: 2500, step: 100, alias: ['nuclei', 'atoms'] }, { key: 'half', label: T('half-life T½', 'عمر النصف'), unit: 's', min: 0.5, max: 20, step: 0.5, alias: ['half-life', 'half life'] }],

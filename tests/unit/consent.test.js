@@ -47,22 +47,24 @@ test('no invitation during the warm-up', () => {
   assert.equal(S.shouldInvite(s, sig, ctx({ now: T0 + 1000 }), cfg).reason, 'warming-up');
 });
 
-test('store: consent is never assumed, and each kind is separate', () => {
-  const st = Store.create(Store.memoryStorage());
-  assert.equal(st.consent('monitoring'), false); assert.equal(st.asked('monitoring'), false);
+test('store (v17): noticing is on by default and an explicit off is remembered; mic and external AI are never assumed', () => {
+  const mem = Store.memoryStorage(), st = Store.create(mem);
+  assert.equal(st.consent('monitoring'), true, 'on-device noticing is automatic'); assert.equal(st.asked('monitoring'), false);
+  assert.equal(st.consent('mic'), false); assert.equal(st.consent('llm'), false);
   st.setConsent('mic', true);
-  assert.equal(st.consent('mic'), true); assert.equal(st.consent('llm'), false); assert.equal(st.consent('monitoring'), false);
+  assert.equal(st.consent('mic'), true); assert.equal(st.consent('llm'), false);
+  st.setConsent('monitoring', false);
+  assert.equal(Store.create(mem).consent('monitoring'), false, 'paused stays paused');
 });
-test('store: baseline is only saved with monitoring consent, and withdrawing consent deletes it', () => {
+test('store: the baseline is kept while noticing is on, and turning noticing off deletes it and stops saving', () => {
   const mem = Store.memoryStorage();
   const st = Store.create(mem);
   st.setBaseline({ sessions: [{ minutes: 5, returnsPerMin: 1 }] });
-  assert.equal(st.baseline().sessions.length, 0, 'not saved without consent');
-  st.setConsent('monitoring', true);
-  st.setBaseline({ sessions: [{ minutes: 5, returnsPerMin: 1 }] });
-  assert.equal(Store.create(mem).baseline().sessions.length, 1, 'persisted');
+  assert.equal(Store.create(mem).baseline().sessions.length, 1, 'persisted (on-device summary numbers only)');
   st.setConsent('monitoring', false);
-  assert.equal(Store.create(mem).baseline().sessions.length, 0, 'deleted on withdrawal');
+  assert.equal(Store.create(mem).baseline().sessions.length, 0, 'deleted when turned off');
+  st.setBaseline({ sessions: [{ minutes: 5, returnsPerMin: 1 }] });
+  assert.equal(Store.create(mem).baseline().sessions.length, 0, 'not saved while off');
 });
 test('store: delete history keeps consent; delete everything removes it all', () => {
   const mem = Store.memoryStorage();
@@ -94,7 +96,9 @@ test('store: only summary numbers are persisted — never raw events', () => {
 test('store: corrupt storage falls back safely', () => {
   const mem = Store.memoryStorage();
   mem.setItem(Store.KEY, '{not json');
-  assert.equal(Store.create(mem).consent('monitoring'), false);
+  const st = Store.create(mem);
+  assert.equal(st.consent('mic'), false); assert.equal(st.consent('llm'), false); // the defaults, never a stored yes
+  assert.equal(st.consent('monitoring'), true);
 });
 
 function fakeRecognition() {

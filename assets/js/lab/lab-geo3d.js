@@ -28,6 +28,7 @@
     match(t) {
       if (/\b(3d|three[- ]dimensional|sphere|cube|cone|cylinder|pyramid|prism|polyhedr)\b/i.test(t)) return null;
       if (/[xy]\s*\^?\s*2\s*[+-].*=|y\s*=/.test(L.normalise(t))) return null; // an equation is for the grapher
+      if (/\b(time dilation|length contraction|relativi\w*|lorentz)\b/i.test(t)) return null; // physics, not a geometric dilation
       for (const [re, mode] of GEO) if (re.test(t)) { const rot = t.match(/rotat\w*\s+(?:by\s+)?(-?\d+)/i); return { score: 0.86, params: { mode, angle: rot ? +rot[1] : undefined, which: /reflect/i.test(t) ? 'reflect' : /translat/i.test(t) ? 'translate' : /dilat|enlarge/i.test(t) ? 'dilate' : 'rotate' } }; }
       return null;
     },
