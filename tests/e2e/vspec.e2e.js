@@ -163,10 +163,15 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await ask('Draw a diagram of how a Pratt truss bridge carries load');
   assert.equal(await s.locator('.vz.is-in').count(), 1, 'an explicit request creates the visual directly');
   assert.match(await title(), /Pratt truss/, 'the visual matches the request');
+  // v16: a plot request opens Noor Lab's graphing calculator, and follow-ups edit that graph
   await ask('plot y = x^2 - 4');
-  assert.match(await title(), /y = x\^2 - 4/, 'plot request builds the graph');
-  await ask('add the derivative');
-  assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.params.derivative), true, '“add the derivative” edits the same graph');
+  assert.equal(await s.evaluate(() => ERLY_LAB.current() && ERLY_LAB.current().engine.id), 'graph', 'plot request builds the graph (Noor Lab)');
+  assert.match(await s.evaluate(() => ERLY_LAB.state().expressions[0].src), /y = x\^2 - 4/);
+  await ask('add the derivative'); await s.waitForTimeout(700);
+  assert.equal(await s.evaluate(() => ERLY_LAB.state().expressions.length), 2, '“add the derivative” edits the same graph');
+  await s.evaluate(() => ERLY_LAB.close());
+  // the older visual engine's graph still supports its own edits
+  await s.evaluate(() => ERLY.companion.tools.visual.open(ERLY.vspec.toScene(ERLY.vspec.plan('plot y = x^2 - 4')))); await s.waitForTimeout(500);
   await ask('make it 3D', 1600);
   assert.equal(await s.evaluate(() => ERLY.companion.tools.visual.current().scene.spec.kind), 'surface3d', '“make it 3D” turns the curve into a 3D surface');
   assert.match(await s.locator('.cmsg--ai').last().textContent(), /surface of revolution/, 'and says exactly what it did');
