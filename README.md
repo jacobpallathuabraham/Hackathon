@@ -1027,3 +1027,44 @@ The full findings are in [`docs/AUDIT-v15.md`](docs/AUDIT-v15.md). They cover th
   - the axe-core serious and critical issues are fixed on all 10 pages in both themes.
 - **Bug fix:** the press effect used `transform`, which made centred buttons jump sideways on press; it now uses `scale`.
 - **New test:** `tests/e2e/a11y-centre.e2e.js`.
+
+## v16: Noor Lab, an interactive maths and physics workspace
+
+Ask Noor in ordinary language ("graph y = a(x−h)² + k", "show me why the angles of a triangle add up to 180°", "build a series circuit with two resistors", "projectile motion at 30°") and a real interactive model opens beside the chat. Then you can change it in conversation ("make it wider", "move the vertex to (2, 3)", "show the derivative", "remove air resistance", "double the resistance"). Everything is computed in the browser, so it works with Noor's AI switched off.
+
+### Architecture (`assets/js/lab/`)
+
+| Module | What it does |
+|---|---|
+| `lab-core.js` | The workspace shell (controls · stage · explanation · command bar), the shared `Plot` canvas (pan, wheel and pinch zoom, 1:1 axes), the UI kit, numerics (roots, extrema, Simpson, RK4, normal and t distributions), the router (plain language → engine), the conversational dispatcher, and PNG/JSON/CSV/copy export |
+| `lab-math.js` | **MathExpr**: natural notation (`a(x-h)^2`, `2x`, `sinx`, `|x|`, `{x<0: -x, x^2}`) with automatic sliders. **GraphingEngine**: explicit, implicit (marching squares), inequalities, parametric, polar, piecewise, points; roots, turning points, intersections, table, window, colours, visibility, animation. **CalculusEngine**: derivative with a movable tangent, f/f′/f″ analysis, integral with left/right/midpoint/trapezoid sums, limits, slope fields with Euler vs RK4. **AlgebraEngine**: solve, factor, expand, simplify, d/dx, ∫, systems, matrices, eigenvalues, complex numbers, series; steps only where they are genuine (linear and quadratic), every answer checked by substitution. **StatsEngine**: summary statistics, histogram, box plot, regression (linear, quadratic, cubic), normal and binomial distributions, seeded probability simulations, a t-interval and a one-sample t-test |
+| `lab-geo3d.js` | **GeometryEngine** (JSXGraph): triangle with live sides and angles, the angle-sum proof, centres plus the Euler line (with Euler's theorem OI² = R(R − 2r) checked live), circle, chord and tangent, two-circle intersections, transformations, bisectors, Pythagoras, parallel and perpendicular lines, polygons, similarity. **ThreeDEngine** (three.js): sphere, cube, cuboid, cylinder, cone, pyramid, the regular polyhedra, torus, surfaces z = f(x, y), helix, planes, vectors with dot and cross products, a 3D vector field, cross-sections, exact volume and surface-area formulas |
+| `lab-physics.js` | One harness (play, pause, step, speed, restart, sliders, live graphs, readouts) running separate models. Mechanics: projectile (RK4 with quadratic drag, checked against the analytic range), Newton's 2nd law with friction, collisions (restitution, momentum check), spring–mass (energy check), pendulum (nonlinear; exact period from the elliptic integral). Circuits: modified nodal analysis for any series/parallel network, LEDs, switches, internal resistance, an RC transient, an I–V graph and Kirchhoff checks. Electric field and potential, the magnetic field of wires, waves (superposition, interference, standing waves, Doppler), optics (Snell, critical angle, thin lens and concave mirror ray diagrams), a 2D kinetic gas (measured pressure vs NkT/A), Kepler orbits (velocity Verlet; energy and period checks; the real inner planets), radioactive decay as a random process |
+
+**Libraries.** All are open source and hosted on the site in `assets/vendor/`, so there is no API key and no usage cost:
+
+| Library | Licence |
+|---|---|
+| math.js 13.2 | Apache-2.0 |
+| Nerdamer 1.1.13 | MIT |
+| JSXGraph 1.10.1 | MIT/LGPL |
+| three.js | MIT (already on the site) |
+
+The Desmos and GeoGebra APIs were not used: their licences, keys and usage terms don't fit a zero-budget static site.
+
+### Honesty rules built in
+- Results come from the engines, never from the language model.
+- Numerical key points are labelled as numerical.
+- Every physics model lists its assumptions.
+- Illustrative, simulated and user data are labelled as such.
+- An answer that fails its check is shown with ✗, never hidden.
+
+### Tests
+- `tests/unit/lab.test.js` (8 tests):
+  - numerics, expression reading and algebra, each answer checked;
+  - statistics against known values;
+  - circuits, including a Wheatstone bridge (KCL), an LED and an open switch;
+  - mechanics: RK4 vs the analytic solution, conservation laws, the exact pendulum period;
+  - optics;
+  - routing, including ordinary chat that must not open the lab.
+- `tests/e2e/lab.e2e.js`: the 19 maths and 15 physics acceptance tests. They run through Noor's chat with no AI provider, using real slider, drag, rotate, wheel, export, phone and theme interactions. 34 of 34 pass.

@@ -362,7 +362,7 @@
   function graphCommand(G, t) {
     let mm; const P = G.st.params, has = k => P[k] && !k.startsWith('__');
     const first = G.st.exprs.find(e => e.kind === 'fx');
-    if ((mm = t.match(/\b(?:add|also (?:graph|plot)|and (?:graph|plot)|plot also)\s+(.+)$/i))) { const ex = extractExprs(mm[1]); const list = ex.length ? ex : [mm[1]]; const done = []; for (const s of list) { try { G.add(s); done.push(s); } catch (e) { /* not an expression */ } } if (done.length) { G.renderSide(); G.redraw(); return { note: T('Added ', 'أضفت ') + done.join(', ') + '.' }; } }
+    if ((mm = t.match(/\b(?:add|also (?:graph|plot)|and (?:graph|plot)|plot also)\s+(.+)$/i))) { const ex = extractExprs(mm[1]); const list = ex.length ? ex : (/[=<>]/.test(mm[1]) || (/\bx\b/.test(mm[1]) && !englishy(mm[1])) ? [mm[1]] : []); const done = []; for (const s of list) { try { G.add(s); done.push(s); } catch (e) { /* not an expression */ } } if (done.length) { G.renderSide(); G.redraw(); return { note: T('Added ', 'أضفت ') + done.join(', ') + '.' }; } }
     if (/\b(wider|widen|flatter|less steep)\b/i.test(t) && has('a')) { setParam(G, 'a', P.a.value / 2); return { note: T(`Wider: a is now ${N.fmt(P.a.value)} (|a| < 1 stretches the parabola sideways).`, `أعرض: a = ${N.fmt(P.a.value)}`) }; }
     if (/\b(narrower|thinner|steeper|stretch)\b/i.test(t) && has('a')) { setParam(G, 'a', P.a.value * 2); return { note: T(`Narrower: a is now ${N.fmt(P.a.value)}.`, `أضيق: a = ${N.fmt(P.a.value)}`) }; }
     if ((mm = t.match(/\bvertex (?:to|at)\s*\(?\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)?/i))) {
@@ -600,7 +600,9 @@
       const checks = eqs.map(e => { const [l, r] = prep(e).split('='); return Math.abs(m.evaluate(l, sc) - m.evaluate(r, sc)) < 1e-9; });
       const text = [T('**Solution:** ', '**الحل:** ') + pairs.map(([k, v]) => `${k} = ${fracOrDec(cas, v)}`).join(', '), T('Check by substitution: ', 'التحقق بالتعويض: ') + eqs.map((e, i) => `${e} ${checks[i] ? '✓' : '✗'}`).join('; '), T('_Solved with Nerdamer; checked with math.js._', '_الحل بـ Nerdamer._')].join('\n\n');
       const two = pairs.length === 2 && pairs.every(([k]) => k === 'x' || k === 'y') && eqs.every(e => /y/.test(e) || /x/.test(e));
-      return { text, open: two ? { id: 'graph', params: { exprs: eqs, title: T('System of equations', 'نظام المعادلات') } } : null };
+      // graph each equation as y = … where it can be rearranged, so the solution shows as a marked intersection
+      const asY = eqs.map(e => { try { const r = cas.solve(prep(e), 'y').toString().replace(/^\[|\]$/g, '').split(','); return r.length === 1 && r[0] && !/y/.test(r[0]) ? 'y = ' + r[0] : e; } catch (er) { return e; } });
+      return { text, open: two ? { id: 'graph', params: { exprs: asY, title: T('System of equations', 'نظام المعادلات'), note: T(`The solution (${sc.x}, ${sc.y}) is where the lines cross.`, 'الحل هو نقطة التقاطع.') } } : null };
     }
     const body = s.replace(/^\s*(?:please\s+)?(?:can you\s+)?(solve|factor(?:i[sz]e)?|expand|simplify|differentiate|integrate|evaluate|calculate|compute|work out|what is|what's|find)\s*(?:the\s+)?(?:value of\s+)?/i, '').replace(/\s*(?:for x|with respect to x|wrt x)\s*[?.]*$/i, '').replace(/[?]+$/, '').trim();
     const verb = (s.match(/^\s*(?:please\s+)?(?:can you\s+)?(solve|factor(?:i[sz]e)?|expand|simplify|differentiate|integrate|evaluate|calculate|compute|work out|what is|what's|find)/i) || [, ''])[1].toLowerCase();

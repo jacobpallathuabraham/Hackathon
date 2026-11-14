@@ -1,7 +1,7 @@
 /* ERLY — Noor Lab workspace (v16). A full mathematics / science workspace that sits beside Noor's chat
    (or fills the screen on phones and portrait tablets), with a controls panel, a large stage, a linked
    explanation panel and a command bar. Every colour is a token, so light and dark themes are both designed. */
-.lab { --lab-bg: #ffffff; --lab-panel: #f6f7fb; --lab-ink: #17131f; --lab-mut: #5b6070; --lab-line: #e2e5ee; --lab-acc: #2563eb; --lab-acc-ink: #ffffff; --lab-soft: #eef2ff;
+.lab { container-type: inline-size; container-name: lab; --lab-bg: #ffffff; --lab-panel: #f6f7fb; --lab-ink: #17131f; --lab-mut: #5b6070; --lab-line: #e2e5ee; --lab-acc: #2563eb; --lab-acc-ink: #ffffff; --lab-soft: #eef2ff;
   position: fixed; z-index: 480; inset: 14px 14px 14px 14px; display: flex; flex-direction: column; background: var(--lab-bg); color: var(--lab-ink); border: 1px solid var(--lab-line); border-radius: 22px;
   box-shadow: 0 30px 80px -30px rgba(10, 12, 30, .55); overflow: hidden; font-family: var(--f-body, system-ui);
   opacity: 0; transform: translateY(12px) scale(.985); transition: opacity .3s ease, transform .42s cubic-bezier(.2, .8, .2, 1); }
@@ -124,3 +124,12 @@
 html.lab-on { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .lab { transition: none; } .lab__note.is-on { animation: none; opacity: 1; } }
 html.a11y-still .lab { transition: none; } html.a11y-still .lab__note.is-on { animation: none; opacity: 1; }
+
+/* a narrower lab (beside Noor, or a landscape tablet): controls and explanation share one column, the stage keeps the room */
+@container lab (max-width: 1080px) {
+  .lab__body, .lab.no-ex .lab__body { grid-template-columns: minmax(230px, 270px) minmax(0, 1fr); grid-template-rows: minmax(0, auto) minmax(0, 1fr); }
+  .lab__side { grid-column: 1; grid-row: 1; max-height: 58vh; border-bottom: 1px solid var(--lab-line); }
+  .lab__ex { grid-column: 1; grid-row: 2; border-inline-start: 0; border-inline-end: 1px solid var(--lab-line); }
+  .lab__stage { grid-column: 2; grid-row: 1 / 3; }
+  .lab__note { display: none; }
+}
