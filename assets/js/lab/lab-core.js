@@ -319,9 +319,10 @@
     if (current) { const r = command(normalise(text)); if (r) return { kind: 'edit', text: r.note + (r.more ? '\n\n' + r.more : '') }; }
     // Noor's hand-built illustrated scenes (Newton's laws, the solar system, the heart…) answer "explain/illustrate"
     // requests; the lab takes over when the student wants to simulate, graph, calculate, build or experiment
-    const LABWORDS = /\b(simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;
-    try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ }
+    const LABWORDS = /\b(solve|factor\w*|simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;
     const list = candidates(text); let r = null;
+    const top = list[0];
+    if (top && !top.reply && top.score < 0.88) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
     for (const c of list) {
       if (c.reply) { let rep = null; try { rep = await c.reply(); } catch (e) { rep = null; } if (rep && rep.text) { if (rep.open) await open(rep.open.id, rep.open.params); return { kind: 'answer', text: rep.text }; } if (c.id === 'algebra') continue; }
       if (c.id === 'algebra') continue; r = c; break;

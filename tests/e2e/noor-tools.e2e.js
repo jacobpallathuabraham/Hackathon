@@ -40,7 +40,7 @@ const MOCKS = () => {
   await page.goto(BASE + 'student.html'); await page.waitForTimeout(600);
   await page.click('.cmp-launch'); await page.waitForTimeout(1300);
   assert.equal(await page.isVisible('.cwel'), true, 'welcome screen');
-  assert.equal(await page.locator('.cwel__grid button').count(), 8, 'eight quick actions (incl. visuals and audio lessons)');
+  assert.equal(await page.locator('.cwel__grid button').count(), 9, 'nine quick actions (incl. visuals, the maths & physics lab and audio lessons)');
   const box = await page.locator('.cmp').boundingBox();
   assert.ok(box.width >= 560, 'bigger panel: ' + box.width);
 

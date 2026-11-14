@@ -669,7 +669,8 @@
       if (/^\s*(please\s+)?(can you\s+)?(solve|factor(?:i[sz]e)?|expand|simplify|differentiate|integrate|evaluate|calculate|compute|work out)\b/i.test(s) && /[\dx=^]/.test(s) && !/\b(visuali[sz]e|graph|show|explain why|animate)\b/i.test(s)) return { score: 0.95, reply: () => algebra(s) };
       if (/\b(determinant|inverse|eigen(value|vector)s?|transpose)\b/i.test(s) && /\[\s*\[/.test(s)) return { score: 0.95, reply: () => algebra(s) };
       if (/\b(solve|simultaneous|system of equations)\b/i.test(s) && (s.match(/=/g) || []).length >= 2) return { score: 0.93, reply: () => algebra('solve ' + s) };
-      if (/^\s*(what is|what's|find)\s+[-\d\s+*/^().%]+(\s*(\?|$))/i.test(s) || /^\s*[-\d\s+*/^().]+(sqrt|sin|cos|tan|log|ln|i|e|pi)?[-\d\s+*/^().i]*\s*=?\s*\??\s*$/.test(s) && /\d/.test(s) && /[+\-*/^]/.test(s)) return { score: 0.85, reply: () => algebra(s) };
+      // plain arithmetic is left to Noor's calculator; complex numbers and functions come here
+      if (/^\s*(what is|what's|find|calculate|compute)?\s*[-\d\s+*/^().]*(sqrt\(\s*-|\bi\b|\d\s*i\b)[-\d\s+*/^().i]*\??\s*$/i.test(s)) return { score: 0.85, reply: () => algebra(s) };
       if (/\b(sum of|series)\b.*\bfrom\b/i.test(s)) return { score: 0.8, reply: () => algebra(s) };
       return null;
     },

@@ -573,7 +573,7 @@
   const GM = 4 * Math.PI * Math.PI; // AU³/yr² for one solar mass
   const PLANETS = [['Mercury', 0.387, 0.206, '#a8a29e'], ['Venus', 0.723, 0.007, '#fbbf24'], ['Earth', 1, 0.017, '#3b82f6'], ['Mars', 1.524, 0.093, '#ef4444']];
   reg('orbit', KIND.space, T('Orbits and Kepler’s laws', 'المدارات وقوانين كبلر'),
-    t => (/\b(orbits?|orbital|kepler'?s?|planet(ary)? (motion|orbits?)|planetary|satellites?|escape velocity|solar system|gravitation(al)?|elliptical orbits?)\b/i.test(t) ? { score: 0.9, params: { set: { sys: /solar system|planets\b/i.test(t) } } } : null),
+    t => (/\b(orbits?|orbital|kepler'?s?|planet(ary)? (motion|orbits?)|planetary|satellites?|escape velocity|solar system|gravitation(al)?|elliptical orbits?)\b/i.test(t) ? { score: /solar system/i.test(t) && !/\b(orbits?|kepler|gravit\w*|simulat\w*|escape|elliptic)/i.test(t) ? 0.8 : 0.9, params: { set: { sys: /solar system|planets\b/i.test(t) } } } : null),
     {
       defaults: { M: 1, r0: 1, vf: 1, sys: false, trail: true }, h: 1 / 4000, every: 40, tWindow: 3,
       params: [{ key: 'M', label: T('star mass', 'كتلة النجم'), unit: 'M☉', min: 0.2, max: 3, step: 0.05, alias: ['mass', 'star mass'] }, { key: 'r0', label: T('start distance', 'المسافة الابتدائية'), unit: 'AU', min: 0.3, max: 3, step: 0.05, alias: ['distance', 'radius'] }, { key: 'vf', label: T('start speed (× circular speed)', 'السرعة الابتدائية'), unit: '', min: 0.2, max: 1.6, step: 0.01, alias: ['speed', 'velocity'] }],
