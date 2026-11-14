@@ -144,4 +144,27 @@ The directive asks for "every discipline, every level". That is not achievable i
 
 ## 5. Tests
 
-See the end of this file for the full run (filled in from the run log).
+Results from this session, all on the final code:
+
+**Unit tests:** `npm test` passes 237/237.
+
+**Browser suites:** all 28 pass.
+
+| New in v17 | Result |
+|---|---|
+| `noor-v17` | 9/9 |
+| `page-video` | 8/8 |
+| `handwriting-v17` | 7/7 |
+| `problems` | 14/14 (A–J, scene specs, dark and phone, coverage page) |
+
+The existing suites also pass: lab, chat, companion, noor, noor-tools, noor-v12, noor-platform, studio-noor, handwriting, ink-studio, a11y, a11y-centre, visuals, vspec, visual-library, visual-acceptance, v9, v10, nav, growth, realtrack, human3d, avatar-lab and companion-quality.
+
+In the first full run, `studio-noor` failed for a real reason: a Reading Studio selection sent with "Ask Noor" was being replaced by the screen snapshot. That is fixed (an attached passage now takes precedence), and the suite passes when re-run.
+
+**Accessibility:** axe-core finds 0 serious or critical issues on coverage, handwriting and student, in both themes. The contrast of the coverage badges was fixed to reach that.
+
+**Older tests updated deliberately, because the requested behaviour changed:**
+- the consent unit tests (noticing is now on by default);
+- the "turn on the AI" card checks;
+- the near-black light-theme ink check;
+- Clear now asks for confirmation.
