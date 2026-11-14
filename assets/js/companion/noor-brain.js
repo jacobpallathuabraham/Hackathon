@@ -101,6 +101,17 @@
     }
     const a = K.answer(text, lang(), kctx);
     if (a.kind === 'crisis') { history.push({ role: 'user', text }); return crisis(); }
+    // Noor Lab: maths and physics requests become interactive models, computed on the device (no AI needed);
+    // with a model open, follow-ups ("make it wider", "remove air resistance") edit that model in place
+    if (window.ERLY_LAB && !o.noLab) {
+      let lr = null;
+      try { lr = await ERLY_LAB.handle(text); } catch (e) { lr = { kind: 'error', text: T('I couldn’t build that model: ', 'تعذر بناء هذا النموذج: ') + (e.message || e) }; }
+      if (lr && lr.text) {
+        history.push({ role: 'user', text }); C.tools && C.tools.trace && C.tools.trace([T('Noor Lab', 'مختبر نور')]);
+        await mdSay(lr.text, lr.text, { tag: lr.kind === 'answer' ? T('Computed', 'محسوب') : T('Noor Lab', 'مختبر نور') });
+        history.push({ role: 'assistant', text: lr.text }); ERLY.emit('noor:turn-end'); return;
+      }
+    }
     // tools first: navigation, resume, study coach, exact maths, the open PDF
     const tr = C.tools ? await C.tools.route(text) : null;
     if (tr && tr.done) { history.push({ role: 'user', text }); return; }

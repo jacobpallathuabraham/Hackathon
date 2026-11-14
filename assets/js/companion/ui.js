@@ -616,6 +616,7 @@
     ['explain', 'sparkle', 'Explain anything', 'اشرح أي شيء', 'Any subject, step by step', 'أي مادة، خطوة بخطوة'],
     ['plan', 'calendar', 'Exam study plan', 'خطة مذاكرة للامتحان', 'A day-by-day plan', 'خطة يوماً بيوم'],
     ['visual', 'layers', 'Interactive visuals', 'شروحات مرئية تفاعلية', 'See science & maths come alive', 'شاهد العلوم والرياضيات حيّة'],
+    ['lab', 'calc', 'Maths & physics lab', 'مختبر الرياضيات والفيزياء', 'Graph, construct, simulate', 'ارسم، أنشئ، حاكِ'],
     ['audio', 'headphones', 'Audio lesson', 'درس صوتي', 'Two hosts talk your topic through', 'مقدمان يشرحان موضوعك']
   ];
   function greet() {

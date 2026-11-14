@@ -493,6 +493,11 @@
       await U.aiSays('Pick a lesson — or just ask me something like “how does the heart work?” and I’ll open the right visual myself.', 'اختر درساً — أو اسألني مثلاً «كيف يعمل القلب؟» وسأفتح الشرح المناسب بنفسي.', { speak: false });
       return U.chipRow(Object.keys(SC).map(k => ({ id: 'vz:' + k, en: SC[k].title[0], ar: SC[k].title[1], icon: 'layers' })), c => { const k = c.id.slice(3); U.bubble('you', pick(SC[k].title[0], SC[k].title[1]), { text: true }); openVisual({ id: k, scene: SC[k] }, { tour: true }); });
     }
+    if (id === 'lab' && window.ERLY_LAB) {
+      await U.aiSays('Ask in your own words — or pick one to start. Everything here runs on your device, even when the AI is offline.', 'اسأل بكلماتك — أو اختر واحداً للبدء. كل شيء يعمل على جهازك.');
+      const EX = [['Graph y = a(x - h)^2 + k', 'ارسم y = a(x - h)^2 + k'], ['Show me why the angles of a triangle add up to 180 degrees', 'لماذا مجموع زوايا المثلث 180؟'], ['Visualise the derivative of x squared', 'المشتقة لـ x²'], ['Explain integration with the area under a curve', 'التكامل والمساحة'], ['Create a 3D model of a cone', 'نموذج مخروط ثلاثي الأبعاد'], ['Make a histogram of 12, 15, 15, 18, 21, 21, 21, 24, 30', 'مدرج تكراري'], ['Show me projectile motion at 30 degrees', 'حركة مقذوف بزاوية 30'], ['Build a series circuit with two resistors', 'دائرة توالي بمقاومتين'], ['Show refraction through water and glass', 'الانكسار في الماء والزجاج'], ['Simulate an ideal gas', 'محاكاة غاز مثالي'], ['Show planetary orbits', 'مدارات الكواكب'], ['Radioactive decay with a half-life of 5 seconds', 'التحلل الإشعاعي']];
+      return U.chipRow(EX.map((x, i) => ({ id: 'lab:' + i, en: x[0], ar: x[1], icon: 'calc' })), c => { const x = EX[+c.id.slice(4)]; U.bubble('you', pick(x[0], x[1]), { text: true }); return B.freeText(x[0], { silentUser: true }); });
+    }
     if (id === 'audio' && ERLY.audioLesson) { U.bubble('you', T('Make me an audio lesson', 'أعدّ لي درساً صوتياً'), { text: true }); return ERLY.audioLesson.start(''); }
     if (id === 'explain') { const f = U.$('#cmpText'); f.value = T('Explain ', 'اشرحي '); f.focus(); U.composer(); return; }
     if (id === 'plan') { U.bubble('you', T('Make me a 7-day exam study plan', 'اصنعي لي خطة مذاكرة للامتحانات ٧ أيام'), { text: true }); return B.freeText('Make me a 7-day exam study plan', { silentUser: true }); }
