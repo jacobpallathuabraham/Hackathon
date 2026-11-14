@@ -81,6 +81,7 @@
             <label class="vroom__rate">${T('Speed', 'السرعة')} <select id="vRate">${[0.5, 0.75, 0.85, 1, 1.25, 1.5].map(r => `<option value="${r}" ${r === 1 ? 'selected' : ''}>${r}×</option>`).join('')}</select></label>
             <button class="btn btn--sm btn--ghost" data-vnotes aria-pressed="false">${ICON('file')} ${T('Key points', 'النقاط الأساسية')}</button>
             <button class="btn btn--sm btn--quiet" data-vask>${ICON('chat')} ${T('Ask Noor', 'اسأل نور')}</button>
+            <button class="btn btn--sm btn--ghost" data-vfull aria-pressed="false">${ICON('fullscreen')} <span>${T('Full screen', 'ملء الشاشة')}</span></button>
           </div></div>
         <aside class="vroom__notes" id="vNotes" hidden><p class="mono">${T('Key points', 'النقاط الأساسية')}</p><ol>${cur.notes.map(n => `<li>${esc(P(...n))}</li>`).join('')}</ol><small class="muted">${T('Written by ERLY to go with this video.', 'كتبها إيرلي لترافق هذا الفيديو.')}</small></aside>
       </div>`;
@@ -88,6 +89,9 @@
     room.style.setProperty('--ox', (r.left + r.width / 2) + 'px'); room.style.setProperty('--oy', (r.top + r.height / 2) + 'px');
     room.hidden = false; document.documentElement.classList.add('studio-open');
     requestAnimationFrame(() => requestAnimationFrame(() => room.classList.add('is-open')));
+    // v17: once the circle has opened, the room drops its clip-path. A clipped ancestor is what stopped the
+    // player's own full-screen button working (WebKit clips a full-screen iframe to it).
+    clearTimeout(room.__settle); room.__settle = setTimeout(() => { if (room.classList.contains('is-open')) room.classList.add('is-settled'); }, reduce ? 0 : 650);
     bindRoom();
     loadAPI().then(() => {
       if (room.hidden) return;
@@ -95,7 +99,11 @@
         host: 'https://www.youtube-nocookie.com', videoId: id,
         playerVars: { rel: 0, modestbranding: 1, playsinline: 1, origin: location.origin },
         events: {
-          onReady: () => { const l = room.querySelector('.vroom__load'); l && l.remove(); startPoll(); },
+          onReady: () => {
+            const l = room.querySelector('.vroom__load'); l && l.remove(); startPoll();
+            const f = room.querySelector('#vPlayer'); // the player's own full-screen button needs these on the iframe
+            if (f && f.tagName === 'IFRAME') { f.setAttribute('allowfullscreen', ''); f.setAttribute('allow', ((f.getAttribute('allow') || '') + '; fullscreen; picture-in-picture').replace(/^; /, '')); f.title = P(...cur.title); }
+          },
           onPlaybackRateChange: e => onRate(e.data),
           onStateChange: e => { if (e.data === 1) mark({ type: 'play' }); if (e.data === 2) mark({ type: 'pause' }); if (e.data === 0) mark({ type: 'end' }); },
           onError: () => { const l = room.querySelector('.vroom__load'); if (l) l.textContent = T('This video isn’t available right now. Try another one.', 'هذا الفيديو غير متاح الآن. جرّب فيديو آخر.'); }
@@ -103,8 +111,34 @@
       });
     }).catch(() => { const l = room.querySelector('.vroom__load'); if (l) l.textContent = T('Videos need an internet connection to YouTube.', 'تحتاج الفيديوهات إلى اتصال بالإنترنت ويوتيوب.'); });
   }
+  /* ---- v17 full screen: the whole page goes full screen with the video filling it, so Noor's chat can open on top
+     without pausing or reloading the video. iPhones have no element full screen: the room maximises instead. ---- */
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  async function fullscreen(on) {
+    on = on == null ? !room.classList.contains('is-max') : on;
+    room.classList.toggle('is-max', on);
+    const b = room.querySelector('[data-vfull]');
+    if (b) { b.setAttribute('aria-pressed', on); b.querySelector('span').textContent = on ? T('Exit full screen', 'الخروج من ملء الشاشة') : T('Full screen', 'ملء الشاشة'); }
+    const H = document.documentElement;
+    try {
+      if (on && !fsEl()) { if (H.requestFullscreen) await H.requestFullscreen({ navigationUI: 'hide' }); else if (H.webkitRequestFullscreen) H.webkitRequestFullscreen(); }
+      if (!on && fsEl()) { if (document.exitFullscreen) await document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); }
+    } catch (e) { /* not allowed here (e.g. iPhone): the maximised room is the full-screen view */ }
+  }
+  const onFs = () => { if (!fsEl() && room.classList.contains('is-max') && room.__fsWas) fullscreen(false); room.__fsWas = !!fsEl(); };
+  document.addEventListener('fullscreenchange', onFs); document.addEventListener('webkitfullscreenchange', onFs);
+  // a time range to replay ("loop 2:30–3:30"); the student's own seeks end it
+  let loopR = null, loopT = null;
+  function loop(a, b) {
+    clearInterval(loopT); loopR = null; if (!player || !player.seekTo) return false;
+    if (a == null) return true;
+    loopR = [a, b]; player.seekTo(a, true); player.playVideo && player.playVideo();
+    loopT = setInterval(() => { if (!player || !loopR) return clearInterval(loopT); const t = player.getCurrentTime(); if (t >= loopR[1] || t < loopR[0] - 3) player.seekTo(loopR[0], true); }, 300);
+    return true;
+  }
   function close() {
-    stopPoll();
+    stopPoll(); loop(null); if (fsEl() || room.classList.contains('is-max')) fullscreen(false);
+    room.classList.remove('is-settled'); clearTimeout(room.__settle);
     try { player && player.destroy(); } catch (e) { /* ignore */ }
     player = null;
     flush();
@@ -117,7 +151,8 @@
     room.querySelector('[data-vback]').onclick = () => { if (!player || !player.getCurrentTime) return; player.seekTo(Math.max(0, player.getCurrentTime() - 10), true); };
     room.querySelector('#vRate').onchange = e => { player && player.setPlaybackRate && player.setPlaybackRate(+e.target.value); };
     room.querySelector('[data-vnotes]').onclick = () => toggleNotes();
-    room.querySelector('[data-vask]').onclick = () => { ERLY.companion && ERLY.companion.open('chat'); };
+    room.querySelector('[data-vfull]').onclick = () => fullscreen();
+    room.querySelector('[data-vask]').onclick = () => { ERLY.companion && ERLY.companion.open('chat'); }; // the video keeps playing
     const c = room.querySelector('[data-vconsent]');
     if (c) c.onclick = () => {
       if (!confirm(T('Let Noor notice when a part of a video seems hard to follow? ERLY only reads playback info (rewinds, speed, restarts, notes) — never your camera, microphone or typing. It stays on this device and you can turn it off in Noor → Reading signals.', 'السماح لنور بملاحظة الأجزاء التي يبدو صعب متابعتها في الفيديو؟ يقرأ إيرلي معلومات التشغيل فقط (الإعادة والسرعة وإعادة البدء والملاحظات) — وليس الكاميرا أو الميكروفون أو ما تكتبه. تبقى على هذا الجهاز ويمكنك إيقافها من نور ← إشارات القراءة.'))) return;
@@ -186,6 +221,15 @@
     setRate: r => { if (player && player.setPlaybackRate) { S.auto = true; player.setPlaybackRate(r); } },
     seek: s => { if (player && player.seekTo) player.seekTo(s, true); },
     showNotes: () => toggleNotes(true),
+    fullscreen, loop,
+    // what Noor may know about the open video: title, position and the authored key points. These YouTube videos
+    // have no transcript here (captions can't be read from another site's player), so none is ever claimed.
+    current: () => {
+      if (!cur || room.hidden) return null;
+      let t = 0, d = 0, rate = 1, state = -1;
+      try { t = player.getCurrentTime() || 0; d = player.getDuration() || 0; rate = player.getPlaybackRate() || 1; state = player.getPlayerState(); } catch (e) { /* player not ready */ }
+      return { id: cur.id, title: P(...cur.title), by: cur.by, course: P(...cur.course), time: t, duration: d, rate, playing: state === 1, notes: cur.notes.map(n => P(...n)), transcript: cur.transcript || null, max: room.classList.contains('is-max') };
+    },
     _simulate: ev => { mark(ev); evaluate(); } // for automated checks without YouTube
   };
 })();
