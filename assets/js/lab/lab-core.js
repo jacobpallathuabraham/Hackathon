@@ -324,7 +324,8 @@
     if (/^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text)) return null;
     const list = candidates(text); let r = null;
     const top = list[0];
-    if (top && !top.reply && top.score < 0.88) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
+    const wantsPicture = /\b(diagram|illustrat\w*|picture|tour|show me how)\b/i.test(text);
+    if (top && !top.reply && (top.score < 0.88 || wantsPicture)) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
     for (const c of list) {
       if (c.reply) { let rep = null; try { rep = await c.reply(); } catch (e) { rep = null; } if (rep && rep.text) { if (rep.open) await open(rep.open.id, rep.open.params); return { kind: 'answer', text: rep.text }; } if (c.id === 'algebra') continue; }
       if (c.id === 'algebra') continue; r = c; break;

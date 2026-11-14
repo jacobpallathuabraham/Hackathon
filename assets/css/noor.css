@@ -474,3 +474,16 @@ html.cmp-lock body { position: fixed; left: 0; right: 0; width: 100%; }
 .cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__orb i { animation: cthinkOrbit2 1.8s cubic-bezier(.45, .05, .55, .95) infinite !important; }
 @keyframes cthinkOrbit2 { from { rotate: 0deg; } to { rotate: 360deg; } }
 @media (prefers-reduced-motion: reduce) { .cthink .cthink__orb i, .cmsg.is-writing .md .cthink .cthink__orb i { animation: none !important; } }
+
+/* ---------- v17: where a message goes, always beside the box you type in ---------- */
+.cmp__privacy { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 6px 4px 0; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+.cmp__privacy svg { width: 13px; height: 13px; flex: none; opacity: .8; }
+.cmp__privacy span { flex: 1 1 180px; min-width: 0; }
+.cmp__privacy button { flex: none; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 3px 10px; min-height: 26px; font: inherit; font-weight: 600; cursor: pointer; transition: background .2s, border-color .2s; }
+.cmp__privacy button:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.cmp.is-kb .cmp__privacy { display: none; } /* the keyboard is up: give the conversation the room */
+.ccard--notice { border-style: dashed; }
+.ccard--notice b svg { width: 16px; height: 16px; vertical-align: -3px; margin-inline-end: 4px; }
+/* the keyboard-fitted panel (ui.js fitViewport) moves with the visual viewport, never with a transition lag */
+.cmp.is-kb { transition: none !important; }
+@supports (padding: max(0px)) { .cmp__dock { padding-bottom: max(10px, env(safe-area-inset-bottom)); } .cmp.is-kb .cmp__dock { padding-bottom: 8px; } }

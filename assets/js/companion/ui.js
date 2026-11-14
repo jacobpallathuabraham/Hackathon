@@ -35,7 +35,7 @@
   /* ---------------- state ---------------- */
   let cfg = S.config(store.thresholds());
   const llm = window.ERLY_LLM.create({ endpoint: (window.ERLY_AI_CONFIG || {}).endpoint || '', getConsent: () => store.consent('llm') });
-  // Noor's brain: built-in by default; on-device or cloud AI only when the student turns it on (ai.js)
+  // Noor's brain: Noor Online by default (v17), or the student's saved choice: built-in / on-device / cloud (ai.js)
   // v13: one usage manager per device (counts only; limits from ERLY_AI_CONFIG.limits)
   try { if (window.ERLY_USAGE && !ERLY.noorUsage) ERLY.noorUsage = window.ERLY_USAGE.create(localStorage, (window.ERLY_AI_CONFIG || {}).limits || {}); } catch (e) { /* storage blocked */ }
   const ai = window.ERLY_AI ? window.ERLY_AI.create({ online: () => { const c = window.ERLY_AI_CONFIG || {}; if (c.gateway && c.gateway.url) return { name: c.gateway.name || 'Noor AI', site: c.gateway.site || 'the ERLY gateway', url: c.gateway.url.replace(/\/$/, '') + '/v1/chat/completions', get: '', model: 'auto', vision: c.gateway.vision !== false, gateway: true }; return c.online; }, cloud: {
@@ -45,6 +45,8 @@
       const r = await llm.chat({ question: last, context: sys.split('\n\n').slice(1).join('\n\n').slice(0, 3000), history: messages.slice(1, -1).map(m => ({ role: m.role, text: m.content })), lang: lang(), voice: !!o.voice });
       return r.reply || '';
     } } }) : null;
+  // v17: Noor is ready the moment the page loads — no activation step (ai.js resume: the student's saved choice, else Noor Online)
+  if (ai) { try { ai.resume(); } catch (e) { /* stays on the built-in brain */ } }
   let generating = null; // { stop } while a reply is being written
   let status = 'idle';
   const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getCloud: () => { const c = (window.ERLY_AI_CONFIG || {}).cloudVoice; const vs = store.prefs().vs || {}; return c && c.url && vs.cloudVoice === true ? c : null; /* explicit opt-in only */ }, getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
@@ -129,6 +131,7 @@
               <button type="button" class="cmp__voice" id="cmpVoice" aria-label="${T('Talk to Noor — voice mode', 'تحدث مع نور — الوضع الصوتي')}" title="${T('Voice mode', 'الوضع الصوتي')}"><span class="cmp__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
               <button type="submit" class="cmp__send" id="cmpSend" aria-label="${T('Send', 'إرسال')}" hidden>${ICON('send')}</button>
             </form>
+            <p class="cmp__privacy" id="cmpPrivacy">${privacyHTML()}</p>
             <div class="cmp__plusmenu" id="cmpPlusMenu" hidden role="menu">
               <button type="button" role="menuitem" data-plus="read">${ICON('book')}<span><b>${T('Ask about what I’m reading', 'اسأل عما أقرؤه')}</b><small>${T('Attach the open page as context', 'أرفق الصفحة المفتوحة كسياق')}</small></span></button>
               <button type="button" role="menuitem" data-plus="image">${ICON('upload')}<span><b>${T('Add an image or screenshot', 'أضف صورة أو لقطة شاشة')}</b><small>${T('PNG, JPEG or WebP — read by a vision AI model if one is connected', 'PNG أو JPEG أو WebP — يقرأها نموذج يرى الصور إن كان متصلاً')}</small></span></button>
@@ -159,7 +162,23 @@
     const k = s.status === 'loading' ? 'loading' : ai && ai.ready() ? s.tier : 'local';
     return `<i class="cmp__dot cmp__dot--${k}"></i><span>${esc(pick(l.en, l.ar))}</span>${s.status === 'loading' ? `<b class="mono">${Math.round((s.progress || 0) * 100)}%</b>` : ''}`;
   }
-  function refreshMode() { const m = $('#cmpMode'); if (m) m.innerHTML = modeHTML(); if (!$('#cmpBrain').hidden) renderBrain(); }
+  // v17: where a message goes is always visible beside the box you type in, with the switch one tap away
+  function privacyHTML() {
+    const s = ai ? ai.state() : { tier: 'local' }, on = ai && ai.ready();
+    const svc = ai ? ai.online() : {};
+    if (on && s.tier === 'online') return `${ICON('globe')}<span>${T(`Messages go to ${esc(svc.name || 'Noor Online')} only when you press Send. Emails and ID numbers are removed first.`, `تُرسل الرسائل إلى ${esc(svc.name || 'نور أونلاين')} فقط عندما تضغط إرسال. تُحذف البريد وأرقام الهوية أولاً.`)}</span><button type="button" data-priv="local">${T('On this device only', 'على هذا الجهاز فقط')}</button>`;
+    if (on && (s.tier === 'webllm' || s.tier === 'chrome')) return `${ICON('lock')}<span>${T('Answers are written on this device. Nothing you type leaves it.', 'تُكتب الإجابات على هذا الجهاز. لا يغادره شيء مما تكتبه.')}</span>`;
+    if (on && s.tier === 'cloud') return `${ICON('globe')}<span>${T('Messages go to the university’s AI server when you press Send.', 'تُرسل الرسائل إلى خادم الجامعة عندما تضغط إرسال.')}</span><button type="button" data-priv="local">${T('On this device only', 'على هذا الجهاز فقط')}</button>`;
+    if (s.status === 'loading') return `${ICON('chip')}<span>${T('Starting the on-device AI…', 'جارٍ تشغيل الذكاء على الجهاز…')}</span>`;
+    return `${ICON('lock')}<span>${T('On this device only: nothing you type leaves this device.', 'على هذا الجهاز فقط: لا يغادر شيء مما تكتبه هذا الجهاز.')}</span><button type="button" data-priv="online">${T('Use Noor Online', 'استخدم نور أونلاين')}</button>`;
+  }
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('#cmpPrivacy [data-priv]'); if (!b || !ai) return;
+    if (b.dataset.priv === 'local') { ai.useLocal(); announce(T('On this device only. Noor uses her built-in brain; nothing you type leaves this device.', 'على هذا الجهاز فقط. لا يغادر شيء مما تكتبه.')); }
+    else { ai.useOnline(false); announce(T('Noor Online is on. Messages are sent only when you press Send.', 'نور أونلاين مفعّل. تُرسل الرسائل فقط عند الضغط على إرسال.')); }
+    refreshMode();
+  });
+  function refreshMode() { const m = $('#cmpMode'); if (m) m.innerHTML = modeHTML(); const pv = $('#cmpPrivacy'); if (pv) pv.innerHTML = privacyHTML(); if (!$('#cmpBrain').hidden) renderBrain(); }
   if (ai) ai.on(() => refreshMode());
   /* ---------- image attachments: validated, previewed, removable, sent only to a model that can see ---------- */
   let imgs = []; // [{ name, url }] — data URLs, kept in memory only
@@ -201,10 +220,13 @@
     b.hidden = !imgs.length && !note;
   }
   function restoreImages(urls, text) { imgs = urls.map((url, i) => ({ name: T('image', 'صورة') + ' ' + (i + 1), url })); renderImgs(); if (text != null && !$('#cmpText').value) $('#cmpText').value = text; composer(); }
-  // ChatGPT-style composer: the voice button turns into "send" while typing, and "stop" while Noor writes
+  // composer: the voice button turns into "send" while typing, and "stop" while Noor writes
   function composer() {
     const t = $('#cmpText'); if (!t) return;
+    // measuring the new height briefly collapses the box; a reader at the latest message is kept there
+    const lg = $('#cmpLog'), keep = lg && lg.__pinned !== false && lg.scrollHeight - lg.scrollTop - lg.clientHeight < 40;
     t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px';
+    if (keep) { lg.scrollTop = lg.scrollHeight; lg.__pinned = true; }
     const has = !!t.value.trim() || imgs.length > 0;
     $('#cmpSend').hidden = !has && !generating; $('#cmpVoice').hidden = has || !!generating;
     $('#cmpSend').innerHTML = ICON(generating ? 'stop' : 'send');
@@ -254,7 +276,7 @@
       <header class="cbrain__h"><span class="cbrain__ic">${ICON('chip')}</span><div><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Choose how Noor thinks. Whatever you choose, she never diagnoses and never gives percentages.', 'اختر كيف تفكر نور. أياً كان اختيارك، لا تشخّص أبداً ولا تعطي نسباً مئوية.')}</small></div><button type="button" class="icon-btn icon-btn--sm" data-b="close" aria-label="${T('Close', 'إغلاق')}">${ICON('x')}</button></header>
       <div class="cbrain__list">
         <div class="cbopt cbopt--star cbopt--online ${on('online') ? 'is-on' : ''}">
-          <div class="cbopt__h"><b>${T('Noor Online', 'نور أونلاين')}</b><span class="cbopt__tag cbopt__tag--hot">${T('ChatGPT-style · works on iPad', 'بأسلوب ChatGPT · يعمل على الآيباد')}</span>${gpu === false || ai.isIOS() ? `<span class="cbopt__tag">${T('Best for this device', 'الأنسب لهذا الجهاز')}</span>` : ''}</div>
+          <div class="cbopt__h"><b>${T('Noor Online', 'نور أونلاين')}</b><span class="cbopt__tag cbopt__tag--hot">${T('Default · works on every device', 'الافتراضي · يعمل على كل الأجهزة')}</span>${gpu === false || ai.isIOS() ? `<span class="cbopt__tag">${T('Best for this device', 'الأنسب لهذا الجهاز')}</span>` : ''}</div>
           <p>${T('A free AI model on the internet that can answer almost anything — any subject, essays, maths, code, plans, Arabic. Nothing to download, so it works on iPads and phones.', 'نموذج ذكاء اصطناعي مجاني على الإنترنت يجيب عن كل شيء تقريباً — أي مادة، والمقالات، والرياضيات، والبرمجة، والخطط، والعربية. لا تنزيل، لذا يعمل على الآيباد والهواتف.')}</p>
           <ul class="cbopt__what">
             <li>${T(`Sent to ${esc(ai.online().name)} (${esc(ai.online().site || '')}): your message, the recent chat, and — only if you attach it — the page you are reading.`, `يُرسل إلى ${esc(ai.online().name)}: رسالتك، والمحادثة الأخيرة، والصفحة التي تقرؤها فقط إن أرفقتها.`)}</li>
@@ -269,7 +291,7 @@
           ${on('local') ? `<span class="cbopt__on">${ICON('check')} ${T('In use', 'قيد الاستخدام')}</span>` : `<button type="button" class="btn btn--xs btn--ghost" data-b="local">${T('Use built-in', 'استخدم المدمج')}</button>`}
         </div>
         <div class="cbopt cbopt--star ${s.tier === 'webllm' && (ready || s.status === 'loading') ? 'is-on' : ''}">
-          <div class="cbopt__h"><b>${T('On-device AI', 'ذكاء اصطناعي على الجهاز')}</b><span class="cbopt__tag cbopt__tag--hot">${T('ChatGPT-style · private', 'بأسلوب ChatGPT · خاص')}</span></div>
+          <div class="cbopt__h"><b>${T('On-device AI', 'ذكاء اصطناعي على الجهاز')}</b><span class="cbopt__tag cbopt__tag--hot">${T('Private · runs on this device', 'خاص · يعمل على هذا الجهاز')}</span></div>
           <p>${T('A real language model that answers anything — explanations, essays feedback, code, plans, Arabic. It downloads once into your browser and runs on this device’s graphics chip. Your messages never leave the device.', 'نموذج لغوي حقيقي يجيب عن أي شيء — شروح وملاحظات على المقالات وبرمجة وخطط وعربية. يُنزَّل مرة واحدة في متصفحك ويعمل على معالج الرسوميات في جهازك. لا تغادر رسائلك الجهاز.')}</p>
           ${gpu === false ? `<p class="cbopt__warn">${ICON('info')} ${T('This browser has no WebGPU, so on-device AI can’t run here. Try the latest Chrome or Edge on a laptop, or Safari on iPadOS / macOS 26.', 'لا يدعم هذا المتصفح WebGPU، لذا لا يعمل الذكاء على الجهاز هنا. جرّب أحدث كروم أو إيدج على حاسوب، أو سفاري على iPadOS / macOS 26.')}</p>` : ''}
           <div class="cbopt__models">${ai.MODELS.map(m => `<button type="button" class="cbmodel ${s.tier === 'webllm' && s.model === m.key ? 'is-on' : ''}${m.rec ? ' is-rec' : ''}" data-b="web:${m.key}" ${gpu === false || s.status === 'loading' || (ai.isIOS() && m.key !== 'lite') ? 'disabled' : ''}><b>${m.name}${m.rec ? ` <i>${T('Recommended', 'موصى به')}</i>` : ''}</b><small>${pick(m.en, m.ar)}</small><span class="mono">${m.size}${caps && caps.cached && caps.cached[m.key] ? ' · ' + T('downloaded', 'منزّل') : ''}</span></button>`).join('')}</div>
@@ -326,6 +348,7 @@
     // touch devices: never focus the text box by script — iPad Safari would scroll the page and pop up the keyboard
     if (!matchMedia('(pointer: coarse)').matches) setTimeout(() => { const f = tab === 'chat' ? $('#cmpText') : $(`#cmpTab-${tab}`); f && f.focus({ preventScroll: true }); }, reduce ? 0 : 260);
     lockPage(true);
+    vvGap = null; queueFit();
   }
   // scrolling inside Noor never moves the page: if nothing under the finger/wheel can scroll that way, the gesture stops here
   function containScroll(root) {
@@ -343,6 +366,27 @@
     root.addEventListener('touchstart', e => { ty = e.touches[0].clientY; }, { passive: true });
     root.addEventListener('touchmove', e => { if (e.touches.length !== 1) return; const dy = ty - e.touches[0].clientY; if (e.target.closest('input[type="range"], canvas, .vz')) return; if (!canScroll(e.target, dy)) e.preventDefault(); }, { passive: false });
   }
+  /* v17: the input-bar "screen jump", fixed at its root. On iPad/iPhone the on-screen keyboard does not shrink the
+     layout viewport: Safari pans the *visual* viewport up to reveal the focused box, so a panel pinned with
+     top/bottom insets slides partly off-screen and snaps back when the keyboard closes. While Noor is open on a
+     touch device the panel is sized to the visual viewport itself (Visual Viewport API): its top follows
+     visualViewport.offsetTop and its height is visualViewport.height, so the composer sits exactly on the
+     keyboard and the header never leaves the screen. Desktop layouts are untouched. */
+  const VV = window.visualViewport;
+  let vvGap = null, vvRaf = 0;
+  function fitViewport() {
+    vvRaf = 0;
+    if (!VV || panel.hidden || !matchMedia('(pointer: coarse)').matches) return;
+    if (!vvGap) { panel.style.top = panel.style.height = panel.style.bottom = ''; const cs = getComputedStyle(panel); vvGap = { top: Math.max(0, parseFloat(cs.top) || 0), bottom: Math.max(0, parseFloat(cs.bottom) || 0) }; }
+    const kb = innerHeight - VV.height > 120; // the keyboard (or another inset) is covering the bottom
+    const top = VV.offsetTop + vvGap.top, h = Math.max(220, VV.height - vvGap.top - (kb ? 0 : vvGap.bottom));
+    panel.style.top = top + 'px'; panel.style.bottom = 'auto'; panel.style.height = h + 'px'; panel.style.maxHeight = 'none';
+    panel.classList.toggle('is-kb', kb);
+  }
+  const queueFit = () => { if (!vvRaf) vvRaf = requestAnimationFrame(fitViewport); };
+  function unfitViewport() { vvGap = null; panel.style.top = panel.style.height = panel.style.bottom = panel.style.maxHeight = ''; panel.classList.remove('is-kb'); }
+  if (VV) { VV.addEventListener('resize', queueFit); VV.addEventListener('scroll', queueFit); }
+  addEventListener('orientationchange', () => { vvGap = null; unfitViewport(); setTimeout(queueFit, 350); });
   // while Noor is open the page behind stays still (iOS ignores overflow:hidden alone, so the body is pinned in place)
   let lockedY = null;
   function lockPage(on) {
@@ -364,7 +408,7 @@
     launch.setAttribute('aria-expanded', 'false');
     document.documentElement.classList.remove('cmp-on');
     lockPage(false);
-    setTimeout(() => { panel.classList.remove('is-out'); if (!panel.classList.contains('is-in')) panel.hidden = true; }, reduce ? 0 : 300);
+    setTimeout(() => { if (!panel.classList.contains('is-in')) unfitViewport(); panel.classList.remove('is-out'); if (!panel.classList.contains('is-in')) panel.hidden = true; }, reduce ? 0 : 300);
     launch.focus({ preventScroll: true });
   }
   function setTab(t) {
@@ -418,7 +462,14 @@
       l.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
       l.addEventListener('touchmove', e => { const dy = e.touches[0].clientY - y0, top = l.scrollTop <= 0, end = l.scrollTop + l.clientHeight >= l.scrollHeight - 1; if ((top && dy > 0) || (end && dy < 0) || l.scrollHeight <= l.clientHeight) e.preventDefault(); }, { passive: false });
       l.addEventListener('scroll', () => { if (l.scrollHeight - l.scrollTop - l.clientHeight < 80) $('#cmpNewMsg').hidden = true; }, { passive: true });
-      $('#cmpNewMsg').addEventListener('click', () => { l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' }); $('#cmpNewMsg').hidden = true; });
+      $('#cmpNewMsg').addEventListener('click', () => { const far = l.scrollHeight - l.scrollTop - l.clientHeight > l.clientHeight * 3; l.__pinned = true; l.__erlyFollow = !reduce && !far; l.scrollTo({ top: l.scrollHeight, behavior: reduce || far ? 'instant' : 'smooth' }); $('#cmpNewMsg').hidden = true; });
+      // v17: when the log's height changes (keyboard opens, the box grows to several lines, an attachment
+      // row appears), a reader who was at the latest message stays there; a reader scrolled up is not moved
+      // "pinned" = the reader is at the latest message. It is decided by where the reader last was (scroll events),
+      // never measured after new content has been added, and Noor's own follow-glide never unpins it.
+      l.__pinned = true;
+      l.addEventListener('scroll', () => { if (!l.__erlyFollow) l.__pinned = l.scrollHeight - l.scrollTop - l.clientHeight < 40; }, { passive: true });
+      if (window.ResizeObserver) new ResizeObserver(() => { if (l.__pinned) l.scrollTop = l.scrollHeight; }).observe(l);
     })();
     $('#cmpText').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#cmpForm').requestSubmit ? $('#cmpForm').requestSubmit() : $('#cmpForm').dispatchEvent(new Event('submit', { cancelable: true })); }
@@ -539,19 +590,19 @@
   let followNext = false; // the student just sent something: always show it
   function scrollLog(instant) {
     const l = $('#cmpLog'); if (!l) return;
-    const near = l.scrollHeight - l.scrollTop - l.clientHeight < 160;
+    const near = l.__pinned !== false || l.scrollHeight - l.scrollTop - l.clientHeight < 160;
     if (!near && !followNext) { const n = $('#cmpNewMsg'); if (n) n.hidden = false; return; } // reading older messages: don't move, offer a jump instead
-    followNext = false;
+    followNext = false; l.__pinned = true; // following again: the glide's end snaps to whatever arrived meanwhile
     if (instant) { l.scrollTop = l.scrollHeight; return; }
     if (!l.__erlyGrab) {
       // the reader always wins: any wheel, touch or key in the log stops a follow-scroll that is still gliding
       l.__erlyGrab = true;
       const grab = () => { if (l.__erlyFollow) { l.__erlyFollow = false; l.scrollTo({ top: l.scrollTop, behavior: 'instant' }); } };
       ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(t => l.addEventListener(t, grab, { passive: true, capture: true }));
-      l.addEventListener('scrollend', () => { l.__erlyFollow = false; });
+      l.addEventListener('scrollend', () => { if (!l.__erlyFollow) return; l.__erlyFollow = false; if (l.__pinned && l.scrollHeight - l.scrollTop - l.clientHeight > 2) l.scrollTo({ top: l.scrollHeight, behavior: 'instant' }); });
     }
     l.__erlyFollow = !reduce;
-    clearTimeout(l.__erlyFollowT); l.__erlyFollowT = setTimeout(() => { l.__erlyFollow = false; }, 900);
+    clearTimeout(l.__erlyFollowT); l.__erlyFollowT = setTimeout(() => { if (!l.__erlyFollow) return; l.__erlyFollow = false; if (l.__pinned) l.scrollTo({ top: l.scrollHeight, behavior: 'instant' }); }, 900);
     l.scrollTo({ top: l.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
   }
   async function aiSays(en, ar, o = {}) {
@@ -619,9 +670,8 @@
     ['lab', 'calc', 'Maths & physics lab', 'مختبر الرياضيات والفيزياء', 'Graph, construct, simulate', 'ارسم، أنشئ، حاكِ'],
     ['audio', 'headphones', 'Audio lesson', 'درس صوتي', 'Two hosts talk your topic through', 'مقدمان يشرحان موضوعك']
   ];
-  function greet() {
-    const first = !store.asked('monitoring');
-    const smart = ai && ai.ready();
+  function greet(o) {
+    const first = !store.prefs().noticeIntro && !(o && o.afterDelete);
     const w = document.createElement('div');
     w.className = 'cwel';
     w.innerHTML = `<div class="cwel__orb" aria-hidden="true">${orb('cmp-orb--xl')}<i></i><i></i><i></i></div>
@@ -631,19 +681,11 @@
     w.addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b && C().tools) { clearChips(); C().tools.quick(b.dataset.q); } });
     $('#cmpLog').appendChild(w);
     return new Promise(r => setTimeout(r, reduce ? 0 : 250)).then(() => {
-      if (!smart && ai) brainCard(); if (first) consentCard();
+      if (first) noticeIntro();
       // keep the welcome in view: the cards below can wait for a scroll
       const top = () => { const l = $('#cmpLog'); if (l && w.isConnected && l.scrollTop > w.offsetTop) l.scrollTo({ top: Math.max(0, w.offsetTop - 8), behavior: 'instant' }); };
       requestAnimationFrame(top); setTimeout(top, 450);
     });
-  }
-  // a gentle prompt to switch on a real AI model (only shown while Noor uses her built-in brain)
-  function brainCard() {
-    const card = document.createElement('div');
-    card.className = 'cbcard';
-    card.innerHTML = `<span class="cbcard__orb" aria-hidden="true"><i></i><i></i><i></i></span><div><b>${T('Want ChatGPT-style answers to anything?', 'تريد إجابات بأسلوب ChatGPT عن أي شيء؟')}</b><small>${T('Turn on Noor Online — works on iPad, phone and laptop.', 'شغّل نور أونلاين — يعمل على الآيباد والهاتف والحاسوب.')}</small></div><button type="button" class="btn btn--xs btn--accent" data-brain-open>${T('Turn on', 'فعّل')}</button>`;
-    card.querySelector('[data-brain-open]').onclick = openBrain;
-    $('#cmpLog').appendChild(card); scrollLog();
   }
   function idleChips() {
     const reading = R.isOpen();
@@ -662,32 +704,24 @@
   }
 
   /* ---------------- consent ---------------- */
-  function consentCard() {
-    clearChips();
+  // v17: noticing reading friction is automatic and on-device — no yes/no question. The student is told once,
+  // in plain words, and can pause it here or any time in Settings (Reading signals).
+  function noticeIntro() {
+    try { if (store.prefs().noticeIntro) return; store.setPref('noticeIntro', Date.now()); } catch (e) { /* prefs unavailable */ }
     const card = document.createElement('div');
-    card.className = 'ccard';
-    card.innerHTML = `
-      <b>${T('Can I notice reading friction while you read?', 'هل يمكنني ملاحظة احتكاك القراءة أثناء قراءتك؟')}</b>
-      <p>${T('If you say yes, I count a few things in this reader only: going back to the same section, zoom and sideways panning, text-setting changes, and read-aloud use. I compare them with your own usual pattern — never with other students.', 'إن وافقت، أحسب بضعة أشياء في هذا القارئ فقط: العودة إلى القسم نفسه، والتكبير والتحريك الجانبي، وتغييرات إعدادات النص، واستخدام القراءة الصوتية. وأقارنها بنمطك المعتاد — لا بالطلبة الآخرين.')}</p>
-      <ul>
-        <li>${T('I never record keystrokes, the camera, audio, or the text you read.', 'لا أسجل ضغطات المفاتيح أو الكاميرا أو الصوت أو النص الذي تقرؤه.')}</li>
-        <li>${T('I can’t measure eye movement, attention, comprehension or reading accuracy.', 'لا أستطيع قياس حركة العين أو الانتباه أو الفهم أو دقة القراءة.')}</li>
-        <li>${T('Everything stays on this device. Nobody is alerted. You can pause or delete it any time.', 'كل شيء يبقى على هذا الجهاز. لا يُنبَّه أحد. يمكنك الإيقاف أو الحذف في أي وقت.')}</li>
-        <li>${T('If something repeats, I’ll gently ask — you can say no, later, or turn that off.', 'إذا تكرر شيء ما، سأسألك بلطف — ويمكنك الرفض أو التأجيل أو إيقاف ذلك.')}</li>
-      </ul>
-      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-c="yes">${T('Yes, notice friction', 'نعم، لاحظي الاحتكاك')}</button><button type="button" class="btn btn--sm btn--ghost" data-c="no">${T('Not now', 'ليس الآن')}</button></div>`;
+    card.className = 'ccard ccard--notice';
+    card.setAttribute('role', 'note');
+    card.innerHTML = `<b>${ICON('shield')} ${T('Noor notices reading friction on this device', 'نور تلاحظ صعوبات القراءة على هذا الجهاز')}</b>
+      <p>${T('While you read, I count a few things in ERLY only — going back to the same section, zooming, sideways panning, text-setting changes and read-aloud use — and compare them with your own usual pattern. If something keeps repeating, I may offer help. You can always say no.', 'أثناء القراءة أحسب بضعة أشياء في إيرلي فقط — العودة إلى القسم نفسه، والتكبير، والتمرير الجانبي، وتغيير إعدادات النص، والقراءة بصوت — وأقارنها بنمطك المعتاد. إن تكرر شيء ما قد أعرض المساعدة. يمكنك الرفض دائماً.')}</p>
+      <p class="muted cmp-small">${T('No keystrokes, camera, audio or reading content is recorded. Nothing leaves this device, nobody is alerted, and it says nothing about ability or health.', 'لا تُسجَّل ضغطات المفاتيح أو الكاميرا أو الصوت أو المحتوى. لا يغادر شيء هذا الجهاز ولا يُنبَّه أحد، ولا يدل على القدرة أو الصحة.')}</p>
+      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--ghost" data-c="ok">${T('Got it', 'فهمت')}</button><button type="button" class="btn btn--sm btn--quiet" data-c="pause">${T('Pause noticing', 'أوقف الملاحظة')}</button></div>`;
     card.addEventListener('click', e => {
       const b = e.target.closest('[data-c]'); if (!b) return;
-      const yes = b.dataset.c === 'yes';
-      store.setConsent('monitoring', yes);
       card.remove();
+      if (b.dataset.c === 'pause') { store.setConsent('monitoring', false); session = null; hideInvite(); announce(T('Noticing paused. Turn it back on in Settings → Reading signals.', 'أُوقفت الملاحظة. أعد تشغيلها من الإعدادات ← إشارات القراءة.')); }
       $('#cmpText').focus({ preventScroll: true });
-      bubble('you', yes ? T('Yes, notice friction', 'نعم، لاحظي الاحتكاك') : T('Not now', 'ليس الآن'), { text: true });
-      if (yes) { startSession(); aiSays('Thanks. I’ll stay quiet unless something keeps repeating. You can see exactly what I count in “Reading signals”.', 'شكراً. سأبقى هادئة ما لم يتكرر شيء. يمكنك رؤية ما أحسبه بالضبط في «إشارات القراءة».'); }
-      else aiSays('No problem — I won’t notice anything. You can still chat with me or use any tool whenever you like.', 'لا مشكلة — لن ألاحظ شيئاً. ما زال بإمكانك التحدث معي أو استخدام أي أداة متى شئت.');
-      setTimeout(() => { if (!helpCtx && !(conv && !conv.done) && !$('#cmpLog .cchips')) idleChips(); }, 700);
     });
-    $('#cmpLog').appendChild(card); scrollLog();
+    $('#cmpLog').appendChild(card);
   }
 
   /* ---------------- Layer 1/2: monitoring ---------------- */
@@ -1173,6 +1207,7 @@
         ${toggle('mon', T('Notice reading friction', 'ملاحظة احتكاك القراءة'), on, T('Off = nothing is counted at all.', 'متوقف = لا يُحسب أي شيء.'))}
         ${toggle('pause', T('Pause for this session', 'إيقاف مؤقت لهذه الجلسة'), paused, T('Stops counting until you close the reading.', 'يوقف الحساب حتى تغلق القراءة.'), !on)}
         ${toggle('inv', T('Gentle check-in invitations', 'دعوات الاطمئنان اللطيفة'), prefs.invitations !== 'off', T(`At most ${cfg.invite.maxPerSession} per session, ${Math.round(cfg.invite.cooldownMs / 60e3)} min apart.`, `بحد أقصى ${cfg.invite.maxPerSession} لكل جلسة، بفارق ${Math.round(cfg.invite.cooldownMs / 60e3)} دقائق.`), !on)}
+        ${ai ? toggle('online', T('Answer with Noor Online', 'الإجابة بنور أونلاين'), ai.state().tier === 'online' && ai.ready(), T(`Off = on this device only. On = your message goes to ${esc(ai.online().name || 'Noor Online')} only when you press Send.`, 'متوقف = على هذا الجهاز فقط. مفعّل = تُرسل رسالتك فقط عند الضغط على إرسال.')) : ''}
         ${toggle('mic', T('Microphone for voice answers', 'الميكروفون للإجابات الصوتية'), store.consent('mic'), voice.supported.stt ? T('Only when you tap the mic. No audio is kept.', 'فقط عندما تضغط على الميكروفون. لا يُحفظ أي صوت.') : T('Not supported in this browser.', 'غير مدعوم في هذا المتصفح.'), !voice.supported.stt)}
         ${llm.configured ? toggle('llm', T('Use the external AI model', 'استخدام نموذج الذكاء الاصطناعي الخارجي'), store.consent('llm'), T(`Sends only the current question and your typed answer (emails and numbers removed) to ${new URL(llm.endpoint, location.href).host}. No name, no reading history, no measurements. Off = built-in rules.`, `يرسل فقط السؤال الحالي وإجابتك المكتوبة (مع إزالة البريد والأرقام) إلى ${new URL(llm.endpoint, location.href).host}. لا اسم ولا سجل قراءة ولا قياسات. متوقف = القواعد المدمجة.`)) : `<div class="cctl__row is-off"><span><b>${T('External AI model', 'نموذج ذكاء اصطناعي خارجي')}</b><small>${T('Not configured on this site, so Noor runs on built-in rules and its replies are simulated. Nothing leaves your device.', 'غير مُعدّ في هذا الموقع، لذا تعمل نور بالقواعد المدمجة وردودها محاكاة. لا يغادر شيء جهازك.')}</small></span></div>`}
       </div>
@@ -1203,6 +1238,7 @@
       const t = e.target.dataset.t; if (!t) return;
       const v = e.target.checked;
       if (t === 'mon') { store.setConsent('monitoring', v); if (v) startSession(); else { session = null; hideInvite(); } }
+      if (t === 'online' && ai) { if (v) ai.useOnline(false); else ai.useLocal(); refreshMode(); }
       if (t === 'pause') paused = v;
       if (t === 'inv') store.setPref('invitations', v ? 'on' : 'off');
       if (t === 'mic') { store.setConsent('mic', v); if (!v) voice.abortListening(); }
@@ -1243,7 +1279,7 @@
     session = null; paused = false; snoozeUntil = 0;
     deleteSession();
     renderShell(); bindPanes(); setTab('chat');
-    greet();
+    greet({ afterDelete: true }); // nothing is written back to storage after "delete everything"
   }
 
   /* ---------------- Reading Lab ---------------- */
@@ -1391,9 +1427,10 @@
       greeting.then(() => setTimeout(() => { if (generating) stopGenerating(); clearChips(); submit(text); }, 120));
     },
     attached: () => attached, attach,
+    ai, store, refreshMode: () => refreshMode(),
     _nudge: kind => showNudge(kind),
     _nudgeReset: () => { nud.lastAny = 0; nud.last = {}; nud.muted.clear(); ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { nud[k].length = 0; }); hideNudge(); },
     // internals shared with noor-brain.js and call.js (same feature, split for size)
-    _ui: { thinking, restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
+    _ui: { refreshMode: () => refreshMode(), thinking, restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
 })();

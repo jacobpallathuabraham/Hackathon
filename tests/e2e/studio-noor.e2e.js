@@ -1,5 +1,5 @@
 // End-to-end check of the Reading Studio library and tools, and Noor's
-// ChatGPT-style chat, AI brain plumbing, nudges and voice mode.
+// Noor chat, AI brain plumbing, nudges and voice mode.
 //   python3 -m http.server 8765 &   then   NODE_PATH=$(npm root -g) node tests/e2e/studio-noor.e2e.js
 // The AI model itself is mocked (no GPU in CI); everything around it is real.
 'use strict';
@@ -102,8 +102,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 
   /* ---------- Noor: composer, built-in skills ---------- */
   await page.click('.cmp-launch'); await page.waitForTimeout(1300);
-  assert.equal(await page.isVisible('.cbcard'), true, 'offers to turn on the AI brain');
-  await page.click('.ccard [data-c="yes"]'); await page.waitForTimeout(600);
+  assert.equal(await page.isVisible('.cbcard'), false, 'v17: no "turn on the AI" card');
+  assert.equal(await page.isVisible('#cmpPrivacy'), true, 'where messages go is shown under the box');
+  if (await page.isVisible('.ccard--notice [data-c="ok"]')) await page.click('.ccard--notice [data-c="ok"]'); await page.waitForTimeout(600);
   assert.equal(await page.isVisible('#cmpVoice'), true, 'voice-mode button when the box is empty');
   await page.fill('#cmpText', 'what is (12+3)*4');
   assert.equal(await page.isVisible('#cmpSend'), true, 'send button while typing');

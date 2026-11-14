@@ -45,7 +45,7 @@ const srv = http.createServer((req, res) => {
       window.__media = 0; if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = () => { window.__media++; return Promise.reject(new Error('no')); };
       if (ai) localStorage.setItem('erly-ai-v1', JSON.stringify({ tier: 'online', consented: Date.now() }));
       // the AI config points at the local fake vision server for this test
-      Object.defineProperty(window, 'ERLY_AI_CONFIG', { configurable: true, get: () => ({ endpoint: '', online: ai ? { name: 'Claude', site: 'test server', model: 'claude', vision: true, url: 'http://localhost:8791/v1/chat/completions', get: '' } : null }), set() {} });
+      Object.defineProperty(window, 'ERLY_AI_CONFIG', { configurable: true, get: () => ({ endpoint: '', limits: { aiPerDay: 999, aiPerMinute: 999 }, online: ai ? { name: 'Claude', site: 'test server', model: 'claude', vision: true, url: 'http://localhost:8791/v1/chat/completions', get: '' } : null }), set() {} });
     }, useAI);
     const p = await ctx.newPage(); p.on('pageerror', e => errors.push(dev + ': ' + e.message));
     await p.goto(BASE + 'student.html'); await p.waitForTimeout(1200);
@@ -126,7 +126,7 @@ const srv = http.createServer((req, res) => {
   const readPos = await p.evaluate(() => document.querySelector('#cmpLog').scrollTop);
   await p.waitForTimeout(1200);
   assert.ok(Math.abs(await p.evaluate(() => document.querySelector('#cmpLog').scrollTop) - readPos) < 5, 'a streaming reply does not drag the reader down');
-  assert.equal(await p.isVisible('#cmpNewMsg'), true, '“New messages” appears');
+  assert.equal(await p.isVisible('#cmpNewMsg'), true, '“New messages” appears ' + JSON.stringify(await p.evaluate(() => { const l = document.querySelector('#cmpLog'); return [l.scrollTop, l.scrollHeight - l.scrollTop - l.clientHeight, l.__pinned, l.__erlyFollow, document.querySelector('#cmpNewMsg').hidden, !!document.querySelector('.cmp.is-gen')]; })));
   await p.click('#cmpNewMsg'); await p.waitForTimeout(700);
   assert.ok(await p.evaluate(() => { const l = document.querySelector('#cmpLog'); return l.scrollHeight - l.scrollTop - l.clientHeight < 200; }), 'and jumps to the latest');
   await p.click('#cmpSend'); mode = 'ok';

@@ -29,11 +29,12 @@ const URL = process.env.ERLY_URL || 'http://localhost:8765/student.html';
   // 1. nothing is collected before consent
   await page.evaluate(() => { const d = document.querySelector('#stDoc'); d.scrollTop = 600; });
   await page.waitForTimeout(500);
-  assert.equal(await page.evaluate(() => ERLY.companion.state().session), null, 'no session without consent');
+  // v17: noticing is automatic and on-device (told once in Noor, pausable in settings)
+  assert.notEqual(await page.evaluate(() => ERLY.companion.state().session), null, 'noticing runs on this device without a yes/no question');
 
   // 2. consent, then repeated returns to one paragraph -> one gentle invitation
   await page.click('.cmp-launch'); await page.waitForTimeout(1200);
-  await page.click('.ccard [data-c="yes"]'); await page.waitForTimeout(800);
+  if (await page.isVisible('.ccard--notice [data-c="ok"]')) await page.click('.ccard--notice [data-c="ok"]'); await page.waitForTimeout(800);
   await page.click('#cmpClose');
   const go = k => page.evaluate(k => { const d = document.querySelector('#stDoc'), r = document.querySelector(`.sp[data-p="${k}"]`).getBoundingClientRect(), dr = d.getBoundingClientRect(); d.scrollTop += (r.top + r.height / 2) - (dr.top + d.clientHeight * 0.45); }, k).then(() => page.waitForTimeout(450));
   const keys = await page.evaluate(() => Array.from(document.querySelectorAll('.sp')).map(x => x.dataset.p));

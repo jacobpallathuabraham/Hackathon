@@ -61,13 +61,15 @@
     return {
       KEY,
       get: () => data,
-      consent: k => data.consent[k] === true,
+      // v17: noticing reading friction is on by default (on-device counts only); an explicit pause/off is remembered.
+      // The microphone and external-AI consents still need an explicit yes.
+      consent: k => (k === 'monitoring' ? data.consent[k] !== false : data.consent[k] === true),
       asked: k => data.consent[k] !== null,
       setConsent(k, v) { data.consent[k] = !!v; if (k === 'monitoring' && !v) data.baseline = { sessions: [] }; save(); },
       prefs: () => data.prefs,
       setPref(k, v) { data.prefs[k] = v; save(); },
       baseline: () => data.baseline,
-      setBaseline(b) { if (data.consent.monitoring) { data.baseline = b; save(); } },
+      setBaseline(b) { if (data.consent.monitoring !== false) { data.baseline = b; save(); } },
       lab: () => data.lab,
       setLab(l) { data.lab = l; save(); },
       thresholds: () => data.thresholds,

@@ -14,9 +14,10 @@
      online  Noor Online: a free, key-less hosted model (Pollinations' classic
              OpenAI-compatible text API by default; a university can point it
              at its own endpoint in config.js). Works on every device,
-             including iPads without WebGPU. Used only after the student agrees
-             to a consent card that names the service and what is sent; emails
-             and long numbers are removed first. If it is busy or blocked,
+             including iPads without WebGPU. v17: ready by default with no
+             activation step; a message is sent only when the student presses
+             Send, the composer names the service, and "On this device only"
+             is one tap away. Emails and long numbers are removed first. If it is busy or blocked,
              Noor falls back to a Wikipedia lookup and then to her built-in brain.
      cloud   A server the university runs (server/llm-proxy.mjs) that holds
              the API key. Used only after the separate "external AI" consent.
@@ -183,16 +184,24 @@ Reply in ${ar ? 'Arabic (keep technical English terms in brackets when useful)' 
         return false;
       }
     }
-    function useOnline() { set({ tier: 'online', status: 'ready', model: 'online', error: null, progress: 1 }); savePref({ tier: 'online', consented: Date.now() }); return true; }
-    function useCloud() { set({ tier: 'cloud', status: 'ready', model: 'cloud', error: null }); savePref({ tier: 'cloud' }); }
-    function useLocal() { set({ tier: 'local', status: 'idle', model: null, error: null, progress: 0 }); savePref({ tier: 'local' }); }
+    // v17: Noor Online is ready by default — no activation step. Availability is not permission: nothing is
+    // sent until the student presses Send, the composer always says where messages go, and "On this device
+    // only" (Noor's brain, or Settings) is remembered. Automated browsers (navigator.webdriver) start on the
+    // built-in brain so test runs never send traffic to a free public service.
+    function useOnline(byDefault) { set({ tier: 'online', status: 'ready', model: 'online', error: null, progress: 1, byDefault: !!byDefault }); if (!byDefault) savePref({ tier: 'online', chosen: Date.now() }); return true; }
+    function useCloud() { set({ tier: 'cloud', status: 'ready', model: 'cloud', error: null, byDefault: false }); savePref({ tier: 'cloud' }); }
+    function useLocal() { set({ tier: 'local', status: 'idle', model: null, error: null, progress: 0, byDefault: false }); savePref({ tier: 'local', chosen: Date.now() }); }
+    const automated = () => { try { return !!(g.navigator && navigator.webdriver) && !localStorage.getItem('erly-ai-default-online'); } catch (e) { return false; } };
+    const defaultOnline = () => !automated() && !(opts.defaultTier && opts.defaultTier() === 'local');
     // bring back last visit's choice: cached on-device models reload without a new download
     async function resume() {
       const p = pref();
       if (p.tier === 'webllm' && g.navigator && navigator.gpu) return useWebLLM(p.model);
       if (p.tier === 'chrome' && g.LanguageModel) { try { if ((await LanguageModel.availability()) === 'available') return useChrome(); } catch (e) { /* ignore */ } }
-      if (p.tier === 'online' && p.consented) return useOnline();
       if (p.tier === 'cloud' && opts.cloud && opts.cloud.configured() && opts.cloud.consent()) { useCloud(); return true; }
+      if (p.tier === 'online' && (p.consented || p.chosen)) return useOnline(false);
+      if (p.tier === 'local' && p.chosen) return false; // the student chose "on this device only"
+      if (defaultOnline()) return useOnline(true);
       return false;
     }
     const canSee = () => st.tier === 'online' && st.status === 'ready' && !!online().vision; // only a service that declares vision gets images

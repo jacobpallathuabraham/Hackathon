@@ -101,6 +101,9 @@
     }
     const a = K.answer(text, lang(), kctx);
     if (a.kind === 'crisis') { history.push({ role: 'user', text }); return crisis(); }
+    // v17: "what am I looking at?" and video time ranges ("explain 2:30–3:30") — answered from what is really on
+    // the screen (page-context.js), never from a guess; an AI answer only because the student just pressed Send
+    if (await screenTurn(text)) return;
     // Noor Lab: maths and physics requests become interactive models, computed on the device (no AI needed);
     // with a model open, follow-ups ("make it wider", "remove air resistance") edit that model in place
     if (window.ERLY_LAB && !o.noLab) {
@@ -129,7 +132,9 @@
     remember(a);
     if (a.kind === 'answer') await sayKB(a);
     else if (a.kind === 'unknown' && U.ai) {
-      await mdSay('My **built-in brain** only covers learning differences, studying, exams, wellbeing and the readings here — so I can’t answer that one yet.\n\nWant me to find out? **Noor Online** is a free AI that can answer almost anything, and it works on iPads too.', 'يغطي **عقلي المدمج** اختلافات التعلّم والمذاكرة والاختبارات والرفاه والقراءات هنا فقط — لذا لا أستطيع الإجابة عن هذا بعد.\n\nهل تريد أن أعرف لك؟ **نور أونلاين** ذكاء اصطناعي مجاني يجيب عن كل شيء تقريباً، ويعمل على الآيباد أيضاً.');
+      const chose = !!((U.ai.pref && U.ai.pref()) || {}).chosen;
+      if (chose) await mdSay('You’ve set Noor to **on this device only**, and my built-in brain covers learning differences, studying, exams, wellbeing and the readings here — so I can’t answer that one on this device.\n\nIf you’re happy for this question to leave your device, I can send it to **Noor Online**.', 'اخترت أن تعمل نور **على هذا الجهاز فقط**، وعقلي المدمج يغطي اختلافات التعلّم والمذاكرة والاختبارات والعافية والقراءات هنا — لذا لا أستطيع الإجابة عن هذا على الجهاز.\n\nإن كنت موافقاً على أن يغادر هذا السؤال جهازك، يمكنني إرساله إلى **نور أونلاين**.');
+      else await mdSay('My **built-in brain** covers learning differences, studying, exams, wellbeing and the readings here — it can’t answer that one on this device.\n\nIf you’re happy for this question to leave your device, I can send it to **Noor Online**.', 'يغطي **عقلي المدمج** اختلافات التعلّم والمذاكرة والاختبارات والعافية والقراءات هنا — ولا يستطيع الإجابة عن هذا على الجهاز.\n\nإن كنت موافقاً على أن يغادر هذا السؤال جهازك، يمكنني إرساله إلى **نور أونلاين**.');
       history.push({ role: 'assistant', text: 'built-in: unknown' });
       onlineCard(text);
       return;
@@ -178,14 +183,14 @@
     const svc = U.ai.online();
     const card = document.createElement('div');
     card.className = 'ccard conline';
-    card.innerHTML = `<b>${ICON('globe')} ${T('Answer this with Noor Online?', 'أجيب عن هذا بنور أونلاين؟')}</b>
+    card.innerHTML = `<b>${ICON('globe')} ${T('Send this question to Noor Online?', 'أرسل هذا السؤال إلى نور أونلاين؟')}</b>
       ${svc.gateway ? `<p>${T('Your question and the recent chat go to Noor’s AI gateway, which uses Google’s Gemini API free tier. Google may use what is sent to its free tier to improve its products, and human reviewers may read it — so never include personal, health or other sensitive information. If you are reading a document, the text of that page (and any passage you selected) is sent with your question; an image you attach is sent with that message. Emails and numbers are removed from what you type; your name, profile, learning records, tracking data and handwriting are never sent.', 'يُرسل سؤالك والمحادثة الأخيرة إلى بوابة نور، التي تستخدم الطبقة المجانية من Gemini من Google. قد تستخدم Google ما يُرسل إلى طبقتها المجانية لتحسين منتجاتها، وقد يقرؤه مراجعون بشريون — لذا لا تُدرج أي معلومات شخصية أو صحية أو حساسة. تُحذف البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو سجلاتك أو كتابتك اليدوية أبداً. إذا كنت تقرأ مستنداً، يُرسل نص تلك الصفحة (وأي مقطع حدّدته) مع سؤالك؛ وتُرسل الصورة التي ترفقها مع تلك الرسالة.')}</p><label class="conline__age"><input type="checkbox" data-age> ${T('I am 18 or older (required by Google’s Gemini API terms)', 'عمري ١٨ عاماً أو أكثر (شرط في شروط Gemini من Google)')}</label>` : `<p>${T(`Your question and the recent chat go to ${esc(svc.name)}, a free AI service. Emails and numbers are removed first; your name, profile and tracking are never sent. Please don’t share anything private.`, `يُرسل سؤالك والمحادثة الأخيرة إلى ${esc(svc.name)}، وهي خدمة ذكاء اصطناعي مجانية. تُحذف عناوين البريد والأرقام أولاً، ولا يُرسل اسمك أو ملفك أو بيانات التتبع أبداً. لا تشارك أي شيء خاص.`)}</p>`}
-      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Turn on & answer', 'شغّل وأجب')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search open sources', 'ابحث في المصادر المفتوحة فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
+      <div class="ccard__btns"><button type="button" class="btn btn--sm btn--accent" data-o="on">${T('Send to Noor Online', 'أرسل إلى نور أونلاين')}</button><button type="button" class="btn btn--sm btn--ghost" data-o="wiki">${T('Just search open sources', 'ابحث في المصادر المفتوحة فقط')}</button><button type="button" class="btn btn--sm btn--quiet" data-o="no">${T('Not now', 'ليس الآن')}</button></div>`;
     card.addEventListener('click', async e => {
       const b = e.target.closest('[data-o]'); if (!b) return;
       if (!(b.dataset.o === 'on' && svc.gateway && !card.querySelector('[data-age]').checked)) card.remove();
       if (b.dataset.o === 'on' && svc.gateway && !card.querySelector('[data-age]').checked) { card.querySelector('.conline__age').classList.add('is-need'); card.querySelector('[data-age]').focus(); return; }
-      if (b.dataset.o === 'on') { U.ai.useOnline(); ERLY.toast && ERLY.toast(T('Noor Online is on — ask me anything.', 'نور أونلاين مفعّل — اسألني أي شيء.')); history.pop(); history.pop(); return freeText(q, { silentUser: true }); }
+      if (b.dataset.o === 'on') { U.ai.useOnline(); ERLY.toast && ERLY.toast(T('Noor Online is back on. Switch to “On this device only” under the message box any time.', 'عاد نور أونلاين. يمكنك التبديل إلى «على هذا الجهاز فقط» أسفل مربع الرسالة.')); U.refreshMode && U.refreshMode(); history.pop(); history.pop(); return freeText(q, { silentUser: true }); }
       if (b.dataset.o === 'wiki') { try { U.store.setPref('research', 'on'); } catch (er) { /* prefs unavailable */ } return wikiAnswer(q); }
       offerChips([{ id: 'topics', en: 'What can you answer?', ar: 'ماذا تستطيعين أن تجيبي؟' }, { id: 'hard', en: 'Something feels hard', ar: 'شيء ما يبدو صعباً' }]);
     });
@@ -326,7 +331,7 @@
         const quick = K.answer(text, lang(), kctx);
         if (quick.kind === 'answer' && relevant(text, pick(quick.en, quick.ar))) { await sayKB(quick); retryChip(0); ERLY.emit('noor:turn-end'); return true; }
         // the device's own limit (configurable) — say so plainly; nothing was sent
-        if (e && /^local-cap/.test(e.code || '')) bubble('ai', /day/.test(e.code) ? T('You’ve reached today’s daily limit of AI questions on this device, so nothing was sent. It resets tomorrow; built-in answers, sources, visuals and calculations still work.', 'وصلت إلى الحد اليومي لأسئلة الذكاء الاصطناعي على هذا الجهاز، لذلك لم يُرسل شيء. يُعاد ضبطه غداً؛ وما زالت الإجابات المدمجة والمصادر والمرئيات تعمل.') : T('That’s a lot of AI questions in one minute, so this one wasn’t sent — wait a moment and press Try again.', 'أسئلة كثيرة للذكاء الاصطناعي في دقيقة واحدة، لذلك لم يُرسل هذا السؤال — انتظر قليلاً واضغط «حاول مجدداً».'), { text: true, cls: 'cmsg--note' });
+        if (e && /^local-cap/.test(e.code || '')) { bubble('ai', /day/.test(e.code) ? T('You’ve reached today’s daily limit of AI questions on this device, so nothing was sent. It resets tomorrow; built-in answers, sources, visuals and calculations still work.', 'وصلت إلى الحد اليومي لأسئلة الذكاء الاصطناعي على هذا الجهاز، لذلك لم يُرسل شيء. يُعاد ضبطه غداً؛ وما زالت الإجابات المدمجة والمصادر والمرئيات تعمل.') : T('That’s a lot of AI questions in one minute, so this one wasn’t sent — wait a moment and press Try again.', 'أسئلة كثيرة للذكاء الاصطناعي في دقيقة واحدة، لذلك لم يُرسل هذا السؤال — انتظر قليلاً واضغط «حاول مجدداً».'), { text: true, cls: 'cmsg--note' }); history.pop(); const bx = U.$('#cmpText'); if (bx && !bx.value) { bx.value = text; U.composer && U.composer(); } retryChip(0); ERLY.emit('noor:turn-end'); return true; } // nothing was sent: no error reference, the question waits in the box
         // zero-budget tier 2: the sources retrieved for this question, quoted (never an unrelated cached answer)
         const qa = res && res.passages.length && relevant(text, res.passages.map(p => p.title + ' ' + p.text).join(' ')) ? quotedAnswer(text, res) : null;
         if (qa) {
@@ -481,6 +486,40 @@
   function offerChips(list) {
     chipRow(list.slice(0, 5), c => chip(c));
   }
+  /* ---- v17: the screen and the open video ---- */
+  const PC = () => ERLY.pageContext;
+  async function screenTurn(text) {
+    const pc = PC(); if (!pc) return false;
+    const vid = ERLY.videos && ERLY.videos.current && ERLY.videos.current();
+    const range = vid ? pc.parseRange(text) : null;
+    if (range && vid) { history.push({ role: 'user', text }); await videoRange(text, vid, range); ERLY.emit('noor:turn-end'); return true; }
+    if (!pc.isLooking(text) && !(vid && /\b(this|the) (video|lecture|clip|lesson)\b/i.test(text))) return false;
+    const snap = pc.snapshot();
+    const ctx = pc.forNoor(snap);
+    if (U.ai && U.ai.ready() && MD && AIX) { await aiReply(text + '\n\n(Answer as a structured explanation: what this is, the key ideas, how the parts on screen relate, and one quick check question. Use only the screen snapshot; say plainly what is not visible.)', { kind: 'unknown' }, { reading: ctx, tools: [T('Your screen', 'شاشتك')] }); return true; }
+    history.push({ role: 'user', text });
+    C.tools && C.tools.trace && C.tools.trace([T('Your screen', 'شاشتك')]);
+    const md = pc.describe(snap, lang());
+    await mdSay(md, md, { tag: T('From your screen · on this device', 'من شاشتك · على هذا الجهاز') });
+    history.push({ role: 'assistant', text: 'screen summary' });
+    offerChips(vid ? [{ id: 'vid:notes', en: 'Show the key points', ar: 'أظهري النقاط الأساسية' }, { id: 'vid:back', en: 'Replay the last 30 seconds', ar: 'أعيدي آخر ٣٠ ثانية' }] : [{ id: 'fu:quiz', en: 'Quiz me on this', ar: 'اختبريني في هذا' }]);
+    ERLY.emit('noor:turn-end'); return true;
+  }
+  async function videoRange(text, vid, r) {
+    const pc = PC(), span = `${pc.mmss(r.from)}${r.single ? '' : '–' + pc.mmss(r.to)}`;
+    const lines = pc.transcriptSlice(vid.transcript, r);
+    if (lines.length) { // a real transcript for that range: explain from it, and only from it
+      const txt = lines.map(x => `[${pc.mmss(x.t)}] ${x.text}`).join('\n');
+      if (U.ai && U.ai.ready() && MD && AIX) { history.pop(); return aiReply(text, { kind: 'unknown' }, { reading: { title: vid.title, course: vid.course, page: span, heading: 'Transcript ' + span, text: txt, quote: '' }, tools: [T('Video transcript', 'نص الفيديو')] }); }
+      const md = `### ${vid.title} · ${span}\n**${T('What is said (transcript)', 'ما يقال (النص)')}**\n${lines.map(x => `- **${pc.mmss(x.t)}** ${x.text}`).join('\n')}`;
+      await mdSay(md, md, { tag: T('Transcript', 'النص') });
+    } else {
+      const md = `### ${vid.title} · ${span}\n${T(`I can’t hear the video, and there’s no transcript for this one here, so I won’t guess what is said at ${span}.`, `لا أستطيع سماع الفيديو، ولا يوجد نص له هنا، لذلك لن أخمّن ما يقال عند ${span}.`)}\n\n**${T('What I can do', 'ما يمكنني فعله')}**\n- ${T(`Replay ${span}${r.single ? '' : ' on a loop'} at a slower speed`, `إعادة ${span} بسرعة أبطأ`)}\n- ${T('Show ERLY’s key points for this video', 'إظهار النقاط الأساسية لهذا الفيديو')}\n- ${T('Explain an idea if you tell me what was said (a sentence or the term you heard is enough)', 'شرح فكرة إن أخبرتني بما قيل (جملة أو مصطلح يكفي)')}`;
+      await mdSay(md, md, { tag: T('Video', 'فيديو') });
+    }
+    history.push({ role: 'assistant', text: 'video range ' + span });
+    offerChips([{ id: `vid:loop:${Math.round(r.from)}:${Math.round(r.to)}`, en: r.single ? `Play from ${pc.mmss(r.from)} at 0.75×` : `Loop ${span} at 0.75×`, ar: `أعيدي ${span} بسرعة 0.75×` }, { id: 'vid:notes', en: 'Show the key points', ar: 'أظهري النقاط الأساسية' }]);
+  }
   async function chip(c) {
     const id = c.id;
     bubble('you', pick(c.en, c.ar), { text: true });
@@ -500,6 +539,12 @@
     if (id === 'assess') return chip({ id: 'kb:assessment:what', en: '', ar: '' });
     if (id === 'call') return ERLY.emit('noor:call');
     if (id === 'brain') return U.openBrain();
+    if (id.startsWith('vid:') && ERLY.videos) { // the video keeps playing; these only act on it when asked
+      const [, k, a, b] = id.split(':');
+      if (k === 'loop') { ERLY.videos.setRate && ERLY.videos.setRate(0.75); ERLY.videos.loop(+a, +b); return say(T('Replaying that part slowly. Use the player or ask me to stop the loop.', 'أعيد هذا الجزء ببطء. استخدم المشغّل أو اطلب إيقاف التكرار.'), T('Replaying that part slowly. Use the player or ask me to stop the loop.', 'أعيد هذا الجزء ببطء.')); }
+      if (k === 'back') { const v = ERLY.videos.current(); if (v) ERLY.videos.seek(Math.max(0, v.time - 30)); return; }
+      if (k === 'notes') return ERLY.videos.showNotes();
+    }
     if (id === 'fu:timer') { if (ERLY.reader && ERLY.reader.isOpen()) ERLY.reader.act('timer'); return freeText('pomodoro focus timer', { silentUser: true }); }
     if (id === 'fu:cards') return freeText('flashcards', { silentUser: true });
     if (id === 'fu:retry' && retryQ) { const bx = U.$('#cmpText'); if (bx && bx.value.trim() === retryQ.trim()) { bx.value = ''; U.composer && U.composer(); } return freeText(retryQ, { silentUser: true }); }

@@ -120,7 +120,10 @@
       ${sw('learn.examples', 'More examples', 'أمثلة أكثر', '', L.examples)}
       ${seg('learn.dense', T('Information density', 'كثافة المعلومات'), [['light', T('Light', 'خفيفة')], ['normal', T('Normal', 'عادية')], ['rich', T('Rich', 'غنية')]], L.dense)}
       ${sw('suggestVisuals', 'Suggest visual explanations', 'اقتراح شروحات مرئية', T('Noor may offer a diagram when it would help (off: only when you ask)', 'قد تقترح نور مخططاً عند الحاجة'), !!((vs.vs || {}).suggestVisuals))}
-      ${sw('speakReplies', 'Read Noor’s replies aloud', 'قراءة ردود نور بصوت', T('Off by default: Noor speaks only when you ask, or when this is on', 'مغلق افتراضياً: تتحدث نور عندما تطلب ذلك أو عند تفعيل هذا'), vs.readAloud === true)}`;
+      ${sw('speakReplies', 'Read Noor’s replies aloud', 'قراءة ردود نور بصوت', T('Off by default: Noor speaks only when you ask, or when this is on', 'مغلق افتراضياً: تتحدث نور عندما تطلب ذلك أو عند تفعيل هذا'), vs.readAloud === true)}
+      <h4 class="a11y__sub">${T('Noor and privacy', 'نور والخصوصية')}</h4>
+      ${sw('noorNotice', 'Noor notices reading friction', 'نور تلاحظ صعوبات القراءة', T('On-device counts only (re-reading, zoom, panning). Off: nothing is counted.', 'عدّ على الجهاز فقط. متوقف: لا يُحسب شيء.'), noorNotice())}
+      ${sw('noorOnline', 'Answer with Noor Online', 'الإجابة بنور أونلاين', T('Off: on this device only. On: a message is sent only when you press Send.', 'متوقف: على هذا الجهاز فقط. مفعّل: تُرسل الرسالة فقط عند الضغط على إرسال.'), noorOnline())}`;
     // reading
     return `
       <div class="a11y__size" role="group" aria-label="${T('Text size', 'حجم النص')}"><b>${T('Text size', 'حجم النص')}</b><div>${[90, 100, 112, 125, 140].map(v => `<button type="button" data-size="${v}" aria-pressed="${st.size === v}">${v === 100 ? 'A' : v < 100 ? 'A−' : 'A+'}<small>${v}%</small></button>`).join('')}</div></div>
@@ -142,11 +145,19 @@
       <header class="a11y__h"><div><b id="a11yTitle">${T('Accessibility', 'سهولة الوصول')}</b><small>${T('Your choices, saved only on this device.', 'اختياراتك، محفوظة على هذا الجهاز فقط.')}</small></div><button type="button" class="a11y__x" data-a="close" aria-label="${T('Close', 'إغلاق')}">✕</button></header>
       <div class="a11y__tabs" role="tablist" aria-label="${T('Settings groups', 'مجموعات الإعدادات')}">${TABS.map(([k, en, ar]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${st.tab === k}">${T(en, ar)}</button>`).join('')}</div>
       <div class="a11y__pane" role="tabpanel">${pane()}</div>
-      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>${changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : ''}ERLY v16 · Alt+A</span></footer>`;
+      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>${changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : ''}ERLY v17 · Alt+A</span></footer>`;
     if (focusKey) { const f = panel.querySelector(`[data-k="${focusKey}"], [data-tab="${focusKey}"][aria-selected="true"], [data-size="${focusKey}"]`); if (f) f.focus(); }
   }
   function voices() { try { const l = (html.lang || 'en').slice(0, 2); return (speechSynthesis.getVoices() || []).filter(v => v.lang && v.lang.slice(0, 2) === l).slice(0, 30); } catch (e) { return []; } }
   if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', () => { if (panel && st.tab === 'reading') render(); });
+  const NC = () => (window.ERLY && ERLY.companion) || null;
+  const noorNotice = () => { const c = NC(); if (c && c.store) return c.store.consent('monitoring'); try { return ((JSON.parse(localStorage.getItem('erly-companion-v1') || '{}').consent || {}).monitoring) !== false; } catch (e) { return true; } };
+  const noorOnline = () => { const c = NC(); if (c && c.ai) return c.ai.state().tier === 'online' && c.ai.ready(); try { const p = JSON.parse(localStorage.getItem('erly-ai-v1') || '{}'); return !(p.tier && p.tier !== 'online'); } catch (e) { return true; } };
+  function setNoor(k, v) {
+    const c = NC();
+    if (k === 'noorNotice') { if (c && c.store) c.store.setConsent('monitoring', v); else try { const db = JSON.parse(localStorage.getItem('erly-companion-v1') || '{}'); db.consent = Object.assign({}, db.consent, { monitoring: v }); localStorage.setItem('erly-companion-v1', JSON.stringify(db)); } catch (e) { /* storage blocked */ } }
+    if (k === 'noorOnline') { if (c && c.ai) { if (v) c.ai.useOnline(false); else c.ai.useLocal(); c.refreshMode && c.refreshMode(); } else try { localStorage.setItem('erly-ai-v1', JSON.stringify({ tier: v ? 'online' : 'local', chosen: Date.now() })); } catch (e) { /* storage blocked */ } }
+  }
   function companionPref(patch) { // the Learning section writes Noor's own preferences, so Noor and this panel always agree
     try { const db = JSON.parse(localStorage.getItem('erly-companion-v1') || '{}'); db.prefs = db.prefs || {}; if (patch.vs) db.prefs.vs = Object.assign({}, db.prefs.vs || {}, patch.vs); if ('readAloud' in patch) db.prefs.readAloud = patch.readAloud; localStorage.setItem('erly-companion-v1', JSON.stringify(db)); } catch (e) { /* not persisted */ }
   }
@@ -175,6 +186,7 @@
       else if (k.startsWith('learn.')) st.learn[k.slice(6)] = i.checked;
       else if (k === 'suggestVisuals') companionPref({ vs: { suggestVisuals: i.checked } });
       else if (k === 'speakReplies') companionPref({ readAloud: i.checked });
+      else if (k === 'noorNotice' || k === 'noorOnline') setNoor(k, i.checked);
       else st[k] = i.checked;
     } else if (k === 'voice') st.voice = i.value;
     save(); apply();
@@ -280,7 +292,7 @@
     if (panel && !panel.hidden) { let c = panel.querySelector('.a11y__ok'); if (!c) { c = document.createElement('p'); c.className = 'a11y__ok'; c.setAttribute('aria-hidden', 'true'); panel.querySelector('.a11y__f').before(c); } c.textContent = '✓ ' + t; c.classList.remove('is-on'); void c.offsetWidth; c.classList.add('is-on'); }
   }
   function changed() { const d = DEF; return ['size', 'contrast', 'still', 'font', 'spacing', 'links', 'focus', 'line', 'letter', 'word', 'width', 'guide', 'tint', 'calm', 'targets', 'cursor', 'focusmode'].filter(k => k === 'still' ? st.still !== null && st.still !== d.still : JSON.stringify(st[k]) !== JSON.stringify(d[k])).length; }
-  function refreshFoot() { const f = panel && panel.querySelector('.a11y__f span'); if (f) f.textContent = (changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : '') + 'ERLY v16 · Alt+A'; }
+  function refreshFoot() { const f = panel && panel.querySelector('.a11y__f span'); if (f) f.textContent = (changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : '') + 'ERLY v17 · Alt+A'; }
   function status(t) { let s = panel.querySelector('.a11y__status'); if (!s) { s = document.createElement('p'); s.className = 'a11y__status'; s.setAttribute('role', 'status'); panel.appendChild(s); } s.textContent = t; }
   function open() { lastFocus = document.activeElement; panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => panel.classList.add('is-in')); (panel.querySelector('[role="tab"][aria-selected="true"]') || panel.querySelector('button')).focus(); }
   function close() { panel.classList.remove('is-in'); btn.setAttribute('aria-expanded', 'false'); setTimeout(() => { panel.hidden = true; }, 160); if (lastFocus && lastFocus.focus) lastFocus.focus(); else btn.focus(); }

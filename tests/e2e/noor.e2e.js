@@ -22,7 +22,7 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   });
   await page.goto(BASE + 'student.html');
   await page.click('.cmp-launch'); await page.waitForTimeout(1400);
-  await page.click('.ccard [data-c="yes"]'); await page.waitForTimeout(900);
+  if (await page.isVisible('.ccard--notice [data-c="ok"]')) await page.click('.ccard--notice [data-c="ok"]'); await page.waitForTimeout(900);
 
   // knowledge
   await page.fill('#cmpText', 'what are the signs of ADHD?'); await page.press('#cmpText', 'Enter'); await page.waitForTimeout(1300);
