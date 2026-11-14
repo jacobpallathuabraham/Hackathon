@@ -139,3 +139,49 @@ test('no diagnostic language, no handwriting judgement, no network in the pipeli
   // the only mentions of conditions in the interface are statements of what it cannot do
   (ui.match(/[^.]*\b(dyslexia|dysgraphia)\b[^.]*/gi) || []).forEach(m => assert.match(m, /Detect|cannot|اكتشاف/i, m));
 });
+
+/* ---------- v17: adaptive threshold, upscaling, line segmentation, word flags ---------- */
+// a shadow across the page: paper goes from bright (240) on the left to dark (95) on the right
+function shadowed() {
+  const img = writing({ bg: 240 }), { width: W, height: H } = img;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, f = 1 - 0.6 * (x / W); img.gray[i] = img.gray[i] > 100 ? Math.round(240 * f) : Math.round(28 * f); }
+  return img;
+}
+test('Sauvola keeps the writing under a shadow, where one global threshold loses paper to ink', () => {
+  const img = shadowed(), { width: W, height: H } = img;
+  const o = HW.otsu(img.gray);
+  const truth = writing({ bg: 240 }).gray; // where the ink really is
+  const err = bin => { let wrong = 0; for (let i = 0; i < truth.length; i++) if ((bin[i] === 0) !== (truth[i] < 128)) wrong++; return wrong / truth.length; };
+  const global = img.gray.map(v => (v <= o.thr ? 0 : 255)), local = HW.sauvola(img.gray, W, H);
+  assert.ok(err(local) < 0.02, 'adaptive error ' + err(local));
+  assert.ok(err(local) < err(global) / 3, `adaptive (${err(local).toFixed(3)}) much better than global (${err(global).toFixed(3)})`);
+  assert.ok(HW.unevenLight(img.gray, W, H) > 0.25, 'the shadow is detected as uneven light');
+  assert.ok(HW.unevenLight(writing().gray, W, H) < 0.1, 'an evenly lit page is not');
+});
+test('prepare upscales small writing to ~40 px letters and uses the adaptive threshold when asked', () => {
+  const small = writing({ h: 14 });
+  const q = HW.quality(small);
+  const p = HW.prepare(small, 0, { letterHeight: q.stats.letterHeight, source: true, uneven: false });
+  assert.ok(p.scale > 1.8 && p.scale <= 3, 'scaled up: ' + p.scale);
+  const sh = shadowed(), p2 = HW.prepare(sh, 0, { source: true, uneven: true });
+  assert.equal(p2.adaptive, true);
+});
+test('line segmentation finds the three written lines', () => {
+  const img = writing(), p = HW.prepare(img, 0);
+  const L = HW.lines(p);
+  assert.equal(L.length, 3, JSON.stringify(L));
+  L.forEach((b, i) => { if (i) assert.ok(b.y0 > L[i - 1].y1 - 5, 'lines in order and separate'); });
+});
+test('word flags come only from the recogniser’s own confidences', () => {
+  const f = HW.flagWords([{ text: 'library', confidence: 91.2 }, { text: 'opns', confidence: 61 }, { text: '~', confidence: 12 }, { text: ' ', confidence: 90 }]);
+  assert.deepEqual(f.map(x => x.flag), ['ok', 'uncertain', 'unreadable']);
+  assert.deepEqual(f.map(x => x.conf), [91, 61, 12]);
+  assert.deepEqual(HW.flagWords(undefined), [], 'no confidences, no flags (nothing is invented)');
+});
+test('a readable page under a shadow passes the quality gate (lighting is evened out first)', () => {
+  const img = shadowed(), q = HW.quality(img);
+  assert.ok(q.stats.uneven > 0.25, 'uneven light recorded');
+  assert.deepEqual(failing(q).filter(id => ['contrast', 'sharp', 'light'].includes(id)), [], 'not rejected for contrast, focus or light: ' + failing(q));
+  // ...while a genuinely faint page is still rejected
+  assert.ok(failing(HW.quality(writing({ ink: 205 }))).includes('contrast'));
+});

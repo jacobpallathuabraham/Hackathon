@@ -33,7 +33,7 @@
       root.addEventListener('click', onClick); root.addEventListener('change', onChange);
       root.addEventListener('dragover', e => { if (e.target.closest('.hw2-drop')) e.preventDefault(); });
       root.addEventListener('drop', e => { const z = e.target.closest('.hw2-drop'); if (!z) return; e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) load(f); });
-      root.addEventListener('keydown', e => { const l = e.target.closest('label.hw2-btn, label.hw2-ghost'); if (l && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); const i = l.querySelector('input'); if (i) i.click(); } if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && pad) { e.preventDefault(); e.shiftKey ? pad.redoOne() : pad.undo(); syncTools(); } });
+      root.addEventListener('keydown', e => { const l = e.target.closest('label.hw2-btn, label.hw2-ghost'); if (l && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); const i = l.querySelector('input'); if (i) i.click(); } });
       return;
     }
     if (!document.getElementById('hwFont')) { const l = document.createElement('link'); l.id = 'hwFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap'; document.head.appendChild(l); }
@@ -64,13 +64,22 @@
     root.addEventListener('keydown', e => { const l = e.target.closest('label.hw2-btn, label.hw2-ghost'); if (l && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); const i = l.querySelector('input'); if (i) i.click(); } });
   }
   let opener = null, pad = null, padStrokes = [];
+  // v17: several pages on screen (each kept as vector strokes, in memory only) and a paper style
+  let pages = [padStrokes], pageIx = 0, paper = 'ruled';
+  const savePage = () => { if (pad) { padStrokes = pad.strokes; pages[pageIx] = padStrokes; } };
+  function goPage(n) { savePage(); pageIx = Math.max(0, Math.min(pages.length - 1, n)); padStrokes = pages[pageIx]; if (pad) { pad.strokes = padStrokes; pad.redo = []; pad.render(); } syncTools(); renderPages(); }
+  function renderPages() { const b = root && root.querySelector('#hwPages'); if (!b) return; b.innerHTML = `<span>${T('Pages', 'الصفحات')}</span>${pages.map((pg, i) => `<button type="button" data-page="${i}" aria-current="${i === pageIx}" aria-label="${T('Page', 'صفحة')} ${i + 1}${pg.length ? '' : ' ' + T('(empty)', '(فارغة)')}">${i + 1}</button>`).join('')}${pages.length < 5 ? `<button type="button" class="hw2-pages__add" data-a="addpage">+ ${T('New page', 'صفحة جديدة')}</button>` : ''}`; }
   function openInline() { mount(); st = fresh(); st.step = 'write'; st.method = 'screen'; render(); }
   function open() {
     if (!studio()) { // the Handwriting Check lives on its own page; the ink transition takes you there
       if (window.ERLY && ERLY.ink) return ERLY.ink.go('handwriting.html', { from: document.activeElement });
       location.href = 'handwriting.html'; return;
     } opener = document.activeElement; mount(); st = fresh(); root.hidden = false; document.body.classList.add('hw-lock'); requestAnimationFrame(() => root.classList.add('is-on')); render(); }
-  function discard(all) { if (st) { st.canvas = null; st.q = null; st.ocr = null; st.crop = null; } if (all) { padStrokes = []; if (pad) { pad.strokes = []; pad.redo = []; pad.render(); } } }
+  // Discard genuinely clears: the photo, every page's strokes, the result and any edits, and the recognition
+  // worker (which held the last image in its memory) is shut down
+  function discard(all) { if (st) { st.canvas = null; st.canvases = null; st.q = null; st.ocr = null; st.crop = null; st.edit = null; } if (all) { padStrokes = []; pages = [padStrokes]; pageIx = 0; if (pad) { pad.strokes = padStrokes; pad.redo = []; pad.render(); } if (worker) { const w = worker; worker = null; workerLang = null; try { w.terminate(); } catch (e) { /* already gone */ } } } }
+  addEventListener('pagehide', () => discard(true));
+  document.addEventListener('keydown', e => { if (!pad || !(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || e.altKey) return; const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return; if (document.querySelector('.cmp:not([hidden]).is-in')) return; e.preventDefault(); e.shiftKey ? pad.redoOne() : pad.undo(); syncTools(); });
   function close() { if (!root) return; discard(); root.classList.remove('is-on'); document.body.classList.remove('hw-lock'); try { speechSynthesis.cancel(); } catch (e) { /* none */ } setTimeout(() => { root.hidden = true; }, still() ? 0 : 250); if (opener && opener.focus && document.contains(opener)) { try { opener.focus(); } catch (er) { /* gone */ } } if (worker) { worker.terminate(); worker = null; workerLang = null; } }
 
   /* ---------- screens ---------- */
@@ -100,7 +109,7 @@
       </div>`;
       return;
     }
-    if (s === 'write' && studio()) { if (pad) { padStrokes = pad.strokes; pad.destroy(); pad = null; } }
+    if (s === 'write' && studio()) { if (pad) { savePage(); pad.destroy(); pad = null; } }
     if (s === 'write' && studio() && st.method === 'screen') {
       b.innerHTML = `<div class="hw2-method" role="tablist" aria-label="${T('How do you want to write?', 'كيف تريد أن تكتب؟')}"><button type="button" role="tab" aria-selected="true" data-method="screen">✍️ ${T('Write on screen', 'اكتب على الشاشة')}</button><button type="button" role="tab" aria-selected="false" data-method="paper">📄 ${T('Write on paper + photo', 'اكتب على ورق وصوّر')}</button></div>
         <div class="hw2-copy" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><span>${T('Copy these sentences, one per line:', 'انسخ هذه الجمل، كل جملة في سطر:')}</span><ol>${set().map(l => `<li dir="auto">${esc(l)}</li>`).join('')}</ol></div>
@@ -111,12 +120,13 @@
           <span class="hw2-tools__sp"></span>
           <button type="button" class="hw2-ghost hw2-ic" data-a="undo" aria-label="${T('Undo', 'تراجع')}" title="${T('Undo (Ctrl+Z)', 'تراجع')}">↶</button><button type="button" class="hw2-ghost hw2-ic" data-a="redo" aria-label="${T('Redo', 'إعادة')}" title="${T('Redo (Ctrl+Shift+Z)', 'إعادة')}">↷</button><button type="button" class="hw2-ghost" data-a="clearpad">${T('Clear', 'مسح')}</button>
         </div>
-        <div class="hw2-pad" id="hwPad"><div class="hw2-pad__hint" aria-hidden="true">${T('Write here with your finger, a stylus or the mouse', 'اكتب هنا بإصبعك أو بقلم أو بالفأرة')}</div></div>
+        <div class="hw2-row hw2-row--tight"><div class="hw2-seg hw2-paper" role="radiogroup" aria-label="${T('Paper', 'الورق')}">${[['ruled', 'Ruled', 'مسطّر'], ['blank', 'Blank', 'سادة'], ['grid', 'Grid', 'مربعات']].map(([k, en, ar]) => `<button type="button" role="radio" aria-checked="${paper === k}" data-paper="${k}">${T(en, ar)}</button>`).join('')}</div><div class="hw2-pages" id="hwPages"></div></div>
+        <div class="hw2-pad" id="hwPad" data-paper="${paper}"><div class="hw2-pad__hint" aria-hidden="true">${T('Write here with your finger, a stylus or the mouse', 'اكتب هنا بإصبعك أو بقلم أو بالفأرة')}</div></div>
         <p class="hw2-tip">${T('Write the three sentences on the lines, at your own pace. Pressure is used if your stylus reports it.', 'اكتب الجمل الثلاث على الأسطر بإيقاعك. يُستخدم ضغط القلم إن كان جهازك يدعمه.')}</p>
         ${st.err ? `<p class="hw2-err" role="alert">${esc(st.err)}</p>` : ''}
         <div class="hw2-row"><button type="button" class="hw2-link" data-a="other">${T('Different sentences', 'جمل أخرى')}</button><button type="button" class="hw2-link" data-a="listen">🔊 ${T('Read them aloud', 'اقرأها بصوت')}</button><button type="button" class="hw2-btn" data-a="analysepad" disabled>${T('Analyse my writing', 'حلّل كتابتي')}</button></div>`;
       pad = new ERLY.InkPad($('#hwPad'), { label: T('Writing area', 'مساحة الكتابة'), onChange: syncTools });
-      pad.strokes = padStrokes; pad.render(); syncTools();
+      pad.strokes = padStrokes; pad.render(); syncTools(); renderPages();
       return;
     }
     if (s === 'write') {
@@ -158,10 +168,29 @@
         <div class="hw2-stats"><div><b>${r.rates.matched}/${r.rates.words}</b><span>${T('expected words recognised', 'كلمات متوقعة مقروءة')}</span></div><div><b>${Math.round(r.conf)}%</b><span>${T('software confidence', 'ثقة البرنامج')}</span></div><div><b>${T('Good', 'جيدة')}</b><span>${st.fromPad ? T('writing area', 'مساحة الكتابة') : T('photo quality', 'جودة الصورة')}</span></div></div>
         <div class="hw2-words" dir="${st.lang === 'ar' ? 'rtl' : 'ltr'}"><b>${T('What the software recognised', 'ما تعرّف عليه البرنامج')}</b>${map.map(line => `<p dir="auto">${line.map(x => `<span class="${x.found ? 'is-found' : 'is-missed'}">${esc(x.w)}</span>`).join(' ')}</p>`).join('')}<small>${T('Highlighted words weren’t matched by the software — that’s about recognition, not about whether they were written correctly.', 'الكلمات المظللة لم يطابقها البرنامج — هذا عن القراءة الآلية، لا عن صحة الكتابة.')}</small>
           <details><summary>${T('Show the raw recognised text', 'اعرض النص المقروء كما هو')}</summary><pre>${esc(r.text.trim() || '—')}</pre></details></div>
+        ${r.words && r.words.length ? `<div class="hw2-flagbox"><b>${T('How sure the software was, word by word', 'مدى ثقة البرنامج كلمة بكلمة')}</b><div class="hw2-flags" dir="auto">${r.words.map(w => `<span class="is-${w.flag}" title="${T('Software confidence', 'ثقة البرنامج')} ${w.conf}%">${esc(w.text)}</span>`).join('')}</div>
+          <p class="hw2-key"><span>✓ ${T('read with confidence', 'قُرئت بثقة')}</span><span>⋯ ${T('uncertain (50–79%)', 'غير مؤكدة (٥٠–٧٩٪)')}</span><span>〰 ${T('unreadable to the software (under 50%)', 'غير مقروءة للبرنامج (أقل من ٥٠٪)')}</span></p>
+          <p class="muted cmp-small">${T('These are Tesseract’s own confidence scores for its reading. They describe the software, not your writing.', 'هذه درجات ثقة Tesseract في قراءته. تصف البرنامج لا كتابتك.')}</p></div>` : ''}
+        <div class="hw2-edit"><label for="hwEdit"><b>${T('Recognised text — you can correct it', 'النص المقروء — يمكنك تصحيحه')}</b></label>
+          <textarea id="hwEdit" dir="auto" spellcheck="false">${esc(st.edit != null ? st.edit : r.text.trim())}</textarea>
+          <div class="hw2-edit__row"><button type="button" class="hw2-ghost" data-a="copy">${T('Copy text', 'انسخ النص')}</button><button type="button" class="hw2-ghost" data-a="compare" aria-expanded="${!!st.showCmp}">${T('Compare with the sentences', 'قارن بالجمل')}</button>${st.fromPad ? '' : `<button type="button" class="hw2-ghost" data-a="retryprep">${T('Read again with a different preparation', 'اقرأ مجدداً بتحضير مختلف')}</button>`}</div>
+          ${st.showCmp ? compareTable() : ''}
+          ${r.prep ? `<p class="muted cmp-small">${T(`Prepared on this device: ${r.prep.adaptive ? 'adaptive threshold for uneven light' : 'one threshold for the whole page'}${r.prep.scale && Math.abs(r.prep.scale - 1) > 0.05 ? `, scaled ×${r.prep.scale.toFixed(2)}` : ''}, ${r.prep.lines} line${r.prep.lines === 1 ? '' : 's'} found${r.pages > 1 ? `, ${r.pages} pages` : ''}.`, `حُضّرت على هذا الجهاز: ${r.prep.lines} أسطر.`)}</p>` : ''}
+        </div>
         <p class="hw2-tip">${T('Recognition uses Tesseract (open-source, running in this page). Measured on synthetic, font-rendered samples it reads clear print-like writing well, Arabic less reliably, and joined-up writing much less reliably. Its accuracy on real student handwriting has not been validated.', 'يستخدم التعرف برنامج Tesseract مفتوح المصدر داخل هذه الصفحة. في عيّنات اصطناعية قرأ الكتابة الواضحة جيداً، والعربية بدقة أقل، والكتابة المتصلة بضعف. لم تُقيَّم دقته على كتابة طلاب حقيقية.')}${st.lang === 'mix' ? ' ' + T('Mixed pages are experimental: Arabic lines are read much less reliably than English ones.', 'الصفحات المختلطة تجريبية: تُقرأ الأسطر العربية بدقة أقل بكثير من الإنجليزية.') : ''}</p>
         <div class="hw2-row"><button type="button" class="hw2-ghost" data-a="again">${T('Try again', 'حاول مجدداً')}</button><button type="button" class="hw2-ghost" data-a="other2">${T('Try different sentences', 'جرّب جملاً أخرى')}</button><a class="hw2-ghost" href="student.html#handoff" data-a="sas">${T('Talk to Student Accessibility Services', 'تحدث مع خدمات الطلبة ذوي الإعاقة')}</a><button type="button" class="hw2-btn" data-a="discard">${T('Discard and finish', 'احذف وأنهِ')}</button></div>
         <p class="hw2-privacy">🔒 ${T('Nothing from this check was saved. Discard deletes the photo and this result from memory now.', 'لم يُحفظ شيء من هذا الفحص. «احذف» يمسح الصورة والنتيجة من الذاكرة الآن.')}</p></div>`;
     }
+  }
+
+  // expected sentence vs what was recognised (the corrected text if the student edited it), word by word
+  function compareTable() {
+    const got = String(st.edit != null ? st.edit : st.ocr.text).split(/\n+/).map(x => x.trim()).filter(Boolean), L = st.lang === 'mix' ? 'ar' : st.lang;
+    return `<table class="hw2-cmp"><thead><tr><th>${T('Sentence to copy', 'الجملة المطلوبة')}</th><th>${T('Recognised', 'المقروء')}</th></tr></thead><tbody>${set().map((line, i) => {
+      const g = got[i] || '', gw = new Set(HW.norm(g, L).split(' ')), ew = new Set(HW.norm(line, L).split(' '));
+      const exp = line.split(/\s+/).map(w => (gw.has(HW.norm(w, L)) ? esc(w) : `<del>${esc(w)}</del>`)).join(' ');
+      const rec = g ? g.split(/\s+/).map(w => (ew.has(HW.norm(w, L)) ? esc(w) : `<ins>${esc(w)}</ins>`)).join(' ') : `<span class="muted">${T('(nothing on this line)', '(لا شيء في هذا السطر)')}</span>`;
+      return `<tr><td dir="auto">${exp}</td><td dir="auto">${rec}</td></tr>`; }).join('')}</tbody></table><p class="hw2-key"><span><del>${T('word', 'كلمة')}</del> ${T('not found', 'غير موجودة')}</span><span><ins>${T('word', 'كلمة')}</ins> ${T('read differently', 'قُرئت بشكل مختلف')}</span></p>`;
   }
 
   /* ---------- image handling ---------- */
@@ -204,13 +233,26 @@
         worker = await Tesseract.createWorker(st.lang === 'ar' ? 'ara' : st.lang === 'mix' ? 'ara+eng' : 'eng', 1, { workerPath: VENDOR + 'worker.min.js', corePath: VENDOR + 'core', langPath: VENDOR + 'lang', gzip: true, workerBlobURL: false, logger: m => { if (m.progress != null && st.step === 'reading') { st.progress = (/recogniz/.test(m.status) ? 0.4 : 0) + m.progress * 0.6; const i = root.querySelector('.hw2-bar i'); if (i) i.style.width = Math.round(st.progress * 100) + '%'; } } });
         workerLang = st.lang;
       }
-      const img = grayOf(working()), prep = HW.prepare(img, st.q.stats.skew);
-      const c = document.createElement('canvas'); c.width = prep.width; c.height = prep.height; const d = c.getContext('2d').createImageData(prep.width, prep.height);
-      for (let i = 0; i < prep.gray.length; i++) { const v = prep.gray[i]; d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
-      c.getContext('2d').putImageData(d, 0, 0);
-      const { data } = await worker.recognize(c);
-      const rates = HW.errorRates(set().join(' '), data.text, st.lang === 'mix' ? 'ar' : st.lang);
-      st.ocr = { text: data.text, conf: data.confidence || 0, rates, outcome: HW.outcome(rates, data.confidence || 0) };
+      const imgs = st.fromPad && st.canvases ? st.canvases : [working()];
+      let text = '', words = [], confs = [], prepInfo = null;
+      for (let n = 0; n < imgs.length; n++) {
+        const img = grayOf(imgs[n]), q = n === 0 && !st.fromPad ? st.q : HW.quality(img);
+        const uneven = !st.fromPad && (st.forceAdaptive != null ? st.forceAdaptive : q.stats.uneven > 0.2);
+        const prep = HW.prepare(img, st.fromPad ? 0 : st.q.stats.skew, { source: true, uneven, letterHeight: q.stats.letterHeight });
+        prepInfo = prepInfo || { adaptive: !!prep.adaptive, scale: prep.scale || 1, lines: HW.lines(prep).length };
+        const c = document.createElement('canvas'); c.width = prep.width; c.height = prep.height; const d = c.getContext('2d').createImageData(prep.width, prep.height);
+        for (let i = 0; i < prep.gray.length; i++) { const v = prep.gray[i]; d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
+        c.getContext('2d').putImageData(d, 0, 0);
+        const { data } = await worker.recognize(c, {}, { text: true, blocks: true });
+        text += (n ? '\n' : '') + (data.text || '');
+        const ws = (data.blocks || []).flatMap(b => b.paragraphs || []).flatMap(p => p.lines || []).flatMap(l => l.words || []);
+        words = words.concat(ws.length ? ws : (data.words || []));
+        if (data.confidence) confs.push(data.confidence);
+          }
+      const conf = confs.length ? confs.reduce((a, b) => a + b, 0) / confs.length : 0;
+      const rates = HW.errorRates(set().join(' '), text, st.lang === 'mix' ? 'ar' : st.lang);
+      st.ocr = { text, conf, rates, outcome: HW.outcome(rates, conf), words: HW.flagWords(words), prep: prepInfo, pages: imgs.length };
+      st.edit = text.trim();
       st.step = 'result';
     } catch (e) {
       console.error('ERLY handwriting: recognition failed', e);
@@ -226,13 +268,17 @@
     if (u) u.disabled = !pad.canUndo(); if (r) r.disabled = !pad.canRedo(); if (go) go.disabled = pad.isEmpty(); if (h) h.hidden = pad.strokes.length > 0;
   }
   function analysePad() {
-    const c = pad.export(); if (!c) return;
-    padStrokes = pad.strokes;
-    st.canvas = c; st.rot = 0; st.crop = null; st.fromPad = true; st.err = '';
+    savePage();
+    const live = pad.strokes, used = pages.filter(pg => pg.some(x => x.tool === 'pen'));
+    if (!used.length) return;
+    const canv = used.map(pg => { pad.strokes = pg; return pad.export(); }).filter(Boolean);
+    pad.strokes = live; pad.render();
+    const c = canv[0];
+    st.canvas = c; st.canvases = canv; st.rot = 0; st.crop = null; st.fromPad = true; st.err = '';
     const q = HW.quality(grayOf(c));
     // lighting, glare, edges and background describe photos, not a clean digital page
     const need = q.checks.filter(x => ['amount', 'size'].includes(x.id) && !x.ok);
-    if (need.length) { st.step = 'write'; st.err = need.map(x => P(x.id === 'amount' ? [T('There isn’t enough writing yet — please write all three sentences.', 'لا توجد كتابة كافية بعد — اكتب الجمل الثلاث.'), 'لا توجد كتابة كافية بعد — اكتب الجمل الثلاث.'] : [T('The writing is very small — try writing a little larger, or make the pen thicker.', 'الكتابة صغيرة جداً — جرّب الكتابة بحجم أكبر.'), 'الكتابة صغيرة جداً — جرّب الكتابة بحجم أكبر.'])).join(' '); return render(); }
+    if (need.length && canv.length === 1) { st.step = 'write'; st.err = need.map(x => x.id === 'amount' ? T('There isn’t enough writing yet — please write all three sentences.', 'لا توجد كتابة كافية بعد — اكتب الجمل الثلاث.') : T('The writing is very small — try writing a little larger.', 'الكتابة صغيرة جداً — جرّب الكتابة بحجم أكبر قليلاً.')).join(' '); return render(); }
     st.q = q; st.q.stats.skew = 0;
     recognise();
   }
@@ -241,6 +287,8 @@
   function onClick(e) {
     const lb = e.target.closest('[data-lang]'); if (lb) { st.lang = lb.dataset.lang; st.set = 0; return render(); }
     const mb = e.target.closest('[data-method]'); if (mb) { st.method = mb.dataset.method; st.err = ''; return render(); }
+    const pb = e.target.closest('[data-page]'); if (pb && pad) return goPage(+pb.dataset.page);
+    const pp = e.target.closest('[data-paper]'); if (pp && pp.tagName === 'BUTTON') { paper = pp.dataset.paper; const h = root.querySelector('#hwPad'); if (h) h.dataset.paper = paper; root.querySelectorAll('button[data-paper]').forEach(x => x.setAttribute('aria-checked', String(x === pp))); return; }
     const tb = e.target.closest('[data-tool]'); if (tb && pad) { pad.setTool(tb.dataset.tool); root.querySelectorAll('[data-tool]').forEach(x => x.setAttribute('aria-checked', String(x === tb))); return; }
     const ib = e.target.closest('[data-ink]'); if (ib && pad) { pad.setInk(ib.dataset.ink); pad.setTool('pen'); root.querySelectorAll('[data-ink]').forEach(x => x.setAttribute('aria-checked', String(x === ib))); root.querySelectorAll('[data-tool]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.tool === 'pen'))); return; }
     const a = (e.target.closest('[data-a]') || {}).dataset; if (!a || !a.a) return;
@@ -258,16 +306,21 @@
     if (k === 'read') return recognise();
     if (k === 'undo' && pad) { pad.undo(); return syncTools(); }
     if (k === 'redo' && pad) { pad.redoOne(); return syncTools(); }
-    if (k === 'clearpad' && pad) { pad.clear(); return syncTools(); }
+    if (k === 'clearpad' && pad) { if (pad.strokes.length && !confirm(T('Clear this page? You can undo it straight after.', 'مسح هذه الصفحة؟ يمكنك التراجع مباشرة بعد ذلك.'))) return; pad.clear(); return syncTools(); }
+    if (k === 'addpage' && pad) { savePage(); pages.push([]); return goPage(pages.length - 1); }
+    if (k === 'copy') { const t = (root.querySelector('#hwEdit') || {}).value || ''; (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => ERLY.toast && ERLY.toast(T('Copied.', 'تم النسخ.'))).catch(() => { const ta = root.querySelector('#hwEdit'); ta.select(); try { document.execCommand('copy'); } catch (er) { /* manual copy */ } }); return; }
+    if (k === 'compare') { st.showCmp = !st.showCmp; return render(); }
+    if (k === 'retryprep') { st.forceAdaptive = !(st.ocr && st.ocr.prep && st.ocr.prep.adaptive); return recognise(); }
     if (k === 'analysepad' && pad) return analysePad();
     if (k === 'discard' && studio()) { discard(true); st.step = 'write'; st.method = 'screen'; render(); ERLY.toast && ERLY.toast(T('Your writing and the result were discarded.', 'تم حذف كتابتك والنتيجة.')); return; }
     if (k === 'discard') { discard(); close(); ERLY.toast && ERLY.toast(T('Photo and result discarded.', 'تم حذف الصورة والنتيجة.')); return; }
     if (k === 'sas') { discard(); close(); return; }
   }
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'hwEdit' && st) { st.edit = e.target.value; if (st.showCmp) { const t = root.querySelector('.hw2-cmp'); if (t) { const w = document.createElement('div'); w.innerHTML = compareTable(); t.nextElementSibling && t.nextElementSibling.remove(); t.replaceWith(...w.childNodes); } } } });
   function onChange(e) { const i = e.target.closest('[data-file]'); if (i && i.files && i.files[0]) { load(i.files[0]); i.value = ''; } }
 
   ERLY.on && ERLY.on('hand:open', open);
-  window.ERLY.handwriting = { open, close, rerender: () => st && render(), state: () => st, pad: () => pad, _working: () => (st && st.canvas ? working() : null) };
+  window.ERLY.handwriting = { open, close, rerender: () => st && render(), state: () => st, pad: () => pad, pages: () => pages.map(pg => pg.length), _worker: () => !!worker, _working: () => (st && st.canvas ? working() : null) };
   if (studio()) { const startIt = () => openInline(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startIt); else startIt(); }
 })();
 document.addEventListener('click', e => { const b = e.target.closest('[data-hand-open]'); if (!b) return; e.preventDefault(); if (window.ERLY && ERLY.ink) ERLY.ink.go('handwriting.html', { from: b }); else location.href = 'handwriting.html'; });

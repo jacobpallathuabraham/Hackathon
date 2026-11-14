@@ -116,8 +116,24 @@
     empty: B('We couldn’t find enough writing in this photo. Make sure the three sentences are in view.', 'لم نجد كتابة كافية في الصورة. تأكد من ظهور الجمل الثلاث.'),
     noisy: B('The background is busy (lines, patterns or shadows), so the writing is hard to separate. Plain paper and even light work best.', 'الخلفية مزدحمة، لذا يصعب فصل الكتابة. الورق السادة والإضاءة المتساوية أفضل.')
   };
+  // v17: even out the paper's brightness (a shadow, a lamp on one side): divide by a smooth estimate of the
+  // local paper colour, so the checks below judge the writing rather than the lighting
+  function flatten(gray, W, H) {
+    const G = 12, bw = W / G, bh = H / G, bg = new Float64Array(G * G);
+    for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
+      const v = []; for (let y = Math.floor(gy * bh); y < Math.floor((gy + 1) * bh); y += 2) for (let x = Math.floor(gx * bw); x < Math.floor((gx + 1) * bw); x += 2) v.push(gray[y * W + x]);
+      v.sort((a, b) => a - b); bg[gy * G + gx] = Math.max(30, v.length ? v[Math.floor(v.length * 0.85)] : 255);
+    }
+    const out = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) { const fy = Math.min(G - 1.001, Math.max(0, y / bh - 0.5)), y0 = Math.floor(fy), ty = fy - y0;
+      for (let x = 0; x < W; x++) { const fx = Math.min(G - 1.001, Math.max(0, x / bw - 0.5)), x0 = Math.floor(fx), tx = fx - x0;
+        const b = bg[y0 * G + x0] * (1 - tx) * (1 - ty) + bg[y0 * G + x0 + 1] * tx * (1 - ty) + bg[(y0 + 1) * G + x0] * (1 - tx) * ty + bg[(y0 + 1) * G + x0 + 1] * tx * ty;
+        out[y * W + x] = Math.min(255, Math.round(gray[y * W + x] / b * 240)); } }
+    return out;
+  }
   function quality(img) {
-    const s = shrink(img.gray, img.width, img.height, 900), g = s.gray, W = s.W, H = s.H;
+    const s = shrink(img.gray, img.width, img.height, 900), W = s.W, H = s.H, uneven = unevenLight(s.gray, W, H);
+    const g = uneven > 0.2 ? flatten(s.gray, W, H) : s.gray;
     let mean = 0, lo = 0, hi = 0; for (let i = 0; i < g.length; i++) { mean += g[i]; if (g[i] < 25) lo++; if (g[i] > 248) hi++; } mean /= g.length;
     const o = otsu(g), ink = new Uint8Array(W * H); for (let i = 0; i < g.length; i++) ink[i] = g[i] <= o.thr ? 1 : 0;
     const comps = components(ink, W, H, 4);
@@ -145,12 +161,12 @@
       { id: 'cropped', ok: !(atEdge && edge >= 2), value: edge, msg: MSG.cropped, essential: true },
       { id: 'background', ok: big === 0 && o.inkShare < 0.35, value: +o.inkShare.toFixed(2), msg: MSG.noisy, essential: false }
     ];
-    return { ok: checks.every(c => c.ok || !c.essential), checks, stats: { mean, sep: o.sep, sharp, comps: text.length, letterHeight: hMed, skew: sk.deg, sideways: sk.ninety } };
+    return { ok: checks.every(c => c.ok || !c.essential), checks, stats: { mean, sep: o.sep, sharp, comps: text.length, letterHeight: hMed, skew: sk.deg, sideways: sk.ninety, uneven } };
   }
 
   /* ---------- 2. preparation for recognition ---------- */
   // rotate (deg) + binarise + trim to the writing + scale so x-height is ~32 px (what Tesseract reads best)
-  function prepare(img, deg) {
+  function prepare(img, deg, opts) {
     const { gray, width: W, height: H } = img, a = -(deg || 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
     const o = otsu(gray);
     const nw = Math.ceil(Math.abs(W * c) + Math.abs(H * s)), nh = Math.ceil(Math.abs(W * s) + Math.abs(H * c));
@@ -162,7 +178,71 @@
     const m = 20; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(nw - 1, x1 + m); y1 = Math.min(nh - 1, y1 + m);
     const tw = x1 - x0 + 1, th = y1 - y0 + 1, out = new Uint8Array(tw * th);
     for (let y = 0; y < th; y++) out.set(rot.subarray((y0 + y) * nw + x0, (y0 + y) * nw + x0 + tw), y * tw);
-    return { gray: out, width: tw, height: th };
+    // v17: uneven lighting → adaptive (Sauvola) threshold of the trimmed page; small writing → upscaled so the
+    // letters are ~40 px tall (Tesseract reads best between ~30 and 50 px); very large writing is scaled down
+    let res = { gray: out, width: tw, height: th, adaptive: false, scale: 1 };
+    const o2 = opts || {};
+    if (o2.source && o2.uneven) {
+      const src = new Uint8Array(tw * th);
+      for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) { const dx = x0 + x - ncx, dy = y0 + y - ncy, sx = Math.round(dx * c + dy * s + cx), sy = Math.round(-dx * s + dy * c + cy); src[y * tw + x] = sx >= 0 && sy >= 0 && sx < W && sy < H ? gray[sy * W + sx] : 255; }
+      res.gray = sauvola(src, tw, th); res.adaptive = true;
+    }
+    const lh = o2.letterHeight || 0;
+    if (lh > 0) { const k = Math.max(0.5, Math.min(3, 40 / lh)); if (Math.abs(k - 1) > 0.15) { const sc = scale(res.gray, res.width, res.height, k); res = Object.assign(res, sc, { scale: k }); } }
+    return res;
+  }
+
+  /* ---------- v17: adaptive threshold, upscaling, line segmentation, word flags ---------- */
+  // Sauvola thresholding (integral images): each pixel is compared with its own neighbourhood, so a page
+  // with a shadow across one corner still separates ink from paper. Returns 0 (ink) / 255 (paper).
+  function sauvola(gray, W, H, win, k) {
+    win = win || Math.max(15, Math.round(Math.min(W, H) / 24) | 1); k = k == null ? 0.2 : k;
+    const I = new Float64Array((W + 1) * (H + 1)), I2 = new Float64Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) { let r = 0, r2 = 0; for (let x = 0; x < W; x++) { const v = gray[y * W + x]; r += v; r2 += v * v; const i = (y + 1) * (W + 1) + x + 1; I[i] = I[i - W - 1] + r; I2[i] = I2[i - W - 1] + r2; } }
+    const out = new Uint8Array(W * H), h = win >> 1;
+    for (let y = 0; y < H; y++) {
+      const y0 = Math.max(0, y - h), y1 = Math.min(H, y + h + 1);
+      for (let x = 0; x < W; x++) {
+        const x0 = Math.max(0, x - h), x1 = Math.min(W, x + h + 1), n = (x1 - x0) * (y1 - y0);
+        const a = y1 * (W + 1) + x1, b = y0 * (W + 1) + x1, c = y1 * (W + 1) + x0, d = y0 * (W + 1) + x0;
+        const m = (I[a] - I[b] - I[c] + I[d]) / n, v = Math.max(0, (I2[a] - I2[b] - I2[c] + I2[d]) / n - m * m);
+        out[y * W + x] = gray[y * W + x] <= m * (1 + k * (Math.sqrt(v) / 128 - 1)) ? 0 : 255;
+      }
+    }
+    return out;
+  }
+  // how uneven the paper's lighting is: spread of local background brightness across a coarse grid
+  function unevenLight(gray, W, H) {
+    const G = 6, vals = [];
+    for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
+      const hist = []; for (let y = Math.floor(gy * H / G); y < Math.floor((gy + 1) * H / G); y += 3) for (let x = Math.floor(gx * W / G); x < Math.floor((gx + 1) * W / G); x += 3) hist.push(gray[y * W + x]);
+      if (hist.length) { hist.sort((a, b) => a - b); vals.push(hist[Math.floor(hist.length * 0.8)]); } // the paper, not the ink
+    }
+    return vals.length ? (Math.max(...vals) - Math.min(...vals)) / 255 : 0;
+  }
+  // bilinear scale of a 0..255 image
+  function scale(gray, W, H, k) {
+    const w = Math.max(1, Math.round(W * k)), h = Math.max(1, Math.round(H * k)), out = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) { const sy = Math.min(H - 1, (y + 0.5) / k - 0.5), y0 = Math.max(0, Math.floor(sy)), y1 = Math.min(H - 1, y0 + 1), fy = Math.max(0, sy - y0);
+      for (let x = 0; x < w; x++) { const sx = Math.min(W - 1, (x + 0.5) / k - 0.5), x0 = Math.max(0, Math.floor(sx)), x1 = Math.min(W - 1, x0 + 1), fx = Math.max(0, sx - x0);
+        const v = gray[y0 * W + x0] * (1 - fx) * (1 - fy) + gray[y0 * W + x1] * fx * (1 - fy) + gray[y1 * W + x0] * (1 - fx) * fy + gray[y1 * W + x1] * fx * fy; out[y * w + x] = v > 127 ? 255 : 0; } }
+    return { gray: out, width: w, height: h };
+  }
+  // text lines: rows of ink separated by (near-)empty rows in the horizontal projection
+  function lines(img) {
+    const { gray, width: W, height: H } = img, prof = new Float64Array(H);
+    for (let y = 0; y < H; y++) { let n = 0; for (let x = 0; x < W; x++) if (gray[y * W + x] < 128) n++; prof[y] = n; }
+    const peak = Math.max(1, ...prof), on = v => v > peak * 0.04;
+    const bands = []; let y0 = -1;
+    for (let y = 0; y <= H; y++) { const v = y < H && on(prof[y]); if (v && y0 < 0) y0 = y; if (!v && y0 >= 0) { bands.push([y0, y - 1]); y0 = -1; } }
+    // merge bands split by a gap smaller than a third of a typical line (dots, accents, descenders)
+    const hs = bands.map(b => b[1] - b[0] + 1), typ = median(hs) || 1, merged = [];
+    for (const b of bands) { const last = merged[merged.length - 1]; if (last && b[0] - last[1] < typ * 0.35) last[1] = b[1]; else merged.push(b.slice()); }
+    return merged.filter(b => b[1] - b[0] + 1 >= Math.max(4, typ * 0.3)).map(([a, b]) => { const m = Math.round((b - a + 1) * 0.15); return { y0: Math.max(0, a - m), y1: Math.min(H - 1, b + m) }; });
+  }
+  // Tesseract's own per-word confidence (0–100), shown as the software's certainty — never as the writer's
+  function flagWords(words) {
+    return (words || []).filter(w => w && String(w.text || '').trim()).map(w => ({ text: String(w.text).trim(), conf: Math.round(w.confidence), flag: w.confidence >= 80 ? 'ok' : w.confidence >= 50 ? 'uncertain' : 'unreadable' }));
   }
 
   /* ---------- 3. comparison (how well the software recognised the copied sentences) ---------- */
@@ -182,5 +262,5 @@
     return 'inconclusive';                                     // too little recognised to say anything
   }
 
-  return { PROMPTS, MSG, toGray, otsu, shrink, laplacianVar, components, skew, quality, prepare, norm, lev, errorRates, wordMap, outcome };
+  return { PROMPTS, MSG, toGray, otsu, shrink, laplacianVar, components, skew, quality, prepare, sauvola, unevenLight, flatten, scale, lines, flagWords, norm, lev, errorRates, wordMap, outcome };
 });

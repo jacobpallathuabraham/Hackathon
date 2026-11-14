@@ -13,9 +13,11 @@
   const KEY = 'erly-ink';
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
   const dark = () => document.documentElement.dataset.theme === 'dark';
+  // v17: each theme has its own ink. Dark: deep navy paper, blue ink with cyan glow and white highlights.
+  // Light: white paper, near-black ink with cobalt. pool = the ink puddles; cover = the page the flood ends on.
   const PAL = {
-    dark: { cover: '#050b20', deep: '#0b1c4f', ink: '#1d4ed8', glow: '#22d3ee', hi: 'rgba(232,246,255,0.9)', accent: 'rgba(139,92,246,0.55)', wash: 'rgba(56,189,248,0.22)', nib: ['#f8fbff', '#9fb7ff'] },
-    light: { cover: '#0b0e16', deep: '#141b2e', ink: '#121a33', glow: '#2b4fd6', hi: 'rgba(147,180,255,0.65)', accent: 'rgba(30,58,138,0.55)', wash: 'rgba(37,99,235,0.28)', nib: ['#20242e', '#3b56c4'] }
+    dark: { cover: '#050b20', pool: '#050b20', deep: '#0b1c4f', ink: '#1d4ed8', glow: '#22d3ee', hi: 'rgba(232,246,255,0.9)', accent: 'rgba(34,211,238,0.55)', wash: 'rgba(56,189,248,0.22)', nib: ['#f8fbff', '#9fb7ff'], drop: '#7dd3fc' },
+    light: { cover: '#fbfaf7', pool: '#10131c', deep: '#10131c', ink: '#1d3fb8', glow: '#2b4fd6', hi: 'rgba(255,255,255,0.85)', accent: 'rgba(29,63,184,0.55)', wash: 'rgba(29,63,184,0.16)', nib: ['#20242e', '#3b56c4'], drop: '#1d3fb8' }
   };
   const pal = () => PAL[dark() ? 'dark' : 'light'];
   const ease = t => (t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.pow(1 - t, 3));
@@ -112,7 +114,7 @@
       // flood (last): from the pen's starting point, covering everything
       const fl = inout(clamp01((u - 0.62) / 0.38));
       // pools
-      g.fillStyle = p.cover;
+      g.fillStyle = p.pool;
       for (const pl of pools) blob(g, pl.x, pl.y, pl.R * ease(clamp01((u - pl.at) / 0.35)), pl.phase, t);
       // branch ribbons
       for (const b of branches) {
@@ -134,7 +136,7 @@
       g.strokeStyle = p.accent; g.lineWidth = 3; g.beginPath(); for (let i = Math.max(0, n - 40); i < n; i++) { const q = main[i]; if (i === Math.max(0, n - 40)) g.moveTo(q[0] + 3, q[1] + 4); else g.lineTo(q[0] + 3, q[1] + 4); } g.stroke();
       g.restore();
       // droplets
-      g.fillStyle = p.ink;
+      g.fillStyle = p.drop;
       for (const d of drops) { d.x += d.vx; d.y += d.vy; d.vx *= 0.96; d.vy *= 0.96; d.life -= 0.02; if (d.life > 0) { g.globalAlpha = Math.min(1, d.life * 1.5); g.beginPath(); g.arc(d.x, d.y, d.r, 0, Math.PI * 2); g.fill(); } }
       g.globalAlpha = 1;
       // the flood, with a soft wash ahead of its edge

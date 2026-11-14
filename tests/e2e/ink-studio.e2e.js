@@ -77,10 +77,12 @@ const SHOT = process.env.ERLY_SHOTS;
   c = await ctxFor({ theme: 'dark' }); p = await c.newPage(); watch(p);
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(700);
   assert.equal(await p.evaluate(() => ERLY.ink._pal().cover), '#050b20', 'dark: midnight ink');
+  assert.equal(await p.evaluate(() => { const t = document.documentElement.dataset.theme; document.documentElement.dataset.theme = 'light'; const v = ERLY.ink._pal(); document.documentElement.dataset.theme = t; return v.pool + ' ' + v.cover; }), '#10131c #fbfaf7', 'light: near-black ink on white paper');
   let px = null; await p.exposeFunction('__px', v => { px = v; });
   await p.evaluate(() => { document.addEventListener('click', () => { setTimeout(() => { document.documentElement.dataset.theme = 'light'; }, 500); setTimeout(() => { const cv = document.querySelector('canvas.ink-fx'); if (!cv) return window.__px(null); const d = cv.getContext('2d').getImageData(cv.width >> 1, cv.height >> 1, 1, 1).data; window.__px([d[0], d[1], d[2], d[3]]); }, 1350); }, { capture: true, once: true }); });
   await p.click('#games [data-hand-open]'); await p.waitForTimeout(1700);
-  assert.ok(px && px[2] < 40, 'light theme switched mid-way: the cover is near-black ink (' + px + ')');
+  // v17: light theme = white paper with black/cobalt ink, so the flood that ends the transition is paper-white
+  assert.ok(px && px[0] > 225 && px[1] > 225 && px[3] > 200, 'light theme switched mid-way: the cover is white paper (' + px + ')');
   await c.close();
 
   /* ---------- 4 · reduced motion: short, calm, still complete ---------- */
@@ -130,7 +132,9 @@ const SHOT = process.env.ERLY_SHOTS;
   assert.ok(lightInk < 200 && darkInk > 500, `ink colour follows the theme (${lightInk} → ${darkInk})`);
   if (SHOT) await p.screenshot({ path: SHOT + '/studio-dark.png' });
   await p.click('#themeToggle'); await p.waitForTimeout(500);
-  await p.click('[data-a="clearpad"]'); assert.equal(await strokes(), 0, 'clear');
+  // v17: Clear asks first; cancelling keeps the page, accepting clears it (and Undo brings it back)
+  p.once('dialog', d => d.dismiss()); await p.click('[data-a="clearpad"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 3, 'cancelled clear keeps the writing');
+  p.once('dialog', d => d.accept()); await p.click('[data-a="clearpad"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 0, 'clear');
 
   /* ---------- 6 · analysing on-screen writing uses the real recognition pipeline ---------- */
   // simulate a writer: the three sentences rendered in a handwriting-style font, traced into short pen strokes
