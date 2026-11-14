@@ -1068,3 +1068,37 @@ The Desmos and GeoGebra APIs were not used: their licences, keys and usage terms
   - optics;
   - routing, including ordinary chat that must not open the lab.
 - `tests/e2e/lab.e2e.js`: the 19 maths and 15 physics acceptance tests. They run through Noor's chat with no AI provider, using real slider, drag, rotate, wheel, export, phone and theme interactions. 34 of 34 pass.
+
+## v17: Noor ready by default, page awareness, Handwriting Check, problem-to-scene visuals
+
+Full report: [`docs/V17-REPORT.md`](docs/V17-REPORT.md).
+
+- **Noor needs no activation.** Noor Online is the default. The line under the message box says where messages go, and **On this device only** is one tap away (also in Settings and the Accessibility panel). Nothing is sent before **Send**.
+- **iPad/iPhone keyboard:** the panel follows the Visual Viewport, so the composer sits on the keyboard and nothing jumps.
+- **Noticing reading friction is automatic and on-device.** Noor explains it once, and it can be paused at any time. Mic and external AI stay opt-in.
+- **"Explain what I'm looking at"** uses the visible screen (`assets/js/page-context.js`).
+- **Video:** full screen works, and the chat can open over it without pausing the video. Time-range questions are answered only from real transcripts.
+- **Handwriting Check:**
+  - theme-specific ink;
+  - ruled, blank or grid paper, and multiple pages;
+  - shadow-tolerant quality checks, adaptive threshold, upscaling and line segmentation;
+  - Tesseract's own word confidences;
+  - an editable, copyable, comparable result;
+  - Discard also shuts down the recognition worker.
+- **Problem-to-scene engines** (`assets/js/lab/lab-problems.js`, acceptance tests A–J):
+  - rigid bodies with pulleys and friction, rolling vs slipping;
+  - point charges;
+  - area between curves;
+  - SN1/SN2/E2 mechanisms;
+  - circuit topology with nodal analysis;
+  - gear trains;
+  - binary distillation;
+  - FM;
+  - the cardiac cycle;
+  - break-even.
+
+  Scene specs are validated data, never code.
+- **Coverage, measured:** [`coverage.html`](coverage.html) runs every concept in `assets/js/lab/curriculum.js` through Noor's live router and reports what actually appears.
+
+Tests: `npm test`, and `tests/e2e/noor-v17`, `page-video`, `handwriting-v17` and `problems.e2e.js`. The local server must be running for the e2e tests.
+
