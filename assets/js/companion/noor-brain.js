@@ -493,6 +493,9 @@
     const vid = ERLY.videos && ERLY.videos.current && ERLY.videos.current();
     const range = vid ? pc.parseRange(text) : null;
     if (range && vid) { history.push({ role: 'user', text }); await videoRange(text, vid, range); ERLY.emit('noor:turn-end'); return true; }
+    // a passage the student attached (Reading Studio selection, "Ask about what I'm reading") is more precise than a screen snapshot
+    if (U.attached && U.attached()) return false;
+    if (ERLY.reader && ERLY.reader.isOpen && ERLY.reader.isOpen() && !vid) return false; // the studio supplies its own page context
     if (!pc.isLooking(text) && !(vid && /\b(this|the) (video|lecture|clip|lesson)\b/i.test(text))) return false;
     const snap = pc.snapshot();
     const ctx = pc.forNoor(snap);
