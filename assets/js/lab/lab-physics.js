@@ -542,7 +542,7 @@
 
   /* ======================= ideal gas (2D hard discs) ======================= */
   reg('gas', KIND.heat, T('Gas in a box (kinetic theory)', 'غاز في صندوق'),
-    t => (/\b(ideal gas|gas laws?|kinetic theory|pv\s*=\s*nrt|boyle|charles|gas (particles|molecules)|heat (a|the) gas|pressure and (volume|temperature)|particle motion|brownian)\b/i.test(t) ? { score: 0.9, params: {} } : null),
+    t => (/\b(ideal gas|gas laws?|kinetic theory|pv\s*=\s*nrt|boyle|charles|gas (particles|molecules)|pressure and (volume|temperature)|particle motion|brownian)\b/i.test(t) ? { score: 0.9, params: {} } : null),
     {
       defaults: { N: 120, T: 300, W: 12, r: 0.12 },
       params: [{ key: 'N', label: T('particles N', 'عدد الجسيمات'), unit: '', min: 10, max: 300, step: 10, alias: ['particles', 'number of particles'] }, { key: 'T', label: T('temperature T', 'درجة الحرارة'), unit: 'K', min: 50, max: 1000, step: 10, live: true, alias: ['temperature'], onSet: (S, st) => { const k = Math.sqrt(S.T / measuredT(st)); if (isFinite(k)) st.p.forEach(q => { q.vx *= k; q.vy *= k; }); st.imp = 0; st.t0 = st.t; } }, { key: 'W', label: T('box width (volume)', 'عرض الصندوق'), unit: '', min: 4, max: 16, step: 0.5, live: true, alias: ['volume', 'width'], onSet: (S, st) => { st.p.forEach(q => { q.x = Math.min(q.x, S.W - S.r); }); st.imp = 0; st.t0 = st.t; } }],

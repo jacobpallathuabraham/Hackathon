@@ -320,6 +320,8 @@
     // Noor's hand-built illustrated scenes (Newton's laws, the solar system, the heart…) answer "explain/illustrate"
     // requests; the lab takes over when the student wants to simulate, graph, calculate, build or experiment
     const LABWORDS = /\b(solve|factor\w*|simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;
+    // a conceptual "why…?" with no maths in it and no request to build anything is Noor's to explain, not a model to open
+    if (/^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text)) return null;
     const list = candidates(text); let r = null;
     const top = list[0];
     if (top && !top.reply && top.score < 0.88) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
