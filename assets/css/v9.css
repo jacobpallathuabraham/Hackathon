@@ -200,3 +200,7 @@ html.a11y-still .a11y-reader__w i, html.a11y-still .a11y-reader { animation: non
 main[tabindex="-1"]:focus { outline: none; }
 /* every form field shows a clear focus ring (some components had removed it) */
 :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea):focus-visible { outline: 2px solid var(--accent, #BA4A26) !important; outline-offset: 2px; }
+/* fields that draw their own focus border on the wrapper (sign-in boxes, Noor's composer) don't get a second ring inside */
+:is(.fld__box, .cmp__input) :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea):focus-visible { outline: none !important; }
+/* an error message only shows when there is an error */
+.lerr[hidden], .lerr:empty { display: none !important; }
