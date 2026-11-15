@@ -15,7 +15,9 @@ const near = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg}: ${a}
   await ctx.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); localStorage.setItem('erly-theme', 'light'); });
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message));
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(1200); await p.click('.cmp-launch'); await p.waitForTimeout(700);
-  const ask = async q => { await p.fill('#cmpText', q); await p.press('#cmpText', 'Enter'); await p.waitForFunction(() => !document.querySelector('.cmsg.is-writing') && !document.querySelector('.cmsg--typing'), null, { timeout: 30000 }); await p.waitForTimeout(700); return p.evaluate(() => { const m = [...document.querySelectorAll('.cmsg--ai')].pop(); return m ? m.innerText : ''; }); };
+  const ask0 = async q => { await p.fill('#cmpText', q); await p.press('#cmpText', 'Enter'); await p.waitForFunction(() => !document.querySelector('.cmsg.is-writing') && !document.querySelector('.cmsg--typing'), null, { timeout: 30000 }); await p.waitForTimeout(700); return p.evaluate(() => { const m = [...document.querySelectorAll('.cmsg--ai')].pop(); return m ? m.innerText : ''; }); };
+  // v18: models open inside the chat; this suite exercises the full Visual Lab workspace, so each is expanded into it
+  const ask = async q => { const r = await ask0(q); await p.evaluate(() => { if (ERLY_LAB.isInline && ERLY_LAB.isInline()) ERLY_LAB.expand(); }); await p.waitForTimeout(250); return r; };
   const st = () => p.evaluate(() => ERLY_LAB.state());
   const eng = () => p.evaluate(() => (ERLY_LAB.current() ? ERLY_LAB.current().engine.id : null));
   const run = s => p.evaluate(s => ERLY_LAB.current().inst.api.run(s), s);

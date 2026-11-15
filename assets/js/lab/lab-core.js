@@ -206,7 +206,9 @@
           <div class="lab-menu"><button type="button" class="lab-ic" data-lab="export" aria-haspopup="true" aria-expanded="false">${T('Export', 'تصدير')}</button>
             <div class="lab-menu__pop" hidden><button type="button" data-lab="png">${T('Image (PNG)', 'صورة PNG')}</button><button type="button" data-lab="json">${T('Model (JSON)', 'النموذج JSON')}</button><button type="button" data-lab="csv">${T('Data table (CSV)', 'جدول بيانات CSV')}</button><button type="button" data-lab="copy">${T('Copy result', 'نسخ النتيجة')}</button><a href="coverage.html" class="lab-menu__link">${T('What Noor can show (coverage)', 'ما يمكن لنور عرضه')}</a></div></div>
           <button type="button" class="lab-ic" data-lab="reset">${T('Reset', 'إعادة')}</button>
-          <button type="button" class="lab-ic" data-lab="max" aria-pressed="false" aria-label="${T('Full screen', 'ملء الشاشة')}">⤢</button>
+          <button type="button" class="lab-ic lab-ic--expand" data-lab="expand" title="${T('Open in the Visual Lab workspace', 'افتح في مساحة المختبر')}">${T('Open in Visual Lab', 'افتح في المختبر')} ⤢</button>
+          <button type="button" class="lab-ic lab-ic--dock" data-lab="dock" title="${T('Put it back in the chat', 'أعده إلى المحادثة')}">${T('Back to chat', 'العودة إلى المحادثة')}</button>
+          <button type="button" class="lab-ic lab-ic--max" data-lab="max" aria-pressed="false" aria-label="${T('Full screen', 'ملء الشاشة')}">⤢</button>
           <button type="button" class="lab-ic" data-lab="close" aria-label="${T('Close the lab', 'إغلاق المختبر')}">✕</button>
         </div></header>
       <div class="lab__body">
@@ -219,6 +221,8 @@
     ws.addEventListener('click', e => {
       const b = e.target.closest('[data-lab]'); if (!b) return; const a = b.dataset.lab;
       if (a === 'close') close();
+      if (a === 'expand') expand();
+      if (a === 'dock') dock();
       if (a === 'reset' && current) { current.inst.reset ? current.inst.reset() : open(current.engine.id, current.params, { reuse: false }); note(T('Reset to the starting model.', 'أُعيد النموذج إلى بدايته.')); }
       if (a === 'max') { const on = ws.classList.toggle('is-max'); b.setAttribute('aria-pressed', String(on)); }
       if (a === 'explain') { const on = ws.classList.toggle('no-ex'); b.setAttribute('aria-pressed', String(!on)); }
@@ -247,7 +251,7 @@
     ws.dataset.engine = id; ws.dataset.family = engine.family || 'math';
     ws.querySelector('#labKind').textContent = engine.kind;
     ws.querySelector('#labTitle').textContent = (params && params.title) || engine.title;
-    ws.hidden = false; document.documentElement.classList.add('lab-on');
+    ws.hidden = false; if (!ws.classList.contains('lab--inline')) document.documentElement.classList.add('lab-on');
     requestAnimationFrame(() => ws.classList.add('is-in'));
     stage.innerHTML = `<p class="lab-loading">${T('Building the model…', 'أبني النموذج…')}</p>`;
     let inst;
@@ -260,8 +264,30 @@
     if (window.ERLY && ERLY.emit) ERLY.emit('lab:open', { id, params });
     return inst;
   }
+  /* v18: the same workspace lives INSIDE a chat message (inline) or as the full Visual Lab. One engine, one model,
+     one state — only the frame changes. inline(host) moves the live model into a chat card; expand() lifts it into
+     the full workspace; dock() puts it back. snapshot() freezes the current model as an image + its parameters so an
+     earlier chat card can reopen it exactly as it was. */
+  let dockHost = null;
+  function inline(host) {
+    shell(); if (!host) return;
+    dockHost = host; host.appendChild(ws); ws.classList.add('lab--inline'); ws.classList.remove('is-max');
+    document.documentElement.classList.remove('lab-on'); ws.setAttribute('aria-modal', 'false');
+    ws.hidden = false; requestAnimationFrame(() => { ws.classList.add('is-in'); if (current && current.inst.redraw) current.inst.redraw(); });
+  }
+  function expand() { if (!ws) return; document.body.appendChild(ws); ws.classList.remove('lab--inline'); document.documentElement.classList.add('lab-on'); ws.classList.add('is-expanded'); requestAnimationFrame(() => current && current.inst.redraw && current.inst.redraw()); explainNow(); if (window.ERLY && ERLY.emit) ERLY.emit('lab:expand', {}); }
+  function dock() { if (dockHost && dockHost.isConnected) { inline(dockHost); ws.classList.remove('is-expanded'); } else { ws.classList.remove('is-expanded'); } }
+  function snapshot() {
+    if (!current) return null;
+    let png = null; try { const cv = current.inst.canvas && current.inst.canvas(); if (cv && cv.toDataURL) png = cv.toDataURL('image/png'); } catch (e) { png = null; }
+    let state = null; try { state = current.inst.state ? current.inst.state() : null; } catch (e) { state = null; }
+    const live = current.inst.api && current.inst.api.S; let set = null;
+    try { set = live ? JSON.parse(JSON.stringify(live)) : state && state.params ? state.params : null; } catch (e) { set = null; } // the model's live parameters (data only)
+    return { id: current.engine.id, title: ws.querySelector('#labTitle').textContent, kind: current.engine.kind, params: Object.assign({}, current.params, set ? { set } : {}), png, state };
+  }
+  L.inline = inline; L.expand = expand; L.dock = dock; L.snapshot = snapshot; L.isInline = () => !!(ws && ws.classList.contains('lab--inline'));
   function close() {
-    if (!ws) return; ws.classList.remove('is-in'); document.documentElement.classList.remove('lab-on');
+    if (!ws) return; ws.classList.remove('is-in', 'is-expanded'); document.documentElement.classList.remove('lab-on');
     if (current && current.inst.destroy) { try { current.inst.destroy(); } catch (e) { /* ok */ } }
     current = null; setTimeout(() => { if (!current) ws.hidden = true; }, 220);
     if (window.ERLY && ERLY.emit) ERLY.emit('lab:close', {});
@@ -316,7 +342,11 @@
   function route(text) { return candidates(text)[0] || null; }
   // Noor's entry point: an edit to the open model, a calculation answered in chat, or a new model
   async function handle(text) {
-    if (current) { const r = command(normalise(text)); if (r) return { kind: 'edit', text: r.note + (r.more ? '\n\n' + r.more : '') }; }
+    // a follow-up ("make it wider", "increase the angle to 50") edits the open model; a full new question opens a new
+    // one even when the open model could also react to some of its words
+    const fresh = current ? candidates(text)[0] : null;
+    const newQuestion = !!(fresh && fresh.score >= 0.9 && String(text).trim().split(/\s+/).length >= 7 && /\b(what|why|how|explain|show|find|draw|plot|graph|visuali[sz]e|simulate|demonstrate|describe|calculate|solve|create|build|help me|can you)\b/i.test(text));
+    if (current && !newQuestion) { const r = command(normalise(text)); if (r) return { kind: 'edit', text: r.note + (r.more ? '\n\n' + r.more : '') }; }
     // Noor's hand-built illustrated scenes (Newton's laws, the solar system, the heart…) answer "explain/illustrate"
     // requests; the lab takes over when the student wants to simulate, graph, calculate, build or experiment
     const LABWORDS = /\b(solve|factor\w*|simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;

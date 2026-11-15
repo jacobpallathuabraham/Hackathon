@@ -87,7 +87,25 @@
      3. otherwise the built-in brain: study skills (maths, plans, emails, page
         summaries, quizzes) and then ERLY's knowledge guide */
   const MD = window.ERLY_MD, AIX = window.ERLY_AI;
+  /* ---- v18: live models inside the conversation ---- */
+  // a placeholder card is put in the log before routing, so the model appears exactly where this answer starts
+  function labCardBefore() { const d = document.createElement('div'); d.className = 'cvis'; d.setAttribute('role', 'group'); d.setAttribute('aria-label', T('Interactive model', 'نموذج تفاعلي')); U.$('#cmpLog').appendChild(d); return d; }
+  let liveCard = null;
+  function freezeCard(card, pre) { // the earlier live card keeps a picture of its model and can reopen it exactly as it was
+    if (!card || !card.isConnected) return;
+    const sn = pre || (ERLY_LAB.current() ? ERLY_LAB.snapshot() : null); if (!sn) return;
+    card.innerHTML = `<div class="cvis__snap">${sn.png ? `<img src="${sn.png}" alt="${esc(sn.title)}">` : ''}<div class="cvis__bar"><b>${esc(sn.title)}</b><button type="button" data-reopen>${T('Reopen', 'أعد الفتح')}</button></div></div>`;
+    card.querySelector('[data-reopen]').onclick = async () => { if (liveCard && liveCard !== card) freezeCard(liveCard); card.innerHTML = ''; await ERLY_LAB.open(sn.id, sn.params); ERLY_LAB.inline(card); liveCard = card; U.scrollLog && U.scrollLog(); };
+  }
+  function placeLab(card, pre) { if (liveCard && liveCard !== card) freezeCard(liveCard, pre); ERLY_LAB.inline(card); liveCard = card; U.scrollLog && U.scrollLog(); }
+  const htmlToMd = h => String(h || '').replace(/<details[\s\S]*?<summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, '\n**$1**\n$2\n').replace(/<li>/gi, '\n- ').replace(/<\/(p|ul|ol|table|tr|div|h\d)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<\/t[dh]>/gi, '  ').replace(/<b>|<\/b>|<strong>|<\/strong>/gi, '**').replace(/<sub>(.*?)<\/sub>/gi, '_$1').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+  function labAnswerMd(lr) { const cur = ERLY_LAB.current(); let ex = ''; try { ex = cur && cur.inst.explain ? htmlToMd(cur.inst.explain()) : ''; } catch (e) { ex = ''; } return lr.text + (ex ? '\n\n' + ex : '') + `\n\n_${T('The model above is live: drag, use its sliders, or tell me what to change (“increase the angle”, “show the derivative”). “Open in Visual Lab” gives it the whole screen.', 'النموذج أعلاه حي: اسحب أو استخدم المنزلقات أو أخبرني بما أغيّر.')}_`; }
+  function labContext(lr) { const cur = ERLY_LAB.current(); if (!cur) return null; let st = '', ex = ''; try { st = JSON.stringify(ERLY_LAB.state()).slice(0, 900); } catch (e) { st = ''; } try { ex = htmlToMd(cur.inst.explain ? cur.inst.explain() : '').slice(0, 1400); } catch (e) { ex = ''; } return `a live Noor Lab model "${cur.engine.title}" (${cur.engine.kind}) shown inside the chat above your answer. What it shows: ${lr.text}\nComputed state: ${st}\nIts worked derivation: ${ex}`; }
+  function labChips() { const cur = ERLY_LAB.current(); if (!cur) return; offerChips([{ id: 'lab:simpler', en: 'Explain it more simply', ar: 'اشرحيه ببساطة' }, { id: 'lab:predict', en: 'Change a value and let me predict', ar: 'غيّري قيمة ودعيني أتوقع' }, { id: 'lab:expand', en: 'Open in Visual Lab', ar: 'افتحي في المختبر' }]); }
+  let pendingPredict = null;
+  const sayBoth = t => say(t, t);
   async function freeText(text, o = {}) {
+    if (pendingPredict && /^\s*(do it|go|ok|okay|yes|show me|check)\b/i.test(text) && window.ERLY_LAB && ERLY_LAB.current()) { const pp = pendingPredict; pendingPredict = null; bubble('you', text, { text: true }); ERLY_LAB.current().inst.set(pp.key, pp.value); ERLY_LAB.explainNow(); await sayBoth(T(`Done — ${pp.key} is now ${pp.value}. Was your prediction right? Look at the readings on the model.`, 'تم. هل كان توقعك صحيحاً؟')); return; }
     const images = o.images || [];
     if (!o.silentUser) { const b = bubble('you', text, { text: true }); if (images.length) { const g = document.createElement('div'); g.className = 'cmsg__imgs'; images.forEach(src => { const im = new Image(); im.src = src; im.alt = T('Image you sent', 'صورة أرسلتها'); g.appendChild(im); }); b.appendChild(g); } }
     clearChips();
@@ -107,12 +125,20 @@
     // Noor Lab: maths and physics requests become interactive models, computed on the device (no AI needed);
     // with a model open, follow-ups ("make it wider", "remove air resistance") edit that model in place
     if (window.ERLY_LAB && !o.noLab) {
-      let lr = null;
+      const host = labCardBefore(); let lr = null;
+      const pre = liveCard && liveCard.isConnected && ERLY_LAB.current() ? ERLY_LAB.snapshot() : null; // taken BEFORE a new model replaces it
       try { lr = await ERLY_LAB.handle(text); } catch (e) { lr = { kind: 'error', text: T('I couldn’t build that model: ', 'تعذر بناء هذا النموذج: ') + (e.message || e) }; }
+      if (!lr || !lr.text) host.remove();
       if (lr && lr.text) {
-        history.push({ role: 'user', text }); C.tools && C.tools.trace && C.tools.trace([T('Noor Lab', 'مختبر نور')]);
-        await mdSay(lr.text, lr.text, { tag: lr.kind === 'answer' ? T('Computed', 'محسوب') : T('Noor Lab', 'مختبر نور') });
-        history.push({ role: 'assistant', text: lr.text }); ERLY.emit('noor:turn-end'); return;
+        C.tools && C.tools.trace && C.tools.trace([T('Noor Lab', 'مختبر نور')]);
+        if (lr.kind === 'open') placeLab(host, pre); else host.remove();
+        const ctxText = labContext(lr);
+        // one model, one explanation: an AI writes from the model's computed state; without one, the engine's own derivation
+        if (lr.kind === 'open' && U.ai && U.ai.ready() && MD && AIX) { if (await aiReply(text, { kind: 'unknown' }, { lab: ctxText, tools: [T('Noor Lab', 'مختبر نور')] })) { labChips(); return; } }
+        history.push({ role: 'user', text });
+        const md = lr.kind === 'open' ? labAnswerMd(lr) : lr.text;
+        await mdSay(md, md, { tag: lr.kind === 'answer' ? T('Computed', 'محسوب') : T('Noor Lab · computed on this device', 'مختبر نور · محسوب على هذا الجهاز') });
+        history.push({ role: 'assistant', text: lr.text }); if (lr.kind !== 'answer') labChips(); ERLY.emit('noor:turn-end'); return;
       }
     }
     // tools first: navigation, resume, study coach, exact maths, the open PDF
@@ -235,7 +261,7 @@
     if (tr && tr.tools) C.tools.trace(tr.tools);
     const strong = ai.canSee && ai.canSee(); // a large-context server model gets more of the conversation verbatim
     const vz = C.tools && C.tools.visual && C.tools.visual.current(), vsc = vz && vz.scene;
-    const visual = vsc ? `an interactive visual "${vsc.title[0]}" (${vsc.subject[0]}) with steps: ${vsc.stages.map((st, i) => `${i + 1}. ${st.title[0]}`).join('; ')}${vsc.spec && vsc.spec.params && (vsc.spec.params.elements || vsc.spec.params.objects) ? '; labelled parts: ' + (vsc.spec.params.elements || vsc.spec.params.objects).map(e => e.label).filter(Boolean).slice(0, 30).join(', ') : ''}${vz.stageIndex != null ? `; currently showing step ${vz.stageIndex + 1}` : ''}` : '';
+    const visual = tr && tr.lab ? tr.lab : vsc ? `an interactive visual "${vsc.title[0]}" (${vsc.subject[0]}) with steps: ${vsc.stages.map((st, i) => `${i + 1}. ${st.title[0]}`).join('; ')}${vsc.spec && vsc.spec.params && (vsc.spec.params.elements || vsc.spec.params.objects) ? '; labelled parts: ' + (vsc.spec.params.elements || vsc.spec.params.objects).map(e => e.label).filter(Boolean).slice(0, 30).join(', ') : ''}${vz.stageIndex != null ? `; currently showing step ${vz.stageIndex + 1}` : ''}` : '';
     const myTurn = ++turnSeq, turnId = 't' + myTurn + '-' + Date.now().toString(36);
     // privacy: personal memory (preferences, goals, profile) stays on the device when the AI runs outside it
     const external = ['online', 'cloud'].includes(ai.state().tier);
@@ -542,6 +568,9 @@
     if (id === 'assess') return chip({ id: 'kb:assessment:what', en: '', ar: '' });
     if (id === 'call') return ERLY.emit('noor:call');
     if (id === 'brain') return U.openBrain();
+    if (id === 'lab:expand' && window.ERLY_LAB) { ERLY_LAB.expand(); return; }
+    if (id === 'lab:simpler') return freeText(T('Explain the model on screen more simply, step by step.', 'اشرحي النموذج على الشاشة ببساطة خطوة بخطوة.'), { noLab: true, silentUser: false });
+    if (id === 'lab:predict' && window.ERLY_LAB && ERLY_LAB.current()) { const ps = (ERLY_LAB.current().inst.params ? ERLY_LAB.current().inst.params() : []).filter(q => q && q.key); const q = ps[0]; if (!q) return sayBoth(T('This model has nothing to vary — try dragging it instead.', 'لا توجد قيمة لتغييرها.')); const v = ERLY_LAB.current().inst.get(q.key); return sayBoth(T(`Prediction time: if I change ${q.label} from ${v} to ${+(v * 2).toPrecision(3)}, what do you think will happen? Tell me, then type “do it” and I’ll change it so you can check.`, 'وقت التوقع: ماذا تتوقع أن يحدث إذا ضاعفت هذه القيمة؟')).then(() => { pendingPredict = { key: q.key, value: +(v * 2).toPrecision(3) }; }); }
     if (id.startsWith('vid:') && ERLY.videos) { // the video keeps playing; these only act on it when asked
       const [, k, a, b] = id.split(':');
       if (k === 'loop') { ERLY.videos.setRate && ERLY.videos.setRate(0.75); ERLY.videos.loop(+a, +b); return say(T('Replaying that part slowly. Use the player or ask me to stop the loop.', 'أعيد هذا الجزء ببطء. استخدم المشغّل أو اطلب إيقاف التكرار.'), T('Replaying that part slowly. Use the player or ask me to stop the loop.', 'أعيد هذا الجزء ببطء.')); }

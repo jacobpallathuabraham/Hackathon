@@ -179,3 +179,7 @@
 @media (prefers-reduced-motion: reduce) {
   .vz__stage > *, .vz__cap.is-step .vz__t, .vz__cap.is-step .vz__p, .vz__dots button { transition: none !important; animation: none !important; }
 }
+/* v18: a visual inside the Noor conversation */
+.vz.vz--inline { position: relative; inset: auto; z-index: auto; width: 100%; height: clamp(360px, 52vh, 520px); max-width: none; margin: 0; border-radius: 16px; box-shadow: none; }
+.vz-fullbtn { position: absolute; z-index: 5; top: 8px; inset-inline-end: 52px; min-height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--vz-line, #e4e6ee); background: var(--vz-bg, #fff); color: var(--vz-ink, #17131f); font: 600 12px var(--f-body, system-ui); cursor: pointer; }
+.vz--modal .vz-fullbtn { inset-inline-end: 60px; }

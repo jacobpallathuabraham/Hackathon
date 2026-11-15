@@ -75,9 +75,11 @@ test('half-written markdown never hangs the renderer', () => {
 });
 
 /* ---------- v10 ---------- */
-test('v10 prompt: no automatic visuals or visual tags; accuracy and uncertainty rules', () => {
+test('v18 prompt: visuals are automatic (never asked about, never claimed unless on screen); accuracy and uncertainty rules', () => {
   const s = AI.systemPrompt({});
-  assert.doesNotMatch(s, /automatically/i);
+  assert.match(s, /automatically/i); // v18: visual-first chat — the student never has to ask
+  assert.match(s, /use exactly those numbers/);
+  assert.match(s, /never claim to have drawn something that is not listed as on screen/);
   assert.match(s, /never write \[\[visual/i);
   assert.match(s, /Never ask whether they would like a visual/i);
   assert.match(s, /Never invent facts, figures, quotations, studies, references, URLs/);

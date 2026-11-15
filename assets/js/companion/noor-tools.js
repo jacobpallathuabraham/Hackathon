@@ -273,7 +273,6 @@
     if (vis) vis.close();
     const call = C.inCall && C.call && C.call.active();
     const host = call ? (document.querySelector('.ncall') || document.body) : document.body;
-    const wide = innerWidth >= 1100;
     vis = ERLY.visuals.open(host, pick, {
       docked: !!call,
       say: sayVisual,
@@ -284,7 +283,11 @@
       onClose: () => { vis = null; if (C.call && C.call.avatar) { const a = C.call.avatar(); if (a && a.setShift) a.setShift(0); } document.documentElement.classList.remove('has-vz'); }
     });
     if (!vis) return null;
-    if (!call) { vis.el.classList.remove('vz--modal'); vis.el.classList.add(wide ? 'vz--side' : 'vz--modal'); }
+    if (!call) { // v18: inside the conversation, like a Noor Lab model; “Full screen” lifts it into the modal view
+      vis.el.classList.remove('vz--modal', 'vz--side'); vis.el.classList.add('vz--inline');
+      const card = document.createElement('div'); card.className = 'cvis cvis--vz'; card.appendChild(vis.el); const log = U.$('#cmpLog'); if (log) { log.appendChild(card); U.scrollLog && U.scrollLog(); } else document.body.appendChild(vis.el);
+      if (!vis.el.querySelector('[data-vz-full]')) { const fb = document.createElement('button'); fb.type = 'button'; fb.className = 'vz-fullbtn'; fb.dataset.vzFull = '1'; fb.textContent = T('Full screen ⤢', 'ملء الشاشة ⤢'); fb.onclick = () => { const on = !vis.el.classList.contains('vz--modal'); vis.el.classList.toggle('vz--modal', on); vis.el.classList.toggle('vz--inline', !on); fb.textContent = on ? T('Back to chat', 'العودة إلى المحادثة') : T('Full screen ⤢', 'ملء الشاشة ⤢'); if (on) document.body.appendChild(vis.el); else card.appendChild(vis.el); }; vis.el.prepend(fb); }
+    }
     if (call && C.call.avatar) { const a = C.call.avatar(); if (a && a.setShift && innerWidth > 760) a.setShift(0.34); }
     document.documentElement.classList.add('has-vz');
     trace([T('Interactive visual', 'شرح مرئي تفاعلي')]);
@@ -374,9 +377,10 @@
         if (r && !r.declined) spec = r;
       }
       if (spec) pickV = VS.toScene(spec);
+      if (!pickV && ERLY.visuals && ERLY.visuals.detect) pickV = ERLY.visuals.detect(o.question); // a hand-built scene for this topic
     }
     if (!pickV) { await U.aiSays((U.ai && U.ai.ready()) ? 'I couldn’t build a reliable interactive visual for this, so I won’t show a made-up one — here’s a clear explanation instead. You can give me the steps (“show it as a diagram: A > B > C”) or numbers (“bar chart of A 3, B 5”) and I’ll draw exactly that.' : 'I don’t have a ready-made visual for this, and no AI model is connected to design a new one, so I won’t invent one. I can draw functions (“plot y = x^2 − 3”), surfaces, fields, waves, algorithms, bridges, beams, matrices, charts from your numbers and many science processes.', 'لم أستطع بناء شرح مرئي موثوق لهذا السؤال، لذا سأكتفي بشرح واضح خطوة بخطوة.', { speak: !C.inCall }); return null; }
-    const v = openVisual(pickV, { tour: o.want === 'animate' || !(U.ai && U.ai.ready()) });
+    const v = openVisual(pickV, { tour: !o.noTour && (o.want === 'animate' || !(U.ai && U.ai.ready())) });
     return v;
   }
   // in a voice conversation the companion also asks out loud, after it finishes its answer
@@ -416,13 +420,25 @@
     if (VS && vis) { const r = await editVisual(t); if (r) return r; }
     // explicit requests, plus questions that are clearly about how something looks or fits together, when an accurate visual exists
     const CLEARLY = /^(please )?(show me|explain (the )?(structure|anatomy|parts|layout|relationship)|what does .{2,40} look like|how (is|are) .{2,40} (structured|arranged|connected))\b/i;
-    const want = VS && (VS.explicit(t) || (CLEARLY.test(t) && (U.store.prefs().vs || {}).visualMode !== 'ask' && VS.plan(t) ? 'visual' : null));
+    // v18: visual-first. A concept question that one of ERLY's checked visuals explains gets that visual automatically,
+    // inside the chat — no button, no "would you like a visual?" (Settings can turn this off: visualMode 'off'/'ask')
+    const ACADEMIC = /\b(explain|what (is|are|does|do)|how (does|do|is|are|can)|why (does|do|is|are)|describe|tell me about|help me understand|teach me|show)\b/i;
+    const mode = (U.store.prefs().vs || {}).visualMode || 'auto';
+    const want = VS && (VS.explicit(t) || (((CLEARLY.test(t) && mode !== 'ask') || (mode === 'auto' && ACADEMIC.test(t) && t.split(/\s+/).length >= 3)) && VS.plan(t) ? 'visual' : null));
+    // hand-built scenes (the heart, photosynthesis, circuits…) found by their own detector when no planned visual fits
+    const scenePick = !want && mode === 'auto' && ACADEMIC.test(t) && ERLY.visuals && ERLY.visuals.detect ? ERLY.visuals.detect(t) : null;
+    if (scenePick) { lastQ = t; await buildVisual({ question: t, want: 'visual', tagPick: scenePick, noTour: true }); }
+    if (scenePick && vis && !(U.ai && U.ai.ready())) {
+      const sc = scenePick.scene || vis.scene, L = x => (Array.isArray(x) ? (window.I18N && I18N.lang === 'ar' ? x[1] : x[0]) : x);
+      const md = `**${L(sc.title)}**\n\n` + sc.stages.map((st, i) => `${i + 1}. **${L(st.title).replace(/^\d+\s*·\s*/, '')}** — ${L(st.text)}`).join('\n');
+      await U.aiSays(md, md, { html: `<div class="md">${window.ERLY_MD ? ERLY_MD.render(md) : md}</div>`, speak: !C.inCall }); return { done: true };
+    }
     if (want) {
       lastQ = t; await buildVisual({ question: t, want });
-      if (/^(draw|plot|graph|sketch|chart|visuali[sz]e|animate|simulate|make|show)\b[^?]{0,80}$/i.test(t) && vis) return { done: true };
+      // v18: a visual always comes with an explanation (no silent “here it is”)
       // with no AI model on, the visual's own reviewed explanation is the answer (never "I can't answer that")
       if (vis && !(U.ai && U.ai.ready())) {
-        const sc = vis.scene, L = x => (Array.isArray(x) ? (window.I18N && I18N.lang === 'ar' ? x[1] : x[0]) : x);
+        const sc = vis.scene || (ERLY.visuals.detect(t) || {}).scene, L = x => (Array.isArray(x) ? (window.I18N && I18N.lang === 'ar' ? x[1] : x[0]) : x);
         const md = `**${L(sc.title)}**${sc.note ? ' — ' + L(sc.note) : ''}\n\n` + sc.stages.map((st, i) => `${i + 1}. **${L(st.title).replace(/^\d+\s*·\s*/, '')}** — ${L(st.text)}`).join('\n') + `\n\n_${T('Use the steps under the visual, or tap any labelled part for its detail.', 'استخدم الخطوات أسفل الشرح المرئي، أو اضغط أي جزء للتفاصيل.')}_`;
         await U.aiSays(md, md, { html: `<div class="md">${window.ERLY_MD ? ERLY_MD.render(md) : md}</div>`, speak: !C.inCall });
         return { done: true };

@@ -411,7 +411,7 @@
   /* ======================= electric field ======================= */
   const kC = 8.9875517923e9;
   reg('efield', KIND.elec, T('Electric field of point charges', 'المجال الكهربائي'),
-    t => (/\b(electric field|coulomb|point charges?|electric potential|equipotential|field lines|dipole|electrostatic)\b/i.test(t) && !/magnetic/i.test(t) ? { score: 0.9, params: { set: { like: /like charges|two positive|repel/i.test(t) } } } : null),
+    t => (/\b(electric fields?|coulomb'?s?|point charges?|electric potentials?|equipotentials?|field lines|dipoles?|electrostatics?)\b/i.test(t) && !/magnetic/i.test(t) ? { score: 0.9, params: { set: { like: /like charges|two positive|repel/i.test(t) } } } : null),
     {
       defaults: { q1: 2, q2: -2, d: 4, pot: true, lines: true, like: false }, autoplay: false, static: true,
       params: [{ key: 'q1', label: 'q₁', unit: 'μC', min: -10, max: 10, step: 0.5, live: true, alias: ['charge 1', 'q1'] }, { key: 'q2', label: 'q₂', unit: 'μC', min: -10, max: 10, step: 0.5, live: true, alias: ['charge 2', 'q2'] }],
@@ -543,7 +543,7 @@
 
   /* ======================= ideal gas (2D hard discs) ======================= */
   reg('gas', KIND.heat, T('Gas in a box (kinetic theory)', 'غاز في صندوق'),
-    t => (/\b(ideal gas|gas laws?|kinetic theory|pv\s*=\s*nrt|boyle|charles|gas (particles|molecules)|pressure and (volume|temperature)|particle motion|brownian)\b/i.test(t) ? { score: 0.9, params: {} } : null),
+    t => (/\b(ideal gas(es)?|gas laws?|kinetic theory|pv\s*=\s*nrt|boyle'?s?|charles'?s?|gay[- ]lussac'?s?|gas (particles|molecules)|pressure(,| and) (volume|temperature)|(volume|temperature)(,| and) pressure|particle motion|brownian)\b/i.test(t) ? { score: 0.9, params: {} } : null),
     {
       defaults: { N: 120, T: 300, W: 12, r: 0.12 },
       params: [{ key: 'N', label: T('particles N', 'عدد الجسيمات'), unit: '', min: 10, max: 300, step: 10, alias: ['particles', 'number of particles'] }, { key: 'T', label: T('temperature T', 'درجة الحرارة'), unit: 'K', min: 50, max: 1000, step: 10, live: true, alias: ['temperature'], onSet: (S, st) => { const k = Math.sqrt(S.T / measuredT(st)); if (isFinite(k)) st.p.forEach(q => { q.vx *= k; q.vy *= k; }); st.imp = 0; st.t0 = st.t; } }, { key: 'W', label: T('box width (volume)', 'عرض الصندوق'), unit: '', min: 4, max: 16, step: 0.5, live: true, alias: ['volume', 'width'], onSet: (S, st) => { st.p.forEach(q => { q.x = Math.min(q.x, S.W - S.r); }); st.imp = 0; st.t0 = st.t; } }],

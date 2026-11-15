@@ -265,6 +265,9 @@
     const pieces = s.split(/;|,(?![^(]*\))|\band\b|\n/).map(x => x.trim().replace(/[.?!]+$/, '')).filter(Boolean);
     const out = [];
     for (const p of pieces) {
+      // an explicit "y = …" / "f(x) = …" wins, so leading words ("Explain y = …", "the graph of y = …") don't swallow it
+      const m1 = p.match(/(?:^|[\s:])((?:[yr]|[fgh]\(x\))\s*(?:<=|>=|≤|≥|<|>|=)\s*[-\w\s^*/+().|]+)$/i);
+      if (m1 && /x|θ/.test(m1[1].split(/[=<>≤≥]/).slice(1).join('')) && !englishy(m1[1])) { out.push(m1[1].trim()); continue; }
       const mm = p.match(/((?:[yr]|[fgh]\(x\)|x)\s*(?:<=|>=|≤|≥|<|>|=)\s*.+|[-\w\s^*/+().|]+?\s*(?:<=|>=|≤|≥|<|>|=)\s*[-\w\s^*/+().|]+)/i);
       if (mm && /[xy0-9θ]/.test(mm[1]) && !englishy(mm[1])) out.push(mm[1].trim());
       else { const bare = p.match(/^(?:y\s*=\s*)?((?:sin|cos|tan|log|ln|sqrt|abs|exp|e\^|\d|x|\()[-\w\s^*/+().|]*x[-\w\s^*/+().|]*)$/i); if (bare && /x/.test(bare[1])) out.push(bare[1].trim()); }

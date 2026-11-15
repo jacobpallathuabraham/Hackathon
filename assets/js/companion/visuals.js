@@ -564,7 +564,7 @@
   /* ======================= detection ======================= */
   const DETECT = [
     ['photosynthesis', /photosynth|chlorophyll|how (do )?plants (make|produce) (food|sugar|energy)/i],
-    ['heart', /(human )?heart (work|pump|chamber)|how does the heart|blood (circulation|flow)|circulatory system|cardiac cycle|ventricle|atri(um|a)\b/i],
+    ['heart', /(human )?heart (work|pump|chamber|structure|anatomy|valves?)|(structure|anatomy|parts|chambers|diagram) of (the )?(human )?heart|how does the heart|blood (circulation|flow)|circulatory system|cardiac cycle|ventricles?\b|atri(um|a)\b/i],
     ['gravity', /gravit|orbit|solar system|planets? (move|go round|orbit)|kepler/i],
     ['circuit', /electric(al)? circuit|how (does )?electricity|ohm'?s law|current flow|series circuit|switch.*bulb/i],
     ['cylinder', /volume of (a )?cylinder|cylinder('?s)? volume|πr²h|pi r squared h/i],

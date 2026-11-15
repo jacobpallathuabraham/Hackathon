@@ -63,8 +63,10 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await app.goto(BASE + 'student.html'); await app.waitForTimeout(700);
   await app.click('.cmp-launch'); await app.waitForTimeout(900);
   await app.fill('#cmpText', 'How does an electric circuit work?'); await app.press('#cmpText', 'Enter'); await app.waitForTimeout(900);
-  // v10: an ordinary question gets no visual and no “would you like a visual?” question
-  assert.equal(await app.locator('.vz, .cvoffer').count(), 0, 'nothing is offered or opened for an ordinary question');
+  // v18 (visual-first chat): a concept question gets its visual automatically, inside the chat — and is never ASKED about
+  assert.equal(await app.locator('.cvoffer').count(), 0, 'never “would you like a visual?”');
+  assert.ok(await app.locator('#cmpLog .vz--inline, #cmpLog .lab--inline').count() >= 1, 'the visual appears inside the conversation');
+  await app.evaluate(() => { ERLY.companion.tools.visual.close(); ERLY_LAB.close(); }); await app.waitForTimeout(300);
   await app.fill('#cmpText', 'Show me a diagram of how an electric circuit works'); await app.press('#cmpText', 'Enter');
   await app.waitForSelector('.vz.is-touring', { timeout: 10000 });
   await app.waitForFunction(() => ERLY.companion.tools.visual.current().stageIndex >= 2, null, { timeout: 15000 });
