@@ -176,15 +176,24 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
     const words = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
     const stem = w => w.replace(/(ies|es|s)$/, '').slice(0, 6), keys = words.filter(w => !/^(with|from|over|under|into|their|that|this|about|between|types|basics|introduction)$/.test(w)).map(stem);
     const score = h => keys.filter(k => h.title.toLowerCase().includes(k)).length * 2 + keys.filter(k => String(h.snippet || '').toLowerCase().includes(k)).length;
-    const hit = hits.slice().sort((a, b) => score(b) - score(a))[0];
-    const ex = await getJSON(host + 'action=query&prop=extracts&explaintext=1&exsectionformat=wiki&redirects=1&titles=' + encodeURIComponent(hit.title));
-    const pg = Object.values((ex.query && ex.query.pages) || {})[0]; if (!pg || !pg.extract) return null;
-    const secs = []; let curS = { h: null, text: '' };
-    pg.extract.split('\n').forEach(line => { const m = line.match(/^(={2,})\s*(.+?)\s*\1\s*$/); if (m) { secs.push(curS); curS = { h: m[2], level: m[1].length, text: '' }; } else curS.text += line + ' '; });
-    secs.push(curS);
-    const lead = (pg.title + ' ' + pg.extract.slice(0, 1500)).toLowerCase(), found = keys.filter(k => lead.includes(k)).length;
-    const relevant = keys.length === 0 || (found >= Math.ceil(keys.length / 2) && keys.some(k => pg.title.toLowerCase().includes(k) || lead.slice(0, 400).includes(k))); // most of the topic's words, not just one
-    return { title: pg.title, url: `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, sections: secs.filter(x => x.text.trim().length > 80 && !(x.h && SKIP_SEC.test(x.h))), relevant };
+    // try the best-matching hits in turn; skip disambiguation pages, lists and stubs (too little to teach from)
+    const ranked = hits.slice().sort((a, b) => score(b) - score(a)).filter(h => !/^(list of|index of|outline of)\b/i.test(h.title) && !/\(disambiguation\)/i.test(h.title)).slice(0, 3);
+    let fallback = null;
+    for (const hit of ranked) {
+      const ex = await getJSON(host + 'action=query&prop=extracts|pageprops&ppprop=disambiguation&explaintext=1&exsectionformat=wiki&redirects=1&titles=' + encodeURIComponent(hit.title));
+      const pg = Object.values((ex.query && ex.query.pages) || {})[0]; if (!pg || !pg.extract) continue;
+      if ((pg.pageprops && 'disambiguation' in pg.pageprops) || /\bmay (also )?refer to\b/i.test(pg.extract.slice(0, 400))) continue;
+      const secs = []; let curS = { h: null, text: '' };
+      pg.extract.split('\n').forEach(line => { const m = line.match(/^(={2,})\s*(.+?)\s*\1\s*$/); if (m) { secs.push(curS); curS = { h: m[2], level: m[1].length, text: '' }; } else curS.text += line + ' '; });
+      secs.push(curS);
+      const lead = (pg.title + ' ' + pg.extract.slice(0, 1500)).toLowerCase(), found = keys.filter(k => lead.includes(k)).length;
+      const relevant = keys.length === 0 || (found >= Math.ceil(keys.length / 2) && keys.some(k => pg.title.toLowerCase().includes(k) || lead.slice(0, 400).includes(k))); // most of the topic's words, not just one
+      const sections = secs.filter(x => x.text.trim().length > 80 && !(x.h && SKIP_SEC.test(x.h)));
+      const art = { title: pg.title, url: `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, sections, relevant };
+      if (relevant && sections.length >= 3) return art; // enough material for a lesson with chapters
+      if (relevant && !fallback) fallback = Object.assign(art, { relevant: false, thin: true }); // a stub is reported, not padded out
+    }
+    return fallback;
   }
   const sentencesOf = t => (String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+(\s|$)/g) || []).map(x => x.trim()).filter(x => x.length > 25 && x.length < 320 && !/\b(citation needed|isbn|doi)\b/i.test(x));
   function fromArticle(art, o) {

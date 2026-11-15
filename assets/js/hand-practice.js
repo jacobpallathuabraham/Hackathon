@@ -45,7 +45,7 @@
 
   let el = null, pad = null, st = null, guideCanvas = null;
   const fresh = () => ({ mode: 'letters', set: ar() ? 'arabic' : 'lower', i: 0, word: 0, sent: 0, fb: null, busy: false, goal: loadGoal() || { remember: false, perWeek: 3, minutes: 10, weeks: {} }, rounds: 0 });
-  function mount(host) { el = host; st = st || fresh(); render(); }
+  function mount(host, mode) { el = host; st = st || fresh(); if (mode && /^(letters|words|tracing|goals)$/.test(mode)) st.mode = mode; render(); }
   function unmount() { if (pad) { pad.destroy(); pad = null; } el = null; }
   function target() { return st.mode === 'letters' ? SETS[st.set][st.i % SETS[st.set].length] : st.mode === 'words' ? WORDS[st.word % WORDS.length] : SENTENCES[st.sent % SENTENCES.length]; }
   const fontFor = txt => (/[؀-ۿ]/.test(txt) ? '"Noto Naskh Arabic", "Amiri", serif' : '"Comic Neue", "Segoe Print", "Bradley Hand", "Patrick Hand", cursive, sans-serif');

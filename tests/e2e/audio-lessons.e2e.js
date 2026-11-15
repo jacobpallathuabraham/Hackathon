@@ -65,11 +65,11 @@ const MOCK = () => { window.__said = []; const synth = { getVoices: () => [{ nam
   });
   await check('revision, more-detail and continue versions are generated from the same source', async () => {
     const w0 = await p.evaluate(() => ERLY.audioLesson.current().script.lines.filter(l => l.t).length);
-    await p.click('.alx [data-a="v:revision"]'); await p.waitForSelector('.alx.is-in'); await p.waitForTimeout(800); const wr = await p.evaluate(() => ERLY.audioLesson.current().script.lines.filter(l => l.t).length);
-    await p.click('.alx [data-a="v:detailed"]'); await p.waitForTimeout(1800); const wd = await p.evaluate(() => ERLY.audioLesson.current().script.lines.filter(l => l.t).length);
+    await p.click('.alx [data-a="v:revision"]'); await p.waitForFunction(() => { const c = ERLY.audioLesson.current(); return c && c.script.opts && c.script.opts.depth === 'revision'; }, null, { timeout: 30000 }); const wr = await p.evaluate(() => ERLY.audioLesson.current().script.lines.filter(l => l.t).length);
+    await p.click('.alx [data-a="v:detailed"]'); await p.waitForFunction(() => { const c = ERLY.audioLesson.current(); return c && c.script.opts && c.script.opts.depth === 'detailed'; }, null, { timeout: 30000 }); const wd = await p.evaluate(() => ERLY.audioLesson.current().script.lines.filter(l => l.t).length);
     assert.ok(wr < w0 && wd > w0, `revision ${wr} < standard ${w0} < detailed ${wd}`);
     const first = await p.evaluate(() => ERLY.audioLesson.current().script.lines.find(l => l.ch && l.ch !== 'Introduction').ch);
-    await p.click('.alx [data-a="v:continue"]'); await p.waitForTimeout(1800); const f2 = await p.evaluate(() => (ERLY.audioLesson.current().script.lines.find(l => l.ch && l.ch !== 'Introduction') || {}).ch);
+    await p.click('.alx [data-a="v:continue"]'); await p.waitForFunction(f => { const c = ERLY.audioLesson.current(); const x = c && (c.script.lines.find(l => l.ch && l.ch !== 'Introduction') || {}).ch; return x && x !== f; }, first, { timeout: 30000 }).catch(() => {}); const f2 = await p.evaluate(() => (ERLY.audioLesson.current().script.lines.find(l => l.ch && l.ch !== 'Introduction') || {}).ch);
     assert.notEqual(f2, first, 'continuation starts with new chapters');
   });
   await check('“Ask Noor about this lesson” attaches the lesson to the chat', async () => {

@@ -1460,4 +1460,16 @@
     // internals shared with noor-brain.js and call.js (same feature, split for size)
     _ui: { refreshMode: () => refreshMode(), thinking, restoreImages, aiSays, bubble, chipRow, clearChips, openPanel, setTab, speak, voice, llm, store, notice, hideInvite, startConversation, setStatus, renderConvBar, lang, pick, esc, T, $: s => $(s), isBusy: () => busy, setBusy: v => { busy = v; }, isBusy: () => busy, convActive: () => !!(conv && !conv.done), closePanel, ai, setGenerating, isGenerating: () => !!generating, stopGenerating, attached: () => attached, attach, openBrain, scrollLog, composer, idleChips, runTool, helpMenu }
   };
+  // v18 deep links from the Growth Plan: ?ask=… opens Noor with the question typed in (the student presses Send),
+  // ?lesson=… starts that audio lesson. The parameters are removed from the address bar straight away.
+  (function deepLink() {
+    let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    const ask = q.get('ask'), lesson = q.get('lesson'); if (!ask && !lesson) return;
+    try { q.delete('ask'); q.delete('lesson'); history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); } catch (e) { /* ok */ }
+    const go = () => {
+      if (lesson && ERLY.audioLesson) { openPanel('chat'); greeting.then(() => setTimeout(() => ERLY.audioLesson.start(String(lesson).slice(0, 160)), 150)); return; }
+      openPanel('chat'); greeting.then(() => setTimeout(() => { const f = $('#cmpText'); if (!f) return; f.value = String(ask).slice(0, 2000); f.dispatchEvent(new Event('input', { bubbles: true })); f.focus(); }, 150));
+    };
+    if (document.readyState === 'complete') setTimeout(go, 300); else addEventListener('load', () => setTimeout(go, 300), { once: true });
+  })();
 })();

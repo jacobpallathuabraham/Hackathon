@@ -1,75 +1,75 @@
 {
  "summary": {
-  "date": "2026-11-15T06:59:50.827Z",
+  "date": "2026-11-15T07:26:31.496Z",
   "source": "Teklia/IAM-line test split",
-  "sampled": 9,
+  "sampled": 150,
   "rowsInSplit": 2915,
   "step": 19,
-  "modelLoadMs": 4731,
+  "modelLoadMs": 4197,
   "line": {
    "trocr": {
-    "cer": 0.049744877428493255,
-    "wer": 0.10258630258630258,
-    "rawCer": 0.0822670445690931,
-    "ms": 2152.4444444444443
+    "cer": 0.1520483352798778,
+    "wer": 0.25397865097865097,
+    "rawCer": 0.16244341320623998,
+    "ms": 2101.68
    },
    "tess": {
-    "cer": 0.4306324851495533,
-    "wer": 0.8677350427350428,
-    "rawCer": 0.48427052278446703,
-    "ms": 145.88888888888889
+    "cer": 0.49966511648738976,
+    "wer": 0.8643079698079696,
+    "rawCer": 0.53753050236107,
+    "ms": 130.7
    }
   },
   "page": {
-   "n": 3,
-   "segmentedRight": 3,
+   "n": 30,
+   "segmentedRight": 30,
    "trocr": {
-    "cer": 0.07483685058055767,
-    "wer": 0.13195402298850575
+    "cer": 0.06519360544524619,
+    "wer": 0.12360236135950912
    },
    "tess": {
-    "cer": 0.34237561432474967,
-    "wer": 0.9238505747126436
+    "cer": 0.42610400365658296,
+    "wer": 0.881531458715301
    }
   },
   "tools": [
    {
     "mode": "dim",
-    "n": 3,
-    "before": 0.06127637935418256,
-    "after": 0.0689888973641834
+    "n": 10,
+    "before": 0.07916975564373953,
+    "after": 0.08055545762426367
    },
    {
     "mode": "lowcontrast",
-    "n": 3,
-    "before": 0.06750572082379862,
-    "after": 0.053394355453852016
+    "n": 10,
+    "before": 0.08297018735973684,
+    "after": 0.07277407612715239
    },
    {
     "mode": "noise",
-    "n": 3,
-    "before": 0.6227362112858739,
-    "after": 0.07771845071616239
+    "n": 10,
+    "before": 0.84098547211492,
+    "after": 0.08519309108874704
    }
   ],
   "calibration": [
    {
     "band": "80–100%",
-    "n": 6,
-    "cer": 0.019230769230769232,
-    "wer": 0.03333333333333333
+    "n": 77,
+    "cer": 0.05070198710643491,
+    "wer": 0.1046349393751991
    },
    {
     "band": "60–79%",
-    "n": 3,
-    "cer": 0.1107730938239413,
-    "wer": 0.24109224109224106
+    "n": 51,
+    "cer": 0.1734071699825819,
+    "wer": 0.3181989579048403
    },
    {
     "band": "0–59%",
-    "n": 0,
-    "cer": null,
-    "wer": null
+    "n": 22,
+    "cer": 0.45724689162156884,
+    "wer": 0.6278072937163847
    }
   ],
   "errors": []
@@ -81,7 +81,7 @@
    "trocr": {
     "text": "assurances. \" Bella Bella Marie \" ( ( Arlaplane ), a lively song that changes tempo midway.",
     "conf": 70,
-    "ms": 3031,
+    "ms": 2395,
     "cer": 0.1111111111111111,
     "wer": 0.3076923076923077,
     "rawCer": 0.1724137931034483
@@ -89,7 +89,7 @@
    "tess": {
     "text": "sssuredness Bella Bella Marie” ( arlophone ), o lively song thal change ; tempo mid-way.",
     "conf": 69,
-    "ms": 276,
+    "ms": 338,
     "cer": 0.06172839506172839,
     "wer": 0.38461538461538464,
     "rawCer": 0.10344827586206896
@@ -101,7 +101,7 @@
    "trocr": {
     "text": "will be with Sir Roy DeLaysky the Premier of the FCder actions",
     "conf": 61,
-    "ms": 2511,
+    "ms": 2131,
     "cer": 0.11864406779661017,
     "wer": 0.2727272727272727,
     "rawCer": 0.13559322033898305
@@ -109,7 +109,7 @@
    "tess": {
     "text": "vr Uf le sth Lr hoy wedes) shy Ue (rewier oe | Hey Fe der atlo,",
     "conf": 47,
-    "ms": 200,
+    "ms": 115,
     "cer": 0.4406779661016949,
     "wer": 1,
     "rawCer": 0.5084745762711864
@@ -121,7 +121,7 @@
    "trocr": {
     "text": "to the European Common Market",
     "conf": 99,
-    "ms": 1941,
+    "ms": 1860,
     "cer": 0,
     "wer": 0,
     "rawCer": 0.03333333333333333
@@ -129,7 +129,7 @@
    "tess": {
     "text": "bs bo Cav opeon Casi ov) Alii d",
     "conf": 23,
-    "ms": 100,
+    "ms": 99,
     "cer": 0.7241379310344828,
     "wer": 1,
     "rawCer": 0.7666666666666667
@@ -141,7 +141,7 @@
    "trocr": {
     "text": "and who is now being pluckily convicted",
     "conf": 76,
-    "ms": 1935,
+    "ms": 1942,
     "cer": 0.10256410256410256,
     "wer": 0.14285714285714285,
     "rawCer": 0.10256410256410256
@@ -149,7 +149,7 @@
    "tess": {
     "text": "awe WNbho I AoW beitg foCuckity car eric!",
     "conf": 24,
-    "ms": 183,
+    "ms": 206,
     "cer": 0.46153846153846156,
     "wer": 1,
     "rawCer": 0.5384615384615384
@@ -161,7 +161,7 @@
    "trocr": {
     "text": "been able to explain. the textual movements by",
     "conf": 87,
-    "ms": 1998,
+    "ms": 1986,
     "cer": 0,
     "wer": 0,
     "rawCer": 0.022222222222222223
@@ -169,7 +169,7 @@
    "tess": {
     "text": "been ole bo expla Hu Jex hal wo ye ments by",
     "conf": 45,
-    "ms": 168,
+    "ms": 110,
     "cer": 0.3111111111111111,
     "wer": 1,
     "rawCer": 0.3333333333333333
@@ -181,7 +181,7 @@
    "trocr": {
     "text": "it is now used to more a paragraph excluding frequently",
     "conf": 80,
-    "ms": 2243,
+    "ms": 1942,
     "cer": 0.11538461538461539,
     "wer": 0.2,
     "rawCer": 0.1509433962264151
@@ -189,7 +189,7 @@
    "tess": {
     "text": "NAS (OW LRA KO Wa 0 gaaAePA aig Tp",
     "conf": 26,
-    "ms": 159,
+    "ms": 196,
     "cer": 0.6346153846153846,
     "wer": 1,
     "rawCer": 0.7547169811320755
@@ -201,7 +201,7 @@
    "trocr": {
     "text": "they are in modern books",
     "conf": 99,
-    "ms": 1878,
+    "ms": 1871,
     "cer": 0,
     "wer": 0,
     "rawCer": 0.04
@@ -209,7 +209,7 @@
    "tess": {
     "text": "Wey OE\nwo hese books",
     "conf": 43,
-    "ms": 77,
+    "ms": 79,
     "cer": 0.4583333333333333,
     "wer": 0.8,
     "rawCer": 0.52
@@ -221,7 +221,7 @@
    "trocr": {
     "text": "cannot think of an author, Mark for example,",
     "conf": 100,
-    "ms": 2061,
+    "ms": 2491,
     "cer": 0,
     "wer": 0,
     "rawCer": 0
@@ -229,7 +229,7 @@
    "tess": {
     "text": "cwnmol Hank of an autor, Wark for Lxanplt,",
     "conf": 51,
-    "ms": 110,
+    "ms": 104,
     "cer": 0.23809523809523808,
     "wer": 0.625,
     "rawCer": 0.25
@@ -241,7 +241,7 @@
    "trocr": {
     "text": "word of God",
     "conf": 96,
-    "ms": 1774,
+    "ms": 1749,
     "cer": 0,
     "wer": 0,
     "rawCer": 0.08333333333333333
@@ -249,10 +249,2830 @@
    "tess": {
     "text": "Sag or Ged",
     "conf": 33,
-    "ms": 40,
+    "ms": 78,
     "cer": 0.5454545454545454,
     "wer": 1,
     "rawCer": 0.5833333333333334
+   }
+  },
+  {
+   "file": "line009.png",
+   "ref": "refused , but it is to become the head-stone",
+   "trocr": {
+    "text": "refused, but it is to become the head-stone",
+    "conf": 99,
+    "ms": 2272,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "refuseol , but 4 is lo become Hhe head- stone",
+    "conf": 64,
+    "ms": 193,
+    "cer": 0.14285714285714285,
+    "wer": 0.4444444444444444,
+    "rawCer": 0.18604651162790697
+   }
+  },
+  {
+   "file": "line010.png",
+   "ref": "diligently unto my commandments , which I command",
+   "trocr": {
+    "text": "diligently my to my poignant attempts which I conveyed",
+    "conf": 62,
+    "ms": 1969,
+    "cer": 0.40425531914893614,
+    "wer": 0.7142857142857143,
+    "rawCer": 0.4166666666666667
+   },
+   "tess": {
+    "text": "Ailioeg tly u\nbey yo “) wing deg which T coupe",
+    "conf": 39,
+    "ms": 121,
+    "cer": 0.5319148936170213,
+    "wer": 1,
+    "rawCer": 0.5833333333333334
+   }
+  },
+  {
+   "file": "line011.png",
+   "ref": "They will not work in union . If physical power , spiritual power",
+   "trocr": {
+    "text": "They will not work in union. if physical power, spiritual power",
+    "conf": 97,
+    "ms": 2125,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.015873015873015872
+   },
+   "tess": {
+    "text": "They will mot work In union. if physi cal pow , Spi titual poweL",
+    "conf": 67,
+    "ms": 191,
+    "cer": 0.11475409836065574,
+    "wer": 0.6363636363636364,
+    "rawCer": 0.15873015873015872
+   }
+  },
+  {
+   "file": "line012.png",
+   "ref": "And you serve Mammon and God . And you cannot serve",
+   "trocr": {
+    "text": "And you serve Woman and God. And you cannot serve",
+    "conf": 94,
+    "ms": 2057,
+    "cer": 0.08163265306122448,
+    "wer": 0.1,
+    "rawCer": 0.08
+   },
+   "tess": {
+    "text": "AN : hoe serve Mommon ow d Cod. And Yu Comned secwe",
+    "conf": 46,
+    "ms": 146,
+    "cer": 0.30612244897959184,
+    "wer": 0.9,
+    "rawCer": 0.38
+   }
+  },
+  {
+   "file": "line013.png",
+   "ref": "back .",
+   "trocr": {
+    "text": "back.",
+    "conf": 90,
+    "ms": 1848,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "back",
+    "conf": 53,
+    "ms": 70,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.2
+   }
+  },
+  {
+   "file": "line014.png",
+   "ref": "Tradition .",
+   "trocr": {
+    "text": "tradition.",
+    "conf": 99,
+    "ms": 2147,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.1
+   },
+   "tess": {
+    "text": "Thakoon :",
+    "conf": 19,
+    "ms": 93,
+    "cer": 0.5555555555555556,
+    "wer": 1,
+    "rawCer": 0.7
+   }
+  },
+  {
+   "file": "line015.png",
+   "ref": "the richness of the Law and that we should",
+   "trocr": {
+    "text": "the richness of the hour, and that we should",
+    "conf": 81,
+    "ms": 2596,
+    "cer": 0.09523809523809523,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.11904761904761904
+   },
+   "tess": {
+    "text": "bre ridhmosSt of fue law ond Hk oe Sleula",
+    "conf": 50,
+    "ms": 204,
+    "cer": 0.38095238095238093,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.47619047619047616
+   }
+  },
+  {
+   "file": "line016.png",
+   "ref": "spoiled that . The Puritans had high hopes , for",
+   "trocr": {
+    "text": "spoiled that. The Puritans had high hopes, for",
+    "conf": 98,
+    "ms": 1967,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Spoiled that. The Aentens bad Yih bopes, for",
+    "conf": 65,
+    "ms": 177,
+    "cer": 0.20454545454545456,
+    "wer": 0.5,
+    "rawCer": 0.21739130434782608
+   }
+  },
+  {
+   "file": "line017.png",
+   "ref": "a Bible translation - the Authorized Version",
+   "trocr": {
+    "text": "a Bible translation - the authorized Version",
+    "conf": 61,
+    "ms": 2000,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.022727272727272728
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 35,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line018.png",
+   "ref": "by Calvinists and Puritans , and the sentiment was",
+   "trocr": {
+    "text": "by Calv consists and functions, and the constituent was",
+    "conf": 55,
+    "ms": 2150,
+    "cer": 0.2916666666666667,
+    "wer": 0.5,
+    "rawCer": 0.2857142857142857
+   },
+   "tess": {
+    "text": "by (a lvanists nA Ars as, and Hie Seatbent la,",
+    "conf": 38,
+    "ms": 124,
+    "cer": 0.3541666666666667,
+    "wer": 1,
+    "rawCer": 0.3673469387755102
+   }
+  },
+  {
+   "file": "line019.png",
+   "ref": "reaped at forty or fifty . Far better to",
+   "trocr": {
+    "text": "reopened at forty or fifty. For better to",
+    "conf": 90,
+    "ms": 2131,
+    "cer": 0.10526315789473684,
+    "wer": 0.25,
+    "rawCer": 0.10256410256410256
+   },
+   "tess": {
+    "text": "Ieee al forty or Fy Far beles vo",
+    "conf": 51,
+    "ms": 151,
+    "cer": 0.3157894736842105,
+    "wer": 0.625,
+    "rawCer": 0.358974358974359
+   }
+  },
+  {
+   "file": "line020.png",
+   "ref": "lives and that the nearer we get to Him ,",
+   "trocr": {
+    "text": "lives and that the nearer use of to this.",
+    "conf": 71,
+    "ms": 2459,
+    "cer": 0.1794871794871795,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.225
+   },
+   "tess": {
+    "text": "Loves aad fha/ Ptr iecrer Ue ef to Hus",
+    "conf": 40,
+    "ms": 184,
+    "cer": 0.358974358974359,
+    "wer": 0.8888888888888888,
+    "rawCer": 0.4
+   }
+  },
+  {
+   "file": "line021.png",
+   "ref": "come what may , we are never alone when",
+   "trocr": {
+    "text": "course what may, we were never obtaine urban",
+    "conf": 54,
+    "ms": 2246,
+    "cer": 0.3783783783783784,
+    "wer": 0.5,
+    "rawCer": 0.3684210526315789
+   },
+   "tess": {
+    "text": "Corr22 wba! pny, le RMAC greulr @l8e ys",
+    "conf": 30,
+    "ms": 138,
+    "cer": 0.6486486486486487,
+    "wer": 1,
+    "rawCer": 0.6578947368421053
+   }
+  },
+  {
+   "file": "line022.png",
+   "ref": "noting the effect of a new stimulus on some-",
+   "trocr": {
+    "text": "noting the effect of a new Minister on some-",
+    "conf": 89,
+    "ms": 2248,
+    "cer": 0.18604651162790697,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.18181818181818182
+   },
+   "tess": {
+    "text": "I y% Vd a o Lai mir 27 Jers -",
+    "conf": 45,
+    "ms": 142,
+    "cer": 0.7674418604651163,
+    "wer": 1,
+    "rawCer": 0.7727272727272727
+   }
+  },
+  {
+   "file": "line023.png",
+   "ref": "if the trouble is a complicated one",
+   "trocr": {
+    "text": "if the trouble is a complicated zone",
+    "conf": 68,
+    "ms": 1904,
+    "cer": 0.02857142857142857,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.02857142857142857
+   },
+   "tess": {
+    "text": "a Ve # fp di, > & pory2ls co ot Rrzl",
+    "conf": 38,
+    "ms": 115,
+    "cer": 0.8285714285714286,
+    "wer": 1,
+    "rawCer": 0.8285714285714286
+   }
+  },
+  {
+   "file": "line024.png",
+   "ref": "far greater simplicity than their successors .",
+   "trocr": {
+    "text": "for greater simplicity than their successors.",
+    "conf": 86,
+    "ms": 1966,
+    "cer": 0.022727272727272728,
+    "wer": 0.16666666666666666,
+    "rawCer": 0.022222222222222223
+   },
+   "tess": {
+    "text": "far greater Girppbiity Far Ther duccesvory,",
+    "conf": 37,
+    "ms": 143,
+    "cer": 0.2727272727272727,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.3111111111111111
+   }
+  },
+  {
+   "file": "line025.png",
+   "ref": "homes . It is easy , desperately easy , to lead",
+   "trocr": {
+    "text": "names. It is easy, desperately easy to lead",
+    "conf": 88,
+    "ms": 2615,
+    "cer": 0.04878048780487805,
+    "wer": 0.125,
+    "rawCer": 0.06818181818181818
+   },
+   "tess": {
+    "text": "Nornes | 19 cody Aespesadiy cosy fo ead,",
+    "conf": 36,
+    "ms": 165,
+    "cer": 0.4878048780487805,
+    "wer": 1,
+    "rawCer": 0.5227272727272727
+   }
+  },
+  {
+   "file": "line026.png",
+   "ref": "we would find life considerably less exhausting",
+   "trocr": {
+    "text": "we would find little commodity for the teaching",
+    "conf": 43,
+    "ms": 2952,
+    "cer": 0.48936170212765956,
+    "wer": 0.7142857142857143,
+    "rawCer": 0.48936170212765956
+   },
+   "tess": {
+    "text": "or we fond GY crmrtio ds A a",
+    "conf": 28,
+    "ms": 118,
+    "cer": 0.7021276595744681,
+    "wer": 1,
+    "rawCer": 0.7021276595744681
+   }
+  },
+  {
+   "file": "line027.png",
+   "ref": "As it is , with so much of our life already",
+   "trocr": {
+    "text": "As its is, with so much of our life already",
+    "conf": 91,
+    "ms": 2607,
+    "cer": 0.024390243902439025,
+    "wer": 0.1,
+    "rawCer": 0.023809523809523808
+   },
+   "tess": {
+    "text": "AD 13, LN ao tach of aus ike already",
+    "conf": 57,
+    "ms": 148,
+    "cer": 0.4146341463414634,
+    "wer": 0.8,
+    "rawCer": 0.40476190476190477
+   }
+  },
+  {
+   "file": "line028.png",
+   "ref": "it added immensely to the interest",
+   "trocr": {
+    "text": "it added erroneously to the interest",
+    "conf": 89,
+    "ms": 2120,
+    "cer": 0.23529411764705882,
+    "wer": 0.16666666666666666,
+    "rawCer": 0.23529411764705882
+   },
+   "tess": {
+    "text": "oA acted Largeniedy Ho Ae then",
+    "conf": 23,
+    "ms": 162,
+    "cer": 0.5588235294117647,
+    "wer": 1,
+    "rawCer": 0.5588235294117647
+   }
+  },
+  {
+   "file": "line029.png",
+   "ref": "( Actually , the Mishnah quotes two further proof",
+   "trocr": {
+    "text": "( Actually, the Miskamah quotes two further proof",
+    "conf": 63,
+    "ms": 2257,
+    "cer": 0.06666666666666667,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.0851063829787234
+   },
+   "tess": {
+    "text": "(kekeadl,, He Mishoald quotes two ffl proof",
+    "conf": 44,
+    "ms": 74,
+    "cer": 0.35555555555555557,
+    "wer": 0.5714285714285714,
+    "rawCer": 0.3617021276595745
+   }
+  },
+  {
+   "file": "line030.png",
+   "ref": "texts to support the thesis of R. Joshua b. Levi .",
+   "trocr": {
+    "text": "texts to support the thesis of R. Joshua b. Hebei",
+    "conf": 79,
+    "ms": 2025,
+    "cer": 0.06521739130434782,
+    "wer": 0.1,
+    "rawCer": 0.08163265306122448
+   },
+   "tess": {
+    "text": "lexdbs bo secgport the theses of 12. losloat.Leb:",
+    "conf": 52,
+    "ms": 120,
+    "cer": 0.3695652173913043,
+    "wer": 0.8,
+    "rawCer": 0.3877551020408163
+   }
+  },
+  {
+   "file": "line031.png",
+   "ref": "response to the particular point at issue here ,",
+   "trocr": {
+    "text": "response to particular point at issue here,",
+    "conf": 100,
+    "ms": 1915,
+    "cer": 0.08695652173913043,
+    "wer": 0.125,
+    "rawCer": 0.0851063829787234
+   },
+   "tess": {
+    "text": "laure,\nfe pax\nresporise",
+    "conf": 51,
+    "ms": 75,
+    "cer": 0.7608695652173914,
+    "wer": 1,
+    "rawCer": 0.7659574468085106
+   }
+  },
+  {
+   "file": "line032.png",
+   "ref": "' The Holy Spirit manifested itself in three places :",
+   "trocr": {
+    "text": "The Holy Spirit manifested itself in three places :",
+    "conf": 96,
+    "ms": 3235,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.057692307692307696
+   },
+   "tess": {
+    "text": "n . din tape :\nThe fot Sprint wae deste feel aces",
+    "conf": 38,
+    "ms": 168,
+    "cer": 0.7346938775510204,
+    "wer": 1,
+    "rawCer": 0.75
+   }
+  },
+  {
+   "file": "line033.png",
+   "ref": "the herring must continue to migrate over",
+   "trocr": {
+    "text": "the learning count continue to emigrate over",
+    "conf": 65,
+    "ms": 2178,
+    "cer": 0.17073170731707318,
+    "wer": 0.42857142857142855,
+    "rawCer": 0.17073170731707318
+   },
+   "tess": {
+    "text": "#3. ferry Nf Celina #% por gral pYer",
+    "conf": 19,
+    "ms": 132,
+    "cer": 0.5853658536585366,
+    "wer": 1,
+    "rawCer": 0.6585365853658537
+   }
+  },
+  {
+   "file": "line034.png",
+   "ref": "they migrate easterly to the Norwegian side , or westerly , until",
+   "trocr": {
+    "text": "they migrate entirely to the Norwegian duke, or sketchy, until",
+    "conf": 79,
+    "ms": 1978,
+    "cer": 0.21311475409836064,
+    "wer": 0.3,
+    "rawCer": 0.20634920634920634
+   },
+   "tess": {
+    "text": "oi\ncarts\n4 h He\nHocw\nish tlle,\nweet\nhg , unhel",
+    "conf": 31,
+    "ms": 124,
+    "cer": 0.639344262295082,
+    "wer": 1,
+    "rawCer": 0.6349206349206349
+   }
+  },
+  {
+   "file": "line035.png",
+   "ref": "fish at a certain spawning ground may",
+   "trocr": {
+    "text": "their at a certain spawning ground money",
+    "conf": 68,
+    "ms": 1904,
+    "cer": 0.21621621621621623,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.21621621621621623
+   },
+   "tess": {
+    "text": "Gil, af 7 2, i 2 ’ FL?\n9 of ef Joe’",
+    "conf": 31,
+    "ms": 123,
+    "cer": 0.7567567567567568,
+    "wer": 1,
+    "rawCer": 0.7837837837837838
+   }
+  },
+  {
+   "file": "line036.png",
+   "ref": "there is an easterly drift special",
+   "trocr": {
+    "text": "there is an east-only draft special",
+    "conf": 73,
+    "ms": 1992,
+    "cer": 0.11764705882352941,
+    "wer": 0.5,
+    "rawCer": 0.11764705882352941
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 24,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line037.png",
+   "ref": "to overcome its effect , very few fish would be caught .",
+   "trocr": {
+    "text": "to overcome its effect may few fish would be caught.",
+    "conf": 91,
+    "ms": 1924,
+    "cer": 0.057692307692307696,
+    "wer": 0.1,
+    "rawCer": 0.07407407407407407
+   },
+   "tess": {
+    "text": "fy ovels tome fr effec\nfeof oy for fick wb b aught.",
+    "conf": 33,
+    "ms": 102,
+    "cer": 0.4807692307692308,
+    "wer": 1,
+    "rawCer": 0.48148148148148145
+   }
+  },
+  {
+   "file": "line038.png",
+   "ref": "the seine-net film this usually seemed to",
+   "trocr": {
+    "text": "the mine - of join the novelty seemed to",
+    "conf": 47,
+    "ms": 2076,
+    "cer": 0.3902439024390244,
+    "wer": 0.625,
+    "rawCer": 0.4146341463414634
+   },
+   "tess": {
+    "text": "A in - PAL 4 7 ows ioe A",
+    "conf": 43,
+    "ms": 112,
+    "cer": 0.7560975609756098,
+    "wer": 1,
+    "rawCer": 0.7560975609756098
+   }
+  },
+  {
+   "file": "line039.png",
+   "ref": "the Thursday evening , with blood actually dripping from",
+   "trocr": {
+    "text": "me Thursday evening with blood actually or being from",
+    "conf": 53,
+    "ms": 2193,
+    "cer": 0.1111111111111111,
+    "wer": 0.375,
+    "rawCer": 0.12727272727272726
+   },
+   "tess": {
+    "text": "tne FhurSday Cveniwg with Loon alt oly SY. TAVEN (= Yow",
+    "conf": 46,
+    "ms": 173,
+    "cer": 0.3888888888888889,
+    "wer": 1,
+    "rawCer": 0.4909090909090909
+   }
+  },
+  {
+   "file": "line040.png",
+   "ref": "tiff , but denied that he owed Miss Camp any",
+   "trocr": {
+    "text": "tiff, but denied that he owed Miss Camp any",
+    "conf": 99,
+    "ms": 2181,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "© ff, but denied that he owed Miss Camp any",
+    "conf": 70,
+    "ms": 170,
+    "cer": 0.047619047619047616,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.046511627906976744
+   }
+  },
+  {
+   "file": "line041.png",
+   "ref": "yet so strange were the circumstances that it was",
+   "trocr": {
+    "text": "yet so strange were the circumstances that it was",
+    "conf": 97,
+    "ms": 2118,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "yet 0) ctrange were Jhe ¢i eum tances Dud 4 wf",
+    "conf": 51,
+    "ms": 140,
+    "cer": 0.32653061224489793,
+    "wer": 1,
+    "rawCer": 0.32653061224489793
+   }
+  },
+  {
+   "file": "line042.png",
+   "ref": "darkness .",
+   "trocr": {
+    "text": "a b zts Negro",
+    "conf": 49,
+    "ms": 2458,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   },
+   "tess": {
+    "text": "dak ELT.",
+    "conf": 46,
+    "ms": 46,
+    "cer": 0.5,
+    "wer": 1,
+    "rawCer": 0.5555555555555556
+   }
+  },
+  {
+   "file": "line043.png",
+   "ref": "Though in the minds of most people there was",
+   "trocr": {
+    "text": "Though in the minds of most people there now",
+    "conf": 92,
+    "ms": 3016,
+    "cer": 0.06818181818181818,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.06818181818181818
+   },
+   "tess": {
+    "text": "ol wo \\ + people Aone PIN\nFI Tp 1\nT houns ANAL",
+    "conf": 41,
+    "ms": 174,
+    "cer": 0.7954545454545454,
+    "wer": 1,
+    "rawCer": 0.8863636363636364
+   }
+  },
+  {
+   "file": "line044.png",
+   "ref": "this stretch of line , but no information was",
+   "trocr": {
+    "text": "this stretch of line, but no information was",
+    "conf": 96,
+    "ms": 2306,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "iS stretch of line, but ho iMtormation was",
+    "conf": 65,
+    "ms": 137,
+    "cer": 0.11627906976744186,
+    "wer": 0.375,
+    "rawCer": 0.13636363636363635
+   }
+  },
+  {
+   "file": "line045.png",
+   "ref": "evening at about seven o'clock , telling her room-mate , Emma",
+   "trocr": {
+    "text": "cleaning and about seven a state, telling her food-worker, Canada,",
+    "conf": 54,
+    "ms": 2356,
+    "cer": 0.40350877192982454,
+    "wer": 0.6363636363636364,
+    "rawCer": 0.423728813559322
+   },
+   "tess": {
+    "text": "eveumwd od about Selen © clock, \\elluy ner (oom - ake, Cura",
+    "conf": 36,
+    "ms": 250,
+    "cer": 0.3508771929824561,
+    "wer": 0.8181818181818182,
+    "rawCer": 0.3728813559322034
+   }
+  },
+  {
+   "file": "line046.png",
+   "ref": "would not do ; nothing an American would not",
+   "trocr": {
+    "text": "expected not, do, watching a mysterious visualment meet",
+    "conf": 42,
+    "ms": 2806,
+    "cer": 0.6904761904761905,
+    "wer": 0.75,
+    "rawCer": 0.7209302325581395
+   },
+   "tess": {
+    "text": "aro eA we d lo vo fe a4 Aen cas would Lok",
+    "conf": 50,
+    "ms": 140,
+    "cer": 0.5476190476190477,
+    "wer": 1,
+    "rawCer": 0.5581395348837209
+   }
+  },
+  {
+   "file": "line047.png",
+   "ref": "than mere converse has always been there .",
+   "trocr": {
+    "text": "than more commerce has always been there.",
+    "conf": 76,
+    "ms": 1889,
+    "cer": 0.1,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.0975609756097561
+   },
+   "tess": {
+    "text": "fo. Me Cov oeid i alectg Ae. be",
+    "conf": 33,
+    "ms": 96,
+    "cer": 0.625,
+    "wer": 1,
+    "rawCer": 0.6829268292682927
+   }
+  },
+  {
+   "file": "line048.png",
+   "ref": "dishes , and for all the blossoming of the",
+   "trocr": {
+    "text": "dislikes, and for all the blossoming of the",
+    "conf": 91,
+    "ms": 2065,
+    "cer": 0.075,
+    "wer": 0.125,
+    "rawCer": 0.07317073170731707
+   },
+   "tess": {
+    "text": "dishes amd {av all te hlotsomim of he",
+    "conf": 41,
+    "ms": 140,
+    "cer": 0.25,
+    "wer": 0.625,
+    "rawCer": 0.2682926829268293
+   }
+  },
+  {
+   "file": "line049.png",
+   "ref": "nowadays their simplified meals would seem quite",
+   "trocr": {
+    "text": "nowadays their simplified meals would seem quite",
+    "conf": 92,
+    "ms": 2325,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Now od SNVAN ANeae ale Weals wan See Qu We",
+    "conf": 27,
+    "ms": 176,
+    "cer": 0.5625,
+    "wer": 1,
+    "rawCer": 0.625
+   }
+  },
+  {
+   "file": "line050.png",
+   "ref": "which the Israelites sighed .",
+   "trocr": {
+    "text": "which the Israelites signed",
+    "conf": 92,
+    "ms": 2017,
+    "cer": 0.037037037037037035,
+    "wer": 0.25,
+    "rawCer": 0.07142857142857142
+   },
+   "tess": {
+    "text": "whan Yee \\sraeliles sane.",
+    "conf": 25,
+    "ms": 122,
+    "cer": 0.4074074074074074,
+    "wer": 1,
+    "rawCer": 0.39285714285714285
+   }
+  },
+  {
+   "file": "line051.png",
+   "ref": "embers wide ; Above the coals the smoking",
+   "trocr": {
+    "text": "numbers wide ; Above the cools the smoicing",
+    "conf": 81,
+    "ms": 2024,
+    "cer": 0.1282051282051282,
+    "wer": 0.42857142857142855,
+    "rawCer": 0.15
+   },
+   "tess": {
+    "text": "eel § wide, Noove. Xhe cools Khe smoleing",
+    "conf": 43,
+    "ms": 171,
+    "cer": 0.28205128205128205,
+    "wer": 0.8571428571428571,
+    "rawCer": 0.35
+   }
+  },
+  {
+   "file": "line052.png",
+   "ref": "they broke fresh ground and called another sense",
+   "trocr": {
+    "text": "they'll broke fresh ground and called another sense",
+    "conf": 80,
+    "ms": 1964,
+    "cer": 0.0625,
+    "wer": 0.125,
+    "rawCer": 0.0625
+   },
+   "tess": {
+    "text": "hey \\aralke ein SA) oud NO ced anata NENTS",
+    "conf": 9,
+    "ms": 193,
+    "cer": 0.5,
+    "wer": 1,
+    "rawCer": 0.6041666666666666
+   }
+  },
+  {
+   "file": "line053.png",
+   "ref": "clarifying the functions of the brain . It",
+   "trocr": {
+    "text": "clarifying the functions of the brains. It",
+    "conf": 70,
+    "ms": 2018,
+    "cer": 0.025,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.024390243902439025
+   },
+   "tess": {
+    "text": "Bow’ fring Ava rancliomh of The Noro IT",
+    "conf": 33,
+    "ms": 147,
+    "cer": 0.475,
+    "wer": 0.7142857142857143,
+    "rawCer": 0.5365853658536586
+   }
+  },
+  {
+   "file": "line054.png",
+   "ref": "over with flour , you will find a stack",
+   "trocr": {
+    "text": "over with floury again with final on better",
+    "conf": 59,
+    "ms": 1964,
+    "cer": 0.4594594594594595,
+    "wer": 0.75,
+    "rawCer": 0.4473684210526316
+   },
+   "tess": {
+    "text": "&V So adi o Mv oA |\nA 5 A a foot o. AXocdd",
+    "conf": 32,
+    "ms": 141,
+    "cer": 0.7837837837837838,
+    "wer": 1,
+    "rawCer": 0.8421052631578947
+   }
+  },
+  {
+   "file": "line055.png",
+   "ref": "Schnitzel as well as dishes and stews heightened with",
+   "trocr": {
+    "text": "Schmiksol as well as dishes and stews heightened with",
+    "conf": 76,
+    "ms": 2109,
+    "cer": 0.07547169811320754,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.07547169811320754
+   },
+   "tess": {
+    "text": "Shonutzel gs well as dashes amd stews hag htorud Wikh",
+    "conf": 50,
+    "ms": 137,
+    "cer": 0.24528301886792453,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.2641509433962264
+   }
+  },
+  {
+   "file": "line056.png",
+   "ref": "derive from gastronomy is intellectual",
+   "trocr": {
+    "text": "derive from gastronomy is intellectual",
+    "conf": 75,
+    "ms": 1897,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Ae De. L LES ye Aosih ono NO WN = \\ Ae \\\\ = val",
+    "conf": 35,
+    "ms": 175,
+    "cer": 0.7368421052631579,
+    "wer": 1,
+    "rawCer": 0.9210526315789473
+   }
+  },
+  {
+   "file": "line057.png",
+   "ref": "a noble dish is , A sort of soup , or",
+   "trocr": {
+    "text": "a mobile clash is, A sort of soup, or",
+    "conf": 85,
+    "ms": 2032,
+    "cer": 0.15151515151515152,
+    "wer": 0.2222222222222222,
+    "rawCer": 0.14285714285714285
+   },
+   "tess": {
+    "text": "A cobble h=h ois, A sort of |ouUp, or",
+    "conf": 56,
+    "ms": 153,
+    "cer": 0.24242424242424243,
+    "wer": 0.5555555555555556,
+    "rawCer": 0.2571428571428571
+   }
+  },
+  {
+   "file": "line058.png",
+   "ref": "had an aversion . Shelley , for example ,",
+   "trocr": {
+    "text": "had an question. Shelley, for example,",
+    "conf": 92,
+    "ms": 1973,
+    "cer": 0.11428571428571428,
+    "wer": 0.16666666666666666,
+    "rawCer": 0.10526315789473684
+   },
+   "tess": {
+    "text": "Nad an uoassion. Shallay | for =xamp\\e",
+    "conf": 42,
+    "ms": 209,
+    "cer": 0.2571428571428571,
+    "wer": 0.8333333333333334,
+    "rawCer": 0.3157894736842105
+   }
+  },
+  {
+   "file": "line059.png",
+   "ref": "without going through the formality",
+   "trocr": {
+    "text": "without going through the formality",
+    "conf": 93,
+    "ms": 2141,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "wit Nou acwna FYorouah A Nel Y orenal Ay",
+    "conf": 30,
+    "ms": 202,
+    "cer": 0.6,
+    "wer": 1,
+    "rawCer": 0.6
+   }
+  },
+  {
+   "file": "line060.png",
+   "ref": "very funny story which made Carlyle absolutely laugh ;",
+   "trocr": {
+    "text": "very funny story which made, Carlyle absolutely laughs ;",
+    "conf": 89,
+    "ms": 2090,
+    "cer": 0.019230769230769232,
+    "wer": 0.125,
+    "rawCer": 0.05660377358490566
+   },
+   "tess": {
+    "text": "ay fey choy slid mele CL LLL Lf",
+    "conf": 38,
+    "ms": 69,
+    "cer": 0.6153846153846154,
+    "wer": 1,
+    "rawCer": 0.6981132075471698
+   }
+  },
+  {
+   "file": "line061.png",
+   "ref": "moment had charge of the mine ; the mine collapsed",
+   "trocr": {
+    "text": "moment had charge of a mine, the mine collapsed",
+    "conf": 83,
+    "ms": 2240,
+    "cer": 0.0625,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.08163265306122448
+   },
+   "tess": {
+    "text": "wowgut 40 diasge of 8 Wu the wine Gollepad",
+    "conf": 36,
+    "ms": 135,
+    "cer": 0.4583333333333333,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.46938775510204084
+   }
+  },
+  {
+   "file": "line062.png",
+   "ref": "without a large-scale and concentrated invasion .",
+   "trocr": {
+    "text": "without a large-scale and concentrated invasion.",
+    "conf": 99,
+    "ms": 2329,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "NLT q faye “Sol. aud couQuiradal UVa,",
+    "conf": 24,
+    "ms": 131,
+    "cer": 0.5957446808510638,
+    "wer": 1,
+    "rawCer": 0.6875
+   }
+  },
+  {
+   "file": "line063.png",
+   "ref": "crown lands , the fees of feudalism",
+   "trocr": {
+    "text": "crown lands, the fees of feudalism",
+    "conf": 80,
+    "ms": 1858,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "CV Vw, [anes +he fees of feadeal i's mr",
+    "conf": 51,
+    "ms": 138,
+    "cer": 0.3939393939393939,
+    "wer": 1,
+    "rawCer": 0.4411764705882353
+   }
+  },
+  {
+   "file": "line064.png",
+   "ref": "the unsuccessful . But the Commons were not",
+   "trocr": {
+    "text": "the unsuccessful. But the Commons were not",
+    "conf": 94,
+    "ms": 2193,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "the wnsuccesstul . But the Commons were hot",
+    "conf": 75,
+    "ms": 225,
+    "cer": 0.07317073170731707,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.09523809523809523
+   }
+  },
+  {
+   "file": "line065.png",
+   "ref": "financing the Exchequer had become stabilized .",
+   "trocr": {
+    "text": "financing the beekeeper had become forbidden",
+    "conf": 47,
+    "ms": 1931,
+    "cer": 0.28888888888888886,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.30434782608695654
+   },
+   "tess": {
+    "text": "facts 4s feeht ger fad become pbbrliéay,",
+    "conf": 21,
+    "ms": 122,
+    "cer": 0.5111111111111111,
+    "wer": 1,
+    "rawCer": 0.5217391304347826
+   }
+  },
+  {
+   "file": "line066.png",
+   "ref": "vely simple obligations of the feudal pyramid",
+   "trocr": {
+    "text": "rely simple obligations of the third pyramid",
+    "conf": 85,
+    "ms": 1845,
+    "cer": 0.15555555555555556,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.15555555555555556
+   },
+   "tess": {
+    "text": "oly mpl Alford of Ha furted pyatinol",
+    "conf": 26,
+    "ms": 147,
+    "cer": 0.5777777777777777,
+    "wer": 0.8571428571428571,
+    "rawCer": 0.6
+   }
+  },
+  {
+   "file": "line067.png",
+   "ref": "In the following year , 1380 , the last and",
+   "trocr": {
+    "text": "In the following years, 1380, the last cured",
+    "conf": 77,
+    "ms": 1984,
+    "cer": 0.1282051282051282,
+    "wer": 0.25,
+    "rawCer": 0.12195121951219512
+   },
+   "tess": {
+    "text": "we Hoa Lollowing Yeo, 1330, Heo lad ound",
+    "conf": 46,
+    "ms": 132,
+    "cer": 0.38461538461538464,
+    "wer": 1,
+    "rawCer": 0.4146341463414634
+   }
+  },
+  {
+   "file": "line068.png",
+   "ref": "John de Kyrkby , a Londoner , was one of",
+   "trocr": {
+    "text": "John de Kyrkley, a landowner, was one of",
+    "conf": 77,
+    "ms": 2016,
+    "cer": 0.1111111111111111,
+    "wer": 0.25,
+    "rawCer": 0.13157894736842105
+   },
+   "tess": {
+    "text": "Yon de Kyrkby, a L oudeswer, was Qa. oll",
+    "conf": 39,
+    "ms": 154,
+    "cer": 0.3333333333333333,
+    "wer": 0.625,
+    "rawCer": 0.3157894736842105
+   }
+  },
+  {
+   "file": "line069.png",
+   "ref": "ventricular content .",
+   "trocr": {
+    "text": "renticular content.",
+    "conf": 80,
+    "ms": 2168,
+    "cer": 0.10526315789473684,
+    "wer": 0.5,
+    "rawCer": 0.1
+   },
+   "tess": {
+    "text": "Vent eve ea lar prm— a 4",
+    "conf": 32,
+    "ms": 153,
+    "cer": 0.7894736842105263,
+    "wer": 1,
+    "rawCer": 0.85
+   }
+  },
+  {
+   "file": "line070.png",
+   "ref": "thus synchronous with cardiac systole but ,",
+   "trocr": {
+    "text": "thussynchronous with cardiac systol e but",
+    "conf": 85,
+    "ms": 2194,
+    "cer": 0.04878048780487805,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.07142857142857142
+   },
+   "tess": {
+    "text": "thoy synchronous wth cardiac systole out",
+    "conf": 55,
+    "ms": 152,
+    "cer": 0.0975609756097561,
+    "wer": 0.5,
+    "rawCer": 0.11904761904761904
+   }
+  },
+  {
+   "file": "line071.png",
+   "ref": "were sold at 32 pieces for one shilling .",
+   "trocr": {
+    "text": "were sold at 32 pioneer for one-stilling",
+    "conf": 70,
+    "ms": 2112,
+    "cer": 0.1282051282051282,
+    "wer": 0.25,
+    "rawCer": 0.175
+   },
+   "tess": {
+    "text": "Lee sd a R preces’ for one Briliney",
+    "conf": 48,
+    "ms": 111,
+    "cer": 0.3333333333333333,
+    "wer": 0.75,
+    "rawCer": 0.35
+   }
+  },
+  {
+   "file": "line072.png",
+   "ref": "as the Bakers' Union , for whom they went on Satur-",
+   "trocr": {
+    "text": "as the Packers' Union, for return their event on Southern",
+    "conf": 64,
+    "ms": 2064,
+    "cer": 0.3617021276595745,
+    "wer": 0.5,
+    "rawCer": 0.34
+   },
+   "tess": {
+    "text": "Mu Baker’ Union, Jor ooh Be ood op Iodine",
+    "conf": 46,
+    "ms": 115,
+    "cer": 0.5319148936170213,
+    "wer": 0.9,
+    "rawCer": 0.52
+   }
+  },
+  {
+   "file": "line073.png",
+   "ref": "Christianity , common ground could be found .",
+   "trocr": {
+    "text": "Christianity, commercial council could be formal",
+    "conf": 29,
+    "ms": 1950,
+    "cer": 0.36585365853658536,
+    "wer": 0.5,
+    "rawCer": 0.3488372093023256
+   },
+   "tess": {
+    "text": "(Loishomsdn (Otte dq grown Cee FO L fuck",
+    "conf": 31,
+    "ms": 133,
+    "cer": 0.7073170731707317,
+    "wer": 1,
+    "rawCer": 0.7441860465116279
+   }
+  },
+  {
+   "file": "line074.png",
+   "ref": "known to say that it was not ne-",
+   "trocr": {
+    "text": "Baldwin to say that it may that me -",
+    "conf": 60,
+    "ms": 2211,
+    "cer": 0.3548387096774194,
+    "wer": 0.5,
+    "rawCer": 0.375
+   },
+   "tess": {
+    "text": "hasy Yo mw Tb 4 Am wel we",
+    "conf": 27,
+    "ms": 97,
+    "cer": 0.6451612903225806,
+    "wer": 1,
+    "rawCer": 0.71875
+   }
+  },
+  {
+   "file": "line075.png",
+   "ref": "windows .",
+   "trocr": {
+    "text": "windows.",
+    "conf": 95,
+    "ms": 1745,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Win oow S .",
+    "conf": 30,
+    "ms": 42,
+    "cer": 0.42857142857142855,
+    "wer": 1,
+    "rawCer": 0.75
+   }
+  },
+  {
+   "file": "line076.png",
+   "ref": "Meanwhile in Purley there was much activity and much",
+   "trocr": {
+    "text": "Meanwhile in Purley there was much activity and much",
+    "conf": 99,
+    "ms": 2075,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Meomwhle \\n Turley here was mudh ack vity and much",
+    "conf": 37,
+    "ms": 138,
+    "cer": 0.17307692307692307,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.17307692307692307
+   }
+  },
+  {
+   "file": "line077.png",
+   "ref": "and Sir Frederick Stoven , but with their perfect con-",
+   "trocr": {
+    "text": "and Sir Frederick Stowen, but will, Illamperfect com-",
+    "conf": 56,
+    "ms": 2297,
+    "cer": 0.19607843137254902,
+    "wer": 0.5555555555555556,
+    "rawCer": 0.20754716981132076
+   },
+   "tess": {
+    "text": "el £0 RN Chore. LE oA Ho. ded cb -",
+    "conf": 42,
+    "ms": 112,
+    "cer": 0.7254901960784313,
+    "wer": 1,
+    "rawCer": 0.7547169811320755
+   }
+  },
+  {
+   "file": "line078.png",
+   "ref": "and came into the livingroom , where",
+   "trocr": {
+    "text": "and came into the livingtown, relieve",
+    "conf": 72,
+    "ms": 1912,
+    "cer": 0.23529411764705882,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.22857142857142856
+   },
+   "tess": {
+    "text": "ool care lo Me fein peo, lee",
+    "conf": 41,
+    "ms": 87,
+    "cer": 0.5588235294117647,
+    "wer": 1,
+    "rawCer": 0.5428571428571428
+   }
+  },
+  {
+   "file": "line079.png",
+   "ref": "apartment he garaged his car and then stood",
+   "trocr": {
+    "text": "apartment he garaged his car and then stood",
+    "conf": 83,
+    "ms": 1897,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "d\nZl, tho\nGud Te\n\n/ Ls ur\n\nFh amped\n\nfdas\n\npart",
+    "conf": 42,
+    "ms": 100,
+    "cer": 0.7906976744186046,
+    "wer": 1,
+    "rawCer": 0.8372093023255814
+   }
+  },
+  {
+   "file": "line080.png",
+   "ref": "the War Memorial . There was a deep",
+   "trocr": {
+    "text": "the war Memorial. There was a deep",
+    "conf": 99,
+    "ms": 1868,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.029411764705882353
+   },
+   "tess": {
+    "text": "Ha Wa Muuowad , Jhere wo o des fo",
+    "conf": 41,
+    "ms": 107,
+    "cer": 0.48484848484848486,
+    "wer": 1,
+    "rawCer": 0.5588235294117647
+   }
+  },
+  {
+   "file": "line081.png",
+   "ref": "we may form the nucleus around ...",
+   "trocr": {
+    "text": "we may form the nucleus arranged...",
+    "conf": 69,
+    "ms": 1865,
+    "cer": 0.13333333333333333,
+    "wer": 0.16666666666666666,
+    "rawCer": 0.12121212121212122
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 35,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line082.png",
+   "ref": "So they proceeded to see if the coast",
+   "trocr": {
+    "text": "So they proceeded to see if the coast",
+    "conf": 99,
+    "ms": 1992,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "WA Hey pre cooded to ceo yi tha cpgat",
+    "conf": 41,
+    "ms": 115,
+    "cer": 0.40540540540540543,
+    "wer": 1,
+    "rawCer": 0.43243243243243246
+   }
+  },
+  {
+   "file": "line083.png",
+   "ref": "Finally , being so obviously on their own ,",
+   "trocr": {
+    "text": "Finally, being so obviously on their own",
+    "conf": 93,
+    "ms": 2104,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.024390243902439025
+   },
+   "tess": {
+    "text": "Fai beg so obucus)y ow herr ow,\nEy Ee",
+    "conf": 29,
+    "ms": 120,
+    "cer": 0.5128205128205128,
+    "wer": 1,
+    "rawCer": 0.5365853658536586
+   }
+  },
+  {
+   "file": "line084.png",
+   "ref": "research at first hand into matters on which",
+   "trocr": {
+    "text": "research at first banned into matters on which",
+    "conf": 86,
+    "ms": 1911,
+    "cer": 0.06818181818181818,
+    "wer": 0.125,
+    "rawCer": 0.06818181818181818
+   },
+   "tess": {
+    "text": "tose cel af Sud Div ee Grafs, x Lppele",
+    "conf": 36,
+    "ms": 114,
+    "cer": 0.7727272727272727,
+    "wer": 1,
+    "rawCer": 0.7954545454545454
+   }
+  },
+  {
+   "file": "line085.png",
+   "ref": "Sometimes she took Harry around with her , but",
+   "trocr": {
+    "text": "Sometimes she took Harry around with her, but",
+    "conf": 100,
+    "ms": 1983,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "ST i took Naty around will hai bid",
+    "conf": 44,
+    "ms": 82,
+    "cer": 0.4318181818181818,
+    "wer": 0.75,
+    "rawCer": 0.4666666666666667
+   }
+  },
+  {
+   "file": "line086.png",
+   "ref": "Sally \" - here she had dropped her voice in homage to the",
+   "trocr": {
+    "text": "Sally \" Irene she had dignified her voice in homage to the",
+    "conf": 92,
+    "ms": 1941,
+    "cer": 0.16981132075471697,
+    "wer": 0.18181818181818182,
+    "rawCer": 0.17543859649122806
+   },
+   "tess": {
+    "text": "Solf “here she fod doped hr toe in forge fot",
+    "conf": 57,
+    "ms": 97,
+    "cer": 0.33962264150943394,
+    "wer": 0.7272727272727273,
+    "rawCer": 0.38596491228070173
+   }
+  },
+  {
+   "file": "line087.png",
+   "ref": "openness and freshness , though perhaps not the same",
+   "trocr": {
+    "text": "openness and that means, though perhaps not the same",
+    "conf": 86,
+    "ms": 1971,
+    "cer": 0.16,
+    "wer": 0.25,
+    "rawCer": 0.1568627450980392
+   },
+   "tess": {
+    "text": "ervey ard Fre, Ga jperops sof He sore",
+    "conf": 28,
+    "ms": 146,
+    "cer": 0.52,
+    "wer": 1,
+    "rawCer": 0.5686274509803921
+   }
+  },
+  {
+   "file": "line088.png",
+   "ref": "neurosis and not in some eruption from those",
+   "trocr": {
+    "text": "a man is and not in some expulsion from the",
+    "conf": 62,
+    "ms": 2115,
+    "cer": 0.2727272727272727,
+    "wer": 0.625,
+    "rawCer": 0.2727272727272727
+   },
+   "tess": {
+    "text": "Heros sS Rot ong she Some eriplon Lom Hos",
+    "conf": 18,
+    "ms": 149,
+    "cer": 0.45454545454545453,
+    "wer": 1,
+    "rawCer": 0.5
+   }
+  },
+  {
+   "file": "line089.png",
+   "ref": "He peered as it were into the dark secrets",
+   "trocr": {
+    "text": "He opened as it were into the dark secrets",
+    "conf": 88,
+    "ms": 2268,
+    "cer": 0.07142857142857142,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.07142857142857142
+   },
+   "tess": {
+    "text": "lle. peered as (CT wee nl He dul secrehs",
+    "conf": 43,
+    "ms": 134,
+    "cer": 0.2857142857142857,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.38095238095238093
+   }
+  },
+  {
+   "file": "line090.png",
+   "ref": "the forest Indians are said to be mortally",
+   "trocr": {
+    "text": "that forest Imaliens are said to be mentally",
+    "conf": 68,
+    "ms": 2017,
+    "cer": 0.19047619047619047,
+    "wer": 0.375,
+    "rawCer": 0.19047619047619047
+   },
+   "tess": {
+    "text": "300 fosest 5 (en SOLE aie Loch TR nostally",
+    "conf": 25,
+    "ms": 196,
+    "cer": 0.5238095238095238,
+    "wer": 1,
+    "rawCer": 0.5476190476190477
+   }
+  },
+  {
+   "file": "line091.png",
+   "ref": "for such protection as our presence , or Mrs",
+   "trocr": {
+    "text": "for such protection as our presence for Mrs",
+    "conf": 93,
+    "ms": 1925,
+    "cer": 0.023809523809523808,
+    "wer": 0.125,
+    "rawCer": 0.046511627906976744
+   },
+   "tess": {
+    "text": "for sud padeation as our Presence (or rs",
+    "conf": 51,
+    "ms": 125,
+    "cer": 0.16666666666666666,
+    "wer": 0.375,
+    "rawCer": 0.23255813953488372
+   }
+  },
+  {
+   "file": "line092.png",
+   "ref": "damn bus .",
+   "trocr": {
+    "text": "darners frees.",
+    "conf": 27,
+    "ms": 1861,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 0.8888888888888888
+   },
+   "tess": {
+    "text": "Ge",
+    "conf": 17,
+    "ms": 47,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line093.png",
+   "ref": "two-twenty carried , for him , a cargo more",
+   "trocr": {
+    "text": "two-twistest, carried, for him, a Congo inverse",
+    "conf": 61,
+    "ms": 2856,
+    "cer": 0.3076923076923077,
+    "wer": 0.375,
+    "rawCer": 0.3170731707317073
+   },
+   "tess": {
+    "text": "190 Feoet y Corie], brjoy Con§0 bg C",
+    "conf": 22,
+    "ms": 124,
+    "cer": 0.6923076923076923,
+    "wer": 1,
+    "rawCer": 0.7560975609756098
+   }
+  },
+  {
+   "file": "line094.png",
+   "ref": "happened , if you ask me . \"",
+   "trocr": {
+    "text": "happened, if you ask me. \"",
+    "conf": 90,
+    "ms": 2593,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "Joop pe ec if Sou ol oc",
+    "conf": 18,
+    "ms": 218,
+    "cer": 0.5454545454545454,
+    "wer": 1,
+    "rawCer": 0.6153846153846154
+   }
+  },
+  {
+   "file": "line095.png",
+   "ref": "And no one doing the first thing about",
+   "trocr": {
+    "text": "fuel no come along the first thing about",
+    "conf": 71,
+    "ms": 2289,
+    "cer": 0.23684210526315788,
+    "wer": 0.375,
+    "rawCer": 0.23684210526315788
+   },
+   "tess": {
+    "text": "Led ne Ou € dens Fle fest Fling aboud",
+    "conf": 55,
+    "ms": 95,
+    "cer": 0.39473684210526316,
+    "wer": 1,
+    "rawCer": 0.4473684210526316
+   }
+  },
+  {
+   "file": "line096.png",
+   "ref": "He had seen no sign of an accident .",
+   "trocr": {
+    "text": "He had seen no sign of our accident.",
+    "conf": 84,
+    "ms": 1972,
+    "cer": 0.08823529411764706,
+    "wer": 0.125,
+    "rawCer": 0.08571428571428572
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 26,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line097.png",
+   "ref": "looked at his forlorn flock . \" What",
+   "trocr": {
+    "text": "hooked at his freshman flock. \" 2ndest",
+    "conf": 36,
+    "ms": 1863,
+    "cer": 0.375,
+    "wer": 0.5,
+    "rawCer": 0.34285714285714286
+   },
+   "tess": {
+    "text": "Joobidd af blo forlorn Jocke, * Ltsot",
+    "conf": 16,
+    "ms": 170,
+    "cer": 0.46875,
+    "wer": 0.8333333333333334,
+    "rawCer": 0.4857142857142857
+   }
+  },
+  {
+   "file": "line098.png",
+   "ref": "\" Do as I say , driver . \" Very stern , the reverend",
+   "trocr": {
+    "text": "\" Do of 3 say,driver. \" Very return, the reverend",
+    "conf": 67,
+    "ms": 2224,
+    "cer": 0.14285714285714285,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.19148936170212766
+   },
+   "tess": {
+    "text": "De a 3 omy oii © Very Prien, Bo revrernd",
+    "conf": 37,
+    "ms": 164,
+    "cer": 0.4523809523809524,
+    "wer": 0.8888888888888888,
+    "rawCer": 0.48936170212765956
+   }
+  },
+  {
+   "file": "line099.png",
+   "ref": "the Heavy World become changed . Some die . Most live",
+   "trocr": {
+    "text": "the Heavy World become charged. Some die. Most live",
+    "conf": 95,
+    "ms": 2088,
+    "cer": 0.02040816326530612,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.0196078431372549
+   },
+   "tess": {
+    "text": "Hue Heavy World become hanged. Sore die. Medd Lee",
+    "conf": 42,
+    "ms": 143,
+    "cer": 0.1836734693877551,
+    "wer": 0.5555555555555556,
+    "rawCer": 0.19607843137254902
+   }
+  },
+  {
+   "file": "line100.png",
+   "ref": "' To this True World , as you call it , we come to die , '",
+   "trocr": {
+    "text": "To this True World, as you call it, we come to die, '",
+    "conf": 98,
+    "ms": 2247,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.05555555555555555
+   },
+   "tess": {
+    "text": "To Mug True World, os vou call +, we come Yo die,",
+    "conf": 66,
+    "ms": 136,
+    "cer": 0.20833333333333334,
+    "wer": 0.4166666666666667,
+    "rawCer": 0.2222222222222222
+   }
+  },
+  {
+   "file": "line101.png",
+   "ref": "So it lets us rule it . ' Flor and Lily-yo",
+   "trocr": {
+    "text": "So it lets us rule it.'Fear and Lily-yo",
+    "conf": 86,
+    "ms": 2158,
+    "cer": 0.05263157894736842,
+    "wer": 0.1,
+    "rawCer": 0.075
+   },
+   "tess": {
+    "text": "So it lets ug wile Wb Flare ond Lily -vo",
+    "conf": 46,
+    "ms": 136,
+    "cer": 0.23684210526315788,
+    "wer": 0.6,
+    "rawCer": 0.3
+   }
+  },
+  {
+   "file": "line102.png",
+   "ref": "World . You must help to lead our force . ' The long",
+   "trocr": {
+    "text": "World. You must help to lead our force.'The long",
+    "conf": 93,
+    "ms": 2113,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.02040816326530612
+   },
+   "tess": {
+    "text": "Wold. You waust help Yo \\eod aux force The long",
+    "conf": 52,
+    "ms": 189,
+    "cer": 0.17391304347826086,
+    "wer": 0.5,
+    "rawCer": 0.20408163265306123
+   }
+  },
+  {
+   "file": "line103.png",
+   "ref": "been inclined to regard women as something",
+   "trocr": {
+    "text": "been inclined to equal names as something",
+    "conf": 67,
+    "ms": 2231,
+    "cer": 0.19047619047619047,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.19047619047619047
+   },
+   "tess": {
+    "text": "reer 0 clued F# yaad HOME os mein",
+    "conf": 18,
+    "ms": 127,
+    "cer": 0.47619047619047616,
+    "wer": 1,
+    "rawCer": 0.5476190476190477
+   }
+  },
+  {
+   "file": "line104.png",
+   "ref": "\" Good luck , Air Marshal , \" she said gently . \" I 'll",
+   "trocr": {
+    "text": "Good luck, his Marshal, \" sue said jewelry. \" I'll",
+    "conf": 69,
+    "ms": 2110,
+    "cer": 0.16666666666666666,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.1836734693877551
+   },
+   "tess": {
+    "text": "bod duck, y. Marcial, ; JUL Jed\ndial i petty 04",
+    "conf": 26,
+    "ms": 105,
+    "cer": 0.6190476190476191,
+    "wer": 1,
+    "rawCer": 0.6326530612244898
+   }
+  },
+  {
+   "file": "line105.png",
+   "ref": "particular area within its range . Geoffrey",
+   "trocr": {
+    "text": "particular area within its range, Geoffrey",
+    "conf": 95,
+    "ms": 1842,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.023809523809523808
+   },
+   "tess": {
+    "text": "particular are q within hs range, Geoffrey",
+    "conf": 53,
+    "ms": 113,
+    "cer": 0.0975609756097561,
+    "wer": 0.5,
+    "rawCer": 0.11904761904761904
+   }
+  },
+  {
+   "file": "line106.png",
+   "ref": "by special helicopter from the Horse Guards",
+   "trocr": {
+    "text": "by special helicopter from the \" House. Quarth",
+    "conf": 67,
+    "ms": 2131,
+    "cer": 0.09302325581395349,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.16279069767441862
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 31,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line107.png",
+   "ref": "miles .",
+   "trocr": {
+    "text": "men leg.",
+    "conf": 63,
+    "ms": 1719,
+    "cer": 0.8,
+    "wer": 1,
+    "rawCer": 0.6666666666666666
+   },
+   "tess": {
+    "text": "bic 7.",
+    "conf": 62,
+    "ms": 38,
+    "cer": 0.8,
+    "wer": 1,
+    "rawCer": 0.6666666666666666
+   }
+  },
+  {
+   "file": "line108.png",
+   "ref": "north of the island .",
+   "trocr": {
+    "text": "north of the island-",
+    "conf": 87,
+    "ms": 1743,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.05
+   },
+   "tess": {
+    "text": "WAN og Waal.",
+    "conf": 25,
+    "ms": 45,
+    "cer": 0.7894736842105263,
+    "wer": 1,
+    "rawCer": 0.75
+   }
+  },
+  {
+   "file": "line109.png",
+   "ref": "a schoolmaster and she a small ,",
+   "trocr": {
+    "text": "A schoolteacher - the aunt. She is small,",
+    "conf": 52,
+    "ms": 2069,
+    "cer": 0.4,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.5483870967741935
+   },
+   "tess": {
+    "text": "G  Slos/ias te, Gud Se 6 St.all",
+    "conf": 25,
+    "ms": 198,
+    "cer": 0.4666666666666667,
+    "wer": 1,
+    "rawCer": 0.5806451612903226
+   }
+  },
+  {
+   "file": "line110.png",
+   "ref": "to account for my manners , \" he retorted .",
+   "trocr": {
+    "text": "to account for my manners, \" the retorted.",
+    "conf": 75,
+    "ms": 2003,
+    "cer": 0.02702702702702703,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.024390243902439025
+   },
+   "tess": {
+    "text": "10 accom for my mapnary | “he edosteA.",
+    "conf": 46,
+    "ms": 133,
+    "cer": 0.32432432432432434,
+    "wer": 0.5714285714285714,
+    "rawCer": 0.36585365853658536
+   }
+  },
+  {
+   "file": "line111.png",
+   "ref": "brought the jeep to a standstill in a rough",
+   "trocr": {
+    "text": "brought the jeep to a standstill in a rough",
+    "conf": 94,
+    "ms": 1923,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "4\nHo\nSLAY\nfa.\ndg\n% a\nlee Jeep\nLf\nbrary",
+    "conf": 47,
+    "ms": 99,
+    "cer": 0.7906976744186046,
+    "wer": 1,
+    "rawCer": 0.813953488372093
+   }
+  },
+  {
+   "file": "line112.png",
+   "ref": "you to think badly of me . \" She turned away",
+   "trocr": {
+    "text": "rose to think badly of me. \" She learned a scary",
+    "conf": 78,
+    "ms": 1967,
+    "cer": 0.25,
+    "wer": 0.4444444444444444,
+    "rawCer": 0.23255813953488372
+   },
+   "tess": {
+    "text": "7 O« do Kat buddy oi i 19 bined G Coy”",
+    "conf": 31,
+    "ms": 139,
+    "cer": 0.6,
+    "wer": 1,
+    "rawCer": 0.6744186046511628
+   }
+  },
+  {
+   "file": "line113.png",
+   "ref": "your knowledge of all the affairs of the",
+   "trocr": {
+    "text": "your knowledge of all the affairs of Mr",
+    "conf": 65,
+    "ms": 1997,
+    "cer": 0.075,
+    "wer": 0.125,
+    "rawCer": 0.075
+   },
+   "tess": {
+    "text": "Cer feo kolye of ot fe efrrs id {Se",
+    "conf": 39,
+    "ms": 128,
+    "cer": 0.575,
+    "wer": 1,
+    "rawCer": 0.575
+   }
+  },
+  {
+   "file": "line114.png",
+   "ref": "and warm sympathy , as she explained",
+   "trocr": {
+    "text": "and warm sympathy, as she explained",
+    "conf": 93,
+    "ms": 1864,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "amo warm S ympathy, as she seplain es",
+    "conf": 49,
+    "ms": 119,
+    "cer": 0.20588235294117646,
+    "wer": 0.8333333333333334,
+    "rawCer": 0.22857142857142856
+   }
+  },
+  {
+   "file": "line115.png",
+   "ref": "lower voice , his sunken black eyes twinkling .",
+   "trocr": {
+    "text": "lower motor his sunken black eyes twinkling.",
+    "conf": 72,
+    "ms": 1858,
+    "cer": 0.09302325581395349,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.1111111111111111
+   },
+   "tess": {
+    "text": "[owes Yoke, Wy Stuube, bleh Lye feoddebe.",
+    "conf": 34,
+    "ms": 114,
+    "cer": 0.6046511627906976,
+    "wer": 1,
+    "rawCer": 0.6
+   }
+  },
+  {
+   "file": "line116.png",
+   "ref": "with part of that howling northwest gale .",
+   "trocr": {
+    "text": "with part of that bowling worth next gold.",
+    "conf": 67,
+    "ms": 1953,
+    "cer": 0.175,
+    "wer": 0.5714285714285714,
+    "rawCer": 0.17073170731707318
+   },
+   "tess": {
+    "text": "= marl Lad JUS\nal Lal\n~W parl of",
+    "conf": 41,
+    "ms": 183,
+    "cer": 0.775,
+    "wer": 1,
+    "rawCer": 0.8048780487804879
+   }
+  },
+  {
+   "file": "line117.png",
+   "ref": "same time dropping the small sheet",
+   "trocr": {
+    "text": "same time dropping the small sheet",
+    "conf": 92,
+    "ms": 1927,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "oe Rue sopping Wee sting sleet",
+    "conf": 43,
+    "ms": 148,
+    "cer": 0.4411764705882353,
+    "wer": 1,
+    "rawCer": 0.4411764705882353
+   }
+  },
+  {
+   "file": "line118.png",
+   "ref": "mine seems to know how to do",
+   "trocr": {
+    "text": "unique illness the immense house has",
+    "conf": 43,
+    "ms": 1955,
+    "cer": 0.8571428571428571,
+    "wer": 1,
+    "rawCer": 0.8571428571428571
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 36,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line119.png",
+   "ref": "With four doing the job and the waves",
+   "trocr": {
+    "text": "With four doing the jobs and the waves",
+    "conf": 95,
+    "ms": 2372,
+    "cer": 0.02702702702702703,
+    "wer": 0.125,
+    "rawCer": 0.02702702702702703
+   },
+   "tess": {
+    "text": "Yr ph Four doc Fle Vie endl fhe wares",
+    "conf": 45,
+    "ms": 93,
+    "cer": 0.43243243243243246,
+    "wer": 1,
+    "rawCer": 0.4594594594594595
+   }
+  },
+  {
+   "file": "line120.png",
+   "ref": "months ashore while Pericles was refitting in the",
+   "trocr": {
+    "text": "months outwise until females, was refitting in the",
+    "conf": 42,
+    "ms": 2241,
+    "cer": 0.2857142857142857,
+    "wer": 0.375,
+    "rawCer": 0.30612244897959184
+   },
+   "tess": {
+    "text": "",
+    "conf": 0,
+    "ms": 27,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
+   }
+  },
+  {
+   "file": "line121.png",
+   "ref": "gin ? \" He turned to Seaweed -",
+   "trocr": {
+    "text": "gain? \" He turned to Seaweed -",
+    "conf": 78,
+    "ms": 1871,
+    "cer": 0.041666666666666664,
+    "wer": 0.2,
+    "rawCer": 0.034482758620689655
+   },
+   "tess": {
+    "text": "pin 7 He Aurned Ap Seapeeo -",
+    "conf": 46,
+    "ms": 118,
+    "cer": 0.3333333333333333,
+    "wer": 1,
+    "rawCer": 0.27586206896551724
+   }
+  },
+  {
+   "file": "line122.png",
+   "ref": "to you ? \" It did . Ian Bawley's name was",
+   "trocr": {
+    "text": "Aogree? \" It did. Jean Hawley's name knew",
+    "conf": 56,
+    "ms": 2294,
+    "cer": 0.34285714285714286,
+    "wer": 0.5555555555555556,
+    "rawCer": 0.3076923076923077
+   },
+   "tess": {
+    "text": "Mogan? Hdd. Jan Grubiyls same Tes",
+    "conf": 40,
+    "ms": 123,
+    "cer": 0.5428571428571428,
+    "wer": 1,
+    "rawCer": 0.5384615384615384
+   }
+  },
+  {
+   "file": "line123.png",
+   "ref": "know how you newspaper people value that commodity ! -",
+   "trocr": {
+    "text": "hour you newspaper value that commodity! -",
+    "conf": 83,
+    "ms": 2097,
+    "cer": 0.28,
+    "wer": 0.375,
+    "rawCer": 0.2641509433962264
+   },
+   "tess": {
+    "text": "Kovr You newspoper nvelue thet commodity ! -",
+    "conf": 38,
+    "ms": 147,
+    "cer": 0.32,
+    "wer": 0.75,
+    "rawCer": 0.3584905660377358
+   }
+  },
+  {
+   "file": "line124.png",
+   "ref": "\" It 's my business . I 'll tell you more . You 're",
+   "trocr": {
+    "text": "' He's my business. Bill tell you more. You're",
+    "conf": 79,
+    "ms": 2371,
+    "cer": 0.09523809523809523,
+    "wer": 0.2727272727272727,
+    "rawCer": 0.10869565217391304
+   },
+   "tess": {
+    "text": "Mes ay business. 822 tell you grote, Vow re",
+    "conf": 51,
+    "ms": 127,
+    "cer": 0.30952380952380953,
+    "wer": 0.6363636363636364,
+    "rawCer": 0.3695652173913043
+   }
+  },
+  {
+   "file": "line125.png",
+   "ref": "have dinner with me ? On His Lordship ,",
+   "trocr": {
+    "text": "before dominance with one. One this workshop,",
+    "conf": 63,
+    "ms": 1948,
+    "cer": 0.4857142857142857,
+    "wer": 0.8571428571428571,
+    "rawCer": 0.5135135135135135
+   },
+   "tess": {
+    "text": "have dimer with we. Gu ths Lovalshep,",
+    "conf": 52,
+    "ms": 113,
+    "cer": 0.3142857142857143,
+    "wer": 0.7142857142857143,
+    "rawCer": 0.32432432432432434
+   }
+  },
+  {
+   "file": "line126.png",
+   "ref": "the vestibule the two men were well",
+   "trocr": {
+    "text": "the vestifiable, the two men were well",
+    "conf": 81,
+    "ms": 1904,
+    "cer": 0.11428571428571428,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.14285714285714285
+   },
+   "tess": {
+    "text": "io Jesh bude, Yu Moo Wak were we",
+    "conf": 34,
+    "ms": 145,
+    "cer": 0.4857142857142857,
+    "wer": 1,
+    "rawCer": 0.5142857142857142
+   }
+  },
+  {
+   "file": "line127.png",
+   "ref": "any time - knock twice and ask for Bawley , what ? \"",
+   "trocr": {
+    "text": "anytime - Lancete twice and ask for'Bausley, what? \"",
+    "conf": 82,
+    "ms": 2038,
+    "cer": 0.20454545454545456,
+    "wer": 0.4444444444444444,
+    "rawCer": 0.2
+   },
+   "tess": {
+    "text": "any fime - knock #oice amd asd for Sawlay , Ohad",
+    "conf": 48,
+    "ms": 140,
+    "cer": 0.20454545454545456,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.26
+   }
+  },
+  {
+   "file": "line128.png",
+   "ref": "must present an unruffled appearance and carry on as",
+   "trocr": {
+    "text": "must present an unruffed appearance and carry on as",
+    "conf": 78,
+    "ms": 2023,
+    "cer": 0.019230769230769232,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.019230769230769232
+   },
+   "tess": {
+    "text": "musk present an wir fffed ajopearamce oud carry on as",
+    "conf": 63,
+    "ms": 136,
+    "cer": 0.19230769230769232,
+    "wer": 0.5555555555555556,
+    "rawCer": 0.19230769230769232
+   }
+  },
+  {
+   "file": "line129.png",
+   "ref": "to her , Dan . \" \" She 'll be all right . It 's the",
+   "trocr": {
+    "text": "to her, Dans. \" She'll be all right. It's the",
+    "conf": 85,
+    "ms": 2141,
+    "cer": 0.02564102564102564,
+    "wer": 0.09090909090909091,
+    "rawCer": 0.06521739130434782
+   },
+   "tess": {
+    "text": "La “ i ) A\nfo he Daun. She 'Y he oll (LA Hy He",
+    "conf": 53,
+    "ms": 142,
+    "cer": 0.6153846153846154,
+    "wer": 1,
+    "rawCer": 0.7608695652173914
+   }
+  },
+  {
+   "file": "line130.png",
+   "ref": "tried to surprise him . \" Dead ? \" he said . \" Yes .",
+   "trocr": {
+    "text": "tried to surprise turns. \" Dead? \" he said. \" Yes.",
+    "conf": 86,
+    "ms": 2081,
+    "cer": 0.13157894736842105,
+    "wer": 0.125,
+    "rawCer": 0.15217391304347827
+   },
+   "tess": {
+    "text": "led Yo gupnit um. \"Dead 27 bg add Yoo,",
+    "conf": 36,
+    "ms": 146,
+    "cer": 0.5,
+    "wer": 1,
+    "rawCer": 0.5217391304347826
+   }
+  },
+  {
+   "file": "line131.png",
+   "ref": "into draws , circling a big mesa by a",
+   "trocr": {
+    "text": "in the effertory circulating a being meta long a",
+    "conf": 41,
+    "ms": 2264,
+    "cer": 0.6,
+    "wer": 0.875,
+    "rawCer": 0.5833333333333334
+   },
+   "tess": {
+    "text": "pdt gw | ac cdi— oa bo | ny a ef",
+    "conf": 35,
+    "ms": 125,
+    "cer": 0.6571428571428571,
+    "wer": 1,
+    "rawCer": 0.6944444444444444
+   }
+  },
+  {
+   "file": "line132.png",
+   "ref": "An hour's riding brought us to a trail that",
+   "trocr": {
+    "text": "An hour's riding brought to a cruel than",
+    "conf": 48,
+    "ms": 2043,
+    "cer": 0.16279069767441862,
+    "wer": 0.3,
+    "rawCer": 0.16279069767441862
+   },
+   "tess": {
+    "text": "A Wor Nd—\niy\n“AV w to a Fad\nFred",
+    "conf": 46,
+    "ms": 116,
+    "cer": 0.627906976744186,
+    "wer": 0.8,
+    "rawCer": 0.627906976744186
+   }
+  },
+  {
+   "file": "line133.png",
+   "ref": "kind of sequence .",
+   "trocr": {
+    "text": "mind of sequence.",
+    "conf": 96,
+    "ms": 1816,
+    "cer": 0.0625,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.058823529411764705
+   },
+   "tess": {
+    "text": "bird of  pespance.",
+    "conf": 40,
+    "ms": 108,
+    "cer": 0.375,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.35294117647058826
+   }
+  },
+  {
+   "file": "line134.png",
+   "ref": "ment and Satanic debauchery .",
+   "trocr": {
+    "text": "ment and Satanic debauchery",
+    "conf": 66,
+    "ms": 1823,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.03571428571428571
+   },
+   "tess": {
+    "text": "ge @ref Sates Aoboccechory",
+    "conf": 19,
+    "ms": 123,
+    "cer": 0.6296296296296297,
+    "wer": 1,
+    "rawCer": 0.6785714285714286
+   }
+  },
+  {
+   "file": "line135.png",
+   "ref": "and her luggage had disappeared and they were alone",
+   "trocr": {
+    "text": "and her luggage had disappeared and they were clone",
+    "conf": 97,
+    "ms": 2186,
+    "cer": 0.0196078431372549,
+    "wer": 0.1111111111111111,
+    "rawCer": 0.0196078431372549
+   },
+   "tess": {
+    "text": "ard er lugqaqe had dicoppaased ard tog were done",
+    "conf": 59,
+    "ms": 176,
+    "cer": 0.27450980392156865,
+    "wer": 0.7777777777777778,
+    "rawCer": 0.27450980392156865
+   }
+  },
+  {
+   "file": "line136.png",
+   "ref": "He gestured towards the bay where the full",
+   "trocr": {
+    "text": "He questioned Democrats like being where the full",
+    "conf": 58,
+    "ms": 2006,
+    "cer": 0.4523809523809524,
+    "wer": 0.5,
+    "rawCer": 0.4523809523809524
+   },
+   "tess": {
+    "text": "ae\nho pul\n\\O\nQo\ni's)\nds Me 4\ned AQUOU\n\" ra",
+    "conf": 34,
+    "ms": 116,
+    "cer": 0.7380952380952381,
+    "wer": 1,
+    "rawCer": 0.8095238095238095
+   }
+  },
+  {
+   "file": "line137.png",
+   "ref": "alone . \" \" I 've booked a table at the",
+   "trocr": {
+    "text": "closure. \" \" I've shocked a table at the",
+    "conf": 81,
+    "ms": 2286,
+    "cer": 0.21875,
+    "wer": 0.25,
+    "rawCer": 0.1891891891891892
+   },
+   "tess": {
+    "text": "tot \"7 je _Gooloa co p87 of ir",
+    "conf": 22,
+    "ms": 220,
+    "cer": 0.6875,
+    "wer": 1,
+    "rawCer": 0.7297297297297297
+   }
+  },
+  {
+   "file": "line138.png",
+   "ref": "Gay stood irresolute for a moment , half",
+   "trocr": {
+    "text": "Going stood irresolence for a movement, half",
+    "conf": 62,
+    "ms": 1986,
+    "cer": 0.23684210526315788,
+    "wer": 0.42857142857142855,
+    "rawCer": 0.23076923076923078
+   },
+   "tess": {
+    "text": "Py ato JAS Ofaa de. Lor © JEST YSOYSUE I Rey Ey",
+    "conf": 23,
+    "ms": 146,
+    "cer": 0.868421052631579,
+    "wer": 1,
+    "rawCer": 0.9743589743589743
+   }
+  },
+  {
+   "file": "line139.png",
+   "ref": "lifeline and Gay got up quickly , mana-",
+   "trocr": {
+    "text": "lifetime and day got up quickly mana-",
+    "conf": 75,
+    "ms": 2029,
+    "cer": 0.08333333333333333,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.10526315789473684
+   },
+   "tess": {
+    "text": "i p]  fP aa ~ /\n#4 AG ad i 1et%, Ppp",
+    "conf": 17,
+    "ms": 151,
+    "cer": 0.75,
+    "wer": 1,
+    "rawCer": 0.7894736842105263
+   }
+  },
+  {
+   "file": "line140.png",
+   "ref": "him a great deal better than you do . \"",
+   "trocr": {
+    "text": "him a great deal better than your doo. \"",
+    "conf": 77,
+    "ms": 1913,
+    "cer": 0.05714285714285714,
+    "wer": 0.25,
+    "rawCer": 0.05263157894736842
+   },
+   "tess": {
+    "text": "ee a aren ded beller Than You Fe ’",
+    "conf": 47,
+    "ms": 76,
+    "cer": 0.34285714285714286,
+    "wer": 0.625,
+    "rawCer": 0.42105263157894735
+   }
+  },
+  {
+   "file": "line141.png",
+   "ref": "again Gay found herself alone at the table",
+   "trocr": {
+    "text": "organism ( Group General herself alone at the North",
+    "conf": 62,
+    "ms": 1996,
+    "cer": 0.5,
+    "wer": 0.5,
+    "rawCer": 0.5476190476190477
+   },
+   "tess": {
+    "text": "agen Gar fod Sesel] alee ak He abl",
+    "conf": 29,
+    "ms": 193,
+    "cer": 0.3333333333333333,
+    "wer": 1,
+    "rawCer": 0.35714285714285715
+   }
+  },
+  {
+   "file": "line142.png",
+   "ref": "for Gavin at the way he was behaving as she",
+   "trocr": {
+    "text": "For goals of the way he was Believing as the",
+    "conf": 75,
+    "ms": 1972,
+    "cer": 0.23255813953488372,
+    "wer": 0.4,
+    "rawCer": 0.3023255813953488
+   },
+   "tess": {
+    "text": "for\nGow al fe way Le\nP ual Belew aS She",
+    "conf": 60,
+    "ms": 104,
+    "cer": 0.4186046511627907,
+    "wer": 0.7,
+    "rawCer": 0.4883720930232558
+   }
+  },
+  {
+   "file": "line143.png",
+   "ref": "Sometimes they talked on the theme of \" when we get married \" ,",
+   "trocr": {
+    "text": "Sometimes they talked on the theme of \" when we got married \",",
+    "conf": 91,
+    "ms": 2291,
+    "cer": 0.017543859649122806,
+    "wer": 0.09090909090909091,
+    "rawCer": 0.05
+   },
+   "tess": {
+    "text": "Sometimas they talked on the theme 6 \"when we A. maied \"|",
+    "conf": 58,
+    "ms": 109,
+    "cer": 0.14035087719298245,
+    "wer": 0.36363636363636365,
+    "rawCer": 0.16666666666666666
+   }
+  },
+  {
+   "file": "line144.png",
+   "ref": "liked during his off-duty periods",
+   "trocr": {
+    "text": "liked # during his off-duely periods",
+    "conf": 81,
+    "ms": 1958,
+    "cer": 0.06060606060606061,
+    "wer": 0.16666666666666666,
+    "rawCer": 0.12121212121212122
+   },
+   "tess": {
+    "text": "eel depot during (PONY off - duly paricels",
+    "conf": 42,
+    "ms": 135,
+    "cer": 0.48484848484848486,
+    "wer": 0.8333333333333334,
+    "rawCer": 0.5757575757575758
+   }
+  },
+  {
+   "file": "line145.png",
+   "ref": "very evening ?",
+   "trocr": {
+    "text": "very evening?",
+    "conf": 88,
+    "ms": 1669,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": ";\nEt\nLy\n\nany",
+    "conf": 32,
+    "ms": 28,
+    "cer": 0.75,
+    "wer": 1,
+    "rawCer": 0.8461538461538461
+   }
+  },
+  {
+   "file": "line146.png",
+   "ref": "\" Gubbins ? Gubbins ? \" he fretted . \" Who 's he ? \"",
+   "trocr": {
+    "text": "\" Butekins?'Subkins? \" he Gredder. \" Who's he? \"",
+    "conf": 68,
+    "ms": 2601,
+    "cer": 0.2857142857142857,
+    "wer": 0.42857142857142855,
+    "rawCer": 0.3488372093023256
+   },
+   "tess": {
+    "text": "“ay, Chin 7 Boi oe oc = Le a ’ Sree . Ly -",
+    "conf": 32,
+    "ms": 166,
+    "cer": 0.7428571428571429,
+    "wer": 1,
+    "rawCer": 0.8604651162790697
+   }
+  },
+  {
+   "file": "line147.png",
+   "ref": "me up for tea , of course . I just thought . \" \" I 'll see , \"",
+   "trocr": {
+    "text": "me up for tea, of course. It just thought.'\" \"'Sleep, '",
+    "conf": 71,
+    "ms": 2221,
+    "cer": 0.14893617021276595,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.16363636363636364
+   },
+   "tess": {
+    "text": "WAR LP Go dea , of Course . + just Huoveyted, pt See,",
+    "conf": 56,
+    "ms": 112,
+    "cer": 0.3829787234042553,
+    "wer": 0.6666666666666666,
+    "rawCer": 0.4909090909090909
+   }
+  },
+  {
+   "file": "line148.png",
+   "ref": "if one walked slowly , between road and",
+   "trocr": {
+    "text": "if one walked sharply, between coast and",
+    "conf": 65,
+    "ms": 1935,
+    "cer": 0.1891891891891892,
+    "wer": 0.2857142857142857,
+    "rawCer": 0.18421052631578946
+   },
+   "tess": {
+    "text": "4 ane y/o lors, Lehrrcesn oad FRAY",
+    "conf": 37,
+    "ms": 134,
+    "cer": 0.6486486486486487,
+    "wer": 1,
+    "rawCer": 0.631578947368421
+   }
+  },
+  {
+   "file": "line149.png",
+   "ref": "coronary . And in that second",
+   "trocr": {
+    "text": "young fifty days in the Second",
+    "conf": 21,
+    "ms": 2167,
+    "cer": 0.5185185185185185,
+    "wer": 0.8,
+    "rawCer": 0.6071428571428571
+   },
+   "tess": {
+    "text": "Oo On 4 : an Ald —econ\nLe a A od Lo en fe a of",
+    "conf": 32,
+    "ms": 202,
+    "cer": 1,
+    "wer": 1,
+    "rawCer": 1
    }
   }
  ],
@@ -354,6 +3174,617 @@
      "before": 0.6962025316455697,
      "after": 0
     }
+   }
+  },
+  {
+   "files": [
+    "line009.png",
+    "line010.png",
+    "line011.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 88,
+    "cer": 0.07894736842105263,
+    "wer": 0.14814814814814814,
+    "rawCer": 0.08974358974358974
+   },
+   "tess": {
+    "cer": 0.26973684210526316,
+    "wer": 0.6296296296296297,
+    "rawCer": 0.2948717948717949
+   },
+   "tools": {
+    "dim": {
+     "before": 0.09868421052631579,
+     "after": 0.09210526315789473
+    },
+    "lowcontrast": {
+     "before": 0.10526315789473684,
+     "after": 0.13157894736842105
+    },
+    "noise": {
+     "before": 1,
+     "after": 0.09210526315789473
+    }
+   }
+  },
+  {
+   "files": [
+    "line012.png",
+    "line013.png",
+    "line014.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 92,
+    "cer": 0.03125,
+    "wer": 0.08333333333333333,
+    "rawCer": 0.05970149253731343
+   },
+   "tess": {
+    "cer": 0.46875,
+    "wer": 1,
+    "rawCer": 0.5074626865671642
+   },
+   "tools": {
+    "dim": {
+     "before": 0.03125,
+     "after": 0.046875
+    },
+    "lowcontrast": {
+     "before": 0.015625,
+     "after": 0.015625
+    },
+    "noise": {
+     "before": 0.828125,
+     "after": 0.046875
+    }
+   }
+  },
+  {
+   "files": [
+    "line015.png",
+    "line016.png",
+    "line017.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 87,
+    "cer": 0.06153846153846154,
+    "wer": 0.08695652173913043,
+    "rawCer": 0.05970149253731343
+   },
+   "tess": {
+    "cer": 0.34615384615384615,
+    "wer": 0.782608695652174,
+    "rawCer": 0.3805970149253731
+   },
+   "tools": {
+    "dim": {
+     "before": 0.06923076923076923,
+     "after": 0
+    },
+    "lowcontrast": {
+     "before": 0.05384615384615385,
+     "after": 0
+    },
+    "noise": {
+     "before": 0.9692307692307692,
+     "after": 0.03076923076923077
+    }
+   }
+  },
+  {
+   "files": [
+    "line018.png",
+    "line019.png",
+    "line020.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 77,
+    "cer": 0.08661417322834646,
+    "wer": 0.16,
+    "rawCer": 0.1
+   },
+   "tess": {
+    "cer": 0.3543307086614173,
+    "wer": 0.76,
+    "rawCer": 0.3923076923076923
+   },
+   "tools": {
+    "dim": {
+     "before": 0.14173228346456693,
+     "after": 0.13385826771653545
+    },
+    "lowcontrast": {
+     "before": 0.15748031496062992,
+     "after": 0.11811023622047244
+    },
+    "noise": {
+     "before": 1,
+     "after": 0.11811023622047244
+    }
+   }
+  },
+  {
+   "files": [
+    "line021.png",
+    "line022.png",
+    "line023.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 79,
+    "cer": 0.05128205128205128,
+    "wer": 0.041666666666666664,
+    "rawCer": 0.058823529411764705
+   },
+   "tess": {
+    "cer": 0.7008547008547008,
+    "wer": 1,
+    "rawCer": 0.7394957983193278
+   },
+   "tools": {
+    "dim": {
+     "before": 0.1111111111111111,
+     "after": 0.1452991452991453
+    },
+    "lowcontrast": {
+     "before": 0.11965811965811966,
+     "after": 0.15384615384615385
+    },
+    "noise": {
+     "before": 0.7606837606837606,
+     "after": 0.06837606837606838
+    }
+   }
+  },
+  {
+   "files": [
+    "line024.png",
+    "line025.png",
+    "line026.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 83,
+    "cer": 0.06716417910447761,
+    "wer": 0.09523809523809523,
+    "rawCer": 0.07971014492753623
+   },
+   "tess": {
+    "cer": 0.5597014925373134,
+    "wer": 0.9047619047619048,
+    "rawCer": 0.572463768115942
+   },
+   "tools": {
+    "dim": {
+     "before": 0.08208955223880597,
+     "after": 0.08208955223880597
+    },
+    "lowcontrast": {
+     "before": 0.13432835820895522,
+     "after": 0.07462686567164178
+    },
+    "noise": {
+     "before": 1,
+     "after": 0.16417910447761194
+    }
+   }
+  },
+  {
+   "files": [
+    "line027.png",
+    "line028.png",
+    "line029.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 86,
+    "cer": 0.01639344262295082,
+    "wer": 0.043478260869565216,
+    "rawCer": 0.024
+   },
+   "tess": {
+    "cer": 0.4098360655737705,
+    "wer": 0.8695652173913043,
+    "rawCer": 0.432
+   },
+   "tools": {
+    "dim": {
+     "before": 0.07377049180327869,
+     "after": 0.09836065573770492
+    },
+    "lowcontrast": {
+     "before": 0.040983606557377046,
+     "after": 0.07377049180327869
+    },
+    "noise": {
+     "before": 0.9836065573770492,
+     "after": 0.09836065573770492
+    }
+   }
+  },
+  {
+   "files": [
+    "line030.png",
+    "line031.png",
+    "line032.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 90,
+    "cer": 0.06293706293706294,
+    "wer": 0.11538461538461539,
+    "rawCer": 0.087248322147651
+   },
+   "tess": {
+    "cer": 0.3986013986013986,
+    "wer": 0.9615384615384616,
+    "rawCer": 0.40939597315436244
+   }
+  },
+  {
+   "files": [
+    "line033.png",
+    "line034.png",
+    "line035.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 74,
+    "cer": 0.14893617021276595,
+    "wer": 0.2916666666666667,
+    "rawCer": 0.14685314685314685
+   },
+   "tess": {
+    "cer": 0.6879432624113475,
+    "wer": 1,
+    "rawCer": 0.7412587412587412
+   }
+  },
+  {
+   "files": [
+    "line036.png",
+    "line037.png",
+    "line038.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 74,
+    "cer": 0.2558139534883721,
+    "wer": 0.4166666666666667,
+    "rawCer": 0.2595419847328244
+   },
+   "tess": {
+    "cer": 0.6434108527131783,
+    "wer": 0.9166666666666666,
+    "rawCer": 0.6717557251908397
+   }
+  },
+  {
+   "files": [
+    "line039.png",
+    "line040.png",
+    "line041.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 89,
+    "cer": 0.034013605442176874,
+    "wer": 0.038461538461538464,
+    "rawCer": 0.040268456375838924
+   },
+   "tess": {
+    "cer": 0.22448979591836735,
+    "wer": 0.6538461538461539,
+    "rawCer": 0.2483221476510067
+   }
+  },
+  {
+   "files": [
+    "line042.png",
+    "line043.png",
+    "line044.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 88,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "cer": 0.30927835051546393,
+    "wer": 0.8333333333333334,
+    "rawCer": 0.3333333333333333
+   }
+  },
+  {
+   "files": [
+    "line045.png",
+    "line046.png",
+    "line047.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 73,
+    "cer": 0.15602836879432624,
+    "wer": 0.34615384615384615,
+    "rawCer": 0.1724137931034483
+   },
+   "tess": {
+    "cer": 0.524822695035461,
+    "wer": 1,
+    "rawCer": 0.5724137931034483
+   }
+  },
+  {
+   "files": [
+    "line048.png",
+    "line049.png",
+    "line050.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 92,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "cer": 0.4444444444444444,
+    "wer": 1,
+    "rawCer": 0.5126050420168067
+   }
+  },
+  {
+   "files": [
+    "line051.png",
+    "line052.png",
+    "line053.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 90,
+    "cer": 0.015503875968992248,
+    "wer": 0.09090909090909091,
+    "rawCer": 0.022900763358778626
+   },
+   "tess": {
+    "cer": 0.43410852713178294,
+    "wer": 1,
+    "rawCer": 0.5190839694656488
+   }
+  },
+  {
+   "files": [
+    "line054.png",
+    "line055.png",
+    "line056.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 92,
+    "cer": 0.038461538461538464,
+    "wer": 0.09090909090909091,
+    "rawCer": 0.03816793893129771
+   },
+   "tess": {
+    "cer": 0.46153846153846156,
+    "wer": 1,
+    "rawCer": 0.5419847328244275
+   }
+  },
+  {
+   "files": [
+    "line057.png",
+    "line058.png",
+    "line059.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 94,
+    "cer": 0.009523809523809525,
+    "wer": 0.05,
+    "rawCer": 0.00909090909090909
+   },
+   "tess": {
+    "cer": 0.22857142857142856,
+    "wer": 0.6,
+    "rawCer": 0.24545454545454545
+   }
+  },
+  {
+   "files": [
+    "line060.png",
+    "line061.png",
+    "line062.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 94,
+    "cer": 0.020134228187919462,
+    "wer": 0.041666666666666664,
+    "rawCer": 0.039473684210526314
+   },
+   "tess": {
+    "cer": 0.6375838926174496,
+    "wer": 1,
+    "rawCer": 0.6776315789473685
+   }
+  },
+  {
+   "files": [
+    "line063.png",
+    "line064.png",
+    "line065.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 85,
+    "cer": 0.049586776859504134,
+    "wer": 0.05263157894736842,
+    "rawCer": 0.04838709677419355
+   },
+   "tess": {
+    "cer": 0.33884297520661155,
+    "wer": 0.8421052631578947,
+    "rawCer": 0.3548387096774194
+   }
+  },
+  {
+   "files": [
+    "line066.png",
+    "line067.png",
+    "line068.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 83,
+    "cer": 0.09016393442622951,
+    "wer": 0.13043478260869565,
+    "rawCer": 0.09523809523809523
+   },
+   "tess": {
+    "cer": 0.4098360655737705,
+    "wer": 0.9130434782608695,
+    "rawCer": 0.42857142857142855
+   }
+  },
+  {
+   "files": [
+    "line069.png",
+    "line070.png",
+    "line071.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 87,
+    "cer": 0.009900990099009901,
+    "wer": 0.125,
+    "rawCer": 0.019230769230769232
+   },
+   "tess": {
+    "cer": 0.22772277227722773,
+    "wer": 0.625,
+    "rawCer": 0.25961538461538464
+   }
+  },
+  {
+   "files": [
+    "line072.png",
+    "line073.png",
+    "line074.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 67,
+    "cer": 0.18181818181818182,
+    "wer": 0.3333333333333333,
+    "rawCer": 0.1889763779527559
+   },
+   "tess": {
+    "cer": 0.5371900826446281,
+    "wer": 0.9583333333333334,
+    "rawCer": 0.5669291338582677
+   }
+  },
+  {
+   "files": [
+    "line075.png",
+    "line076.png",
+    "line077.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 83,
+    "cer": 0.044642857142857144,
+    "wer": 0.15789473684210525,
+    "rawCer": 0.05217391304347826
+   },
+   "tess": {
+    "cer": 0.3392857142857143,
+    "wer": 0.631578947368421,
+    "rawCer": 0.3739130434782609
+   }
+  },
+  {
+   "files": [
+    "line078.png",
+    "line079.png",
+    "line080.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 89,
+    "cer": 0.09821428571428571,
+    "wer": 0.09523809523809523,
+    "rawCer": 0.10526315789473684
+   },
+   "tess": {
+    "cer": 0.44642857142857145,
+    "wer": 0.9523809523809523,
+    "rawCer": 0.4824561403508772
+   }
+  },
+  {
+   "files": [
+    "line081.png",
+    "line082.png",
+    "line083.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 96,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "cer": 0.4722222222222222,
+    "wer": 1,
+    "rawCer": 0.49557522123893805
+   }
+  },
+  {
+   "files": [
+    "line084.png",
+    "line085.png",
+    "line086.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 92,
+    "cer": 0.02097902097902098,
+    "wer": 0.037037037037037035,
+    "rawCer": 0.02702702702702703
+   },
+   "tess": {
+    "cer": 0.5034965034965035,
+    "wer": 1,
+    "rawCer": 0.5337837837837838
+   }
+  },
+  {
+   "files": [
+    "line087.png",
+    "line088.png",
+    "line089.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 85,
+    "cer": 0.10144927536231885,
+    "wer": 0.24,
+    "rawCer": 0.10071942446043165
+   },
+   "tess": {
+    "cer": 0.37681159420289856,
+    "wer": 0.84,
+    "rawCer": 0.4244604316546763
    }
   }
  ],

@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="assets/css/companion.css?v=17">
   <link rel="stylesheet" href="assets/css/checkins.css?v=17">
   <link rel="stylesheet" href="assets/css/growth.css?v=17">
-  <link rel="stylesheet" href="assets/css/growth-v10.css?v=17">
+  <link rel="stylesheet" href="assets/css/growth-v18.css?v=18">
   <script>
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
     (function () {
@@ -57,8 +57,8 @@
     <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
     <div class="q-head">
       <p class="kicker"><span data-i18n="g.kicker">Growth Plan · with Noor</span></p>
-      <h1 class="q-title" data-i18n="g.title">Build the skills, slowly. A little every day.</h1>
-      <p class="q-lead" data-i18n="g.lead">A six-week programme, run like a learning specialist would: a first consult, specific goals, short daily exercises that adapt to you, and a weekly review where the plan changes with you. It builds skills and strategies — alongside, never instead of, support from SAS or a specialist.</p>
+      <h1 class="q-title">A plan that fits your real week.</h1>
+      <p class="q-lead">Tell ERLY when you are free, what else you do and what you want to work on. It builds a timetable around your commitments, links every session to something you can actually do in ERLY — a lesson, a model, practice with Noor — and changes it with you each week. It plans time; it never scores you.</p>
     </div>
     <div id="growthApp"></div>
   </main>
@@ -87,11 +87,8 @@
     })();
   </script>
   <script src="assets/js/accent.js?v=17"></script>
-  <script src="assets/js/growth-core.js?v=17"></script>
-  <script src="assets/js/growth-games.js?v=17"></script>
-  <script src="assets/js/growth-plan-core.js?v=17"></script>
-  <script src="assets/js/growth-v10.js?v=17"></script>
-  <script src="assets/js/growth.js?v=17"></script>
+  <script src="assets/js/growth-sched.js?v=18"></script>
+  <script src="assets/js/growth-studio.js?v=18"></script>
   <script src="assets/js/theme-fx.js?v=17"></script>
   <script src="assets/js/ambient.js?v=17" defer></script>
   <script src="assets/js/a11y.js?v=17"></script>

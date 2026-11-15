@@ -67,6 +67,7 @@ const N = +(process.argv[2] || 150);
   const sum = {
     date: new Date().toISOString(), source: man.source, sampled: L.length, rowsInSplit: man.rows_in_split, step: man.step, modelLoadMs: loadMs,
     line: { trocr: { cer: mean(L.map(x => x.trocr.cer)), wer: mean(L.map(x => x.trocr.wer)), rawCer: mean(L.map(x => x.trocr.rawCer)), ms: mean(L.map(x => x.trocr.ms)) }, tess: { cer: mean(L.map(x => x.tess.cer)), wer: mean(L.map(x => x.tess.wer)), rawCer: mean(L.map(x => x.tess.rawCer)), ms: mean(L.map(x => x.tess.ms)) } },
+    sameLines: { n: P.length * 3, trocr: mean(L.slice(0, P.length * 3).map(x => x.trocr.cer)), tess: mean(L.slice(0, P.length * 3).map(x => x.tess.cer)) },
     page: { n: P.length, segmentedRight: P.filter(x => x.nLines === 3).length, trocr: { cer: mean(P.map(x => x.trocr.cer)), wer: mean(P.map(x => x.trocr.wer)) }, tess: { cer: mean(P.map(x => x.tess.cer)), wer: mean(P.map(x => x.tess.wer)) } },
     tools: ['dim', 'lowcontrast', 'noise'].map(m => ({ mode: m, n: Tl.length, before: mean(Tl.map(x => x.tools[m].before)), after: mean(Tl.map(x => x.tools[m].after)) })),
     calibration: [[80, 101], [60, 80], [0, 60]].map(([lo, hi]) => { const g = L.filter(x => x.trocr.conf >= lo && x.trocr.conf < hi); return { band: `${lo}–${Math.min(100, hi - 1)}%`, n: g.length, cer: mean(g.map(x => x.trocr.cer)), wer: mean(g.map(x => x.trocr.wer)) }; }),
@@ -91,6 +92,8 @@ Run ${sum.date.slice(0, 16).replace('T', ' ')} UTC in Chromium (WebAssembly, CPU
 |---|---|---|---|---|
 | Handwriting model (segmented into lines) | ${sum.page.n} | ${sum.page.segmentedRight}/${sum.page.n} pages split into exactly 3 lines | **${pct(sum.page.trocr.cer)}** | **${pct(sum.page.trocr.wer)}** |
 | Tesseract (whole page) | ${sum.page.n} | — | ${pct(sum.page.tess.cer)} | ${pct(sum.page.tess.wer)} |
+
+The page path is what the app runs: each line is evened out and cut to its ink before reading. Reading the same ${sum.sameLines.n} lines as raw line images gives ${pct(sum.sameLines.trocr)} (model) and ${pct(sum.sameLines.tess)} (Tesseract), so the cleaning step accounts for part of the difference.
 
 ## Image tools on simulated poor photos (handwriting model, CER)
 
