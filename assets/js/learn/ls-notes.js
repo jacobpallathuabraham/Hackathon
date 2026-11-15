@@ -28,7 +28,7 @@
 
   function create(o) {
     const id = LS.uid('n'), now = Date.now();
-    const n = { id, title: (o.title || T('Untitled note', 'ملاحظة بلا عنوان')).slice(0, 140), html: clean(o.html || '<p></p>'), svg: o.svg && /^<svg[\s>]/.test(o.svg) ? o.svg : null, kind: o.kind || 'note', map: o.map || null, folder: o.folder || 'General', tags: o.tags || [], src: o.src || null, created: now, updated: now };
+    const n = { id, title: (o.title || T('Untitled note', 'ملاحظة بلا عنوان')).slice(0, 140), html: clean(o.html || '<p><br></p>'), svg: o.svg && /^<svg[\s>]/.test(o.svg) ? o.svg : null, kind: o.kind || 'note', map: o.map || null, folder: o.folder || 'General', tags: o.tags || [], src: o.src || null, created: now, updated: now };
     st.update(d => { d.notes[id] = n; if (!d.folders.includes(n.folder)) d.folders.push(n.folder); });
     return id;
   }
@@ -49,7 +49,9 @@
   function toMd(n) {
     const d = document.createElement('div'); d.innerHTML = n.html; const out = [];
     const inl = el => [...el.childNodes].map(c => c.nodeType === 3 ? c.textContent : /^(B|STRONG)$/.test(c.tagName) ? `**${inl(c)}**` : /^(I|EM)$/.test(c.tagName) ? `*${inl(c)}*` : c.tagName === 'MARK' ? `==${inl(c)}==` : c.tagName === 'CODE' ? '`' + inl(c) + '`' : c.tagName === 'SUP' ? '^' + inl(c) : c.tagName === 'SUB' ? '_' + inl(c) : c.tagName === 'BR' ? '\n' : c.tagName === 'A' ? `[${inl(c)}](${c.getAttribute('href')})` : inl(c)).join('');
-    [...d.children].forEach(c => {
+    [...d.childNodes].forEach(c => {
+      if (c.nodeType === 3) { if (c.textContent.trim()) out.push(c.textContent.trim()); return; }
+      if (c.nodeType !== 1) return;
       if (c.tagName === 'H2') out.push('## ' + inl(c)); else if (c.tagName === 'H3') out.push('### ' + inl(c));
       else if (c.tagName === 'UL') out.push([...c.children].map(li => '- ' + inl(li)).join('\n')); else if (c.tagName === 'OL') out.push([...c.children].map((li, i) => (i + 1) + '. ' + inl(li)).join('\n'));
       else if (c.tagName === 'BLOCKQUOTE') out.push('> ' + inl(c));
@@ -134,6 +136,8 @@
     const off = LS.on('leave', () => { if (dirty) commit(); off(); });
     addEventListener('beforeunload', ev => { if (dirty) { commit(); } }, { once: true });
     if (body) {
+      try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* older browsers */ }
+      if (!body.innerHTML.trim()) body.innerHTML = '<p><br></p>';
       body.addEventListener('paste', e => { const h = e.clipboardData && (e.clipboardData.getData('text/html') || ''); if (h) { e.preventDefault(); document.execCommand('insertHTML', false, clean(h)); } });
       body.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); commit(); } });
     }

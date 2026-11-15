@@ -1,0 +1,84 @@
+{
+ "id": "erly-quad",
+ "generated": "2026-11-15",
+ "voice": "am_michael (Kokoro-82M, Apache-2.0)",
+ "duration": 68.63,
+ "chapters": [
+  {
+   "t": 0,
+   "title": "The parabola"
+  },
+  {
+   "t": 12.8,
+   "title": "a: stretch and flip"
+  },
+  {
+   "t": 32.5,
+   "title": "c: up and down"
+  },
+  {
+   "t": 42.15,
+   "title": "Roots and the discriminant"
+  }
+ ],
+ "questions": [
+  {
+   "at": 31.6,
+   "q": {
+    "id": "v-q1",
+    "type": "mcq",
+    "difficulty": 1,
+    "prompt": "If a is negative, the parabola…",
+    "options": [
+     "opens downwards",
+     "opens upwards",
+     "becomes a straight line",
+     "moves to the right"
+    ],
+    "answer": 0,
+    "explain": "A negative a flips the parabola, giving a maximum point."
+   }
+  },
+  {
+   "at": 41.25,
+   "q": {
+    "id": "v-q2",
+    "type": "numeric",
+    "difficulty": 1,
+    "prompt": "Where does y = x² + 2x + 5 cross the y-axis? (Give the y-value.)",
+    "answer": 5,
+    "tol": 0,
+    "explain": "At x = 0, y = c = 5."
+   }
+  },
+  {
+   "at": 67.22,
+   "q": {
+    "id": "v-q3",
+    "type": "mcq",
+    "difficulty": 2,
+    "prompt": "A quadratic has a negative discriminant. Its graph…",
+    "options": [
+     "does not meet the x-axis",
+     "touches the x-axis once",
+     "crosses the x-axis twice",
+     "crosses the y-axis twice"
+    ],
+    "answer": 0,
+    "explain": "Δ < 0 means no real roots."
+   }
+  }
+ ],
+ "cards": [
+  {
+   "front": "Effect of a in y = ax² + bx + c",
+   "back": "Larger |a| → narrower; a < 0 → opens downwards.",
+   "kind": "qa"
+  },
+  {
+   "front": "What does c tell you?",
+   "back": "The y-intercept; changing c moves the curve up or down.",
+   "kind": "qa"
+  }
+ ]
+}

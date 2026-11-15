@@ -858,3 +858,4 @@ section.section { transition: background-color .6s ease; }
   .catalogue__col { display: contents; }
   .catalogue__col > .catg { order: var(--ci); }
 }
+.studio-cta__more { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .studio-cta__more .muted { font-size: .9rem; max-width: 46ch; }

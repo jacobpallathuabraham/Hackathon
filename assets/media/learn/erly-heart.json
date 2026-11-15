@@ -1,0 +1,83 @@
+{
+ "id": "erly-heart",
+ "generated": "2026-11-15",
+ "voice": "af_heart (Kokoro-82M, Apache-2.0)",
+ "duration": 79.75,
+ "chapters": [
+  {
+   "t": 0,
+   "title": "Four chambers"
+  },
+  {
+   "t": 20.6,
+   "title": "The right side: to the lungs"
+  },
+  {
+   "t": 42.65,
+   "title": "The left side: to the body"
+  },
+  {
+   "t": 60.075,
+   "title": "Two loops, one heartbeat"
+  }
+ ],
+ "questions": [
+  {
+   "at": 41.75,
+   "q": {
+    "id": "v-h1",
+    "type": "mcq",
+    "difficulty": 1,
+    "prompt": "Where does the right ventricle pump blood?",
+    "options": [
+     "To the lungs, through the pulmonary artery",
+     "To the body, through the aorta",
+     "Into the left atrium",
+     "Into the vena cava"
+    ],
+    "answer": 0,
+    "explain": "The right side of the heart pumps oxygen-poor blood to the lungs."
+   }
+  },
+  {
+   "at": 59.17,
+   "q": {
+    "id": "v-h2",
+    "type": "tf",
+    "difficulty": 1,
+    "prompt": "“The wall of the left ventricle is thicker than the wall of the right ventricle.”",
+    "answer": true,
+    "explain": "It pumps blood all round the body, which needs a higher pressure."
+   }
+  },
+  {
+   "at": 78.35,
+   "q": {
+    "id": "v-h3",
+    "type": "mcq",
+    "difficulty": 2,
+    "prompt": "Which vessel carries oxygen-poor blood AWAY from the heart?",
+    "options": [
+     "Pulmonary artery",
+     "Aorta",
+     "Pulmonary vein",
+     "Vena cava"
+    ],
+    "answer": 0,
+    "explain": "It is an artery (away from the heart) but carries oxygen-poor blood to the lungs."
+   }
+  }
+ ],
+ "cards": [
+  {
+   "front": "Path of oxygen-poor blood through the heart",
+   "back": "Vena cava → right atrium → tricuspid valve → right ventricle → pulmonary artery → lungs",
+   "kind": "qa"
+  },
+  {
+   "front": "Why is the left ventricle wall thickest?",
+   "back": "It pumps blood through the aorta to the whole body, which needs the highest pressure.",
+   "kind": "qa"
+  }
+ ]
+}

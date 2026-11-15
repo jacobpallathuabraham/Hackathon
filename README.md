@@ -1129,3 +1129,24 @@ Full report: [`docs/V18-REPORT.md`](docs/V18-REPORT.md). Audit: [`docs/V18-AUDIT
 Tests: `npm test`. With the local server running, also run:
 - `tests/e2e/syllabus-chat`, `neural-voice`, `audio-lessons`, `handwriting-v18` and `growth-v18`;
 - `node tests/bench/run-bench.js`.
+
+## v19: the Interactive Learning Studio
+
+[`learn.html`](learn.html) turns the Reading Studio into one connected learning environment. The Reading Studio itself is unchanged and opens from the Studio's Library. Full delivery report: [`docs/LEARNING-STUDIO-REPORT.md`](docs/LEARNING-STUDIO-REPORT.md).
+
+- **Interactive lessons from data, not pages.** A validated content registry (`assets/js/learn/ls-registry.js`, `ls-schema.js`) and one renderer.
+  - 8 lessons (biology, chemistry, maths, physics), 29 sections, 79 questions.
+  - **15 activity types:** multiple choice, choose-all, true/false, fill-in, matching, ordering, diagram labelling, sorting, comparison, numeric with units, typed expressions, graph reading, sliders, short written answers and step-by-step problems.
+  - Each has an explanation, an explanation for each wrong option, retry and keyboard access.
+  - Section progress is saved, so students resume where they stopped.
+- **Visual Learning Lab:** all 174 computed Noor Lab models, with a coverage map that marks what is not built yet. Four new models: algebra balance, fraction bars, cell explorer, reaction balancing.
+- **Video Studio:** three ERLY-made narrated videos, built by `tools/make-learn-videos.js` with the open Kokoro voice model and ffmpeg. They have captions, a clickable transcript, chapters, section replay, bookmarks, timestamped notes and questions that unlock as you watch. External videos are listed with their publisher.
+- **Practice Centre:** guided, independent and test modes, a timer, and a mistake notebook. **Flashcards & Revision:** spaced repetition that explains why each card is due. **My Notebook:** rich text, concept maps, autosave with draft recovery, export, and source links back to where each note came from.
+- **Noor in context:** select any text, diagram, equation, wrong answer or video section and ask. Noor receives only the selection and the lesson title — the Noor Tutor page shows the exact request.
+- **Learning insights:**
+  - each one separates what was observed, what it may mean for the task, other explanations and things to try, with the evidence and its reliability;
+  - with too little evidence, the Studio says so;
+  - insights never diagnose and never estimate a probability or a risk.
+- **Consent first:** nothing is stored until the student chooses "this device" or "this visit". Demonstration data is labelled and kept apart. The Profile page exports or deletes everything.
+
+Tests: `npm test` (272 unit tests, including content validation and insight safeguards). With the local server running, `tests/e2e/learning-studio.e2e.js` runs 34 acceptance checks.

@@ -1,0 +1,78 @@
+{
+ "id": "erly-newton",
+ "generated": "2026-11-15",
+ "voice": "bm_george (Kokoro-82M, Apache-2.0)",
+ "duration": 60.63,
+ "chapters": [
+  {
+   "t": 0,
+   "title": "Balanced forces"
+  },
+  {
+   "t": 17.425,
+   "title": "An unbalanced force"
+  },
+  {
+   "t": 32.5,
+   "title": "Mass matters"
+  },
+  {
+   "t": 42.975,
+   "title": "F equals m a"
+  }
+ ],
+ "questions": [
+  {
+   "at": 16.52,
+   "q": {
+    "id": "v-n1",
+    "type": "tf",
+    "difficulty": 1,
+    "prompt": "“An object moving at constant velocity has zero resultant force on it.”",
+    "answer": true,
+    "explain": "No acceleration means no resultant force."
+   }
+  },
+  {
+   "at": 42.08,
+   "q": {
+    "id": "v-n2",
+    "type": "mcq",
+    "difficulty": 2,
+    "prompt": "The same resultant force acts on a box, then on a box with twice the mass. The second acceleration is…",
+    "options": [
+     "half as large",
+     "twice as large",
+     "the same",
+     "four times as large"
+    ],
+    "answer": 0,
+    "explain": "a = F/m: doubling m halves a."
+   }
+  },
+  {
+   "at": 59.23,
+   "q": {
+    "id": "v-n3",
+    "type": "numeric",
+    "difficulty": 1,
+    "prompt": "A 12 N resultant force acts on a 3 kg mass. Acceleration in m/s²?",
+    "answer": 4,
+    "tol": 0.01,
+    "explain": "a = 12 / 3 = 4 m/s²."
+   }
+  }
+ ],
+ "cards": [
+  {
+   "front": "Resultant force zero means…",
+   "back": "No acceleration: at rest or constant velocity.",
+   "kind": "qa"
+  },
+  {
+   "front": "Effect of doubling mass (same force)",
+   "back": "The acceleration halves (a = F/m).",
+   "kind": "qa"
+  }
+ ]
+}

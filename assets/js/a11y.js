@@ -145,7 +145,7 @@
       <header class="a11y__h"><div><b id="a11yTitle">${T('Accessibility', 'سهولة الوصول')}</b><small>${T('Your choices, saved only on this device.', 'اختياراتك، محفوظة على هذا الجهاز فقط.')}</small></div><button type="button" class="a11y__x" data-a="close" aria-label="${T('Close', 'إغلاق')}">✕</button></header>
       <div class="a11y__tabs" role="tablist" aria-label="${T('Settings groups', 'مجموعات الإعدادات')}">${TABS.map(([k, en, ar]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${st.tab === k}">${T(en, ar)}</button>`).join('')}</div>
       <div class="a11y__pane" role="tabpanel">${pane()}</div>
-      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>${changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : ''}ERLY v18 · Alt+A</span></footer>`;
+      <footer class="a11y__f"><button type="button" data-a="reset">${T('Reset all', 'إعادة الضبط')}</button><span>${changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : ''}ERLY v19 · Alt+A</span></footer>`;
     if (focusKey) { const f = panel.querySelector(`[data-k="${focusKey}"], [data-tab="${focusKey}"][aria-selected="true"], [data-size="${focusKey}"]`); if (f) f.focus(); }
   }
   function voices() { try { const l = (html.lang || 'en').slice(0, 2); return (speechSynthesis.getVoices() || []).filter(v => v.lang && v.lang.slice(0, 2) === l).slice(0, 30); } catch (e) { return []; } }
@@ -292,7 +292,7 @@
     if (panel && !panel.hidden) { let c = panel.querySelector('.a11y__ok'); if (!c) { c = document.createElement('p'); c.className = 'a11y__ok'; c.setAttribute('aria-hidden', 'true'); panel.querySelector('.a11y__f').before(c); } c.textContent = '✓ ' + t; c.classList.remove('is-on'); void c.offsetWidth; c.classList.add('is-on'); }
   }
   function changed() { const d = DEF; return ['size', 'contrast', 'still', 'font', 'spacing', 'links', 'focus', 'line', 'letter', 'word', 'width', 'guide', 'tint', 'calm', 'targets', 'cursor', 'focusmode'].filter(k => k === 'still' ? st.still !== null && st.still !== d.still : JSON.stringify(st[k]) !== JSON.stringify(d[k])).length; }
-  function refreshFoot() { const f = panel && panel.querySelector('.a11y__f span'); if (f) f.textContent = (changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : '') + 'ERLY v18 · Alt+A'; }
+  function refreshFoot() { const f = panel && panel.querySelector('.a11y__f span'); if (f) f.textContent = (changed() ? T(`${changed()} changed · `, `${changed()} مُعدّل · `) : '') + 'ERLY v19 · Alt+A'; }
   function status(t) { let s = panel.querySelector('.a11y__status'); if (!s) { s = document.createElement('p'); s.className = 'a11y__status'; s.setAttribute('role', 'status'); panel.appendChild(s); } s.textContent = t; }
   function open() { lastFocus = document.activeElement; panel.hidden = false; btn.setAttribute('aria-expanded', 'true'); requestAnimationFrame(() => panel.classList.add('is-in')); (panel.querySelector('[role="tab"][aria-selected="true"]') || panel.querySelector('button')).focus(); }
   function close() { panel.classList.remove('is-in'); btn.setAttribute('aria-expanded', 'false'); setTimeout(() => { panel.hidden = true; }, 160); if (lastFocus && lastFocus.focus) lastFocus.focus(); else btn.focus(); }

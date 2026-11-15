@@ -1,0 +1,61 @@
+WEBVTT
+
+1
+00:00:00.600 --> 00:00:05.175
+This is the simplest quadratic: y equals x squared.
+
+2
+00:00:05.625 --> 00:00:11.900
+Its graph is a parabola: a symmetric curve with one turning point, called the vertex.
+
+3
+00:00:12.800 --> 00:00:15.850
+The number in front of x squared is a.
+
+4
+00:00:16.300 --> 00:00:19.800
+Make a bigger, and the parabola gets narrower.
+
+5
+00:00:20.250 --> 00:00:23.725
+Make a smaller, and it opens out wider.
+
+6
+00:00:24.175 --> 00:00:28.083
+And if a is negative, the parabola flips upside down:
+
+7
+00:00:28.083 --> 00:00:31.600
+it now has a maximum instead of a minimum.
+
+8
+00:00:32.500 --> 00:00:37.075
+The constant term, c, slides the whole curve up and down.
+
+9
+00:00:37.525 --> 00:00:41.250
+It is also where the graph crosses the y-axis.
+
+10
+00:00:42.150 --> 00:00:48.543
+The roots are where the curve meets the x-axis. For x squared minus two x minus three,
+
+11
+00:00:48.543 --> 00:00:50.800
+they are minus one and three.
+
+12
+00:00:51.250 --> 00:00:54.292
+The discriminant, b squared minus four a c,
+
+13
+00:00:54.292 --> 00:00:58.475
+tells you how many roots there are before you draw anything.
+
+14
+00:00:58.925 --> 00:01:04.631
+Positive: two roots. Zero: the curve just touches the axis. Negative:
+
+15
+00:01:04.631 --> 00:01:07.225
+it misses the axis completely.
