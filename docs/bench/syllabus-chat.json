@@ -1,7 +1,7 @@
 {
- "date": "2026-11-15T11:45:22.664Z",
- "models": 129,
- "pass": 129,
+ "date": "2026-11-15T18:02:26.379Z",
+ "models": 133,
+ "pass": 133,
  "negatives": 15,
  "negPass": 15,
  "byExam": {
@@ -66,6 +66,18 @@
    2
   ],
   "Geography / environmental science": [
+   1,
+   1
+  ],
+  "School": [
+   2,
+   2
+  ],
+  "School / NEET": [
+   1,
+   1
+  ],
+  "School / JEE": [
    1,
    1
   ]
@@ -310,7 +322,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 577,
-   "ink": 298,
+   "ink": 301,
    "pass": true
   },
   {
@@ -519,7 +531,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 747,
-   "ink": 480,
+   "ink": 477,
    "pass": true
   },
   {
@@ -552,7 +564,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 678,
-   "ink": 313,
+   "ink": 300,
    "pass": true
   },
   {
@@ -596,7 +608,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 519,
-   "ink": 47,
+   "ink": 42,
    "pass": true
   },
   {
@@ -849,7 +861,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 635,
-   "ink": 33,
+   "ink": 34,
    "pass": true
   },
   {
@@ -1014,7 +1026,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 546,
-   "ink": 37,
+   "ink": 36,
    "pass": true
   },
   {
@@ -1058,7 +1070,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 939,
-   "ink": 31,
+   "ink": 35,
    "pass": true
   },
   {
@@ -1113,7 +1125,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 672,
-   "ink": 43,
+   "ink": 41,
    "pass": true
   },
   {
@@ -1278,7 +1290,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 779,
-   "ink": 1870,
+   "ink": 1866,
    "pass": true
   },
   {
@@ -1388,7 +1400,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 717,
-   "ink": 89,
+   "ink": 87,
    "pass": true
   },
   {
@@ -1488,6 +1500,50 @@
    "fullScreenLab": false,
    "replyChars": 749,
    "ink": 175,
+   "pass": true
+  },
+  {
+   "id": "balance",
+   "unit": "School · Linear equations",
+   "probe": "show me how to solve 3x + 2 = x + 10 with a balance",
+   "got": "balance",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 671,
+   "ink": 106,
+   "pass": true
+  },
+  {
+   "id": "fractions",
+   "unit": "School · Fractions",
+   "probe": "show me how to add 1/3 and 1/4 with fraction bars",
+   "got": "fractions",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 540,
+   "ink": 366,
+   "pass": true
+  },
+  {
+   "id": "cell",
+   "unit": "School / NEET · Cell structure",
+   "probe": "show me the organelles in a plant cell and what each one does",
+   "got": "cell",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 770,
+   "ink": 433,
+   "pass": true
+  },
+  {
+   "id": "balancer",
+   "unit": "School / JEE · Some basic concepts in chemistry",
+   "probe": "help me balance the equation CH4 + O2 → CO2 + H2O",
+   "got": "balancer",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 767,
+   "ink": 216,
    "pass": true
   }
  ],

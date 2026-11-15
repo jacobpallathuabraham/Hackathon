@@ -144,7 +144,7 @@ Each feature below lives at a Studio route.
 | Learning intelligence | `#/progress` | Progress by subject and topic, lessons, weekly answers, chosen formats, and explainable insights. Separate evidence thresholds; "not enough evidence yet" list; dismiss / correct / restore | Tested |
 | Personalisation | `#/profile` and Home | Student-stated profile (explanation styles, formats, pace, goals, help wanted). Goals reorder recommendations, prerequisites gate them, insights can switch on reading support. Every suggestion gives its reason and can be ignored | Implemented (recommendation logic unit-tested) |
 | Profile, privacy & data | `#/profile` | Storage choice, insights on/off, data-flow table, export, view, partial and full delete | Tested |
-| New Lab models | `#/lab/balance`, `fractions`, `cell`, `balancer` | Built on the shared spec engine; also usable in Noor's chat | Tested (balance, balancer); implemented (fractions, cell) |
+| New Lab models | `#/lab/balance`, `fractions`, `cell`, `balancer` | Built on the shared spec engine; also usable in Noor's chat | Tested: values for balance and balancer; all 4 open from a chat question and render (syllabus chat suite) |
 
 ---
 
@@ -157,7 +157,7 @@ Each feature below lives at a Studio route.
 | `tests/unit/learn-logic.test.js` | **9 / 9** |
 | All unit tests (`npm test`) | **272 / 272** |
 | axe-core 4.10 (WCAG 2.0/2.1/2.2 A and AA rules), 18 Studio screens × light and dark, with demonstration data loaded | **0 violations** (after the fixes below) |
-| Existing site regression (`tests/e2e/*`, excluding the 2 network-heavy suites) | REGRESSION_RESULT |
+| Existing site regression: all 34 other suites in `tests/e2e/` (excluding the 2 suites that download models or call Wikipedia) | **All pass.** Two failed in the full run and are resolved. `companion-quality` checked AI-composed visuals with a plant cell, which now opens the new cell explorer; the test now uses a leaf cross-section, which still has no model, and passes. `lab` failed one reply-wording check under CPU load and passed 34/34 when rerun alone. The syllabus chat suite includes the 4 new models: 133/133 open the right model inline, and 15/15 factual questions get no forced visual. |
 
 `learn-content.test.js` checks that every lesson validates and every question is correctly answerable from its own key. It also checks that every listed wrong answer really is marked wrong, that there is a mix of question types (no more than 35% multiple choice), and that malformed content is rejected.
 
