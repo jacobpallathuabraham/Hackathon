@@ -38,7 +38,7 @@ Status key: **Model** = computed interactive model · **Partial** = some topics 
 
 | # | Unit | Models | Status |
 |---|---|---|---|
-| 1 | Units and measurements | vernier | Partial (no model for dimensional analysis or error propagation) |
+| 1 | Units and measurements | dimensions, vernier, screwgauge | Model (error propagation is explained in words) |
 | 2 | Kinematics | kin1d, projectile, riverboat | Model |
 | 3 | Laws of motion | newton, incline, banking, atwood, problems (massive pulley) | Model |
 | 4 | Work, energy and power | coaster, vcircle, collision | Model |
@@ -50,14 +50,14 @@ Status key: **Model** = computed interactive model · **Partial** = some topics 
 | 10 | Oscillations and waves | spring, pendulum, shm, resonance, waves, superpose | Model |
 | 11 | Electrostatics | efield, charges, radial, capnet, dielectric | Model |
 | 12 | Current electricity | circuit, netlist, transient | Model |
-| 13 | Magnetic effects of current and magnetism | bfield, lorentz | Partial (no model for magnetic materials / hysteresis) |
+| 13 | Magnetic effects of current and magnetism | bfield, lorentz, hysteresis | Model |
 | 14 | Electromagnetic induction and AC | induction, lcr, transient | Model |
 | 15 | Electromagnetic waves | emwave | Model |
 | 16 | Optics | optics (rays, lenses, mirrors, prisms), waves (interference, diffraction), malus | Model |
 | 17 | Dual nature of matter and radiation | photoelectric, debroglie | Model |
 | 18 | Atoms and nuclei | bohr, binding, decay | Model |
-| 19 | Electronic devices | diode, logic | Partial (no transistor model) |
-| 20 | Experimental skills | vernier | Partial (screw gauge, metre bridge and potentiometer experiments not modelled) |
+| 19 | Electronic devices | diode, logic, transistor | Model |
+| 20 | Experimental skills | vernier, screwgauge, metrebridge, potentiometer, titration | Model |
 
 ## JEE Main — Chemistry
 
@@ -72,32 +72,32 @@ Status key: **Model** = computed interactive model · **Partial** = some topics 
 | 7 | Redox reactions and electrochemistry | nernst, faraday, kohlrausch | Model |
 | 8 | Chemical kinetics | kinetics, arrhenius, eprofile | Model |
 | 9 | Classification of elements and periodicity | periodic | Model |
-| 10 | p-Block elements | — | Text |
+| 10 | p-Block elements | pblock (oxidation states, inert pair effect) | Partial (descriptive chemistry of individual compounds in words) |
 | 11 | d- and f-Block elements | cfse (colour and magnetism) | Partial |
 | 12 | Coordination compounds | cfse | Model |
-| 13 | Purification and characterisation of organic compounds | distil | Partial (chromatography not modelled) |
+| 13 | Purification and characterisation of organic compounds | distil, chromatography | Model |
 | 14 | Basic principles of organic chemistry | conform, mechanism | Model |
-| 15 | Hydrocarbons | conform, molecule (benzene) | Partial |
+| 15 | Hydrocarbons | conform, alkanes, molecule (benzene) | Model |
 | 16 | Organic compounds containing halogens | mechanism (SN1 / SN2) | Partial |
-| 17 | Organic compounds containing oxygen | mechanism | Partial |
-| 18 | Organic compounds containing nitrogen | — | Text |
+| 17 | Organic compounds containing oxygen | acidity, mechanism | Model |
+| 18 | Organic compounds containing nitrogen | amines (basicity) | Partial (diazonium reactions in words) |
 | 19 | Biomolecules | enzyme, dna | Partial |
-| 20 | Principles related to practical chemistry | titration | Partial |
+| 20 | Principles related to practical chemistry | titration, chromatography | Model |
 | — | States of matter / solid state (CBSE, NEET) | vdw, gas, unitcell | Model |
 
 ## NEET (UG) — Biology
 
 | Unit | Models | Status |
 |---|---|---|
-| Diversity in the living world | — | Text |
+| Diversity in the living world | kingdoms | Partial (taxonomic detail in words) |
 | Structural organisation in animals and plants | — | Text |
 | Cell structure and function | celldiv, enzyme | Partial |
 | Plant physiology | photorate, waterpot, photosynthesis scene | Model |
-| Human physiology | heart scene, o2curve, actionpot | Partial (digestion, excretion, locomotion not modelled) |
-| Reproduction | — | Text |
+| Human physiology | heart scene, o2curve, actionpot, digestph | Partial (excretion, locomotion not modelled) |
+| Reproduction | menstrual | Partial (plant reproduction, embryology in words) |
 | Genetics and evolution | punnett (incl. X-linked), hardyweinberg, dna | Model |
 | Biology and human welfare | sir | Partial |
-| Biotechnology | — | Text |
+| Biotechnology | pcr, gel | Model |
 | Ecology | popgrowth, predprey, pyramid | Model |
 
 ## Undergraduate and other disciplines (selection)
@@ -111,8 +111,8 @@ computed models, which is reported as such on the coverage page.
 
 ## Totals (measured, v18)
 
-- Models available: 42 engines from v16–v17 plus 113 syllabus models = 155.
-- Curriculum registry (`assets/js/lab/curriculum.js`): 248 concepts in 22 disciplines.
-- Normal chat: 113/113 syllabus questions open the right model inline; 15/15 factual questions get no forced visual
+- Models available: 42 engines from v16–v17 plus 129 syllabus models = 171.
+- Curriculum registry (`assets/js/lab/curriculum.js`): 264 concepts in 22 disciplines.
+- Normal chat: 129/129 syllabus questions open the right model inline; 15/15 factual questions get no forced visual
   (`docs/bench/syllabus-chat.json`).
 - Benchmark: see `docs/bench/visual-bench-results.md` for the per-subject executed and accurate counts.

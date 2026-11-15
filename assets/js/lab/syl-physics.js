@@ -9,7 +9,7 @@
   'use strict';
   const L = window.ERLY_LAB; if (!L || !L.syl) return;
   const Y = L.syl, T = L.T, f3 = Y.f3, P = Y.p;
-  const g0 = 9.8, R = 8.314, kB = 1.380649e-23, h = 6.62607015e-34, c0 = 2.99792458e8, e = 1.602176634e-19, me = 9.1093837015e-31, eps0 = 8.8541878128e-12, NA = 6.02214076e23;
+  const g0 = 9.8, R = 8.314462618, kB = 1.380649e-23, h = 6.62607015e-34, c0 = 2.99792458e8, e = 1.602176634e-19, me = 9.1093837015e-31, eps0 = 8.8541878128e-12, NA = 6.02214076e23;
   const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
   const K = { kin: T('Physics · Kinematics', 'فيزياء · الحركة'), lm: T('Physics · Laws of motion', 'فيزياء · قوانين الحركة'), wep: T('Physics · Work, energy and power', 'فيزياء · الشغل والطاقة'), grav: T('Physics · Gravitation', 'فيزياء · الجاذبية'), mat: T('Physics · Properties of solids and liquids', 'فيزياء · خواص المادة'), th: T('Physics · Thermodynamics', 'فيزياء · الديناميكا الحرارية'), osc: T('Physics · Oscillations', 'فيزياء · الاهتزازات'), es: T('Physics · Electrostatics', 'فيزياء · الكهرباء الساكنة'), ac: T('Physics · EMI and AC', 'فيزياء · التيار المتردد'), emw: T('Physics · EM waves and optics', 'فيزياء · الموجات الكهرومغناطيسية'), mod: T('Physics · Dual nature and atoms', 'فيزياء · الفيزياء الحديثة'), nuc: T('Physics · Nuclei', 'فيزياء · النواة'), dev: T('Physics · Electronic devices', 'فيزياء · الإلكترونيات'), adv: T('Physics · Undergraduate (modern)', 'فيزياء · جامعية'), exp: T('Physics · Experimental skills', 'فيزياء · المهارات العملية') };
 

@@ -111,5 +111,21 @@
 "heatrod": "a rod starts at 20 °C and one end is held at 100 °C: show how the temperature spreads along it",
 "sorting": "show how merge sort and bubble sort work and compare how many comparisons they make",
 "graphalgo": "show how Dijkstra’s algorithm finds the shortest paths from node A",
-"greenhouse": "why is the Earth about 33 °C warmer than it would be without a greenhouse effect?"
+"greenhouse": "why is the Earth about 33 °C warmer than it would be without a greenhouse effect?",
+"dimensions": "use dimensional analysis to check if T = 2π√(l/g) is correct and derive how a pendulum’s period depends on length",
+"hysteresis": "show the hysteresis loop of soft iron and hard steel and explain retentivity and coercivity",
+"transistor": "show the output characteristics of an npn transistor in common emitter mode and its voltage gain",
+"metrebridge": "in a metre bridge the balance point is at 40 cm with 10 Ω in the left gap: what is the unknown resistance?",
+"potentiometer": "with a potentiometer, a cell balances at 300 cm open and 250 cm when shunted by 10 Ω: find its internal resistance",
+"screwgauge": "how do I read a screw gauge with pitch 0.5 mm and 50 circular divisions?",
+"chromatography": "show how paper chromatography separates leaf pigments and how Rf values are calculated",
+"pblock": "explain the inert pair effect in groups 13 to 15 and why Tl⁺ is more stable than Tl³⁺",
+"amines": "why is aniline a weaker base than ammonia and methylamine? compare the basic strength of amines",
+"alkanes": "how does the boiling point of alkanes change with chain length and branching?",
+"acidity": "why is phenol more acidic than ethanol, and why does chloroacetic acid have a lower pKa than acetic acid?",
+"pcr": "how many copies of DNA does PCR make after 30 cycles, and why does it level off?",
+"gel": "how does gel electrophoresis separate DNA fragments, and how do I find the size of an unknown band?",
+"menstrual": "show how FSH, LH, oestrogen and progesterone change through the menstrual cycle and when ovulation happens",
+"digestph": "show the optimum pH of pepsin, salivary amylase and trypsin along the digestive tract",
+"kingdoms": "explain Whittaker’s five kingdom classification and which kingdom yeast belongs to"
 }

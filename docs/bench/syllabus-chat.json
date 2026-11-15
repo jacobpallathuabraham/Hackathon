@@ -1,13 +1,13 @@
 {
- "date": "2026-11-15T10:39:33.146Z",
- "models": 113,
- "pass": 113,
+ "date": "2026-11-15T10:53:05.694Z",
+ "models": 129,
+ "pass": 129,
  "negatives": 15,
  "negPass": 15,
  "byExam": {
   "JEE Main": [
-   72,
-   72
+   83,
+   83
   ],
   "Undergraduate": [
    6,
@@ -26,8 +26,8 @@
    1
   ],
   "NEET": [
-   12,
-   12
+   17,
+   17
   ],
   "Medicine / interdisciplinary": [
    1,
@@ -519,7 +519,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 747,
-   "ink": 477,
+   "ink": 481,
    "pass": true
   },
   {
@@ -552,7 +552,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 678,
-   "ink": 312,
+   "ink": 306,
    "pass": true
   },
   {
@@ -596,7 +596,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 519,
-   "ink": 47,
+   "ink": 46,
    "pass": true
   },
   {
@@ -760,7 +760,7 @@
    "got": "orbitals",
    "inline": true,
    "fullScreenLab": false,
-   "replyChars": 732,
+   "replyChars": 740,
    "ink": 1863,
    "pass": true
   },
@@ -1014,7 +1014,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 546,
-   "ink": 36,
+   "ink": 34,
    "pass": true
   },
   {
@@ -1058,7 +1058,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 939,
-   "ink": 31,
+   "ink": 33,
    "pass": true
   },
   {
@@ -1233,7 +1233,7 @@
    "got": "beam",
    "inline": true,
    "fullScreenLab": false,
-   "replyChars": 877,
+   "replyChars": 878,
    "ink": 456,
    "pass": true
   },
@@ -1278,7 +1278,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 779,
-   "ink": 1870,
+   "ink": 1871,
    "pass": true
   },
   {
@@ -1312,6 +1312,182 @@
    "fullScreenLab": false,
    "replyChars": 811,
    "ink": 776,
+   "pass": true
+  },
+  {
+   "id": "dimensions",
+   "unit": "JEE Main · Units and measurements",
+   "probe": "use dimensional analysis to check if T = 2π√(l/g) is correct and derive how a pendulum’s period depends on length",
+   "got": "dimensions",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 773,
+   "ink": 95,
+   "pass": true
+  },
+  {
+   "id": "hysteresis",
+   "unit": "JEE Main · Magnetic effects of current and magnetism",
+   "probe": "show the hysteresis loop of soft iron and hard steel and explain retentivity and coercivity",
+   "got": "hysteresis",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 866,
+   "ink": 325,
+   "pass": true
+  },
+  {
+   "id": "transistor",
+   "unit": "JEE Main · Electronic devices (transistor)",
+   "probe": "show the output characteristics of an npn transistor in common emitter mode and its voltage gain",
+   "got": "transistor",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 815,
+   "ink": 1876,
+   "pass": true
+  },
+  {
+   "id": "metrebridge",
+   "unit": "JEE Main · Experimental skills / current electricity",
+   "probe": "in a metre bridge the balance point is at 40 cm with 10 Ω in the left gap: what is the unknown resistance?",
+   "got": "metrebridge",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 648,
+   "ink": 141,
+   "pass": true
+  },
+  {
+   "id": "potentiometer",
+   "unit": "JEE Main · Experimental skills / current electricity",
+   "probe": "with a potentiometer, a cell balances at 300 cm open and 250 cm when shunted by 10 Ω: find its internal resistance",
+   "got": "potentiometer",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 847,
+   "ink": 82,
+   "pass": true
+  },
+  {
+   "id": "screwgauge",
+   "unit": "JEE Main · Experimental skills",
+   "probe": "how do I read a screw gauge with pitch 0.5 mm and 50 circular divisions?",
+   "got": "screwgauge",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 663,
+   "ink": 91,
+   "pass": true
+  },
+  {
+   "id": "chromatography",
+   "unit": "JEE Main · Purification and characterisation of organic compounds / NEET",
+   "probe": "show how paper chromatography separates leaf pigments and how Rf values are calculated",
+   "got": "chromatography",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 717,
+   "ink": 87,
+   "pass": true
+  },
+  {
+   "id": "pblock",
+   "unit": "JEE Main · p-Block elements",
+   "probe": "explain the inert pair effect in groups 13 to 15 and why Tl⁺ is more stable than Tl³⁺",
+   "got": "pblock",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 916,
+   "ink": 178,
+   "pass": true
+  },
+  {
+   "id": "amines",
+   "unit": "JEE Main · Organic compounds containing nitrogen",
+   "probe": "why is aniline a weaker base than ammonia and methylamine? compare the basic strength of amines",
+   "got": "amines",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 865,
+   "ink": 1877,
+   "pass": true
+  },
+  {
+   "id": "alkanes",
+   "unit": "JEE Main · Hydrocarbons",
+   "probe": "how does the boiling point of alkanes change with chain length and branching?",
+   "got": "alkanes",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 795,
+   "ink": 1925,
+   "pass": true
+  },
+  {
+   "id": "acidity",
+   "unit": "JEE Main · Organic compounds containing oxygen",
+   "probe": "why is phenol more acidic than ethanol, and why does chloroacetic acid have a lower pKa than acetic acid?",
+   "got": "acidity",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 913,
+   "ink": 1885,
+   "pass": true
+  },
+  {
+   "id": "pcr",
+   "unit": "NEET · Biotechnology: principles and processes",
+   "probe": "how many copies of DNA does PCR make after 30 cycles, and why does it level off?",
+   "got": "pcr",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 617,
+   "ink": 1880,
+   "pass": true
+  },
+  {
+   "id": "gel",
+   "unit": "NEET · Biotechnology: principles and processes",
+   "probe": "how does gel electrophoresis separate DNA fragments, and how do I find the size of an unknown band?",
+   "got": "gel",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 840,
+   "ink": 160,
+   "pass": true
+  },
+  {
+   "id": "menstrual",
+   "unit": "NEET · Human reproduction",
+   "probe": "show how FSH, LH, oestrogen and progesterone change through the menstrual cycle and when ovulation happens",
+   "got": "menstrual",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 911,
+   "ink": 1896,
+   "pass": true
+  },
+  {
+   "id": "digestph",
+   "unit": "NEET · Digestion and absorption",
+   "probe": "show the optimum pH of pepsin, salivary amylase and trypsin along the digestive tract",
+   "got": "digestph",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 906,
+   "ink": 1890,
+   "pass": true
+  },
+  {
+   "id": "kingdoms",
+   "unit": "NEET · Diversity in the living world",
+   "probe": "explain Whittaker’s five kingdom classification and which kingdom yeast belongs to",
+   "got": "kingdoms",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 749,
+   "ink": 175,
    "pass": true
   }
  ],
