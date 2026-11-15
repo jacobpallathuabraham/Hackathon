@@ -351,11 +351,12 @@
     // requests; the lab takes over when the student wants to simulate, graph, calculate, build or experiment
     const LABWORDS = /\b(solve|factor\w*|simulat\w*|experiment\w*|graph\w*|plot\w*|calculat\w*|comput\w*|sliders?|adjust\w*|lab|interactive model|construct\w*|build\w*|let me (try|play|explore))\b/i;
     // a conceptual "why…?" with no maths in it and no request to build anything is Noor's to explain, not a model to open
-    if (/^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text)) return null;
+    // …unless a purpose-built syllabus model answers exactly this question with high confidence (v18)
     const list = candidates(text); let r = null;
-    const top = list[0];
+    const top = list[0], confident = !!(top && top.score >= 0.95 && (L.engines.find(e => e.id === top.id) || {}).family === 'syllabus');
+    if (!confident && /^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text)) return null;
     const wantsPicture = /\b(diagram|illustrat\w*|picture|tour|show me how)\b/i.test(text);
-    if (top && !top.reply && (top.score < 0.88 || wantsPicture)) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
+    if (top && !top.reply && !confident && (top.score < 0.88 || wantsPicture)) { try { const V = window.ERLY && ERLY.vspec; const pl = V && !LABWORDS.test(text) ? V.plan(text) : null; if (pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind)) return null; } catch (e) { /* no curated visual */ } }
     for (const c of list) {
       if (c.reply) { let rep = null; try { rep = await c.reply(); } catch (e) { rep = null; } if (rep && rep.text) { if (rep.open) await open(rep.open.id, rep.open.params); return { kind: 'answer', text: rep.text }; } if (c.id === 'algebra') continue; }
       if (c.id === 'algebra') continue; r = c; break;
@@ -373,8 +374,9 @@
     const top = candidates(text)[0];
     const curated = pl && ['scene', 'scene2d', 'scene3d', 'mermaid', 'timeline', 'diagram'].includes(pl.kind);
     const wantsPicture = /\b(diagram|illustrat\w*|picture|tour|show me how)\b/i.test(text);
-    const why = /^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text);
-    if (top && !why && top.score >= 0.6 && !(curated && !top.reply && !LABWORDS.test(text) && (top.score < 0.88 || wantsPicture))) return { status: 'interactive', engine: top.id, score: top.score };
+    const confident = !!(top && top.score >= 0.95 && (L.engines.find(e => e.id === top.id) || {}).family === 'syllabus');
+    const why = !confident && /^\s*why\b/i.test(text) && !LABWORDS.test(text) && !/[=^]|\d\s*[+\-*/]\s*\d|\bx\b/.test(text);
+    if (top && !why && top.score >= 0.6 && (confident || !(curated && !top.reply && !LABWORDS.test(text) && (top.score < 0.88 || wantsPicture)))) return { status: 'interactive', engine: top.id, score: top.score };
     if (pl && pl.kind) return { status: ['diagram', 'mermaid', 'timeline', 'chart'].includes(pl.kind) ? 'diagram' : 'visual', kind: pl.kind, title: pl.title && (pl.title[0] || pl.title) };
     return { status: 'explain' };
   }

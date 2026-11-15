@@ -1,0 +1,1395 @@
+{
+ "date": "2026-11-15T10:39:33.146Z",
+ "models": 113,
+ "pass": 113,
+ "negatives": 15,
+ "negPass": 15,
+ "byExam": {
+  "JEE Main": [
+   72,
+   72
+  ],
+  "Undergraduate": [
+   6,
+   6
+  ],
+  "JEE / Undergraduate": [
+   2,
+   2
+  ],
+  "CBSE Class 12": [
+   1,
+   1
+  ],
+  "JEE Main (Wien, Stefan) / Undergraduate": [
+   1,
+   1
+  ],
+  "NEET": [
+   12,
+   12
+  ],
+  "Medicine / interdisciplinary": [
+   1,
+   1
+  ],
+  "Medicine / pharmacy": [
+   1,
+   1
+  ],
+  "CBSE Economics": [
+   5,
+   5
+  ],
+  "Economics": [
+   1,
+   1
+  ],
+  "Commerce / Mathematics": [
+   1,
+   1
+  ],
+  "Statistics": [
+   2,
+   2
+  ],
+  "Engineering": [
+   4,
+   4
+  ],
+  "Engineering / physics": [
+   1,
+   1
+  ],
+  "Computer science": [
+   2,
+   2
+  ],
+  "Geography / environmental science": [
+   1,
+   1
+  ]
+ },
+ "rows": [
+  {
+   "id": "transform",
+   "unit": "JEE Main · Sets, relations and functions",
+   "probe": "show how the graph of y = a f(b(x − h)) + k changes when I shift and stretch it",
+   "got": "transform",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 670,
+   "ink": 1888,
+   "pass": true
+  },
+  {
+   "id": "inverse",
+   "unit": "JEE Main · Sets, relations and functions",
+   "probe": "show a function and its inverse reflected in y = x",
+   "got": "inverse",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 623,
+   "ink": 317,
+   "pass": true
+  },
+  {
+   "id": "composite",
+   "unit": "JEE Main · Sets, relations and functions",
+   "probe": "explain composite functions f(g(x)) with a picture",
+   "got": "composite",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 497,
+   "ink": 1905,
+   "pass": true
+  },
+  {
+   "id": "complex",
+   "unit": "JEE Main · Complex numbers and quadratic equations",
+   "probe": "show z = 3 + 4i on the Argand plane with its modulus and argument",
+   "got": "complex",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 639,
+   "ink": 248,
+   "pass": true
+  },
+  {
+   "id": "quadratic",
+   "unit": "JEE Main · Complex numbers and quadratic equations",
+   "probe": "explain the nature of the roots of x² − 4x + 5 = 0 using the discriminant",
+   "got": "quadratic",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 537,
+   "ink": 1903,
+   "pass": true
+  },
+  {
+   "id": "matrix",
+   "unit": "JEE Main · Matrices and determinants",
+   "probe": "show what the matrix [[2,1],[1,3]] does to the plane and what its determinant means",
+   "got": "matrix",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 660,
+   "ink": 430,
+   "pass": true
+  },
+  {
+   "id": "linsys",
+   "unit": "JEE Main · Matrices and determinants",
+   "probe": "solve 2x + 3y = 12 and x − y = 1 and show when a system has no solution",
+   "got": "linsys",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 529,
+   "ink": 1893,
+   "pass": true
+  },
+  {
+   "id": "pnc",
+   "unit": "JEE Main · Permutations and combinations",
+   "probe": "how many ways can I choose 3 people from 8, and how is that different from arranging them?",
+   "got": "pnc",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 596,
+   "ink": 355,
+   "pass": true
+  },
+  {
+   "id": "binomthm",
+   "unit": "JEE Main · Binomial theorem",
+   "probe": "expand (2 + x)^6 and find the greatest term when x = 1",
+   "got": "binomthm",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 511,
+   "ink": 1902,
+   "pass": true
+  },
+  {
+   "id": "apgp",
+   "unit": "JEE Main · Sequence and series",
+   "probe": "show the partial sums of a geometric series with first term 1 and ratio 1/2",
+   "got": "apgp",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 487,
+   "ink": 1885,
+   "pass": true
+  },
+  {
+   "id": "conics",
+   "unit": "JEE Main · Coordinate geometry (conic sections)",
+   "probe": "show how the eccentricity changes an ellipse into a parabola and a hyperbola",
+   "got": "conics",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 702,
+   "ink": 1701,
+   "pass": true
+  },
+  {
+   "id": "circletan",
+   "unit": "JEE Main · Coordinate geometry (circles)",
+   "probe": "find the length of the tangent from (7, 5) to the circle with centre (1, 2) and radius 3",
+   "got": "circletan",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 701,
+   "ink": 1879,
+   "pass": true
+  },
+  {
+   "id": "lines",
+   "unit": "JEE Main · Coordinate geometry (straight lines)",
+   "probe": "find the angle between y = 2x + 1 and y = −x + 4 and the distance from (3, 5) to the first line",
+   "got": "lines",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 549,
+   "ink": 1739,
+   "pass": true
+  },
+  {
+   "id": "vectors",
+   "unit": "JEE Main · Vector algebra",
+   "probe": "show the dot product and the projection of a = (3, 1) on b = (1, 2)",
+   "got": "vectors",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 550,
+   "ink": 1718,
+   "pass": true
+  },
+  {
+   "id": "lines3d",
+   "unit": "JEE Main · Three-dimensional geometry",
+   "probe": "find the shortest distance between two skew lines and show it in 3D",
+   "got": "lines3d",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 580,
+   "ink": 999,
+   "pass": true
+  },
+  {
+   "id": "bayes",
+   "unit": "JEE Main · Statistics and probability",
+   "probe": "a test is 95% sensitive and 90% specific for a disease with 2% prevalence: what is the chance a positive person has it?",
+   "got": "bayes",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 619,
+   "ink": 253,
+   "pass": true
+  },
+  {
+   "id": "trigfn",
+   "unit": "JEE Main · Trigonometry",
+   "probe": "show the graph of y = 2 sin(3x) and its period, and solve sin x = 0.5",
+   "got": "trigfn",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 634,
+   "ink": 374,
+   "pass": true
+  },
+  {
+   "id": "invtrig",
+   "unit": "JEE Main · Trigonometry (inverse functions)",
+   "probe": "explain the principal value branch of sin⁻¹ x",
+   "got": "invtrig",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 558,
+   "ink": 1750,
+   "pass": true
+  },
+  {
+   "id": "taylor",
+   "unit": "Undergraduate · Calculus (series)",
+   "probe": "show how Taylor polynomials of sin x get better as the degree increases",
+   "got": "taylor",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 572,
+   "ink": 1922,
+   "pass": true
+  },
+  {
+   "id": "fourier",
+   "unit": "Undergraduate · Mathematical methods / signals",
+   "probe": "show the Fourier series of a square wave with more and more terms",
+   "got": "fourier",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 620,
+   "ink": 1883,
+   "pass": true
+  },
+  {
+   "id": "polar",
+   "unit": "Undergraduate · Calculus (polar coordinates)",
+   "probe": "draw the cardioid r = 2(1 + cos θ) and find its area",
+   "got": "polar",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 495,
+   "ink": 1720,
+   "pass": true
+  },
+  {
+   "id": "parametric",
+   "unit": "JEE / Undergraduate · Parametric differentiation",
+   "probe": "show a cycloid traced by a point on a rolling wheel and find dy/dx",
+   "got": "parametric",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 577,
+   "ink": 303,
+   "pass": true
+  },
+  {
+   "id": "revolution",
+   "unit": "JEE / Undergraduate · Applications of integrals",
+   "probe": "find the volume when y = √x from 0 to 4 is rotated about the x-axis",
+   "got": "revolution",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 539,
+   "ink": 999,
+   "pass": true
+  },
+  {
+   "id": "mvt",
+   "unit": "JEE Main · Limit, continuity and differentiability",
+   "probe": "illustrate the mean value theorem for f(x) = x³ − 3x on [0, 2]",
+   "got": "mvt",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 697,
+   "ink": 1912,
+   "pass": true
+  },
+  {
+   "id": "newtonr",
+   "unit": "Undergraduate · Numerical methods",
+   "probe": "use Newton–Raphson to find the root of x³ − 2x − 5 starting at 2",
+   "got": "newtonr",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 526,
+   "ink": 1894,
+   "pass": true
+  },
+  {
+   "id": "venn",
+   "unit": "JEE Main · Sets, relations and functions",
+   "probe": "in a class of 40, 25 study maths, 18 study physics and 10 study both: how many study neither?",
+   "got": "venn",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 489,
+   "ink": 550,
+   "pass": true
+  },
+  {
+   "id": "lpp",
+   "unit": "CBSE Class 12 · Linear programming",
+   "probe": "maximise Z = 3x + 5y subject to x + 2y ≤ 10, 3x + y ≤ 15, x, y ≥ 0",
+   "got": "lpp",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 602,
+   "ink": 965,
+   "pass": true
+  },
+  {
+   "id": "kin1d",
+   "unit": "JEE Main · Kinematics",
+   "probe": "a car starts at 20 m/s and decelerates at 4 m/s²: show its velocity–time graph and the distance travelled in 8 s",
+   "got": "kin1d",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 638,
+   "ink": 617,
+   "pass": true
+  },
+  {
+   "id": "riverboat",
+   "unit": "JEE Main · Kinematics (relative velocity)",
+   "probe": "a boat moves at 5 m/s in still water across a 100 m river flowing at 3 m/s: where should it head to cross straight, and how long does it take?",
+   "got": "riverboat",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 687,
+   "ink": 287,
+   "pass": true
+  },
+  {
+   "id": "incline",
+   "unit": "JEE Main · Laws of motion (friction)",
+   "probe": "a 4 kg block rests on a 30° incline with μs = 0.4 and μk = 0.3: does it slide, and with what acceleration?",
+   "got": "incline",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 619,
+   "ink": 335,
+   "pass": true
+  },
+  {
+   "id": "banking",
+   "unit": "JEE Main · Laws of motion (circular motion)",
+   "probe": "what is the maximum speed of a car on a curve of radius 50 m banked at 15° with friction coefficient 0.3?",
+   "got": "banking",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 629,
+   "ink": 65,
+   "pass": true
+  },
+  {
+   "id": "vcircle",
+   "unit": "JEE Main · Work, energy and power / circular motion",
+   "probe": "a 0.5 kg stone on a 1 m string is whirled in a vertical circle: what speed at the bottom lets it just complete the circle?",
+   "got": "vcircle",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 630,
+   "ink": 290,
+   "pass": true
+  },
+  {
+   "id": "coaster",
+   "unit": "JEE Main · Work, energy and power",
+   "probe": "show kinetic and potential energy changing as a roller coaster car goes down a hill and up the next",
+   "got": "coaster",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 642,
+   "ink": 783,
+   "pass": true
+  },
+  {
+   "id": "com",
+   "unit": "JEE Main · System of particles and rotational motion",
+   "probe": "find the centre of mass of masses 2 kg at (0,0), 3 kg at (4,0) and 5 kg at (1,3)",
+   "got": "com",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 534,
+   "ink": 1911,
+   "pass": true
+  },
+  {
+   "id": "gravfield",
+   "unit": "JEE Main · Gravitation",
+   "probe": "how does g change with height and depth, and what are the orbital and escape speeds at 400 km?",
+   "got": "gravfield",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 659,
+   "ink": 1867,
+   "pass": true
+  },
+  {
+   "id": "stressstrain",
+   "unit": "JEE Main · Properties of solids and liquids",
+   "probe": "a 2 m steel wire of cross-section 1 mm² carries 100 N: how much does it stretch? show the stress–strain curve",
+   "got": "stressstrain",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 740,
+   "ink": 1885,
+   "pass": true
+  },
+  {
+   "id": "torricelli",
+   "unit": "JEE Main · Properties of solids and liquids (fluids)",
+   "probe": "water in a 2 m tall tank flows from a hole: at what depth does the jet reach farthest?",
+   "got": "torricelli",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 766,
+   "ink": 432,
+   "pass": true
+  },
+  {
+   "id": "venturi",
+   "unit": "JEE Main · Properties of solids and liquids (fluids)",
+   "probe": "water flows at 2 m/s in a pipe of area 10 cm² that narrows to 4 cm²: find the speed and pressure drop",
+   "got": "venturi",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 547,
+   "ink": 136,
+   "pass": true
+  },
+  {
+   "id": "stokes",
+   "unit": "JEE Main · Properties of solids and liquids (viscosity)",
+   "probe": "a 2 mm steel ball falls through glycerine: what is its terminal velocity and how quickly does it reach it?",
+   "got": "stokes",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 584,
+   "ink": 1032,
+   "pass": true
+  },
+  {
+   "id": "capillary",
+   "unit": "JEE Main · Properties of solids and liquids (surface tension)",
+   "probe": "how high does water rise in a glass capillary of radius 0.5 mm, and why does mercury go down?",
+   "got": "capillary",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 677,
+   "ink": 870,
+   "pass": true
+  },
+  {
+   "id": "cooling",
+   "unit": "JEE Main · Thermal properties of matter",
+   "probe": "tea at 90 °C cools in a 25 °C room to 70 °C in 5 minutes: when will it reach 50 °C?",
+   "got": "cooling",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 747,
+   "ink": 477,
+   "pass": true
+  },
+  {
+   "id": "pvcycle",
+   "unit": "JEE Main · Thermodynamics",
+   "probe": "show a Carnot cycle between 500 K and 300 K on a PV diagram and its efficiency",
+   "got": "pvcycle",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 810,
+   "ink": 1879,
+   "pass": true
+  },
+  {
+   "id": "mbdist",
+   "unit": "JEE Main · Kinetic theory of gases",
+   "probe": "show the Maxwell–Boltzmann speed distribution for nitrogen at 300 K and 600 K and the rms speed",
+   "got": "mbdist",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 636,
+   "ink": 1886,
+   "pass": true
+  },
+  {
+   "id": "shm",
+   "unit": "JEE Main · Oscillations and waves",
+   "probe": "explain simple harmonic motion with the reference circle and show how KE and PE change",
+   "got": "shm",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 678,
+   "ink": 312,
+   "pass": true
+  },
+  {
+   "id": "resonance",
+   "unit": "JEE Main · Oscillations (damped and forced)",
+   "probe": "show the resonance curve of a driven oscillator and how damping changes it",
+   "got": "resonance",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 577,
+   "ink": 1884,
+   "pass": true
+  },
+  {
+   "id": "capnet",
+   "unit": "JEE Main · Electrostatics (capacitance)",
+   "probe": "capacitors of 2 µF and 3 µF in parallel are in series with 5 µF across 10 V: find the charge and voltage on each",
+   "got": "capnet",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 567,
+   "ink": 91,
+   "pass": true
+  },
+  {
+   "id": "dielectric",
+   "unit": "JEE Main · Electrostatics (capacitance)",
+   "probe": "a parallel-plate capacitor with plates 100 cm² and 2 mm apart gets a 1 mm slab of K = 4: what is the new capacitance?",
+   "got": "dielectric",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 659,
+   "ink": 394,
+   "pass": true
+  },
+  {
+   "id": "transient",
+   "unit": "JEE Main · Current electricity / EMI",
+   "probe": "show how a 100 µF capacitor charges through a 10 kΩ resistor from 12 V and what the time constant means",
+   "got": "transient",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 519,
+   "ink": 47,
+   "pass": true
+  },
+  {
+   "id": "lcr",
+   "unit": "JEE Main · Electromagnetic induction and alternating currents",
+   "probe": "a series LCR circuit has R = 30 Ω, L = 100 mH and C = 50 µF on 220 V, 50 Hz: find the impedance, current and power factor",
+   "got": "lcr",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 687,
+   "ink": 66,
+   "pass": true
+  },
+  {
+   "id": "emwave",
+   "unit": "JEE Main · Electromagnetic waves",
+   "probe": "show an electromagnetic wave with its E and B fields and where 500 nm sits in the spectrum",
+   "got": "emwave",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 556,
+   "ink": 170,
+   "pass": true
+  },
+  {
+   "id": "malus",
+   "unit": "JEE Main · Optics (wave optics)",
+   "probe": "unpolarised light passes through two polarisers at 60°: what fraction gets through?",
+   "got": "malus",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 621,
+   "ink": 1883,
+   "pass": true
+  },
+  {
+   "id": "photoelectric",
+   "unit": "JEE Main · Dual nature of matter and radiation",
+   "probe": "light of 400 nm falls on sodium: what is the maximum kinetic energy of the electrons and the stopping potential?",
+   "got": "photoelectric",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 702,
+   "ink": 1882,
+   "pass": true
+  },
+  {
+   "id": "debroglie",
+   "unit": "JEE Main · Dual nature of matter and radiation",
+   "probe": "what is the de Broglie wavelength of an electron accelerated through 100 V?",
+   "got": "debroglie",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 672,
+   "ink": 1896,
+   "pass": true
+  },
+  {
+   "id": "bohr",
+   "unit": "JEE Main · Atoms and nuclei",
+   "probe": "show the energy levels of hydrogen and the wavelength of the photon emitted from n = 3 to n = 2",
+   "got": "bohr",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 743,
+   "ink": 1873,
+   "pass": true
+  },
+  {
+   "id": "binding",
+   "unit": "JEE Main · Atoms and nuclei",
+   "probe": "show the binding energy per nucleon curve and explain why both fission and fusion release energy",
+   "got": "binding",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 839,
+   "ink": 1878,
+   "pass": true
+  },
+  {
+   "id": "diode",
+   "unit": "JEE Main · Electronic devices",
+   "probe": "show the I–V characteristic of a silicon diode and how a full-wave rectifier changes AC",
+   "got": "diode",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 775,
+   "ink": 1894,
+   "pass": true
+  },
+  {
+   "id": "logic",
+   "unit": "JEE Main · Electronic devices (logic gates)",
+   "probe": "show the truth table of a NAND gate and why it is called a universal gate",
+   "got": "logic",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 389,
+   "ink": 65,
+   "pass": true
+  },
+  {
+   "id": "relativity",
+   "unit": "Undergraduate · Special relativity",
+   "probe": "how much does time slow down for a spaceship moving at 0.8c, and why do muons reach the ground?",
+   "got": "relativity",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 595,
+   "ink": 1897,
+   "pass": true
+  },
+  {
+   "id": "qmbox",
+   "unit": "Undergraduate · Quantum mechanics",
+   "probe": "show the wavefunctions and energy levels of an electron in a 1 nm box",
+   "got": "qmbox",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 604,
+   "ink": 1725,
+   "pass": true
+  },
+  {
+   "id": "blackbody",
+   "unit": "JEE Main (Wien, Stefan) / Undergraduate · Thermal radiation",
+   "probe": "show the black-body spectrum of the Sun at 5772 K and where it peaks",
+   "got": "blackbody",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 621,
+   "ink": 1885,
+   "pass": true
+  },
+  {
+   "id": "vernier",
+   "unit": "JEE Main · Experimental skills",
+   "probe": "how do I read a vernier caliper with least count 0.1 mm and correct a zero error?",
+   "got": "vernier",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 692,
+   "ink": 56,
+   "pass": true
+  },
+  {
+   "id": "limiting",
+   "unit": "JEE Main · Some basic concepts in chemistry",
+   "probe": "10 g of hydrogen reacts with 64 g of oxygen: which is the limiting reagent and how much water forms?",
+   "got": "limiting",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 643,
+   "ink": 1895,
+   "pass": true
+  },
+  {
+   "id": "orbitals",
+   "unit": "JEE Main · Atomic structure",
+   "probe": "show the radial probability distribution of the 2s and 3p orbitals and where their nodes are",
+   "got": "orbitals",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 732,
+   "ink": 1863,
+   "pass": true
+  },
+  {
+   "id": "periodic",
+   "unit": "JEE Main · Classification of elements and periodicity",
+   "probe": "show the trend in first ionisation energy across period 2 and explain why it dips at boron and oxygen",
+   "got": "periodic",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 851,
+   "ink": 1899,
+   "pass": true
+  },
+  {
+   "id": "vdw",
+   "unit": "JEE Main · States of matter (gaseous state)",
+   "probe": "compare the van der Waals isotherms of CO₂ with an ideal gas near its critical temperature",
+   "got": "vdw",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 823,
+   "ink": 1871,
+   "pass": true
+  },
+  {
+   "id": "gibbs",
+   "unit": "JEE Main · Chemical thermodynamics",
+   "probe": "a reaction has ΔH = +178 kJ/mol and ΔS = +161 J/K/mol: above what temperature is it spontaneous?",
+   "got": "gibbs",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 504,
+   "ink": 1867,
+   "pass": true
+  },
+  {
+   "id": "bornhaber",
+   "unit": "JEE Main · Chemical thermodynamics / bonding",
+   "probe": "use a Born–Haber cycle to find the lattice energy of sodium chloride",
+   "got": "bornhaber",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 698,
+   "ink": 1889,
+   "pass": true
+  },
+  {
+   "id": "kinetics",
+   "unit": "JEE Main · Chemical kinetics",
+   "probe": "compare how concentration falls for zero, first and second order reactions and their half-lives",
+   "got": "kinetics",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 517,
+   "ink": 1881,
+   "pass": true
+  },
+  {
+   "id": "arrhenius",
+   "unit": "JEE Main · Chemical kinetics",
+   "probe": "by how much does the rate rise from 300 K to 310 K if the activation energy is 50 kJ/mol?",
+   "got": "arrhenius",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 620,
+   "ink": 1888,
+   "pass": true
+  },
+  {
+   "id": "eprofile",
+   "unit": "JEE Main · Chemical kinetics / thermodynamics",
+   "probe": "draw the energy profile of an exothermic reaction and show how a catalyst changes the activation energy",
+   "got": "eprofile",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 591,
+   "ink": 1904,
+   "pass": true
+  },
+  {
+   "id": "equilibrium",
+   "unit": "JEE Main · Equilibrium",
+   "probe": "show A + B ⇌ C + D reaching equilibrium and what happens when I add more A",
+   "got": "equilibrium",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 635,
+   "ink": 33,
+   "pass": true
+  },
+  {
+   "id": "titration",
+   "unit": "JEE Main · Equilibrium (ionic)",
+   "probe": "show the titration curve of 25 mL of 0.1 M acetic acid with 0.1 M NaOH and pick an indicator",
+   "got": "titration",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 798,
+   "ink": 1901,
+   "pass": true
+  },
+  {
+   "id": "ksp",
+   "unit": "JEE Main · Equilibrium (ionic)",
+   "probe": "how does the solubility of AgCl change when NaCl is added? show the common ion effect",
+   "got": "ksp",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 745,
+   "ink": 1864,
+   "pass": true
+  },
+  {
+   "id": "raoult",
+   "unit": "JEE Main · Solutions",
+   "probe": "show the vapour pressure of a benzene–toluene mixture and how positive deviation changes it",
+   "got": "raoult",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 842,
+   "ink": 1887,
+   "pass": true
+  },
+  {
+   "id": "colligative",
+   "unit": "JEE Main · Solutions",
+   "probe": "what are the boiling and freezing points of 10 g of NaCl in 250 g of water, and its osmotic pressure?",
+   "got": "colligative",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 789,
+   "ink": 95,
+   "pass": true
+  },
+  {
+   "id": "nernst",
+   "unit": "JEE Main · Redox reactions and electrochemistry",
+   "probe": "what is the emf of a Daniell cell with 0.01 M Zn²⁺ and 1 M Cu²⁺ at 25 °C?",
+   "got": "nernst",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 696,
+   "ink": 1896,
+   "pass": true
+  },
+  {
+   "id": "faraday",
+   "unit": "JEE Main · Electrochemistry",
+   "probe": "how much copper is deposited by 2 A for 30 minutes?",
+   "got": "faraday",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 606,
+   "ink": 1895,
+   "pass": true
+  },
+  {
+   "id": "kohlrausch",
+   "unit": "JEE Main · Electrochemistry",
+   "probe": "show how molar conductivity changes with dilution for a strong electrolyte like KCl and a weak one like acetic acid",
+   "got": "kohlrausch",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 891,
+   "ink": 1881,
+   "pass": true
+  },
+  {
+   "id": "unitcell",
+   "unit": "JEE Main · Solid state",
+   "probe": "show a face-centred cubic unit cell and calculate the density of copper",
+   "got": "unitcell",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 688,
+   "ink": 999,
+   "pass": true
+  },
+  {
+   "id": "motheory",
+   "unit": "JEE Main · Chemical bonding and molecular structure",
+   "probe": "draw the molecular orbital diagram of O₂ and explain why it is paramagnetic",
+   "got": "motheory",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 672,
+   "ink": 74,
+   "pass": true
+  },
+  {
+   "id": "conform",
+   "unit": "JEE Main · Basic principles of organic chemistry / hydrocarbons",
+   "probe": "show the Newman projections of butane and the energy of the anti, gauche and eclipsed forms",
+   "got": "conform",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 804,
+   "ink": 1886,
+   "pass": true
+  },
+  {
+   "id": "cfse",
+   "unit": "JEE Main · Coordination compounds",
+   "probe": "why is [Fe(CN)₆]⁴⁻ low spin and [Fe(H₂O)₆]²⁺ high spin? show the d-orbital splitting",
+   "got": "cfse",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 782,
+   "ink": 27,
+   "pass": true
+  },
+  {
+   "id": "punnett",
+   "unit": "NEET · Principles of inheritance and variation",
+   "probe": "show a Punnett square for a dihybrid cross AaBb × AaBb and the 9:3:3:1 ratio",
+   "got": "punnett",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 569,
+   "ink": 272,
+   "pass": true
+  },
+  {
+   "id": "hardyweinberg",
+   "unit": "NEET · Evolution",
+   "probe": "if 1 in 2500 people has cystic fibrosis, what fraction are carriers?",
+   "got": "hardyweinberg",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 649,
+   "ink": 1873,
+   "pass": true
+  },
+  {
+   "id": "enzyme",
+   "unit": "NEET · Biomolecules (enzymes) / undergraduate biochemistry",
+   "probe": "show the Michaelis–Menten curve and how a competitive inhibitor changes Km and Vmax",
+   "got": "enzyme",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 562,
+   "ink": 1884,
+   "pass": true
+  },
+  {
+   "id": "popgrowth",
+   "unit": "NEET · Organisms and populations",
+   "probe": "compare exponential and logistic population growth with a carrying capacity of 1000",
+   "got": "popgrowth",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 546,
+   "ink": 36,
+   "pass": true
+  },
+  {
+   "id": "predprey",
+   "unit": "NEET · Organisms and populations / undergraduate ecology",
+   "probe": "simulate rabbits and foxes as a predator–prey system",
+   "got": "predprey",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 599,
+   "ink": 1920,
+   "pass": true
+  },
+  {
+   "id": "pyramid",
+   "unit": "NEET · Ecosystem",
+   "probe": "if producers fix 10,000 kJ, how much energy reaches the tertiary consumers?",
+   "got": "pyramid",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 648,
+   "ink": 559,
+   "pass": true
+  },
+  {
+   "id": "o2curve",
+   "unit": "NEET · Breathing and exchange of gases",
+   "probe": "show the oxygen dissociation curve and how it shifts during exercise (Bohr effect)",
+   "got": "o2curve",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 669,
+   "ink": 1869,
+   "pass": true
+  },
+  {
+   "id": "actionpot",
+   "unit": "NEET · Neural control and coordination / undergraduate physiology",
+   "probe": "show how a nerve impulse is generated and what happens to sodium and potassium channels",
+   "got": "actionpot",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 939,
+   "ink": 31,
+   "pass": true
+  },
+  {
+   "id": "waterpot",
+   "unit": "NEET · Transport in plants",
+   "probe": "a plant cell with solute potential −0.8 MPa is placed in a −1.2 MPa solution: which way does water move?",
+   "got": "waterpot",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 549,
+   "ink": 971,
+   "pass": true
+  },
+  {
+   "id": "celldiv",
+   "unit": "NEET · Cell cycle and cell division",
+   "probe": "show how the chromosome number and DNA content change through meiosis",
+   "got": "celldiv",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 707,
+   "ink": 45,
+   "pass": true
+  },
+  {
+   "id": "dna",
+   "unit": "NEET · Molecular basis of inheritance",
+   "probe": "show the structure of the DNA double helix and explain Chargaff’s rules",
+   "got": "dna",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 784,
+   "ink": 999,
+   "pass": true
+  },
+  {
+   "id": "photorate",
+   "unit": "NEET · Photosynthesis in higher plants",
+   "probe": "show how light intensity and carbon dioxide concentration limit the rate of photosynthesis",
+   "got": "photorate",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 867,
+   "ink": 1916,
+   "pass": true
+  },
+  {
+   "id": "sir",
+   "unit": "Medicine / interdisciplinary · Epidemiology",
+   "probe": "simulate an epidemic with R0 = 3 and show how vaccinating 50% flattens the curve",
+   "got": "sir",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 672,
+   "ink": 42,
+   "pass": true
+  },
+  {
+   "id": "pkdose",
+   "unit": "Medicine / pharmacy · Pharmacokinetics",
+   "probe": "a drug with a half-life of 6 hours is given every 8 hours: show the concentration reaching steady state",
+   "got": "pkdose",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 881,
+   "ink": 1920,
+   "pass": true
+  },
+  {
+   "id": "elasticity",
+   "unit": "CBSE Economics · Consumer behaviour and demand",
+   "probe": "show how price elasticity changes along a straight-line demand curve and where total revenue is highest",
+   "got": "elasticity",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 683,
+   "ink": 1898,
+   "pass": true
+  },
+  {
+   "id": "costcurves",
+   "unit": "CBSE Economics · Producer behaviour and supply",
+   "probe": "show the AC, AVC and MC curves and why MC cuts AC at its minimum",
+   "got": "costcurves",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 637,
+   "ink": 1904,
+   "pass": true
+  },
+  {
+   "id": "monopoly",
+   "unit": "CBSE Economics · Market forms / undergraduate microeconomics",
+   "probe": "compare monopoly and perfect competition for demand P = 100 − 2Q and marginal cost 20, and show the deadweight loss",
+   "got": "monopoly",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 717,
+   "ink": 1855,
+   "pass": true
+  },
+  {
+   "id": "ppf",
+   "unit": "CBSE Economics · Introduction (central problems)",
+   "probe": "explain the production possibility curve and increasing opportunity cost",
+   "got": "ppf",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 721,
+   "ink": 1884,
+   "pass": true
+  },
+  {
+   "id": "keynes",
+   "unit": "CBSE Economics · Determination of income and employment",
+   "probe": "if MPC is 0.8, how much does national income rise when investment increases by 100?",
+   "got": "keynes",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 552,
+   "ink": 1876,
+   "pass": true
+  },
+  {
+   "id": "lorenz",
+   "unit": "Economics · Development / inequality",
+   "probe": "draw a Lorenz curve and explain the Gini coefficient of income inequality",
+   "got": "lorenz",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 737,
+   "ink": 1794,
+   "pass": true
+  },
+  {
+   "id": "finance",
+   "unit": "Commerce / Mathematics · Financial mathematics",
+   "probe": "how much does ₹10,000 grow to at 8% compounded quarterly for 5 years, and what is the EMI on a ₹5 lakh loan?",
+   "got": "finance",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 510,
+   "ink": 1887,
+   "pass": true
+  },
+  {
+   "id": "chisq",
+   "unit": "Statistics · Inference (categorical data)",
+   "probe": "a die is rolled 120 times giving 15, 25, 18, 22, 16, 24: is it fair? use a chi-square test",
+   "got": "chisq",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 663,
+   "ink": 1892,
+   "pass": true
+  },
+  {
+   "id": "bayesupdate",
+   "unit": "Statistics · Bayesian inference (undergraduate)",
+   "probe": "start with a uniform prior for a coin’s bias and update it after 7 heads in 10 tosses",
+   "got": "bayesupdate",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 606,
+   "ink": 1896,
+   "pass": true
+  },
+  {
+   "id": "beam",
+   "unit": "Engineering · Mechanics of materials",
+   "probe": "draw the shear force and bending moment diagrams for a 6 m simply supported beam with a 10 kN load at 2 m",
+   "got": "beam",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 877,
+   "ink": 456,
+   "pass": true
+  },
+  {
+   "id": "step2",
+   "unit": "Engineering · Control systems",
+   "probe": "show the step response of a second-order system with damping ratio 0.3 and find the overshoot and settling time",
+   "got": "step2",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 569,
+   "ink": 1892,
+   "pass": true
+  },
+  {
+   "id": "bode",
+   "unit": "Engineering · Signals and systems / electronics",
+   "probe": "draw the Bode plot of an RC low-pass filter with cut-off 1 kHz",
+   "got": "bode",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 640,
+   "ink": 1884,
+   "pass": true
+  },
+  {
+   "id": "aliasing",
+   "unit": "Engineering · Signals and systems",
+   "probe": "what happens when a 9 Hz signal is sampled at 10 Hz? show aliasing",
+   "got": "aliasing",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 589,
+   "ink": 1878,
+   "pass": true
+  },
+  {
+   "id": "heatrod",
+   "unit": "Engineering / physics · Heat transfer (PDEs)",
+   "probe": "a rod starts at 20 °C and one end is held at 100 °C: show how the temperature spreads along it",
+   "got": "heatrod",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 779,
+   "ink": 1870,
+   "pass": true
+  },
+  {
+   "id": "sorting",
+   "unit": "Computer science · Algorithms",
+   "probe": "show how merge sort and bubble sort work and compare how many comparisons they make",
+   "got": "sorting",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 552,
+   "ink": 967,
+   "pass": true
+  },
+  {
+   "id": "graphalgo",
+   "unit": "Computer science · Algorithms (graphs)",
+   "probe": "show how Dijkstra’s algorithm finds the shortest paths from node A",
+   "got": "graphalgo",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 595,
+   "ink": 154,
+   "pass": true
+  },
+  {
+   "id": "greenhouse",
+   "unit": "Geography / environmental science · Climate",
+   "probe": "why is the Earth about 33 °C warmer than it would be without a greenhouse effect?",
+   "got": "greenhouse",
+   "inline": true,
+   "fullScreenLab": false,
+   "replyChars": 811,
+   "ink": 776,
+   "pass": true
+  }
+ ],
+ "neg": [
+  {
+   "q": "Who discovered the electron?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "What is the capital of France?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "When was the periodic table first published?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Who wrote the theory of evolution?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "What does NEET stand for?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "How many marks is JEE Main out of?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Define a mole.",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Translate hello into Arabic",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Can you help me plan my week?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Tell me a joke",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "What is your name?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Who invented the light bulb?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Summarise the French Revolution in two lines",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "What year did India become independent?",
+   "model": null,
+   "pass": true
+  },
+  {
+   "q": "Recommend a good book on economics",
+   "model": null,
+   "pass": true
+  }
+ ]
+}
