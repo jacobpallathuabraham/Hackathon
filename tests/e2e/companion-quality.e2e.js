@@ -10,7 +10,8 @@ const { chromium } = require('playwright');
 const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 const SHOT = process.env.ERLY_SHOTS;
 
-// a plant cell spec the "model" composes — nothing like it exists in ERLY's code
+// a spec the "model" composes for a topic with no built-in visual (a leaf cross-section; v19 added a computed
+// cell explorer, so a plant cell itself is now answered by that model instead)
 const PLANT_CELL = { kind: 'scene2d', title: 'Plant cell', subject: 'Biology', alt: 'A labelled plant cell.', params: { scale: 'schematic', layers: [{ id: 'org', label: 'Organelles' }], elements: [
   { id: 'wall', shape: 'rect', x: 50, y: 30, w: 80, h: 50, rx: 6, fill: 'none', stroke: 'green', sw: 1.2, label: 'Cell wall', detail: 'Rigid cellulose layer outside the membrane.' },
   { id: 'vac', shape: 'ellipse', x: 50, y: 32, w: 30, h: 20, fill: 'water', label: 'Central vacuole', detail: 'Stores water and keeps the cell turgid.', layer: 'org' },
@@ -29,7 +30,7 @@ const srv = http.createServer((req, res) => {
     const sys = body.messages[0].content, last = body.messages[body.messages.length - 1];
     const q = Array.isArray(last.content) ? last.content.map(p => p.text || '').join(' ') : last.content;
     let out;
-    if (/strict JSON specs/.test(sys)) out = /plant cell/i.test(q) ? JSON.stringify(PLANT_CELL) : 'not json at all';
+    if (/strict JSON specs/.test(sys)) out = /leaf cross-section/i.test(q) ? JSON.stringify(PLANT_CELL) : 'not json at all';
     else if (/entanglement/i.test(q) && !/visual/i.test(q)) out = 'Quantum entanglement is a correlation between particles described by one shared state…';
     else out = 'A detailed, structured answer.';
     res.writeHead(200, Object.assign({ 'content-type': 'text/event-stream' }, cors));
@@ -102,7 +103,7 @@ const srv = http.createServer((req, res) => {
   assert.ok(req.messages.some(m => m.role === 'user' && /quantum entanglement/i.test(typeof m.content === 'string' ? m.content : '')), '8: earlier turns are sent');
   assert.match(req.messages[0].content, /Never invent facts/, '7: accuracy rules in force');
   // open-ended generation: a subject with no built-in visual is composed by the model, validated and rendered
-  await ask('Draw a labelled diagram of a plant cell');
+  await ask('Draw a labelled diagram of a leaf cross-section');
   v = await vis(); assert.equal(v.title, 'Plant cell', 'model-composed visual'); assert.equal(v.state.elements, 5);
   assert.equal(await p.locator('.vz.is-in img').count(), 0, 'markup in model text is never executed or injected');
   assert.match(await p.textContent('.vz.is-in svg'), /img src=x onerror=alert\(1\)/, '…angle brackets are stripped and it is shown as plain text');
