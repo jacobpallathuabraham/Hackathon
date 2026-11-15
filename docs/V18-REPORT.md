@@ -113,11 +113,16 @@ Status words used:
   - When no reliable source answers, the lesson says so instead of improvising.
   - The player has chapters, seek, speed, revision / detailed / continue versions, "ask Noor", and requests from normal chat.
 
-  Result (previous full run, before the fixes below): 6/8 checks; 48/50 lessons made; 465/465 teaching sentences quoted verbatim from the source. The rerun is pending (`tests/e2e/audio-lessons.e2e.js`; 50 topics drawn evenly from the registry, none special-cased).
-  Fixes from that run:
-  - A topic with a colon ("Relative velocity: crossing a river") matched a bridge-collapse article. The main phrase before the colon must now appear, and the search retries with that phrase alone.
-  - Specialist pages such as "(quantum mechanics)" rank lower unless the topic asks for them.
-  - The revision, detailed and continue buttons closed the lesson before the new version existed, so a failure left nothing on screen. The lesson now stays until its replacement is ready.
+  Result: **8 / 8 checks** (`tests/e2e/audio-lessons.e2e.js`; 50 topics drawn evenly from the registry, none special-cased).
+  - **47 / 50** topic-specific lessons. In the other 3, the encyclopedia was rate-limiting this machine, and the student is told the source did not answer. Nothing was improvised.
+  - **457 / 457** teaching sentences quoted verbatim from the cited article.
+  - Player, revision / detailed / continue, "ask Noor", the request from normal chat and an honest refusal for an unknown topic all pass.
+  - The test's word check flags "Reading a screw gauge → Micrometer (device)", which is in fact the right article.
+
+  Fixes from the earlier run (6/8):
+  - A topic with a colon ("Relative velocity: crossing a river") had matched a bridge-collapse article. The main phrase before the colon must now appear, and the search retries with that phrase alone.
+  - Specialist pages such as "(quantum mechanics)" rank lower unless the topic asks for them. Generic qualifiers such as "(device)" are not penalised.
+  - The revision, detailed and continue buttons closed the lesson before the new version existed. The lesson now stays until its replacement is ready.
 - **Limits:**
   - The neural voices are English only; Arabic uses the device voices.
   - The download needs a capable device.
@@ -189,7 +194,7 @@ Security and privacy:
 | NEET Biology units | 5 Model, 4 Partial, 1 Text |
 | Undergraduate disciplines | Partial (selected models; humanities in words) |
 | Neural voice (Kokoro) | Tested (pitch measured) |
-| Audio lessons on any topic | Tested (see §2) |
+| Audio lessons on any topic | Tested: 8/8; 47/50 lessons, 457/457 sentences quoted |
 | Handwriting model, image tools, practice | Validated on IAM; not validated on students' photos |
 | Growth Plan rebuild | Tested |
 | Benchmark subject balance (Statistics, Biology, Interdisciplinary under target) | Partial |
