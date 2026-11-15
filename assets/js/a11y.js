@@ -119,7 +119,7 @@
       ${sw('learn.steps', 'Step-by-step explanations', 'شرح خطوة بخطوة', '', L.steps)}
       ${sw('learn.examples', 'More examples', 'أمثلة أكثر', '', L.examples)}
       ${seg('learn.dense', T('Information density', 'كثافة المعلومات'), [['light', T('Light', 'خفيفة')], ['normal', T('Normal', 'عادية')], ['rich', T('Rich', 'غنية')]], L.dense)}
-      ${sw('suggestVisuals', 'Suggest visual explanations', 'اقتراح شروحات مرئية', T('Noor may offer a diagram when it would help (off: only when you ask)', 'قد تقترح نور مخططاً عند الحاجة'), !!((vs.vs || {}).suggestVisuals))}
+      ${sw('autoVisuals', 'Visuals in chat', 'الشروحات المرئية في المحادثة', T('On: a concept question gets a checked model or diagram inside the chat. Off: only when you ask (“draw…”, “show me”)', 'تشغيل: يحصل سؤال المفهوم على نموذج أو رسم مُراجَع داخل المحادثة. إيقاف: عند طلبك فقط'), ((vs.vs || {}).visualMode || 'auto') !== 'off')}
       ${sw('speakReplies', 'Read Noor’s replies aloud', 'قراءة ردود نور بصوت', T('Off by default: Noor speaks only when you ask, or when this is on', 'مغلق افتراضياً: تتحدث نور عندما تطلب ذلك أو عند تفعيل هذا'), vs.readAloud === true)}
       <h4 class="a11y__sub">${T('Noor and privacy', 'نور والخصوصية')}</h4>
       ${sw('noorNotice', 'Noor notices reading friction', 'نور تلاحظ صعوبات القراءة', T('On-device counts only (re-reading, zoom, panning). Off: nothing is counted.', 'عدّ على الجهاز فقط. متوقف: لا يُحسب شيء.'), noorNotice())}
@@ -184,7 +184,7 @@
     if (i.type === 'checkbox') {
       if (k === 'still') st.still = i.checked;
       else if (k.startsWith('learn.')) st.learn[k.slice(6)] = i.checked;
-      else if (k === 'suggestVisuals') companionPref({ vs: { suggestVisuals: i.checked } });
+      else if (k === 'autoVisuals') companionPref({ vs: { visualMode: i.checked ? 'auto' : 'off' } });
       else if (k === 'speakReplies') companionPref({ readAloud: i.checked });
       else if (k === 'noorNotice' || k === 'noorOnline') setNoor(k, i.checked);
       else st[k] = i.checked;

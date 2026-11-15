@@ -444,7 +444,7 @@
         return { done: true };
       }
     }
-    else if (VS && (U.store.prefs().vs || {}).suggestVisuals && !/^(what is|calculate)\s+[\d(]/i.test(t)) { const kind = VS.offerable(t, U.ai && U.ai.ready()); if (kind) showOffer(t, kind); }
+    else if (VS && mode === 'ask' && !/^(what is|calculate)\s+[\d(]/i.test(t)) { const kind = VS.offerable(t, U.ai && U.ai.ready()); if (kind) showOffer(t, kind); }
     if (!want) lastQ = t;
     // exact maths
     const math = C.brain && C.brain._math && C.brain._math(t);

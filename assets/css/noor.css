@@ -487,3 +487,13 @@ html.cmp-lock body { position: fixed; left: 0; right: 0; width: 100%; }
 /* the keyboard-fitted panel (ui.js fitViewport) moves with the visual viewport, never with a transition lag */
 .cmp.is-kb { transition: none !important; }
 @supports (padding: max(0px)) { .cmp__dock { padding-bottom: max(10px, env(safe-area-inset-bottom)); } .cmp.is-kb .cmp__dock { padding-bottom: 8px; } }
+.cmp__nv { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.cmp__nv b { font-size: 13px; } .cmp__nvon { font-size: 11px; color: var(--accent); font-weight: 700; }
+.cmp__nvbar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; } .cmp__nvbar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.cmp__nvl { display: flex; gap: 8px; align-items: center; font-size: 13px; } .cmp__nvl select { flex: 1; min-height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+/* v18: audio lesson seek bar and versions */
+.alx__seek { display: flex; align-items: center; gap: 10px; padding: 6px 16px 0; }
+.alx__seek input { flex: 1; accent-color: var(--accent); }
+.alx__pos { font: 500 12px var(--f-mono, ui-monospace); color: var(--muted); min-width: 84px; text-align: end; }
+.alx__more { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 14px; }
+.alx__more a, .alx__more button { min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 600 12.5px var(--f-body, system-ui); cursor: pointer; text-decoration: none; }

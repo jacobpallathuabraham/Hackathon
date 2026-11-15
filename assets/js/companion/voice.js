@@ -110,6 +110,8 @@
     let token = 0, gapT = null;
     /* ---- optional expressive cloud voice (ElevenLabs via ERLY's server) ---- */
     const getCloud = env.getCloud || (() => null);
+    const getNeural = env.getNeural || (() => null); // v18: on-device neural voice (neural-voice.js)
+    let neuralDown = 0;
     let cloudDown = 0, timers = [];
     const ttsCache = new Map();
     // emotion → a gentle eleven_v3 audio tag; real "haha" becomes a natural laugh from the voice model itself
@@ -133,6 +135,23 @@
       const gap = !next ? 0 : next.sentence !== item.sentence ? 300 + (item.question ? 80 : 0) + ((opts.prosody && opts.prosody.pause) || 0) : 110;
       const go = () => { if (my !== token) return; if (state.paused) { state.resumeAt = i + 1; return; } speakFrom(i + 1, opts); };
       if (gap) gapT = setTimeout(go, gap); else go();
+    }
+    // v18: the natural on-device voice. Same queue, same pause/resume/skip/repeat as every other voice; the next
+    // phrase is generated while this one plays, so speech flows instead of stopping between sentences
+    function neuralSpeak(i, opts, my, nv) {
+      const item = state.queue[i], cfg = getSettings(), N = nv.engine, voice = opts.neuralVoice || nv.voice, speed = Math.max(0.6, Math.min(1.6, (cfg.rate || 1) * (opts.rate || 1)));
+      N.synth(item.text, voice, speed).then(a => {
+        if (my !== token) return;
+        if (!a) return advance(i, item, opts, my);
+        const audio = new Audio(a.url); state.audio = audio;
+        audio.volume = Math.max(0, Math.min(1, (cfg.volume != null ? cfg.volume : 1)));
+        const words = []; const re = /\S+/g; let m; while ((m = re.exec(item.text))) words.push(m.index);
+        audio.onplaying = () => { if (my !== token) return; set('speaking', true); opts.onstart && opts.onstart(item.sentence, i); phraseHook('start', item.text, speed, null, opts.emotion); timers.forEach(clearTimeout); const per = a.duration / Math.max(1, words.length); timers = words.map((ci, k) => setTimeout(() => { if (my === token) phraseHook('boundary', ci); }, k * per * 1000)); };
+        audio.onended = () => { timers.forEach(clearTimeout); if (my === token) advance(i, item, opts, my); };
+        audio.onerror = () => { neuralDown = Date.now(); if (my === token) speakFrom(i, opts); };
+        if (state.queue[i + 1]) N.synth(state.queue[i + 1].text, voice, speed).catch(() => {}); // prefetch
+        audio.play().catch(() => { neuralDown = Date.now(); if (my === token) speakFrom(i, opts); });
+      }).catch(() => { neuralDown = Date.now(); if (my === token) speakFrom(i, opts); });
     }
     function cloudSpeak(i, opts, my, cloud) {
       const item = state.queue[i], cfg = getSettings(), g = cfg.gender || 'f';
@@ -167,6 +186,8 @@
       clearTimeout(gapT);
       if (state.audio) { try { state.audio.pause(); } catch (e) { /* ignore */ } state.audio = null; }
       const cloud = getCloud();
+      const nv = getNeural();
+      if (nv && state.lang !== 'ar' && Date.now() - neuralDown > 60000 && i < state.queue.length && (!opts.voiceName || opts.neuralVoice)) { if (synth) synth.cancel(); state.idx = i; return neuralSpeak(i, opts, my, nv); }
       if (cloud && cloud.url && Date.now() - cloudDown > 60000 && i < state.queue.length && !opts.voiceName) { if (synth) synth.cancel(); state.idx = i; return cloudSpeak(i, opts, my, cloud); }
       if (!synth || !Utter) return;
       synth.cancel();
@@ -214,7 +235,7 @@
       state: snapshot,
       speak(text, opts) {
         opts = opts || {};
-        if (!synth || !Utter) { opts.onend && opts.onend(); return false; }
+        if ((!synth || !Utter) && !getNeural()) { opts.onend && opts.onend(); return false; }
         state.lastText = text; state.lang = opts.lang || 'en'; state.queue = phrases(text, state.lang, getSettings().dict); state.paused = false; state.resumeAt = null;
         lastOpts = opts;
         set('speaking', true);

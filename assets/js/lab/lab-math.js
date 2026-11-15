@@ -157,7 +157,10 @@
       const v = plot.view, out = [], fx = st.exprs.filter(e => e.visible && e.kind === 'fx');
       fx.forEach(e => {
         const f = fOf(e);
-        N.roots(f, v.x0, v.x1, 500).slice(0, 8).forEach(x => out.push({ x, y: 0, label: `(${N.fmt(x, 3)}, 0)`, type: 'root', of: e.id }));
+        const rts = N.roots(f, v.x0, v.x1, 500).slice(0, 8);
+        // a double root (the curve touches the axis) has no sign change: an extremum at height 0 is a root too
+        N.extrema(f, v.x0, v.x1, 500).filter(p => Math.abs(p.y) < 1e-7 && !rts.some(r => Math.abs(r - p.x) < 1e-4)).forEach(p => rts.push(p.x));
+        rts.sort((a, b) => a - b).forEach(x => out.push({ x, y: 0, label: `(${N.fmt(x, 3)}, 0)`, type: 'root', of: e.id }));
         N.extrema(f, v.x0, v.x1, 400).slice(0, 6).forEach(p => out.push({ x: p.x, y: p.y, label: `${p.kind} (${N.fmt(p.x, 3)}, ${N.fmt(p.y, 3)})`, type: p.kind, of: e.id }));
         const y0 = f(0); if (isFinite(y0) && v.x0 < 0 && v.x1 > 0) out.push({ x: 0, y: y0, label: `(0, ${N.fmt(y0, 3)})`, type: 'yint', of: e.id });
       });
@@ -698,7 +701,7 @@
     },
     corr(xs, ys) { const mx = Stats.mean(xs), my = Stats.mean(ys); let sxy = 0, sxx = 0, syy = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; syy += (ys[i] - my) ** 2; }); return sxy / Math.sqrt(sxx * syy); }
   };
-  function parseData(t) { const pairs = [...t.matchAll(/\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g)].map(m0 => [+m0[1], +m0[2]]); if (pairs.length >= 2) return { pairs }; const nums = (t.replace(/\b(?:n|k|p|df|μ|mu|sigma|σ)\s*=\s*-?[\d.]+/gi, '').match(/-?\d+(?:\.\d+)?/g) || []).map(Number); return nums.length >= 3 ? { nums } : null; }
+  function parseData(t) { const pairs = [...t.matchAll(/\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g)].map(m0 => [+m0[1], +m0[2]]); if (pairs.length >= 2) return { pairs }; const nums = (t.replace(/\b(?:n|k|p|df|μ|mu|sigma|σ)\s*=\s*-?[\d.]+/gi, '').match(/-?\d+(?:\.\d+)?/g) || []).map(Number); return nums.length >= 3 || (nums.length === 2 && /\b(mean|average|median|standard deviation|variance|range)\b/i.test(t)) ? { nums } : null; }
   L.register({
     id: 'stats', family: 'math', kind: T('Maths · Statistics & probability', 'رياضيات · الإحصاء والاحتمال'), title: T('Statistics lab', 'مختبر الإحصاء'),
     match(t) {

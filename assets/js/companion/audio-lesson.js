@@ -57,9 +57,9 @@
     L.push({ s: 'A', t: T('That’s it. Everything you heard came straight from the reading — open it to read any part in full.', 'هذا كل شيء. كل ما سمعته جاء من القراءة مباشرة — افتحها لقراءة أي جزء كاملاً.') });
     return { title: d.title, source: T('Built only from your open reading', 'مبني فقط من قراءتك المفتوحة'), lines: L };
   }
-  async function fromAI(topic, reading) {
+  async function fromAI(topic, reading, art) {
     const ai = U.ai; if (!ai || !ai.ready()) return null;
-    const src = reading ? reading.pages.slice(0, 6).map(p => '## ' + p.h + '\n' + p.paras.map(x => x.text.replace(/\[([^\]]+)\]/g, '$1')).join('\n')).join('\n\n').slice(0, 6000) : '';
+    const src = art ? art.sections.slice(0, 8).map(x => (x.h ? '## ' + x.h + '\n' : '') + x.text.slice(0, 900)).join('\n\n').slice(0, 6000) : reading ? reading.pages.slice(0, 6).map(p => '## ' + p.h + '\n' + p.paras.map(x => x.text.replace(/\[([^\]]+)\]/g, '$1')).join('\n')).join('\n\n').slice(0, 6000) : '';
     const prompt = `Write a lively but accurate educational audio dialogue between two hosts, Maya (A, explains) and Sami (B, curious, asks good questions, sometimes recaps). Topic: ${reading ? reading.title : topic}.
 ${src ? 'Use ONLY facts from this source. If something isn\'t in it, the hosts say the reading doesn\'t cover it.\nSOURCE:\n<<<' + src + '>>>' : 'Stick to well-established facts; say when something is uncertain.'}
 Format: one line per turn, "A: text" or "B: text". Start chapters with a line "# Chapter title". 3–5 chapters, 18–30 turns, short spoken sentences, no stage directions, no markdown besides chapter lines. Reply in ${U.lang() === 'ar' ? 'Arabic' : 'English'}.`;
@@ -101,7 +101,9 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       <p class="alx__now" aria-live="polite"></p>
       <nav class="alx__ch">${chapters.map((c, k) => `<button type="button" data-ch="${c.i}">${k + 1}. ${esc(c.t)}</button>`).join('')}</nav>
       <ol class="alx__tr">${lines.map((l, i) => l.ch ? `<li class="alx__chl" data-i="${i}">${esc(l.ch)}</li>` : `<li data-i="${i}" class="is-${l.s}"><b>${HOSTS[l.s].name}</b> ${esc(l.t)}</li>`).join('')}</ol>
-      <footer class="alx__ctl"><button type="button" data-a="prev" aria-label="${T('Previous line', 'السطر السابق')}">⟨</button><button type="button" data-a="play" class="alx__play" aria-label="${T('Play', 'تشغيل')}">▶</button><button type="button" data-a="next" aria-label="${T('Next line', 'السطر التالي')}">⟩</button>${[0.75, 1, 1.25, 1.5].map(s => `<button type="button" data-sp="${s}" aria-pressed="${s === 1}">${s}×</button>`).join('')}${script.visual ? `<button type="button" data-a="visual">${T('Show the visual', 'اعرض الشرح المرئي')}</button>` : ''}</footer></div>`;
+      <footer class="alx__ctl"><button type="button" data-a="prev" aria-label="${T('Previous line', 'السطر السابق')}">⟨</button><button type="button" data-a="play" class="alx__play" aria-label="${T('Play', 'تشغيل')}">▶</button><button type="button" data-a="next" aria-label="${T('Next line', 'السطر التالي')}">⟩</button>${[0.75, 1, 1.25, 1.5].map(s => `<button type="button" data-sp="${s}" aria-pressed="${s === 1}">${s}×</button>`).join('')}${script.visual ? `<button type="button" data-a="visual">${T('Show the visual', 'اعرض الشرح المرئي')}</button>` : ''}</footer>
+      <div class="alx__seek"><input type="range" min="0" max="${lines.length - 1}" value="0" step="1" data-a="seek" aria-label="${T('Position in the lesson', 'الموضع في الدرس')}"><span class="alx__pos"></span></div>
+      <div class="alx__more">${script.sourceUrl ? `<a href="${esc(script.sourceUrl)}" target="_blank" rel="noopener">${T('Source', 'المصدر')} ↗</a>` : ''}<button type="button" data-a="v:revision">${T('Revision version', 'نسخة مراجعة')}</button><button type="button" data-a="v:detailed">${T('More detail', 'تفاصيل أكثر')}</button><button type="button" data-a="v:continue">${T('Continue', 'تابع')}</button><button type="button" data-a="ask">${T('Ask Noor about this lesson', 'اسأل نور عن الدرس')}</button></div></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('is-in'));
     let i = lines.findIndex(l => l.s), playing = false, speed = 1, gapT = null, dead = false;
     const mark = () => {
@@ -109,6 +111,7 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       const li = el.querySelector(`.alx__tr li[data-i="${i}"]`); if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       const l = lines[i]; el.querySelectorAll('.alx__host').forEach(h => h.classList.toggle('is-on', playing && l && h.dataset.host === l.s));
       el.querySelector('.alx__now').textContent = l && l.s ? `${HOSTS[l.s].name}: ${l.t}` : '';
+      const sk = el.querySelector('[data-a="seek"]'); if (sk) { sk.value = i; const spoken = lines.slice(0, i).filter(x => x.t).reduce((n2, x) => n2 + x.t.split(/\s+/).length, 0), total = lines.filter(x => x.t).reduce((n2, x) => n2 + x.t.split(/\s+/).length, 0); const mmss = w => { const sec = Math.round(w / (2.4 * speed)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }; el.querySelector('.alx__pos').textContent = `${mmss(spoken)} / ${mmss(total)}`; }
       const chIdx = chapters.filter(c => c.i <= i).length - 1; el.querySelectorAll('.alx__ch button').forEach((b, k) => b.classList.toggle('is-on', k === chIdx));
     };
     function speak() {
@@ -117,8 +120,8 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       if (i >= lines.length) { playing = false; setPlay(); mark(); return; }
       const l = lines[i]; mark();
       const tone = PR ? PR.classify(l.t, {}) : 'neutral';
-      const vo = VO[l.s];
-      v.speak(l.t, Object.assign({ lang: U.lang(), emotion: tone, prosody: PR ? PR.prosody(tone, 1.1) : null, onend: () => { if (!playing || dead) return; i++; gapT = setTimeout(speak, l.s === (lines[i] && lines[i].s) ? 150 : 320); }, onerror: () => { if (!playing || dead) return; i++; gapT = setTimeout(speak, 200); } }, vo, { baseRate: (vo.baseRate || 1) * speed }));
+      const vo = VO[l.s]; const NV = window.ERLY && ERLY.neuralVoice, neural = NV && NV.ready() && (U.store.prefs() || {}).voiceEngine === 'neural';
+      v.speak(l.t, Object.assign({ lang: U.lang(), emotion: tone, neuralVoice: neural ? (l.s === 'A' ? 'af_heart' : 'am_michael') : undefined, rate: speed, prosody: PR ? PR.prosody(tone, 1.1) : null, onend: () => { if (!playing || dead) return; i++; gapT = setTimeout(speak, l.s === (lines[i] && lines[i].s) ? 150 : 320); }, onerror: () => { if (!playing || dead) return; i++; gapT = setTimeout(speak, 200); } }, vo, { baseRate: (vo.baseRate || 1) * speed }));
       if (script.visual && l.stage != null && ERLY.companion.tools && ERLY.companion.tools.visual) { const vz = ERLY.companion.tools.visual.current(); if (vz) vz.show(l.stage); }
     }
     const setPlay = () => { const b = el.querySelector('.alx__play'); b.textContent = playing ? '❚❚' : '▶'; b.setAttribute('aria-label', playing ? T('Pause', 'إيقاف مؤقت') : T('Play', 'تشغيل')); };
@@ -128,34 +131,127 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       if (b.dataset.ch != null) { i = +b.dataset.ch; v.stop(); if (playing) speak(); else { while (i < lines.length && !lines[i].s) i++; mark(); } return; }
       if (b.dataset.i != null) { i = +b.dataset.i; v.stop(); if (playing) speak(); else mark(); return; }
       const a = b.dataset.a;
+      if (a === 'seek') return;
+      if (a && a.startsWith('v:')) { ctrl.close(); return variant(script, a.slice(2)); }
+      if (a === 'ask') { const box = document.getElementById('cmpText'); const at = lines[i] && lines[i].t; if (box) { box.value = T(`About the audio lesson on ${script.title}: `, `عن الدرس الصوتي ${script.title}: `) + (at ? `“${at.slice(0, 140)}” — ` : ''); box.focus(); } ERLY.companion.attach && ERLY.companion.attach({ title: script.title, page: T('audio lesson', 'درس صوتي'), heading: script.title, text: lines.filter(l => l.t).map(l => l.t).join(' ').slice(0, 3400), quote: at || '' }); ERLY.companion.open && ERLY.companion.open('chat'); return; }
       if (a === 'close') return ctrl.close();
       if (a === 'play') { playing = !playing; setPlay(); if (playing) speak(); else { v.stop(); clearTimeout(gapT); mark(); } }
       if (a === 'next' || a === 'prev') { do { i += a === 'next' ? 1 : -1; } while (i > 0 && i < lines.length && !lines[i].s); i = Math.max(0, Math.min(lines.length - 1, i)); v.stop(); if (playing) speak(); else mark(); }
       if (a === 'visual' && C.tools && C.tools.visual) C.tools.visual.open({ id: script.visual, scene: ERLY.visuals.scenes[script.visual] });
     });
     el.addEventListener('keydown', e => { if (e.key === 'Escape') ctrl.close(); });
+    el.querySelector('[data-a="seek"]').addEventListener('input', e => { i = +e.target.value; v.stop(); if (playing) speak(); else { while (i < lines.length && !lines[i].s) i++; mark(); } });
     mark();
     const ctrl = { el, script, play: () => { if (!playing) el.querySelector('.alx__play').click(); }, index: () => i, playing: () => playing, close() { if (dead) return; dead = true; playing = false; clearTimeout(gapT); v.stop(); el.classList.remove('is-in'); setTimeout(() => el.remove(), 300); cur = null; } };
     cur = ctrl;
     return ctrl;
   }
 
-  async function start(topic) {
-    const R = ERLY.reader, reading = R && R.isOpen && R.isOpen() ? R.doc : null;
-    const VZ = ERLY.visuals;
-    const NAMES = { photosynthesis: /photosynth|plant/i, heart: /heart|blood|circulat/i, gravity: /gravit|orbit|planet|solar/i, circuit: /circuit|electric|current|ohm/i, cylinder: /cylinder/i, tectonics: /tectonic|plate|earthquake|volcano/i, newton: /newton|motion|force/i, graph: /graph|parabola|quadratic|function/i };
-    const named = Object.keys(NAMES).find(k => NAMES[k].test(topic || ''));
-    const want = VZ && (VZ.detect(topic || '') || (named ? { id: named } : null));
-    let script = null;
-    if (U.ai && U.ai.ready()) {
-      await U.aiSays('Writing your audio lesson — Maya and Sami will be ready in a moment…', 'أكتب درسك الصوتي — ستكون مايا وسامي جاهزَين بعد لحظة…', { speak: false });
-      script = await fromAI(topic, reading);
+  /* ---------- v18: a lesson for ANY topic ----------
+     Sources, in order: (1) an AI model when one is in use — told to stay with the retrieved source text;
+     (2) the encyclopedia article for the topic (Wikipedia, fetched for the topic words only), organised into
+     chapters from its own sections; (3) a Noor Lab model for the topic, whose computed explanation becomes a
+     "Working it out" chapter and stays open as the lesson's visual companion. Nothing is invented: every
+     sentence the hosts say comes from the source, and the source is named on the lesson. */
+  const LEVELS = { school: { label: ['School', 'مدرسة'], sents: 2, chapters: 4 }, exam: { label: ['JEE / NEET / exam revision', 'مراجعة للامتحان'], sents: 3, chapters: 5 }, uni: { label: ['University', 'جامعة'], sents: 4, chapters: 7 } };
+  const DEPTH = { revision: 0.5, standard: 1, detailed: 1.8 };
+  const SKIP_SEC = /^(see also|references|external links|further reading|notes|bibliography|sources|citations|gallery|footnotes|works cited|in popular culture|trivia)$/i;
+  // Wikipedia asks API clients to cache and back off: answers are kept for the page's life, and a 429 waits and retries
+  const wcache = new Map();
+  async function getJSON(url) {
+    if (wcache.has(url)) return wcache.get(url);
+    for (let k = 0; k < 4; k++) {
+      const r = await fetch(url);
+      if (r.status === 429 || r.status === 503) { const ra = +r.headers.get('retry-after') || 0; await new Promise(z => setTimeout(z, Math.min(8000, Math.max(ra * 1000, 1200 * 2 ** k)))); continue; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json(); wcache.set(url, j); return j;
     }
-    if (!script) script = reading && !want ? fromReading() : want ? fromScene(want.id) : fromReading();
-    if (!script) { await U.aiSays('I can make an audio lesson from the reading you have open, or about a topic I have a checked visual for (photosynthesis, the heart, gravity, circuits, cylinders, tectonic plates, Newton’s laws, graphs). With Noor Online on, I can do almost any topic.', 'يمكنني إعداد درس صوتي من القراءة المفتوحة، أو عن موضوع لديّ له شرح مرئي مُراجَع. مع نور أونلاين يمكنني تناول أي موضوع تقريباً.'); return null; }
-    await U.aiSays(`Here’s your audio lesson: “${script.title}”. ${script.source}. Press play whenever you’re ready.`, `إليك درسك الصوتي: «${script.title}». ${script.source}. اضغط تشغيل عندما تكون جاهزاً.`, { speak: false });
+    throw new Error('rate limited');
+  }
+  async function wikiArticle(topic, lang) {
+    const host = `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/w/api.php?origin=*&format=json&`;
+    const q = String(topic).replace(/^(an?|the)\s+/i, '').slice(0, 120);
+    const sr = await getJSON(host + 'action=query&list=search&srlimit=3&srsearch=' + encodeURIComponent(q));
+    const hits = (sr.query && sr.query.search) || []; if (!hits.length) return null;
+    const words = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+    const hit = hits.find(h => words.some(w => h.title.toLowerCase().includes(w))) || hits[0];
+    const ex = await getJSON(host + 'action=query&prop=extracts&explaintext=1&exsectionformat=wiki&redirects=1&titles=' + encodeURIComponent(hit.title));
+    const pg = Object.values((ex.query && ex.query.pages) || {})[0]; if (!pg || !pg.extract) return null;
+    const secs = []; let curS = { h: null, text: '' };
+    pg.extract.split('\n').forEach(line => { const m = line.match(/^(={2,})\s*(.+?)\s*\1\s*$/); if (m) { secs.push(curS); curS = { h: m[2], level: m[1].length, text: '' }; } else curS.text += line + ' '; });
+    secs.push(curS);
+    const relevant = words.length === 0 || words.some(w => (pg.title + ' ' + pg.extract.slice(0, 600)).toLowerCase().includes(w));
+    return { title: pg.title, url: `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, sections: secs.filter(x => x.text.trim().length > 80 && !(x.h && SKIP_SEC.test(x.h))), relevant };
+  }
+  const sentencesOf = t => (String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+(\s|$)/g) || []).map(x => x.trim()).filter(x => x.length > 25 && x.length < 320 && !/\b(citation needed|isbn|doi)\b/i.test(x));
+  function fromArticle(art, o) {
+    const L = LEVELS[o.level] || LEVELS.school, k = DEPTH[o.depth] || 1, budget = Math.round((o.minutes || 6) * 140 * (o.depth === 'detailed' ? 1.4 : o.depth === 'revision' ? 0.6 : 1));
+    const lines = [], used = o.skip || 0; let words = 0, chapters = 0;
+    const say = (s, t, extra) => { lines.push(Object.assign({ s, t }, extra || {})); words += t.split(/\s+/).length; };
+    const secs = art.sections.slice(used, used + Math.ceil(L.chapters * k) + 1);
+    const intro = sentencesOf(art.sections[0] ? art.sections[0].text : '');
+    lines.push({ ch: T('Introduction', 'مقدمة') });
+    say('A', T(`Welcome to your ERLY audio lesson on ${art.title}.${o.skip ? ' This continues where the last part stopped.' : ''}`, `أهلاً بكم في درس إيرلي الصوتي عن ${art.title}.`));
+    say('B', T(`I’d love to really understand ${art.title}. Where do we start?`, `أريد فهم ${art.title} حقاً. من أين نبدأ؟`));
+    if (!o.skip) intro.slice(0, Math.max(2, Math.round(L.sents * k))).forEach(t => say('A', t));
+    const keyIdeas = [];
+    for (const sec of (o.skip ? secs : secs.slice(1))) {
+      if (words > budget || chapters >= Math.ceil(L.chapters * k)) break;
+      const ss = sentencesOf(sec.text); if (!ss.length) continue;
+      chapters++; lines.push({ ch: sec.h || art.title });
+      say('B', pick(...BRIDGE[chapters % BRIDGE.length]).replace(/\.$/, '') + (sec.h ? ` ${T('What about', 'وماذا عن')} ${sec.h.toLowerCase()}?` : ''));
+      const n = Math.max(1, Math.round(L.sents * k));
+      ss.slice(0, n).forEach((t, q) => { say('A', t); if (q === 0) keyIdeas.push(t); });
+      if (ss.length > n && o.level !== 'school') say('B', T('So, in short: ', 'إذن باختصار: ') + firstSentences(ss[0], 1));
+    }
+    if (o.lab) { lines.push({ ch: T('Working it out', 'لنحسبها') }); say('B', T('Can we see it with real numbers?', 'هل نراها بأرقام حقيقية؟')); sentencesOf(o.lab).slice(0, 6).forEach(t => say('A', t)); say('A', T('The model is open in the chat — try changing it while you listen.', 'النموذج مفتوح في المحادثة — جرّب تغييره أثناء الاستماع.')); }
+    lines.push({ ch: T('Recap and check yourself', 'ملخص واختبر نفسك') });
+    say('B', T('Let me try to sum it up.', 'دعيني أحاول أن ألخص.'));
+    keyIdeas.slice(0, 3).forEach(t => say('B', firstSentences(t, 1)));
+    const checks = keyIdeas.slice(0, 2).map(t => { const m = t.match(/^(.{3,60}?)\s+(is|are|was|were)\s+(.+)$/i); return m ? T(`Quick check: what ${m[2]} ${m[1].replace(/^(the|a|an)\s+/i, '').toLowerCase()}? Pause and answer, then listen again to this chapter.`, 'سؤال سريع: توقف وأجب.') : null; }).filter(Boolean);
+    checks.forEach(c => say('A', c));
+    say('A', T(`That’s the lesson. Everything we said came from the ${art.title} article on Wikipedia, which is linked on this lesson.`, `هذا هو الدرس. كل ما قيل جاء من مقالة ${art.title} في ويكيبيديا.`));
+    return { title: art.title, source: T(`From the Wikipedia article “${art.title}” (quoted, then arranged into a dialogue)`, `من مقالة ويكيبيديا «${art.title}»`), sourceUrl: art.url, lines, opts: o, nextSkip: used + secs.length, words };
+  }
+  const sayL = t => U.aiSays(t, t, { speak: false });
+  async function compose(topic, o) {
+    o = Object.assign({ level: 'school', depth: 'standard', minutes: 6 }, o || {});
+    const R = ERLY.reader, reading = R && R.isOpen && R.isOpen() && /\b(this|the) (reading|page|chapter|pdf)\b/i.test(topic) ? R.doc : null;
+    if (reading) return fromReading();
+    // a Noor Lab model for the topic: its computed explanation becomes a chapter and it stays open beside the lesson
+    let lab = null;
+    try { const L = window.ERLY_LAB, top = L && L.candidates(topic)[0]; if (top && top.score >= 0.9) { await L.open(top.id, top.params); const cur = L.current(); lab = (cur.inst.intro ? cur.inst.intro() : '') + ' ' + String(cur.inst.explain ? cur.inst.explain() : '').replace(/<details[\s\S]*$/i, '').replace(/<[^>]+>/g, ' ');
+        // the model is the lesson's visual companion INSIDE the chat; with the chat closed it is not left on screen
+        const log = document.getElementById('cmpLog'), open = ERLY.companion && ERLY.companion.isOpen && ERLY.companion.isOpen();
+        if (log && open) { const card = document.createElement('div'); card.className = 'cvis'; log.appendChild(card); L.inline(card); } else L.close(); } } catch (e) { lab = null; }
+    const pr = (U.store.prefs() || {}), deviceOnly = U.ai && U.ai.pref && (U.ai.pref() || {}).tier === 'local' && (U.ai.pref() || {}).chosen;
+    let art = null;
+    if (pr.research !== 'off' && !deviceOnly) { try { art = await wikiArticle(topic, U.lang()); } catch (e) { art = null; } }
+    if (U.ai && U.ai.ready()) { const ai = await fromAI(topic + (art ? '' : ''), null, art); if (ai) return Object.assign(ai, { opts: o }); }
+    if (art && art.relevant) return fromArticle(art, Object.assign({}, o, { lab }));
+    const VZ = ERLY.visuals, want = VZ && VZ.detect(topic || '');
+    if (want) { // a built-in scene only when it is about this topic ("atomic orbitals" is not "gravity and orbits")
+      const sc = fromScene(want.id), stems = String(topic).toLowerCase().split(/[^a-z]+/).filter(w => w.length > 3).map(w => w.slice(0, 5));
+      if (sc && stems.length && stems.every(st => sc.title.toLowerCase().includes(st))) return sc; }
+    return null;
+  }
+  async function start(topic, o) {
+    topic = String(topic || '').replace(/^(please\s+)?(create|make|give me|generate|record)?\s*(me\s+)?(an?\s+)?(audio lesson|podcast|audio overview|audio explanation)\s*(about|on|for|of)?\s*/i, '').replace(/\b(as an audio lesson|in audio)\b/i, '').replace(/[?.!]+$/, '').trim() || topic;
+    const lvl = /\b(university|undergraduate|degree|lecture)\b/i.test(topic) ? 'uni' : /\b(jee|neet|revision|exam)\b/i.test(topic) ? 'exam' : (o && o.level) || 'school';
+    const depth = /\b(revision|quick|short)\b/i.test(topic) ? 'revision' : /\b(entire|whole|full|detailed|in depth|complete)\b/i.test(topic) ? 'detailed' : (o && o.depth) || 'standard';
+    const clean = topic.replace(/\b(a |an |the )?(university[- ]level|jee advanced|jee main|jee|neet|revision|quick|short|entire|whole|full|detailed|in depth|complete) (lesson |lecture |chapter )?(on |about |of )?/gi, '').replace(/\b(lecture|lesson|chapter) (on|about|of)\b/gi, '').trim() || topic;
+    await sayL(T(`Building your audio lesson on “${clean}”…`, `أبني درسك الصوتي عن «${clean}»…`));
+    const script = await compose(clean, Object.assign({ level: lvl, depth }, o || {}));
+    if (!script) { await sayL(T(`I couldn’t find a reliable source for “${clean}”, so I won’t make up a lesson. Try a more specific name for the topic (for example “photosynthesis” or “French Revolution”), or open a reading and ask for a lesson on it.`, 'لم أجد مصدراً موثوقاً، ولن أختلق درساً.')); return null; }
+    await sayL(`${T('Here’s your audio lesson', 'إليك درسك الصوتي')}: “${script.title}”. ${script.source}. ${T('Press play whenever you’re ready.', 'اضغط تشغيل عندما تكون جاهزاً.')}`);
     return open(script);
   }
+  async function variant(script, kind) { // revision / detailed / continuation of the same lesson
+    const o = Object.assign({}, script.opts || {}); if (kind === 'revision') o.depth = 'revision'; if (kind === 'detailed') o.depth = 'detailed'; if (kind === 'continue') o.skip = script.nextSkip || 0;
+    const art = await wikiArticle(script.title, U.lang()).catch(() => null); if (!art) return null;
+    const s2 = fromArticle(art, o); if (kind === 'continue' && s2.lines.filter(l => l.s).length < 6) { await sayL(T('That was the whole article — there is nothing more to continue with.', 'انتهت المقالة.')); return null; }
+    return open(s2);
+  }
 
-  ERLY.audioLesson = { start, open, fromScene, fromReading, current: () => cur };
+  ERLY.audioLesson = { start, open, compose, variant, fromScene, fromReading, wikiArticle, current: () => cur, LEVELS };
 })();

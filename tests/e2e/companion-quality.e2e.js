@@ -59,7 +59,9 @@ const srv = http.createServer((req, res) => {
   await ask('What is quantum entanglement?');
   assert.match(await lastAI(), /shared state/, '1: answered by the model');
   assert.equal(await p.locator('.cvoffer').count(), 0, '1: no “would you like a visual?”');
-  assert.equal(await vis(), null, '1: no visual opened');
+  // v18: a concept question may get a visual automatically (inside the chat); it is never asked about
+  assert.equal(await p.locator('.vz:not(.vz--inline)').count(), 0, '1: no overlay');
+  await p.evaluate(() => ERLY.companion.tools.visual.close());
   // 2 · explicit visual → a composed, relevant visual
   await ask('Create an interactive visual representation of quantum entanglement.');
   let v = await vis(); assert.equal(v.kind, 'scene2d', '2: an open composition'); assert.match(v.title, /entanglement/i);

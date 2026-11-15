@@ -49,7 +49,7 @@
   if (ai) { try { ai.resume(); } catch (e) { /* stays on the built-in brain */ } }
   let generating = null; // { stop } while a reply is being written
   let status = 'idle';
-  const voice = window.ERLY_VOICE.create({ getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getCloud: () => { const c = (window.ERLY_AI_CONFIG || {}).cloudVoice; const vs = store.prefs().vs || {}; return c && c.url && vs.cloudVoice === true ? c : null; /* explicit opt-in only */ }, getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
+  const voice = window.ERLY_VOICE.create({ getNeural: () => { const pr = store.prefs(), N = window.ERLY && ERLY.neuralVoice; return pr.voiceEngine === 'neural' && N && N.ready() ? { engine: N, voice: pr.neuralVoice || 'af_heart' } : null; }, getConsent: () => store.consent('mic'), getVoiceName: l => (store.prefs().voices || {})[l] || '', getCloud: () => { const c = (window.ERLY_AI_CONFIG || {}).cloudVoice; const vs = store.prefs().vs || {}; return c && c.url && vs.cloudVoice === true ? c : null; /* explicit opt-in only */ }, getSettings: () => { const vs = store.prefs().vs || {}; const pr = (vs.prof || {})[lang()]; return pr ? Object.assign({}, vs, { baseRate: pr.rate, basePitch: pr.pitch }) : vs; }, onState: v => setStatus(v.listening ? 'listening' : v.paused ? 'paused' : v.speaking ? 'speaking' : (status === 'thinking' ? 'thinking' : 'idle')) });
   let session = null, paused = false, snoozeUntil = 0, conv = null, inviteOpen = false, draft = null, helpCtx = null, busy = false;
   const lab = { lang: lang(), variant: 'default', ratings: {} };
   const brain = () => ERLY.companion && ERLY.companion.brain;
@@ -118,6 +118,7 @@
               <label><span>${T('Noor’s voice', 'صوت نور')}</span><select id="cmpVoiceSel"></select></label>
               <button type="button" class="btn btn--xs btn--ghost" id="cmpVoiceTry">${ICON('volume')} ${T('Hear it', 'استمع')}</button>
               <p class="muted cmp-small" id="cmpVoiceHint"></p>
+              <div class="cmp__nv" id="cmpNV"></div>
             </div>
             <div class="cmp__attach" id="cmpAttach" hidden></div>
             <div class="cmp__imgs" id="cmpImgs" hidden aria-live="polite"></div>
@@ -514,6 +515,15 @@
       sayHello();
     });
     $('#cmpVoiceTry').addEventListener('click', sayHello);
+    renderNV();
+    $('#cmpNV').addEventListener('click', async e => {
+      const b = e.target.closest('[data-nv]'); if (!b) return; const N = ERLY.neuralVoice; if (!N) return;
+      if (b.dataset.nv === 'load') { b.disabled = true; try { await N.load(); store.setPref('voiceEngine', 'neural'); announce(T('Natural voices are ready on this device.', 'الأصوات الطبيعية جاهزة على هذا الجهاز.')); } catch (er) { announce(T('The natural voices could not be downloaded. Your device voices still work.', 'تعذر تنزيل الأصوات الطبيعية.')); } renderNV(); }
+      if (b.dataset.nv === 'try') { const id = $('#cmpNVSel').value; store.setPref('neuralVoice', id); store.setPref('voiceEngine', 'neural'); voice.speak(T(`Hi, I'm Noor. This is the voice called ${N.voice(id).name}. A projectile launched at 20 metres per second at 45 degrees lands about 40.8 metres away.`, ''), { lang: 'en', neuralVoice: id }); }
+      if (b.dataset.nv === 'system') { store.setPref('voiceEngine', 'system'); renderNV(); announce(T('Using the device voices.', 'استخدام أصوات الجهاز.')); }
+      if (b.dataset.nv === 'neural') { store.setPref('voiceEngine', 'neural'); renderNV(); }
+    });
+    $('#cmpNV').addEventListener('change', e => { if (e.target.id === 'cmpNVSel') { store.setPref('neuralVoice', e.target.value); store.setPref('voiceEngine', 'neural'); } });
     $('#cmpPause').addEventListener('click', () => { const s = voice.state(); if (s.paused) voice.resume(); else voice.pause(); });
     $('#cmpRepeat').addEventListener('click', () => { if (lastSpoken) speak(lastSpoken, true); });
     $('#cmpSkip').addEventListener('click', () => voice.skip());
@@ -687,6 +697,23 @@
       requestAnimationFrame(top); setTimeout(top, 450);
     });
   }
+  // v18: natural neural voices (Kokoro-82M) that run on this device after one download
+  function renderNV() {
+    const box = $('#cmpNV'), N = window.ERLY && ERLY.neuralVoice; if (!box || !N) return;
+    if (!N.supported()) { box.innerHTML = ''; return; }
+    const st = N.status(), pr = store.prefs(), on = pr.voiceEngine === 'neural';
+    if (!N.ready()) {
+      box.innerHTML = `<b>${T('Natural voices (on this device)', 'أصوات طبيعية (على هذا الجهاز)')}</b><p class="muted cmp-small">${T('A neural voice model (Kokoro-82M, open licence) — far more natural than the device voices. One download of about 92 MB from Hugging Face’s model hosting, then it runs on this device: nothing you or Noor say is sent anywhere to be spoken. English only; a strong device helps.', 'نموذج صوت عصبي يعمل على جهازك بعد تنزيل واحد (~٩٢ ميغابايت). الإنجليزية فقط.')}</p>${st.status === 'loading' ? `<div class="cmp__nvbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(st.progress * 100)}"><i style="width:${Math.round(st.progress * 100)}%"></i></div><small>${T('Downloading', 'جارٍ التنزيل')} ${Math.round(st.progress * 100)}%</small>` : `<button type="button" class="btn btn--xs btn--accent" data-nv="load">${T('Download natural voices', 'نزّل الأصوات الطبيعية')}</button>${st.status === 'error' ? `<small class="muted"> ${T('Last try failed — check the connection.', 'فشلت المحاولة الأخيرة.')}</small>` : ''}`}`;
+      return;
+    }
+    const groups = {}; N.VOICES.forEach(v => { const k = `${v.accent} · ${v.gender}`; (groups[k] = groups[k] || []).push(v); });
+    const cur = pr.neuralVoice || 'af_heart';
+    box.innerHTML = `<b>${T('Natural voices (on this device)', 'أصوات طبيعية')}</b> <span class="cmp__nvon">${on ? T('in use', 'قيد الاستخدام') : ''}</span>
+      <label class="cmp__nvl"><span>${T('Voice', 'الصوت')}</span><select id="cmpNVSel">${Object.entries(groups).map(([k, vs]) => `<optgroup label="${esc(k)}">${vs.map(v => `<option value="${v.id}" ${v.id === cur ? 'selected' : ''}>${esc(v.name)}${N.RECOMMENDED.includes(v.id) ? ' ★' : ''}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <div class="ccard__btns"><button type="button" class="btn btn--xs btn--ghost" data-nv="try">${ICON('volume')} ${T('Preview', 'معاينة')}</button>${on ? `<button type="button" class="btn btn--xs btn--quiet" data-nv="system">${T('Use device voices instead', 'استخدم أصوات الجهاز')}</button>` : `<button type="button" class="btn btn--xs btn--accent" data-nv="neural">${T('Use natural voice', 'استخدم الصوت الطبيعي')}</button>`}</div>
+      <small class="muted cmp-small">${T('★ = highest-rated in the model card. Labels (accent, female/male) are the model card’s. Arabic replies use the device voices.', '★ = الأعلى تقييماً.')}</small>`;
+  }
+  if (window.ERLY && ERLY.neuralVoice) ERLY.neuralVoice.on(() => renderNV());
   function idleChips() {
     const reading = R.isOpen();
     chipRow([

@@ -158,7 +158,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   for (const q of ['How does a Pratt truss bridge carry load?', 'Explain supply and demand and market equilibrium', 'How does merge sort work?']) {
     await ask(q);
     assert.equal(await s.locator('.cvoffer').count(), 0, 'no “would you like a visual?” after an ordinary question: ' + q);
-    assert.equal(await s.locator('.vz').count(), 0, 'and nothing opens on its own');
+    // v18 visual-first chat: a visual may appear on its own — always inside the conversation, never as an overlay
+    assert.equal(await s.locator('.vz:not(.vz--inline)').count(), 0, 'nothing pops up outside the chat');
+    await s.evaluate(() => { ERLY.companion.tools.visual.close(); window.ERLY_LAB && ERLY_LAB.close(); });
   }
   await ask('Draw a diagram of how a Pratt truss bridge carries load');
   assert.equal(await s.locator('.vz.is-in').count(), 1, 'an explicit request creates the visual directly');
@@ -192,12 +194,12 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await ask('set the demand intercept a to 15');
   assert.match(await s.locator('.cmsg--ai').last().textContent(), /Set .*15|allowed range/, 'parameter follow-up');
   await s.screenshot({ path: process.env.SHOT || '/tmp/vspec-chat.png' });
-  // opt-in: with “Suggest visuals” on, the old consent offer comes back (and still never auto-opens)
-  await s.evaluate(() => { ERLY.companion.tools.visual.close(); const st = JSON.parse(localStorage.getItem('erly-companion-v1')); st.prefs.vs = Object.assign(st.prefs.vs || {}, { suggestVisuals: true }); localStorage.setItem('erly-companion-v1', JSON.stringify(st)); });
+  // Settings → Visuals in chat → “Offer first”: the consent offer comes back (and still never auto-opens)
+  await s.evaluate(() => { ERLY.companion.tools.visual.close(); const st = JSON.parse(localStorage.getItem('erly-companion-v1')); st.prefs.vs = Object.assign(st.prefs.vs || {}, { visualMode: 'ask' }); localStorage.setItem('erly-companion-v1', JSON.stringify(st)); });
   await s.reload(); await s.waitForTimeout(600); await s.click('.cmp-launch'); await s.waitForTimeout(900);
   assert.ok(await s.locator('.cmsg--restored').count() > 0, 'the conversation is restored after a reload in the same tab');
   await ask('How does binary search work?');
-  assert.equal(await s.locator('.cvoffer').count(), 1, 'Suggest visuals ON: a visual is offered');
+  assert.equal(await s.locator('.cvoffer').count(), 1, 'Offer first: a visual is offered');
   assert.equal(await s.locator('.vz').count(), 0, 'but not opened');
   await ask('no thanks'); await s.waitForTimeout(300);
   assert.equal(await s.locator('.vz').count(), 0, 'a typed “no” declines');

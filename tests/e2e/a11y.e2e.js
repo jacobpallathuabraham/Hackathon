@@ -50,8 +50,8 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   // Learning → Noor's instructions really change
   await p.click('[data-tab="learning"]');
   await p.click('.a11y__row:has([data-k="learn.steps"])'); await p.click('[data-seg="learn.dense"][data-v="light"]');
-  await p.click('.a11y__row:has([data-k="suggestVisuals"])');
-  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('erly-companion-v1')).prefs.vs.suggestVisuals), true, 'visual suggestions preference reaches Noor');
+  await p.click('.a11y__row:has([data-k="autoVisuals"])');
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('erly-companion-v1')).prefs.vs.visualMode), 'off', 'turning automatic visuals off reaches Noor');
   // persistence across reload and pages; a tab click never resets anything
   await p.reload(); await p.waitForTimeout(500);
   const after = await cls();

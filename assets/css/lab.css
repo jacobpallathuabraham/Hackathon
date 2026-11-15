@@ -6,6 +6,7 @@
   box-shadow: 0 30px 80px -30px rgba(10, 12, 30, .55); overflow: hidden; font-family: var(--f-body, system-ui);
   opacity: 0; transform: translateY(12px) scale(.985); transition: opacity .3s ease, transform .42s cubic-bezier(.2, .8, .2, 1); }
 .lab.is-in { opacity: 1; transform: none; }
+.lab[hidden] { display: none !important; } .lab:not(.is-in):not(.lab--inline) { pointer-events: none; }
 [data-theme="dark"] .lab { --lab-bg: #0f1424; --lab-panel: #161c30; --lab-ink: #e8ecf6; --lab-mut: #9aa4bd; --lab-line: #273049; --lab-acc: #7dd3fc; --lab-acc-ink: #06121f; --lab-soft: #1c2742; }
 /* beside Noor on wide screens, so the chat stays usable */
 @media (min-width: 1101px) { html.cmp-on .lab:not(.is-max):not(.lab--inline) { inset-inline-end: calc(min(580px, 100vw - 24px) + 30px); } }
