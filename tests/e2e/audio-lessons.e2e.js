@@ -24,7 +24,7 @@ const MOCK = () => { window.__said = []; const synth = { getVoices: () => [{ nam
   const topics = Array.from({ length: 50 }, (_, k) => all[Math.floor(k * all.length / 50)]); // evenly across every discipline and level
   assert.equal(topics.length, 50);
   if (!process.env.AL_PLAYER_ONLY) { // AL_PLAYER_ONLY=1 runs just the player checks (one lesson), e.g. while the encyclopedia is rate-limiting
-  const lessonRows = [];
+  var lessonRows = [];
   for (const topic of topics) {
     let r; for (let attempt = 0; attempt < 3; attempt++) { r = await p.evaluate(async topic => { try { const s = await ERLY.audioLesson.compose(topic, { level: 'school', depth: 'standard', minutes: 4 }); if (!s) return ERLY.audioLesson.compose.lastError ? { busy: ERLY.audioLesson.compose.lastError } : { none: true }; const art = s.sourceUrl ? await ERLY.audioLesson.wikiArticle(s.title, 'en') : null; const src = art ? art.sections.map(x => x.text).join(' ').replace(/\s+/g, ' ') : ''; const teach = s.lines.filter(l => l.s === 'A' && l.src !== 'model').map(l => l.t).filter(t => !/^(Welcome to your ERLY audio lesson|That’s the lesson|Quick check|The model is open)/.test(t)); const quoted = teach.filter(t => src.includes(t.replace(/\s+/g, ' ').trim())).length; return { title: s.title, chapters: s.lines.filter(l => l.ch).length, lines: s.lines.filter(l => l.t).length, teach: teach.length, quoted, url: s.sourceUrl || null, words: s.words || 0 }; } catch (e) { return { err: e.message }; } }, topic); if (!r.busy) break; await p.waitForTimeout(15000); } // the API asked us to slow down: wait, not count it as “no source”
     lessonRows.push(Object.assign({ topic }, r)); await p.waitForTimeout(1500); // polite to the Wikipedia API
@@ -88,7 +88,7 @@ const MOCK = () => { window.__said = []; const synth = { getVoices: () => [{ nam
   await b.close();
   for (const [n, r] of results) console.log((r === 'PASS' ? '✓ ' : '✗ ') + n + (r === 'PASS' ? '' : ' — ' + r));
   if (errors.length) console.log('page errors:', errors.slice(0, 5));
-  require('node:fs').writeFileSync(require('node:path').join(__dirname, '..', '..', 'docs', 'bench', 'audio-lessons-50.json'), JSON.stringify(lessonRows, null, 1));
+  if (!process.env.AL_PLAYER_ONLY) require('node:fs').writeFileSync(require('node:path').join(__dirname, '..', '..', 'docs', 'bench', 'audio-lessons-50.json'), JSON.stringify(lessonRows, null, 1));
   const fail = results.filter(r => r[1] !== 'PASS').length;
   console.log(`\n${results.length - fail}/${results.length} passed`);
   process.exit(fail || errors.length ? 1 : 0);
