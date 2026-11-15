@@ -176,7 +176,7 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
     const words = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
     const stem = w => w.replace(/(ies|es|s)$/, '').slice(0, 6), keys = words.filter(w => !/^(with|from|over|under|into|their|that|this|about|between|types|basics|introduction)$/.test(w)).map(stem);
     const headQ = String(q).split(/\s*(?::|\s[—–-]\s)\s*/)[0], headKeys = headQ !== q ? headQ.toLowerCase().split(/\W+/).filter(w => w.length > 3).map(stem) : [];
-    const qual = h => { const m = h.title.match(/\(([^)]+)\)/); return m && !m[1].toLowerCase().split(/\W+/).filter(w => w.length > 3).every(w => q.toLowerCase().includes(w.slice(0, 5))) ? 3 : 0; }; /* 'Rotation operator (quantum mechanics)' is a specialist page unless the topic says so */
+    const qual = h => { const m = h.title.match(/\(([^)]+)\)/); return m && !m[1].toLowerCase().split(/\W+/).filter(w => w.length > 3 && !/^(device|instrument|tool|unit|physics|chemistry|biology|mathematics|science|process|concept|theory|law|equation)$/.test(w)).every(w => q.toLowerCase().includes(w.slice(0, 5))) ? 3 : 0; }; /* 'Rotation operator (quantum mechanics)' is a specialist page unless the topic says so */
     const score = h => keys.filter(k => h.title.toLowerCase().includes(k)).length * 2 + keys.filter(k => String(h.snippet || '').toLowerCase().includes(k)).length - qual(h);
     // try the best-matching hits in turn; skip disambiguation pages, lists and stubs (too little to teach from)
     const ranked = hits.slice().sort((a, b) => score(b) - score(a)).filter(h => !/^(list of|index of|outline of)\b/i.test(h.title) && !/\(disambiguation\)/i.test(h.title)).slice(0, 3);

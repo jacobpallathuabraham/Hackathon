@@ -2,6 +2,7 @@
 // they are not special-cased anywhere in the lesson code. For each: the lesson is about the requested topic, has
 // chapters, and the hosts' teaching sentences are quoted from the named source (nothing invented). Then the player:
 // play/pause, seek, chapter jump, speed, revision/detailed/continue versions, "ask Noor", requested from normal chat.
+//   AL_PLAYER_ONLY=1 skips the 50-topic sweep and runs only the player checks.
 //   python3 -m http.server 8765 &   then   NODE_PATH=$(npm root -g) node tests/e2e/audio-lessons.e2e.js
 'use strict';
 const assert = require('node:assert/strict');
@@ -22,6 +23,7 @@ const MOCK = () => { window.__said = []; const synth = { getVoices: () => [{ nam
   const all = C.list.map(c => c.concept.replace(/\s*\(.*?\)\s*/g, ' ').trim()).filter((t, i, A) => A.indexOf(t) === i);
   const topics = Array.from({ length: 50 }, (_, k) => all[Math.floor(k * all.length / 50)]); // evenly across every discipline and level
   assert.equal(topics.length, 50);
+  if (!process.env.AL_PLAYER_ONLY) { // AL_PLAYER_ONLY=1 runs just the player checks (one lesson), e.g. while the encyclopedia is rate-limiting
   const lessonRows = [];
   for (const topic of topics) {
     let r; for (let attempt = 0; attempt < 3; attempt++) { r = await p.evaluate(async topic => { try { const s = await ERLY.audioLesson.compose(topic, { level: 'school', depth: 'standard', minutes: 4 }); if (!s) return ERLY.audioLesson.compose.lastError ? { busy: ERLY.audioLesson.compose.lastError } : { none: true }; const art = s.sourceUrl ? await ERLY.audioLesson.wikiArticle(s.title, 'en') : null; const src = art ? art.sections.map(x => x.text).join(' ').replace(/\s+/g, ' ') : ''; const teach = s.lines.filter(l => l.s === 'A' && l.src !== 'model').map(l => l.t).filter(t => !/^(Welcome to your ERLY audio lesson|That’s the lesson|Quick check|The model is open)/.test(t)); const quoted = teach.filter(t => src.includes(t.replace(/\s+/g, ' ').trim())).length; return { title: s.title, chapters: s.lines.filter(l => l.ch).length, lines: s.lines.filter(l => l.t).length, teach: teach.length, quoted, url: s.sourceUrl || null, words: s.words || 0 }; } catch (e) { return { err: e.message }; } }, topic); if (!r.busy) break; await p.waitForTimeout(15000); } // the API asked us to slow down: wait, not count it as “no source”
@@ -45,6 +47,7 @@ const MOCK = () => { window.__said = []; const synth = { getVoices: () => [{ nam
     console.log(`teaching sentences quoted verbatim from the source: ${q}/${tot}`);
     assert.ok(q / tot >= 0.97, `${q}/${tot}`);
   });
+  } // end of the 50-topic part
 
   await p.click('.cmp-launch'); await p.waitForTimeout(600);
   await check('asked in normal chat: “Create an audio lesson about rotational mechanics” opens a real lesson', async () => {
