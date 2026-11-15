@@ -4,51 +4,45 @@
   "title": "Projectile motion",
   "chapters": 7,
   "lines": 29,
-  "teach": 15,
+  "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Projectile_motion",
   "words": 496
  },
  {
   "topic": "Connected bodies over a massive pulley",
-  "title": "Ultimate Fighting Championship",
-  "chapters": 7,
-  "lines": 26,
-  "teach": 12,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Ultimate_Fighting_Championship",
-  "words": 483
+  "none": true
  },
  {
   "topic": "Collisions and momentum",
-  "err": "rate limited"
+  "title": "Collision",
+  "chapters": 6,
+  "lines": 22,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Collision",
+  "words": 322
  },
  {
   "topic": "Planetary orbits",
-  "title": "Kepler's laws of planetary motion",
+  "title": "Orbit",
   "chapters": 7,
-  "lines": 29,
-  "teach": 15,
-  "quoted": 9,
-  "url": "https://en.wikipedia.org/wiki/Kepler's_laws_of_planetary_motion",
-  "words": 425
+  "lines": 30,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Orbit",
+  "words": 451
  },
  {
   "topic": "Electric field of two charges",
-  "title": "Electric field",
-  "chapters": 7,
-  "lines": 31,
-  "teach": 16,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Electric_field",
-  "words": 507
+  "err": "rate limited"
  },
  {
   "topic": "Magnetic field of a wire",
   "title": "Magnetic field",
   "chapters": 7,
   "lines": 28,
-  "teach": 15,
+  "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Magnetic_field",
   "words": 491
@@ -58,7 +52,7 @@
   "title": "Snell's law",
   "chapters": 7,
   "lines": 26,
-  "teach": 12,
+  "teach": 9,
   "quoted": 9,
   "url": "https://en.wikipedia.org/wiki/Snell's_law",
   "words": 502
@@ -68,14 +62,20 @@
   "title": "Ideal gas",
   "chapters": 6,
   "lines": 28,
-  "teach": 14,
+  "teach": 8,
   "quoted": 8,
   "url": "https://en.wikipedia.org/wiki/Ideal_gas",
   "words": 510
  },
  {
   "topic": "Photoelectric effect",
-  "none": true
+  "title": "Photoelectric effect",
+  "chapters": 6,
+  "lines": 22,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Photoelectric_effect",
+  "words": 402
  },
  {
   "topic": "Atomic orbitals",
@@ -109,7 +109,13 @@
  },
  {
   "topic": "E2 elimination",
-  "none": true
+  "title": "Elimination reaction",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Elimination_reaction",
+  "words": 428
  },
  {
   "topic": "Periodic trends",
@@ -136,14 +142,20 @@
   "title": "Covariant derivative",
   "chapters": 7,
   "lines": 29,
-  "teach": 15,
+  "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Covariant_derivative",
   "words": 528
  },
  {
   "topic": "Limits",
-  "none": true
+  "title": "Limit",
+  "chapters": 2,
+  "lines": 4,
+  "teach": 0,
+  "quoted": 0,
+  "url": "https://en.wikipedia.org/wiki/Limit",
+  "words": 44
  },
  {
   "topic": "Systems of equations",
@@ -177,7 +189,13 @@
  },
  {
   "topic": "Mean and standard deviation",
-  "none": true
+  "title": "Standard deviation",
+  "chapters": 6,
+  "lines": 23,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Standard_deviation",
+  "words": 437
  },
  {
   "topic": "Normal distribution",
@@ -204,7 +222,7 @@
   "title": "Frequency modulation",
   "chapters": 7,
   "lines": 29,
-  "teach": 16,
+  "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Frequency_modulation",
   "words": 442
@@ -221,7 +239,13 @@
  },
  {
   "topic": "Beam bending",
-  "none": true
+  "title": "Bending",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Bending",
+  "words": 380
  },
  {
   "topic": "Hydraulic press",
@@ -235,27 +259,27 @@
  },
  {
   "topic": "Solar photovoltaic cell",
-  "title": "Photovoltaic system",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Photovoltaic_system",
-  "words": 406
+  "err": "rate limited"
  },
  {
   "topic": "Sorting algorithms",
-  "none": true
+  "title": "Sorting algorithm",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Sorting_algorithm",
+  "words": 352
  },
  {
   "topic": "Linear transformations",
-  "title": "Linear map",
+  "title": "Linear fractional transformation",
   "chapters": 6,
-  "lines": 22,
+  "lines": 23,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Linear_map",
-  "words": 379
+  "url": "https://en.wikipedia.org/wiki/Linear_fractional_transformation",
+  "words": 445
  },
  {
   "topic": "Anatomy of the heart",
@@ -279,7 +303,13 @@
  },
  {
   "topic": "Nephron function",
-  "none": true
+  "title": "Nephron",
+  "chapters": 6,
+  "lines": 23,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Nephron",
+  "words": 302
  },
  {
   "topic": "Enzyme kinetics",
@@ -293,13 +323,13 @@
  },
  {
   "topic": "Animal cell structure",
-  "title": "Animal",
+  "title": "Cell physiology",
   "chapters": 6,
-  "lines": 20,
-  "teach": 9,
-  "quoted": 9,
-  "url": "https://en.wikipedia.org/wiki/Animal",
-  "words": 313
+  "lines": 22,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Cell_physiology",
+  "words": 266
  },
  {
   "topic": "Protein synthesis",
@@ -313,17 +343,23 @@
  },
  {
   "topic": "Natural selection",
-  "none": true
- },
- {
-  "topic": "Balanced diet",
-  "title": "Healthy diet",
+  "title": "Natural selection",
   "chapters": 6,
   "lines": 21,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Healthy_diet",
-  "words": 465
+  "url": "https://en.wikipedia.org/wiki/Natural_selection",
+  "words": 398
+ },
+ {
+  "topic": "Balanced diet",
+  "title": "Diet (nutrition)",
+  "chapters": 6,
+  "lines": 22,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Diet_(nutrition)",
+  "words": 313
  },
  {
   "topic": "Double-entry bookkeeping",
@@ -347,7 +383,13 @@
  },
  {
   "topic": "Net present value",
-  "none": true
+  "title": "Net present value",
+  "chapters": 6,
+  "lines": 22,
+  "teach": 9,
+  "quoted": 9,
+  "url": "https://en.wikipedia.org/wiki/Net_present_value",
+  "words": 340
  },
  {
   "topic": "SWOT analysis",
@@ -381,7 +423,13 @@
  },
  {
   "topic": "Parts of speech",
-  "none": true
+  "title": "Part of speech",
+  "chapters": 6,
+  "lines": 20,
+  "teach": 8,
+  "quoted": 8,
+  "url": "https://en.wikipedia.org/wiki/Part_of_speech",
+  "words": 449
  },
  {
   "topic": "Elements of a contract",
@@ -415,10 +463,22 @@
  },
  {
   "topic": "Types of bridges",
-  "none": true
+  "title": "List of bridge types",
+  "chapters": 2,
+  "lines": 4,
+  "teach": 0,
+  "quoted": 0,
+  "url": "https://en.wikipedia.org/wiki/List_of_bridge_types",
+  "words": 53
  },
  {
   "topic": "Surfaces and gradients",
-  "none": true
+  "title": "Surface gradient",
+  "chapters": 2,
+  "lines": 6,
+  "teach": 2,
+  "quoted": 2,
+  "url": "https://en.wikipedia.org/wiki/Surface_gradient",
+  "words": 77
  }
 ]

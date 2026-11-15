@@ -1,0 +1,361 @@
+{
+ "summary": {
+  "date": "2026-11-15T06:59:50.827Z",
+  "source": "Teklia/IAM-line test split",
+  "sampled": 9,
+  "rowsInSplit": 2915,
+  "step": 19,
+  "modelLoadMs": 4731,
+  "line": {
+   "trocr": {
+    "cer": 0.049744877428493255,
+    "wer": 0.10258630258630258,
+    "rawCer": 0.0822670445690931,
+    "ms": 2152.4444444444443
+   },
+   "tess": {
+    "cer": 0.4306324851495533,
+    "wer": 0.8677350427350428,
+    "rawCer": 0.48427052278446703,
+    "ms": 145.88888888888889
+   }
+  },
+  "page": {
+   "n": 3,
+   "segmentedRight": 3,
+   "trocr": {
+    "cer": 0.07483685058055767,
+    "wer": 0.13195402298850575
+   },
+   "tess": {
+    "cer": 0.34237561432474967,
+    "wer": 0.9238505747126436
+   }
+  },
+  "tools": [
+   {
+    "mode": "dim",
+    "n": 3,
+    "before": 0.06127637935418256,
+    "after": 0.0689888973641834
+   },
+   {
+    "mode": "lowcontrast",
+    "n": 3,
+    "before": 0.06750572082379862,
+    "after": 0.053394355453852016
+   },
+   {
+    "mode": "noise",
+    "n": 3,
+    "before": 0.6227362112858739,
+    "after": 0.07771845071616239
+   }
+  ],
+  "calibration": [
+   {
+    "band": "80–100%",
+    "n": 6,
+    "cer": 0.019230769230769232,
+    "wer": 0.03333333333333333
+   },
+   {
+    "band": "60–79%",
+    "n": 3,
+    "cer": 0.1107730938239413,
+    "wer": 0.24109224109224106
+   },
+   {
+    "band": "0–59%",
+    "n": 0,
+    "cer": null,
+    "wer": null
+   }
+  ],
+  "errors": []
+ },
+ "lines": [
+  {
+   "file": "line000.png",
+   "ref": "assuredness \" Bella Bella Marie \" ( Parlophone ) , a lively song that changes tempo mid-way .",
+   "trocr": {
+    "text": "assurances. \" Bella Bella Marie \" ( ( Arlaplane ), a lively song that changes tempo midway.",
+    "conf": 70,
+    "ms": 3031,
+    "cer": 0.1111111111111111,
+    "wer": 0.3076923076923077,
+    "rawCer": 0.1724137931034483
+   },
+   "tess": {
+    "text": "sssuredness Bella Bella Marie” ( arlophone ), o lively song thal change ; tempo mid-way.",
+    "conf": 69,
+    "ms": 276,
+    "cer": 0.06172839506172839,
+    "wer": 0.38461538461538464,
+    "rawCer": 0.10344827586206896
+   }
+  },
+  {
+   "file": "line001.png",
+   "ref": "will be with Sir Roy Welensky the Premier of the Federation",
+   "trocr": {
+    "text": "will be with Sir Roy DeLaysky the Premier of the FCder actions",
+    "conf": 61,
+    "ms": 2511,
+    "cer": 0.11864406779661017,
+    "wer": 0.2727272727272727,
+    "rawCer": 0.13559322033898305
+   },
+   "tess": {
+    "text": "vr Uf le sth Lr hoy wedes) shy Ue (rewier oe | Hey Fe der atlo,",
+    "conf": 47,
+    "ms": 200,
+    "cer": 0.4406779661016949,
+    "wer": 1,
+    "rawCer": 0.5084745762711864
+   }
+  },
+  {
+   "file": "line002.png",
+   "ref": "to the European Common Market .",
+   "trocr": {
+    "text": "to the European Common Market",
+    "conf": 99,
+    "ms": 1941,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.03333333333333333
+   },
+   "tess": {
+    "text": "bs bo Cav opeon Casi ov) Alii d",
+    "conf": 23,
+    "ms": 100,
+    "cer": 0.7241379310344828,
+    "wer": 1,
+    "rawCer": 0.7666666666666667
+   }
+  },
+  {
+   "file": "line003.png",
+   "ref": "and who is now being pluckily convivial",
+   "trocr": {
+    "text": "and who is now being pluckily convicted",
+    "conf": 76,
+    "ms": 1935,
+    "cer": 0.10256410256410256,
+    "wer": 0.14285714285714285,
+    "rawCer": 0.10256410256410256
+   },
+   "tess": {
+    "text": "awe WNbho I AoW beitg foCuckity car eric!",
+    "conf": 24,
+    "ms": 183,
+    "cer": 0.46153846153846156,
+    "wer": 1,
+    "rawCer": 0.5384615384615384
+   }
+  },
+  {
+   "file": "line004.png",
+   "ref": "been able to explain the textual movements by",
+   "trocr": {
+    "text": "been able to explain. the textual movements by",
+    "conf": 87,
+    "ms": 1998,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.022222222222222223
+   },
+   "tess": {
+    "text": "been ole bo expla Hu Jex hal wo ye ments by",
+    "conf": 45,
+    "ms": 168,
+    "cer": 0.3111111111111111,
+    "wer": 1,
+    "rawCer": 0.3333333333333333
+   }
+  },
+  {
+   "file": "line005.png",
+   "ref": "it is now used to mark a paragraph ending . Frequently",
+   "trocr": {
+    "text": "it is now used to more a paragraph excluding frequently",
+    "conf": 80,
+    "ms": 2243,
+    "cer": 0.11538461538461539,
+    "wer": 0.2,
+    "rawCer": 0.1509433962264151
+   },
+   "tess": {
+    "text": "NAS (OW LRA KO Wa 0 gaaAePA aig Tp",
+    "conf": 26,
+    "ms": 159,
+    "cer": 0.6346153846153846,
+    "wer": 1,
+    "rawCer": 0.7547169811320755
+   }
+  },
+  {
+   "file": "line006.png",
+   "ref": "they are in modern books .",
+   "trocr": {
+    "text": "they are in modern books",
+    "conf": 99,
+    "ms": 1878,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.04
+   },
+   "tess": {
+    "text": "Wey OE\nwo hese books",
+    "conf": 43,
+    "ms": 77,
+    "cer": 0.4583333333333333,
+    "wer": 0.8,
+    "rawCer": 0.52
+   }
+  },
+  {
+   "file": "line007.png",
+   "ref": "cannot think of an author , Mark for example ,",
+   "trocr": {
+    "text": "cannot think of an author, Mark for example,",
+    "conf": 100,
+    "ms": 2061,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0
+   },
+   "tess": {
+    "text": "cwnmol Hank of an autor, Wark for Lxanplt,",
+    "conf": 51,
+    "ms": 110,
+    "cer": 0.23809523809523808,
+    "wer": 0.625,
+    "rawCer": 0.25
+   }
+  },
+  {
+   "file": "line008.png",
+   "ref": "word of God .",
+   "trocr": {
+    "text": "word of God",
+    "conf": 96,
+    "ms": 1774,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.08333333333333333
+   },
+   "tess": {
+    "text": "Sag or Ged",
+    "conf": 33,
+    "ms": 40,
+    "cer": 0.5454545454545454,
+    "wer": 1,
+    "rawCer": 0.5833333333333334
+   }
+  }
+ ],
+ "pages": [
+  {
+   "files": [
+    "line000.png",
+    "line001.png",
+    "line002.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 81,
+    "cer": 0.15204678362573099,
+    "wer": 0.27586206896551724,
+    "rawCer": 0.1797752808988764
+   },
+   "tess": {
+    "cer": 0.3157894736842105,
+    "wer": 0.896551724137931,
+    "rawCer": 0.33707865168539325
+   },
+   "tools": {
+    "dim": {
+     "before": 0.14035087719298245,
+     "after": 0.13450292397660818
+    },
+    "lowcontrast": {
+     "before": 0.12280701754385964,
+     "after": 0.08771929824561403
+    },
+    "noise": {
+     "before": 0.9473684210526315,
+     "after": 0.14619883040935672
+    }
+   }
+  },
+  {
+   "files": [
+    "line003.png",
+    "line004.png",
+    "line005.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 92,
+    "cer": 0.07246376811594203,
+    "wer": 0.12,
+    "rawCer": 0.07194244604316546
+   },
+   "tess": {
+    "cer": 0.3695652173913043,
+    "wer": 1,
+    "rawCer": 0.4172661870503597
+   },
+   "tools": {
+    "dim": {
+     "before": 0.043478260869565216,
+     "after": 0.07246376811594203
+    },
+    "lowcontrast": {
+     "before": 0.07971014492753623,
+     "after": 0.07246376811594203
+    },
+    "noise": {
+     "before": 0.2246376811594203,
+     "after": 0.08695652173913043
+    }
+   }
+  },
+  {
+   "files": [
+    "line006.png",
+    "line007.png",
+    "line008.png"
+   ],
+   "nLines": 3,
+   "trocr": {
+    "conf": 99,
+    "cer": 0,
+    "wer": 0,
+    "rawCer": 0.024096385542168676
+   },
+   "tess": {
+    "cer": 0.34177215189873417,
+    "wer": 0.875,
+    "rawCer": 0.40963855421686746
+   },
+   "tools": {
+    "dim": {
+     "before": 0,
+     "after": 0
+    },
+    "lowcontrast": {
+     "before": 0,
+     "after": 0
+    },
+    "noise": {
+     "before": 0.6962025316455697,
+     "after": 0
+    }
+   }
+  }
+ ],
+ "tools": []
+}

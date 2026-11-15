@@ -171,16 +171,19 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
   async function wikiArticle(topic, lang) {
     const host = `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/w/api.php?origin=*&format=json&`;
     const q = String(topic).replace(/^(an?|the)\s+/i, '').slice(0, 120);
-    const sr = await getJSON(host + 'action=query&list=search&srlimit=3&srsearch=' + encodeURIComponent(q));
+    const sr = await getJSON(host + 'action=query&list=search&srlimit=6&srsearch=' + encodeURIComponent(q));
     const hits = (sr.query && sr.query.search) || []; if (!hits.length) return null;
     const words = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
-    const hit = hits.find(h => words.some(w => h.title.toLowerCase().includes(w))) || hits[0];
+    const stem = w => w.replace(/(ies|es|s)$/, '').slice(0, 6), keys = words.filter(w => !/^(with|from|over|under|into|their|that|this|about|between|types|basics|introduction)$/.test(w)).map(stem);
+    const score = h => keys.filter(k => h.title.toLowerCase().includes(k)).length * 2 + keys.filter(k => String(h.snippet || '').toLowerCase().includes(k)).length;
+    const hit = hits.slice().sort((a, b) => score(b) - score(a))[0];
     const ex = await getJSON(host + 'action=query&prop=extracts&explaintext=1&exsectionformat=wiki&redirects=1&titles=' + encodeURIComponent(hit.title));
     const pg = Object.values((ex.query && ex.query.pages) || {})[0]; if (!pg || !pg.extract) return null;
     const secs = []; let curS = { h: null, text: '' };
     pg.extract.split('\n').forEach(line => { const m = line.match(/^(={2,})\s*(.+?)\s*\1\s*$/); if (m) { secs.push(curS); curS = { h: m[2], level: m[1].length, text: '' }; } else curS.text += line + ' '; });
     secs.push(curS);
-    const relevant = words.length === 0 || words.some(w => (pg.title + ' ' + pg.extract.slice(0, 600)).toLowerCase().includes(w));
+    const lead = (pg.title + ' ' + pg.extract.slice(0, 1500)).toLowerCase(), found = keys.filter(k => lead.includes(k)).length;
+    const relevant = keys.length === 0 || (found >= Math.ceil(keys.length / 2) && keys.some(k => pg.title.toLowerCase().includes(k) || lead.slice(0, 400).includes(k))); // most of the topic's words, not just one
     return { title: pg.title, url: `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, sections: secs.filter(x => x.text.trim().length > 80 && !(x.h && SKIP_SEC.test(x.h))), relevant };
   }
   const sentencesOf = t => (String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+(\s|$)/g) || []).map(x => x.trim()).filter(x => x.length > 25 && x.length < 320 && !/\b(citation needed|isbn|doi)\b/i.test(x));
@@ -204,14 +207,14 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       ss.slice(0, n).forEach((t, q) => { say('A', t); if (q === 0) keyIdeas.push(t); });
       if (ss.length > n && o.level !== 'school') say('B', T('So, in short: ', 'إذن باختصار: ') + firstSentences(ss[0], 1));
     }
-    if (o.lab) { lines.push({ ch: T('Working it out', 'لنحسبها') }); say('B', T('Can we see it with real numbers?', 'هل نراها بأرقام حقيقية؟')); sentencesOf(o.lab).slice(0, 6).forEach(t => say('A', t)); say('A', T('The model is open in the chat — try changing it while you listen.', 'النموذج مفتوح في المحادثة — جرّب تغييره أثناء الاستماع.')); }
+    if (o.lab) { lines.push({ ch: T('Working it out', 'لنحسبها') }); say('B', T('Can we see it with real numbers?', 'هل نراها بأرقام حقيقية؟')); sentencesOf(o.lab).slice(0, 6).forEach(t => say('A', t, { src: 'model' })); /* from ERLY's model of this topic, not the article */ say('A', T('The model is open in the chat — try changing it while you listen.', 'النموذج مفتوح في المحادثة — جرّب تغييره أثناء الاستماع.')); }
     lines.push({ ch: T('Recap and check yourself', 'ملخص واختبر نفسك') });
     say('B', T('Let me try to sum it up.', 'دعيني أحاول أن ألخص.'));
     keyIdeas.slice(0, 3).forEach(t => say('B', firstSentences(t, 1)));
     const checks = keyIdeas.slice(0, 2).map(t => { const m = t.match(/^(.{3,60}?)\s+(is|are|was|were)\s+(.+)$/i); return m ? T(`Quick check: what ${m[2]} ${m[1].replace(/^(the|a|an)\s+/i, '').toLowerCase()}? Pause and answer, then listen again to this chapter.`, 'سؤال سريع: توقف وأجب.') : null; }).filter(Boolean);
     checks.forEach(c => say('A', c));
     say('A', T(`That’s the lesson. Everything we said came from the ${art.title} article on Wikipedia, which is linked on this lesson.`, `هذا هو الدرس. كل ما قيل جاء من مقالة ${art.title} في ويكيبيديا.`));
-    return { title: art.title, source: T(`From the Wikipedia article “${art.title}” (quoted, then arranged into a dialogue)`, `من مقالة ويكيبيديا «${art.title}»`), sourceUrl: art.url, lines, opts: o, nextSkip: used + secs.length, words };
+    return { art, title: art.title, source: T(`From the Wikipedia article “${art.title}” (quoted, then arranged into a dialogue)`, `من مقالة ويكيبيديا «${art.title}»`), sourceUrl: art.url, lines, opts: o, nextSkip: used + secs.length, words };
   }
   const sayL = t => U.aiSays(t, t, { speak: false });
   async function compose(topic, o) {
@@ -226,7 +229,8 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
         if (log && open) { const card = document.createElement('div'); card.className = 'cvis'; log.appendChild(card); L.inline(card); } else L.close(); } } catch (e) { lab = null; }
     const pr = (U.store.prefs() || {}), deviceOnly = U.ai && U.ai.pref && (U.ai.pref() || {}).tier === 'local' && (U.ai.pref() || {}).chosen;
     let art = null;
-    if (pr.research !== 'off' && !deviceOnly) { try { art = await wikiArticle(topic, U.lang()); } catch (e) { art = null; } }
+    compose.lastError = null;
+    if (pr.research !== 'off' && !deviceOnly) { try { art = await wikiArticle(topic, U.lang()); } catch (e) { art = null; compose.lastError = String(e.message || e); } }
     if (U.ai && U.ai.ready()) { const ai = await fromAI(topic + (art ? '' : ''), null, art); if (ai) return Object.assign(ai, { opts: o }); }
     if (art && art.relevant) return fromArticle(art, Object.assign({}, o, { lab }));
     const VZ = ERLY.visuals, want = VZ && VZ.detect(topic || '');
@@ -242,13 +246,14 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
     const clean = topic.replace(/\b(a |an |the )?(university[- ]level|jee advanced|jee main|jee|neet|revision|quick|short|entire|whole|full|detailed|in depth|complete) (lesson |lecture |chapter )?(on |about |of )?/gi, '').replace(/\b(lecture|lesson|chapter) (on|about|of)\b/gi, '').trim() || topic;
     await sayL(T(`Building your audio lesson on “${clean}”…`, `أبني درسك الصوتي عن «${clean}»…`));
     const script = await compose(clean, Object.assign({ level: lvl, depth }, o || {}));
+    if (!script && compose.lastError) { await sayL(T(`The source I build lessons from (Wikipedia) didn’t answer just now (${compose.lastError}), so I won’t make one up. Please try again in a minute.`, 'لم يستجب المصدر الآن، لذا لن أختلق درساً. حاول بعد دقيقة.')); return null; }
     if (!script) { await sayL(T(`I couldn’t find a reliable source for “${clean}”, so I won’t make up a lesson. Try a more specific name for the topic (for example “photosynthesis” or “French Revolution”), or open a reading and ask for a lesson on it.`, 'لم أجد مصدراً موثوقاً، ولن أختلق درساً.')); return null; }
     await sayL(`${T('Here’s your audio lesson', 'إليك درسك الصوتي')}: “${script.title}”. ${script.source}. ${T('Press play whenever you’re ready.', 'اضغط تشغيل عندما تكون جاهزاً.')}`);
     return open(script);
   }
   async function variant(script, kind) { // revision / detailed / continuation of the same lesson
     const o = Object.assign({}, script.opts || {}); if (kind === 'revision') o.depth = 'revision'; if (kind === 'detailed') o.depth = 'detailed'; if (kind === 'continue') o.skip = script.nextSkip || 0;
-    const art = await wikiArticle(script.title, U.lang()).catch(() => null); if (!art) return null;
+    const art = script.art || await wikiArticle(script.title, U.lang()).catch(() => null); if (!art) return null; // the same article the lesson quoted
     const s2 = fromArticle(art, o); if (kind === 'continue' && s2.lines.filter(l => l.s).length < 6) { await sayL(T('That was the whole article — there is nothing more to continue with.', 'انتهت المقالة.')); return null; }
     return open(s2);
   }
