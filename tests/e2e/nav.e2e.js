@@ -18,12 +18,11 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   // student → Growth Plan (through its seedling transition) → Back → Forward → Refresh
   await p.waitForTimeout(800);
   await p.evaluate(() => document.querySelector('a.growth-cta').scrollIntoView()); await p.click('a.growth-cta');
-  await p.waitForURL(/support\.html/, { timeout: 8000 }); await p.waitForSelector('.gv-tabs');
-  await p.click('[data-gvtab="timetable"]');
+  await p.waitForURL(/support\.html/, { timeout: 8000 }); await p.waitForSelector('#growthApp .gx');
   await p.goBack(); await p.waitForURL(/student\.html/); await p.waitForTimeout(600);
   assert.equal(await p.locator('.gw-grow').count(), 0, 'no leftover seedling overlay after Back');
-  await p.goForward(); await p.waitForURL(/support\.html/); await p.waitForSelector('.gv-tabs');
-  await p.reload(); await p.waitForSelector('.gv-tabs');
+  await p.goForward(); await p.waitForURL(/support\.html/); await p.waitForSelector('#growthApp .gx');
+  await p.reload(); await p.waitForSelector('#growthApp .gx');
   assert.match(p.url(), /support\.html/, 'refresh keeps you signed in');
   assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('erly-gplan-v10')).week), 3, 'progress kept through the whole journey');
   // Safari-style restore from memory with the leaving animation still on screen

@@ -1,5 +1,5 @@
 // v10/v12: Learning Games (all 12 played correctly, pause/skip/stop, settings, privacy)
-// and the Growth Plan (timetable, planner, programme, review, progress, strategies, future plan).
+// and a smoke check of the v18 Growth Plan (its full tests are growth-v18.e2e.js).
 //   python3 -m http.server 8765 &   then   NODE_PATH=$(npm root -g) node tests/e2e/v10.e2e.js
 // ERLY_SHOTS=<dir> also saves screenshots.
 'use strict';
@@ -116,88 +116,11 @@ const ORIGIN = new URL(BASE).origin;
   assert.match(await p.textContent('.gm-p__h b'), /Plan It/);
   await p.click('[data-c="stop"]'); await p.click('[data-c="close"]');
 
-  /* ================= Growth Plan ================= */
-  await p.goto(BASE + 'support.html?fast=1');
-  await p.click('[data-next]'); await p.click('[data-area="reading"]'); await p.click('[data-next]');
-  for (let i = 0; i < 4; i++) { const pills = p.locator('.gx-body button:not([data-next])'); if (await pills.count()) await pills.first().click(); await p.click('[data-next]'); }
-  await p.click('[data-startplan]'); await p.waitForSelector('.gv-tabs');
+  /* ================= Growth Plan (v18 rebuild; full coverage in tests/e2e/growth-v18.e2e.js) ================= */
+  await p.goto(BASE + 'support.html'); await p.waitForSelector('#growthApp .gx');
   assert.doesNotMatch(await p.textContent('#growthApp'), /streak/i, 'no streaks anywhere');
-  assert.equal(await p.locator('.gv-tabs [role="tab"]').count(), 7);
-  // timetable
-  await p.click('[data-gvtab="timetable"]');
-  assert.equal(await p.locator('.gv-col').count(), 7, 'Mon–Sun grid');
-  assert.ok(await p.locator('[data-col="mon"] .gv-b--lunch').count(), 'lunch on weekdays');
-  assert.match(await p.textContent('[data-col="sat"]'), /Optional catch-up/);
-  assert.match(await p.textContent('[data-col="sun"]'), /Rest day/);
-  assert.match(await p.textContent('[data-col="mon"] .gv-b'), /08:30/);
-  if (SHOT) await p.waitForTimeout(900); if (SHOT) await p.screenshot({ path: SHOT + '/growth-timetable.png', fullPage: true });
-  await p.click('.gv-set summary');
-  await p.fill('[data-gvtt] [name="start"]', '09:00'); await p.selectOption('[data-gvtt] [name="session"]', '30'); await p.click('[data-gvtt] .gv-btn');
-  assert.match(await p.textContent('[data-col="tue"] .gv-b'), /09:00/, 'start time customised');
-  await p.selectOption('[data-gvfix] [name="day"]', 'mon'); await p.fill('[data-gvfix] [name="from"]', '10:00'); await p.fill('[data-gvfix] [name="to"]', '11:00'); await p.fill('[data-gvfix] [name="label"]', 'Biology lecture'); await p.click('[data-gvfix] .gv-btn');
-  assert.match(await p.textContent('[data-col="mon"] .gv-b--class'), /Biology lecture/, 'a class is placed');
-  // planner (move to Wednesday, which has the Plan It game this week) — evidence is suggested, not auto-ticked
-  await p.click('[data-gvtab="today"]');
-  const wed = await p.evaluate(() => { const d = new Date(); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() + ((2 - k + 7) % 7)); const pad = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); });
-  await p.evaluate(k => { const db = JSON.parse(localStorage.getItem('erly-games-v1')); db.sessions.push({ g: 'plan', at: new Date(k + 'T11:00:00').getTime(), n: 1, ok: 1, mins: 3 }); localStorage.setItem('erly-games-v1', JSON.stringify(db)); const V = JSON.parse(localStorage.getItem('erly-gplan-v10')); V.day = k; localStorage.setItem('erly-gplan-v10', JSON.stringify(V)); }, wed);
-  await p.reload(); await p.waitForSelector('.gv-tabs'); await p.click('[data-gvtab="today"]');
-  const items = p.locator('.gv-e');
-  assert.ok(await items.count() >= 2, 'planned entries for the day');
-  assert.match(await p.textContent('.gv-list'), /You played this game \d+× on this day/, 'real activity is suggested as evidence');
-  assert.equal(await p.locator('.gv-e.is-done').count(), 0, 'but nothing is ticked automatically');
-  await items.nth(0).locator('[data-gv="done"]').first().click();
-  await p.fill('.gv-modal textarea', 'Ordering by what each step needs made sense'); await p.fill('.gv-modal input', 'Use it on my essay');
-  await p.click('.gv-modal [data-m="0"]'); await p.waitForTimeout(300);
-  assert.equal(await p.locator('.gv-e.is-done').count(), 1); assert.match(await p.textContent('.gv-e.is-done'), /Use it on my essay/);
-  await p.locator('.gv-e:not(.is-done)').first().locator('[data-gv="skip"]').click();
-  assert.equal(await p.locator('.gv-e.is-skipped').count(), 1, 'skip without penalty');
-  await p.fill('[data-gvadd] [name="t"]', 'Chemistry problem sheet'); await p.click('[data-gvadd] .gv-btn');
-  assert.match(await p.textContent('.gv-e.is-own'), /Chemistry problem sheet/, 'own work added');
-  await p.locator('.gv-e.is-own [data-gvmins]').selectOption('45');
-  const before = await p.$$eval('.gv-e', els => els.map(e => e.dataset.id));
-  await p.locator('.gv-e').nth(1).locator('[data-gv="up"]').click();
-  const after = await p.$$eval('.gv-e', els => els.map(e => e.dataset.id));
-  assert.deepEqual([after[0], after[1]], [before[1], before[0]], 'rearranged');
-  const n0 = await items.count();
-  await p.locator('.gv-e.is-own [data-gv="tomorrow"]').click();
-  assert.equal(await items.count(), n0 - 1, 'rescheduled to tomorrow');
-  await p.click('[data-gv="next"]'); assert.match(await p.textContent('.gv-list'), /Chemistry problem sheet/, 'and it is there tomorrow');
-  if (SHOT) { await p.click('[data-gv="prev"]'); await p.waitForTimeout(900); await p.screenshot({ path: SHOT + '/growth-planner.png', fullPage: true }); }
-  // six weeks: journey map + weekly cards; weekly review from real answers
-  await p.click('[data-gvtab="programme"]');
-  assert.equal(await p.locator('.gv-j__n').count(), 6); assert.equal(await p.locator('.gv-wk').count(), 6);
-  assert.match(await p.textContent('#gvw4'), /Start-Ramp/);
-  if (SHOT) await p.screenshot({ path: SHOT + '/growth-programme.png', fullPage: true });
-  await p.click('.gv-wk.is-now [data-gv="review"]');
-  await p.click('.gv-review [data-v="4"]');
-  await p.click('.gv-review [data-v="morph"]'); await p.click('.gv-review [data-q="next"]');
-  await p.click('.gv-review [data-v="time"]'); await p.click('.gv-review [data-v="same"]');
-  await p.fill('.gv-review textarea', 'More breaks please'); await p.click('.gv-review [data-q="next"]');
-  const rv = await p.textContent('.gv-review');
-  assert.match(rv, /You completed 1 planned activity/, 'the review quotes real activity');
-  assert.match(rv, /Word parts/); assert.match(rv, /More breaks please/); assert.match(rv, /no AI model and no server/);
-  assert.doesNotMatch(rv, /dyslex|adhd|diagnos|disorder|probab/i);
-  await p.click('.gv-review [data-q="ok"]'); await p.waitForTimeout(300);
-  assert.equal(await p.evaluate(() => ERLY_GPV10.state().week), 2, 'moved on to week 2');
-  await p.click('[data-gv="repeat"]'); assert.equal(await p.evaluate(() => ERLY_GPV10.state().week), 2, 'repeat keeps the week');
-  await p.click('[data-gv="pause"]'); assert.match(await p.textContent('.gv-paused'), /paused/); await p.click('.gv-paused [data-gv="resume"]');
-  // progress from real data
-  await p.click('[data-gvtab="progress"]');
-  assert.match(await p.textContent('.gv-pr__top'), /1\s*activities done/);
-  assert.match(await p.textContent('.gv-pr'), /Ordering by what each step needs/, 'reflections listed');
-  assert.match(await p.textContent('.gv-pr'), /never turns it into a score of ability/);
-  if (SHOT) await p.screenshot({ path: SHOT + '/growth-progress.png', fullPage: true });
-  // strategies → future plan
-  await p.click('[data-gvtab="strategies"]'); await p.click('[data-gvstrat="spacing:helpful"]');
-  await p.click('[data-gvtab="future"]');
-  const fu = await p.textContent('.gv-fu'); assert.match(fu, /Spaced review/); assert.match(fu, /Word parts/, 'strategies kept from the review');
-  // mobile: timetable becomes a day-by-day view
-  await p.setViewportSize({ width: 390, height: 844 });
-  await p.click('[data-gvtab="timetable"]');
-  assert.equal(await p.locator('.gv-col:visible').count(), 1, 'one day at a time on a phone');
-  await p.click('[data-gvday="sun"]'); assert.match(await p.textContent('.gv-col.is-sel'), /Rest day/);
-  const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov <= 1, 'no horizontal scroll at 390px (' + ov + ')');
-  if (SHOT) { await p.click('[data-gvday="mon"]'); await p.waitForTimeout(900); await p.screenshot({ path: SHOT + '/growth-timetable-mobile.png', fullPage: true }); }
+  await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(300);
+  const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov <= 1, 'Growth Plan: no horizontal scroll at 390px (' + ov + ')');
   await p.goto(BASE + 'games.html'); await p.waitForTimeout(500);
   const ov2 = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov2 <= 1, 'games: no horizontal scroll at 390px');
   if (SHOT) await p.screenshot({ path: SHOT + '/games-mobile.png' });

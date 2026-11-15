@@ -10,10 +10,6 @@
   "words": 496
  },
  {
-  "topic": "Connected bodies over a massive pulley",
-  "none": true
- },
- {
   "topic": "Collisions and momentum",
   "title": "Collision",
   "chapters": 6,
@@ -24,198 +20,104 @@
   "words": 322
  },
  {
-  "topic": "Planetary orbits",
-  "title": "Orbit",
+  "topic": "Electric field of two charges",
+  "title": "Electric field",
   "chapters": 7,
-  "lines": 30,
+  "lines": 31,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Orbit",
-  "words": 451
+  "url": "https://en.wikipedia.org/wiki/Electric_field",
+  "words": 507
  },
  {
-  "topic": "Electric field of two charges",
-  "err": "rate limited"
+  "topic": "Two-source interference",
+  "title": "Thin-film interference",
+  "chapters": 6,
+  "lines": 23,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Thin-film_interference",
+  "words": 337
  },
  {
-  "topic": "Magnetic field of a wire",
-  "title": "Magnetic field",
+  "topic": "Radioactive decay",
+  "title": "Radioactive decay",
   "chapters": 7,
   "lines": 28,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Magnetic_field",
-  "words": 491
- },
- {
-  "topic": "Refraction and Snell’s law",
-  "title": "Snell's law",
-  "chapters": 7,
-  "lines": 26,
   "teach": 9,
   "quoted": 9,
-  "url": "https://en.wikipedia.org/wiki/Snell's_law",
-  "words": 502
+  "url": "https://en.wikipedia.org/wiki/Radioactive_decay",
+  "words": 404
  },
  {
-  "topic": "Ideal gas",
-  "title": "Ideal gas",
+  "topic": "Ideal gas law",
+  "title": "Ideal gas law",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 9,
+  "quoted": 9,
+  "url": "https://en.wikipedia.org/wiki/Ideal_gas_law",
+  "words": 449
+ },
+ {
+  "topic": "SN2 mechanism",
+  "title": "SN2 reaction",
   "chapters": 6,
-  "lines": 28,
+  "lines": 24,
   "teach": 8,
   "quoted": 8,
-  "url": "https://en.wikipedia.org/wiki/Ideal_gas",
-  "words": 510
+  "url": "https://en.wikipedia.org/wiki/SN2_reaction",
+  "words": 383
  },
  {
-  "topic": "Photoelectric effect",
-  "title": "Photoelectric effect",
-  "chapters": 6,
-  "lines": 22,
+  "topic": "Raoult’s law and distillation",
+  "title": "Distillation",
+  "chapters": 7,
+  "lines": 27,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Photoelectric_effect",
-  "words": 402
+  "url": "https://en.wikipedia.org/wiki/Distillation",
+  "words": 378
  },
  {
-  "topic": "Atomic orbitals",
-  "title": "Atomic orbital",
-  "chapters": 6,
-  "lines": 21,
+  "topic": "Definite integral",
+  "title": "Integral",
+  "chapters": 7,
+  "lines": 27,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Atomic_orbital",
-  "words": 352
+  "url": "https://en.wikipedia.org/wiki/Integral",
+  "words": 478
  },
  {
-  "topic": "Le Chatelier’s principle",
-  "title": "Le Chatelier's principle",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Le_Chatelier's_principle",
-  "words": 399
- },
- {
-  "topic": "Reaction rate and activation energy",
-  "title": "Activation energy",
-  "chapters": 6,
-  "lines": 20,
-  "teach": 9,
-  "quoted": 9,
-  "url": "https://en.wikipedia.org/wiki/Activation_energy",
-  "words": 410
- },
- {
-  "topic": "E2 elimination",
-  "title": "Elimination reaction",
+  "topic": "Complex roots",
+  "title": "Complex number",
   "chapters": 7,
   "lines": 29,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Elimination_reaction",
+  "url": "https://en.wikipedia.org/wiki/Complex_number",
+  "words": 479
+ },
+ {
+  "topic": "3D solids",
+  "title": "Solid modeling",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Solid_modeling",
+  "words": 427
+ },
+ {
+  "topic": "Arithmetic and geometric series",
+  "title": "Geometric series",
+  "chapters": 7,
+  "lines": 26,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Geometric_series",
   "words": 428
- },
- {
-  "topic": "Periodic trends",
-  "title": "Periodic trends",
-  "chapters": 6,
-  "lines": 23,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Periodic_trends",
-  "words": 408
- },
- {
-  "topic": "Crystal field splitting",
-  "title": "Crystal field theory",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Crystal_field_theory",
-  "words": 457
- },
- {
-  "topic": "Derivative and tangent",
-  "title": "Covariant derivative",
-  "chapters": 7,
-  "lines": 29,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Covariant_derivative",
-  "words": 528
- },
- {
-  "topic": "Limits",
-  "title": "Limit",
-  "chapters": 2,
-  "lines": 4,
-  "teach": 0,
-  "quoted": 0,
-  "url": "https://en.wikipedia.org/wiki/Limit",
-  "words": 44
- },
- {
-  "topic": "Systems of equations",
-  "title": "System of linear equations",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/System_of_linear_equations",
-  "words": 341
- },
- {
-  "topic": "Matrix inverse and determinant",
-  "title": "Jacobian matrix and determinant",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant",
-  "words": 390
- },
- {
-  "topic": "Circle and tangent",
-  "title": "Tangent lines to circles",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Tangent_lines_to_circles",
-  "words": 495
- },
- {
-  "topic": "Mean and standard deviation",
-  "title": "Standard deviation",
-  "chapters": 6,
-  "lines": 23,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Standard_deviation",
-  "words": 437
- },
- {
-  "topic": "Normal distribution",
-  "title": "Normal distribution",
-  "chapters": 6,
-  "lines": 23,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Normal_distribution",
-  "words": 365
- },
- {
-  "topic": "Nodal analysis of a network",
-  "title": "Nodal analysis",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Nodal_analysis",
-  "words": 320
  },
  {
   "topic": "Frequency modulation",
@@ -228,68 +130,34 @@
   "words": 442
  },
  {
-  "topic": "Fourier series",
-  "title": "Fourier series",
+  "topic": "Refrigeration cycle",
+  "title": "Heat pump and refrigeration cycle",
   "chapters": 6,
   "lines": 22,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Fourier_series",
-  "words": 323
+  "url": "https://en.wikipedia.org/wiki/Heat_pump_and_refrigeration_cycle",
+  "words": 427
  },
  {
-  "topic": "Beam bending",
-  "title": "Bending",
+  "topic": "Wind turbine",
+  "title": "Wind turbine",
   "chapters": 6,
-  "lines": 21,
+  "lines": 22,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Bending",
-  "words": 380
- },
- {
-  "topic": "Hydraulic press",
-  "title": "Hydraulic press",
-  "chapters": 4,
-  "lines": 15,
-  "teach": 6,
-  "quoted": 6,
-  "url": "https://en.wikipedia.org/wiki/Hydraulic_press",
-  "words": 181
- },
- {
-  "topic": "Solar photovoltaic cell",
-  "err": "rate limited"
- },
- {
-  "topic": "Sorting algorithms",
-  "title": "Sorting algorithm",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Sorting_algorithm",
-  "words": 352
+  "url": "https://en.wikipedia.org/wiki/Wind_turbine",
+  "words": 355
  },
  {
   "topic": "Linear transformations",
   "title": "Linear fractional transformation",
-  "chapters": 6,
-  "lines": 23,
+  "chapters": 7,
+  "lines": 29,
   "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Linear_fractional_transformation",
-  "words": 445
- },
- {
-  "topic": "Anatomy of the heart",
-  "title": "Anatomy of the human heart",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Anatomy_of_the_human_heart",
-  "words": 378
+  "words": 562
  },
  {
   "topic": "Gas exchange in the alveoli",
@@ -302,34 +170,14 @@
   "words": 405
  },
  {
-  "topic": "Nephron function",
-  "title": "Nephron",
-  "chapters": 6,
-  "lines": 23,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Nephron",
-  "words": 302
- },
- {
   "topic": "Enzyme kinetics",
   "title": "Enzyme kinetics",
-  "chapters": 6,
-  "lines": 22,
+  "chapters": 7,
+  "lines": 27,
   "teach": 10,
   "quoted": 10,
   "url": "https://en.wikipedia.org/wiki/Enzyme_kinetics",
-  "words": 359
- },
- {
-  "topic": "Animal cell structure",
-  "title": "Cell physiology",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Cell_physiology",
-  "words": 266
+  "words": 436
  },
  {
   "topic": "Protein synthesis",
@@ -342,16 +190,6 @@
   "words": 310
  },
  {
-  "topic": "Natural selection",
-  "title": "Natural selection",
-  "chapters": 6,
-  "lines": 21,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Natural_selection",
-  "words": 398
- },
- {
   "topic": "Balanced diet",
   "title": "Diet (nutrition)",
   "chapters": 6,
@@ -362,34 +200,14 @@
   "words": 313
  },
  {
-  "topic": "Double-entry bookkeeping",
-  "title": "Double-entry bookkeeping",
-  "chapters": 6,
-  "lines": 21,
+  "topic": "Supply and demand",
+  "title": "Supply and demand",
+  "chapters": 7,
+  "lines": 30,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Double-entry_bookkeeping",
-  "words": 379
- },
- {
-  "topic": "Price elasticity",
-  "title": "Price elasticity of demand",
-  "chapters": 6,
-  "lines": 23,
-  "teach": 10,
-  "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Price_elasticity_of_demand",
-  "words": 381
- },
- {
-  "topic": "Net present value",
-  "title": "Net present value",
-  "chapters": 6,
-  "lines": 22,
-  "teach": 9,
-  "quoted": 9,
-  "url": "https://en.wikipedia.org/wiki/Net_present_value",
-  "words": 340
+  "url": "https://en.wikipedia.org/wiki/Supply_and_demand",
+  "words": 567
  },
  {
   "topic": "SWOT analysis",
@@ -402,83 +220,271 @@
   "words": 319
  },
  {
-  "topic": "Maslow’s hierarchy",
-  "title": "Maslow's hierarchy of needs",
+  "topic": "Timeline of the Industrial Revolution",
+  "title": "Industrial Revolution",
   "chapters": 6,
   "lines": 22,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Maslow's_hierarchy_of_needs",
-  "words": 380
+  "url": "https://en.wikipedia.org/wiki/Industrial_Revolution",
+  "words": 439
  },
  {
-  "topic": "Water cycle",
-  "title": "Water cycle",
+  "topic": "Literary devices",
+  "title": "Literary device",
   "chapters": 6,
   "lines": 22,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Water_cycle",
-  "words": 345
+  "url": "https://en.wikipedia.org/wiki/Literary_device",
+  "words": 346
  },
  {
-  "topic": "Parts of speech",
-  "title": "Part of speech",
-  "chapters": 6,
-  "lines": 20,
-  "teach": 8,
-  "quoted": 8,
-  "url": "https://en.wikipedia.org/wiki/Part_of_speech",
-  "words": 449
- },
- {
-  "topic": "Elements of a contract",
-  "title": "Contract",
+  "topic": "Colour theory",
+  "title": "Theory of Colours",
   "chapters": 6,
   "lines": 22,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Contract",
-  "words": 378
+  "url": "https://en.wikipedia.org/wiki/Theory_of_Colours",
+  "words": 431
  },
  {
-  "topic": "Music theory: scales",
-  "title": "Scale (music)",
-  "chapters": 6,
-  "lines": 22,
+  "topic": "Time dilation",
+  "title": "Time dilation",
+  "chapters": 7,
+  "lines": 28,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Scale_(music)",
-  "words": 361
+  "url": "https://en.wikipedia.org/wiki/Time_dilation",
+  "words": 479
  },
  {
-  "topic": "Note-taking methods",
-  "title": "Note-taking",
+  "topic": "A function and its inverse",
+  "title": "Inverse function",
   "chapters": 6,
-  "lines": 22,
+  "lines": 23,
   "teach": 10,
   "quoted": 10,
-  "url": "https://en.wikipedia.org/wiki/Note-taking",
-  "words": 355
+  "url": "https://en.wikipedia.org/wiki/Inverse_function",
+  "words": 409
  },
  {
-  "topic": "Types of bridges",
-  "title": "List of bridge types",
-  "chapters": 2,
-  "lines": 4,
-  "teach": 0,
-  "quoted": 0,
-  "url": "https://en.wikipedia.org/wiki/List_of_bridge_types",
-  "words": 53
+  "topic": "Systems of linear equations",
+  "title": "System of linear equations",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/System_of_linear_equations",
+  "words": 341
  },
  {
-  "topic": "Surfaces and gradients",
-  "title": "Surface gradient",
-  "chapters": 2,
-  "lines": 6,
-  "teach": 2,
-  "quoted": 2,
-  "url": "https://en.wikipedia.org/wiki/Surface_gradient",
-  "words": 77
+  "topic": "Circles: tangents from an external point",
+  "title": "Tangent lines to circles",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Tangent_lines_to_circles",
+  "words": 495
+ },
+ {
+  "topic": "Trigonometric graphs and equations",
+  "err": "rate limited"
+ },
+ {
+  "topic": "Rolle’s theorem and the mean value theorem",
+  "title": "Mean value theorem",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Mean_value_theorem",
+  "words": 608
+ },
+ {
+  "topic": "Relative velocity: crossing a river",
+  "title": "Schoharie Creek Bridge collapse",
+  "chapters": 7,
+  "lines": 31,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Schoharie_Creek_Bridge_collapse",
+  "words": 455
+ },
+ {
+  "topic": "Centre of mass of a system of particles",
+  "title": "Center of mass",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Center_of_mass",
+  "words": 595
+ },
+ {
+  "topic": "Viscosity and terminal velocity",
+  "title": "Terminal velocity",
+  "chapters": 7,
+  "lines": 25,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Terminal_velocity",
+  "words": 462
+ },
+ {
+  "topic": "Forced oscillations, damping and resonance",
+  "title": "Parametric oscillator",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Parametric_oscillator",
+  "words": 507
+ },
+ {
+  "topic": "Electromagnetic waves and the spectrum",
+  "title": "Electromagnetic spectrum",
+  "chapters": 7,
+  "lines": 26,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Electromagnetic_spectrum",
+  "words": 451
+ },
+ {
+  "topic": "Binding energy per nucleon",
+  "title": "Nuclear binding energy",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Nuclear_binding_energy",
+  "words": 485
+ },
+ {
+  "topic": "Reading a vernier caliper",
+  "title": "Calipers",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Calipers",
+  "words": 390
+ },
+ {
+  "topic": "Born–Haber cycle and lattice energy",
+  "title": "Born–Haber cycle",
+  "chapters": 5,
+  "lines": 19,
+  "teach": 5,
+  "quoted": 5,
+  "url": "https://en.wikipedia.org/wiki/Born%E2%80%93Haber_cycle",
+  "words": 335
+ },
+ {
+  "topic": "Acid–base titration curves and indicators",
+  "title": "Acid–base titration",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Acid%E2%80%93base_titration",
+  "words": 473
+ },
+ {
+  "topic": "Electrolysis and Faraday’s laws",
+  "title": "Faraday's laws of electrolysis",
+  "chapters": 6,
+  "lines": 21,
+  "teach": 7,
+  "quoted": 7,
+  "url": "https://en.wikipedia.org/wiki/Faraday's_laws_of_electrolysis",
+  "words": 435
+ },
+ {
+  "topic": "Crystal field splitting: high and low spin",
+  "title": "Crystal field theory",
+  "chapters": 7,
+  "lines": 27,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Crystal_field_theory",
+  "words": 524
+ },
+ {
+  "topic": "Energy flow and ecological pyramids",
+  "err": "rate limited"
+ },
+ {
+  "topic": "The DNA double helix",
+  "title": "Nucleic acid double helix",
+  "chapters": 7,
+  "lines": 27,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Nucleic_acid_double_helix",
+  "words": 488
+ },
+ {
+  "topic": "Cost curves and the profit-maximising firm",
+  "title": "Profit maximization",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Profit_maximization",
+  "words": 568
+ },
+ {
+  "topic": "Compound interest, loans and present value",
+  "title": "Net present value",
+  "chapters": 7,
+  "lines": 27,
+  "teach": 9,
+  "quoted": 9,
+  "url": "https://en.wikipedia.org/wiki/Net_present_value",
+  "words": 420
+ },
+ {
+  "topic": "Sampling and aliasing",
+  "title": "Supersampling",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Supersampling",
+  "words": 475
+ },
+ {
+  "topic": "Dimensional analysis",
+  "title": "Dimensional analysis",
+  "chapters": 7,
+  "lines": 29,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Dimensional_analysis",
+  "words": 447
+ },
+ {
+  "topic": "Reading a screw gauge",
+  "title": "Micrometer (device)",
+  "chapters": 7,
+  "lines": 26,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Micrometer_(device)",
+  "words": 445
+ },
+ {
+  "topic": "Acidity of alcohols, phenols and carboxylic acids",
+  "title": "Phenols",
+  "chapters": 7,
+  "lines": 28,
+  "teach": 10,
+  "quoted": 10,
+  "url": "https://en.wikipedia.org/wiki/Phenols",
+  "words": 389
  }
 ]

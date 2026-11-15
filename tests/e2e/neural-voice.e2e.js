@@ -18,7 +18,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(1200);
 
   await check('nothing is downloaded until the student asks; the offer states size and that speech stays on the device', async () => {
-    assert.equal(await p.evaluate(() => ERLY.neuralVoice.status()), 'idle');
+    assert.equal(await p.evaluate(() => ERLY.neuralVoice.status().status), 'idle');
     assert.equal(reqs.filter(u => /huggingface|hf\.co/.test(u)).length, 0);
     await p.click('.cmp-launch'); await p.waitForTimeout(500); await p.click('#cmpVoiceSet'); await p.waitForSelector('#cmpNV [data-nv="load"]');
     const t = await p.textContent('#cmpNV'); assert.match(t, /MB/); assert.match(t, /device/i);

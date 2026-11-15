@@ -133,7 +133,7 @@ label.hw2-btn, label.hw2-ghost { cursor: pointer; }
 @media (max-width: 600px) { .hw-cta em { display: none; } }
 .growth-cta { text-decoration: none; }
 .growth-cta > span:first-child { background: linear-gradient(135deg, #1baf7a, #146a63); }
-.nav__growth { color: var(--accent) !important; font-weight: 600; }
+.nav__growth { color: inherit !important; font-weight: 600; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
 /* the way into the Growth Plan */
 .gw-grow { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; align-content: center; gap: 4px; color: #fff; background: radial-gradient(circle at var(--x) var(--y), #2BB283, #0F5D47 55%, #08362a); clip-path: circle(0 at var(--x) var(--y)); transition: clip-path .7s cubic-bezier(.7,0,.2,1); pointer-events: none; }

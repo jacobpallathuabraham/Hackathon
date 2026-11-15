@@ -508,7 +508,7 @@
     $('#cmpVoiceSet').addEventListener('click', () => {
       const box = $('#cmpVSet'), open = box.hidden;
       box.hidden = !open; $('#cmpVoiceSet').setAttribute('aria-expanded', open);
-      if (open) fillVoices();
+      if (open) { fillVoices(); renderNV(); }
     });
     $('#cmpVoiceSel').addEventListener('change', e => {
       const v = Object.assign({}, store.prefs().voices || {}); v[lang()] = e.target.value; store.setPref('voices', v);

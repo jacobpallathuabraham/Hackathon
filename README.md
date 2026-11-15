@@ -1102,3 +1102,30 @@ Full report: [`docs/V17-REPORT.md`](docs/V17-REPORT.md).
 
 Tests: `npm test`, and `tests/e2e/noor-v17`, `page-video`, `handwriting-v17` and `problems.e2e.js`. The local server must be running for the e2e tests.
 
+
+## v18: visuals across the whole syllabus in normal chat, natural voice, a handwriting model, one Growth Plan
+
+Full report: [`docs/V18-REPORT.md`](docs/V18-REPORT.md). Audit: [`docs/V18-AUDIT.md`](docs/V18-AUDIT.md). Chapter-by-chapter coverage: [`docs/V18-SYLLABUS.md`](docs/V18-SYLLABUS.md).
+
+- **Noor shows a live, adjustable model inside its chat reply** whenever a visual helps. It does this across the JEE Main Maths, Physics and Chemistry chapters, NEET Biology units and selected undergraduate subjects: **171 computed models**, 129 of them new in v18 (`assets/js/lab/syl-*.js`, built on `syl-core.js`). Follow-ups such as "double the mass" or "set k to 3" change the model. Factual questions get words, not a forced visual.
+- **Measured:**
+  - 129/129 syllabus questions typed in normal chat open the right model inline;
+  - 15/15 factual questions get no forced visual;
+  - 1,067 benchmark scenarios are executed in the browser and checked against independently computed values (`docs/bench/visual-bench-results.md`).
+- **Natural voice:** Kokoro-82M runs on the device after one opt-in download of about 92 MB. The voices are genuinely different: measured median pitch is 197 Hz for female and 119 Hz for male. The device voices remain one tap away.
+- **Audio lessons on any topic:**
+  - AI-written when an AI is configured;
+  - otherwise quoted from a named encyclopedia source, with lines from the computed models;
+  - when no reliable source answers, the lesson says so.
+- **Handwriting:** a handwriting model (TrOCR) reads segmented lines in the browser. On 150 real IAM lines the character error rate is 15.2%, against 50.0% for the old OCR; on 3-line pages it is 6.5%. Image tools and practice modes were added. Handwriting Check stays non-diagnostic.
+- **Growth Plan:** one journey:
+  - onboarding;
+  - a constraint scheduler built from the student's own week;
+  - a draggable timetable that refuses impossible moves and has a keyboard Reschedule form;
+  - goal-linked exercises;
+  - a weekly review;
+  - ICS and CSV export.
+
+Tests: `npm test`. With the local server running, also run:
+- `tests/e2e/syllabus-chat`, `neural-voice`, `audio-lessons`, `handwriting-v18` and `growth-v18`;
+- `node tests/bench/run-bench.js`.

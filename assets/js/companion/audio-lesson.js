@@ -132,7 +132,7 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       if (b.dataset.i != null) { i = +b.dataset.i; v.stop(); if (playing) speak(); else mark(); return; }
       const a = b.dataset.a;
       if (a === 'seek') return;
-      if (a && a.startsWith('v:')) { ctrl.close(); return variant(script, a.slice(2)); }
+      if (a && a.startsWith('v:')) { const btn = e.target.closest('[data-a]'); btn.disabled = true; btn.setAttribute('aria-busy', 'true'); return variant(script, a.slice(2)).catch(() => null).then(r => { if (!r && !dead) { btn.disabled = false; btn.removeAttribute('aria-busy'); } }); } /* the lesson stays until the new version is ready; open() then replaces it */
       if (a === 'ask') { const box = document.getElementById('cmpText'); const at = lines[i] && lines[i].t; if (box) { box.value = T(`About the audio lesson on ${script.title}: `, `عن الدرس الصوتي ${script.title}: `) + (at ? `“${at.slice(0, 140)}” — ` : ''); box.focus(); } ERLY.companion.attach && ERLY.companion.attach({ title: script.title, page: T('audio lesson', 'درس صوتي'), heading: script.title, text: lines.filter(l => l.t).map(l => l.t).join(' ').slice(0, 3400), quote: at || '' }); ERLY.companion.open && ERLY.companion.open('chat'); return; }
       if (a === 'close') return ctrl.close();
       if (a === 'play') { playing = !playing; setPlay(); if (playing) speak(); else { v.stop(); clearTimeout(gapT); mark(); } }
@@ -168,14 +168,16 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
     }
     throw new Error('rate limited');
   }
-  async function wikiArticle(topic, lang) {
+  async function wikiArticle(topic, lang, headOnly) {
     const host = `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/w/api.php?origin=*&format=json&`;
     const q = String(topic).replace(/^(an?|the)\s+/i, '').slice(0, 120);
     const sr = await getJSON(host + 'action=query&list=search&srlimit=6&srsearch=' + encodeURIComponent(q));
     const hits = (sr.query && sr.query.search) || []; if (!hits.length) return null;
     const words = q.toLowerCase().split(/\W+/).filter(w => w.length > 3);
     const stem = w => w.replace(/(ies|es|s)$/, '').slice(0, 6), keys = words.filter(w => !/^(with|from|over|under|into|their|that|this|about|between|types|basics|introduction)$/.test(w)).map(stem);
-    const score = h => keys.filter(k => h.title.toLowerCase().includes(k)).length * 2 + keys.filter(k => String(h.snippet || '').toLowerCase().includes(k)).length;
+    const headQ = String(q).split(/\s*(?::|\s[—–-]\s)\s*/)[0], headKeys = headQ !== q ? headQ.toLowerCase().split(/\W+/).filter(w => w.length > 3).map(stem) : [];
+    const qual = h => { const m = h.title.match(/\(([^)]+)\)/); return m && !m[1].toLowerCase().split(/\W+/).filter(w => w.length > 3).every(w => q.toLowerCase().includes(w.slice(0, 5))) ? 3 : 0; }; /* 'Rotation operator (quantum mechanics)' is a specialist page unless the topic says so */
+    const score = h => keys.filter(k => h.title.toLowerCase().includes(k)).length * 2 + keys.filter(k => String(h.snippet || '').toLowerCase().includes(k)).length - qual(h);
     // try the best-matching hits in turn; skip disambiguation pages, lists and stubs (too little to teach from)
     const ranked = hits.slice().sort((a, b) => score(b) - score(a)).filter(h => !/^(list of|index of|outline of)\b/i.test(h.title) && !/\(disambiguation\)/i.test(h.title)).slice(0, 3);
     let fallback = null;
@@ -187,12 +189,13 @@ Format: one line per turn, "A: text" or "B: text". Start chapters with a line "#
       pg.extract.split('\n').forEach(line => { const m = line.match(/^(={2,})\s*(.+?)\s*\1\s*$/); if (m) { secs.push(curS); curS = { h: m[2], level: m[1].length, text: '' }; } else curS.text += line + ' '; });
       secs.push(curS);
       const lead = (pg.title + ' ' + pg.extract.slice(0, 1500)).toLowerCase(), found = keys.filter(k => lead.includes(k)).length;
-      const relevant = keys.length === 0 || (found >= Math.ceil(keys.length / 2) && keys.some(k => pg.title.toLowerCase().includes(k) || lead.slice(0, 400).includes(k))); // most of the topic's words, not just one
+      const relevant = keys.length === 0 || (found >= Math.ceil(keys.length / 2) && keys.some(k => pg.title.toLowerCase().includes(k) || lead.slice(0, 400).includes(k)) && headKeys.every(k => lead.includes(k))); /* most of the topic's words, and all of its main phrase (the part before a colon) */
       const sections = secs.filter(x => x.text.trim().length > 80 && !(x.h && SKIP_SEC.test(x.h)));
       const art = { title: pg.title, url: `https://${lang === 'ar' ? 'ar' : 'en'}.wikipedia.org/wiki/${encodeURIComponent(pg.title.replace(/ /g, '_'))}`, sections, relevant };
       if (relevant && sections.length >= 3) return art; // enough material for a lesson with chapters
       if (relevant && !fallback) fallback = Object.assign(art, { relevant: false, thin: true }); // a stub is reported, not padded out
     }
+    if (!fallback && !headOnly && headQ !== q && headQ.length > 3) return wikiArticle(headQ, lang, true); /* "Relative velocity: crossing a river" → the article on relative velocity */
     return fallback;
   }
   const sentencesOf = t => (String(t).replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+(\s|$)/g) || []).map(x => x.trim()).filter(x => x.length > 25 && x.length < 320 && !/\b(citation needed|isbn|doi)\b/i.test(x));

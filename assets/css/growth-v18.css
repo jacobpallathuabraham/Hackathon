@@ -5,7 +5,7 @@
 .gx-card h2 { font-family: var(--f-display, inherit); font-size: clamp(1.3rem, 2.4vw, 1.7rem); margin: 0 0 8px; }
 .gx-card h3 { margin: 18px 0 8px; font-size: 1.02rem; }
 .gx-steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0; counter-reset: s; }
-.gx-steps li { counter-increment: s; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); font-size: .85rem; color: var(--muted); }
+.gx-steps li { counter-increment: s; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); font-size: .85rem; color: var(--ink, inherit); }
 .gx-steps li::before { content: counter(s) ' · '; }
 .gx-steps li.is-on { border-color: var(--accent); color: var(--ink, inherit); font-weight: 600; }
 .gx-steps li.is-done { color: var(--ink, inherit); background: color-mix(in srgb, var(--accent) 10%, transparent); }

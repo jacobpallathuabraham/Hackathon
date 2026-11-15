@@ -260,7 +260,7 @@
   /* ======================= potential and field around a point charge ======================= */
   const KC = 8.9875517923e9;
   reg('radial', K.em, T('Potential and field of a point charge', 'الجهد والمجال لشحنة نقطية'),
-    t => (/\b(electric )?potential\b[^.]*\b(point charge|distance|farther|further|away)\b|\b(electric field|field strength)\b[^.]*\b(distance|farther|further|inverse square)\b|\binverse[- ]square\b[^.]*\b(charge|electric)\b|\bhow (do|does) electric fields? work\b/i.test(t) ? { score: 0.95, params: {} } : null),
+    t => (/\b(electric )?potential\b(?:[^.]|\.\d)*\b(point charge|distance|farther|further|away)\b|\b(electric field|field strength)\b(?:[^.]|\.\d)*\b(distance|farther|further|inverse square)\b|\binverse[- ]square\b(?:[^.]|\.\d)*\b(charge|electric)\b|\bhow (do|does) electric fields? work\b/i.test(t) ? { score: 0.95, params: {} } : null),
     { q: { min: -1e-3, max: 1e-3 }, r: { min: 0.01, max: 100 } },
     () => ({
       defaults: { q: 1e-9, r: 1 }, static: true, autoplay: false, graph: true, equal: true,

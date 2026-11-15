@@ -708,6 +708,7 @@
       const d = parseData(t);
       const kw = /\b(mean|median|mode|average|standard deviations?|variance|quartiles?|percentiles?|iqr|range|histograms?|box ?plots?|box-and-whisker|scatter( ?plots?)?|regression|line of best fit|correlation|normal distributions?|bell curve|binomial|probability|probabilities|dice|die|coins?|sampling|sample means?|central limit|confidence intervals?|hypothesis|t-test|significance|frequency)\b/i;
       if (!kw.test(t)) return null;
+      if (/(\bm\/s\b|\b(projected|thrown|launched|kicked|angle of \d|trajectory|projectile)\b)/i.test(t) && !/\b(mean|median|mode|data|histogram|statistics|sample)\b/i.test(t)) return null; /* 'range' of a projectile is not a data range */
       let mode = /\b(scatter|regression|best fit|correlation)\b/i.test(t) || (d && d.pairs) ? 'scatter' : /\bbinomial\b/i.test(t) ? 'binomial' : /\b(normal distribution|bell curve|z-score)\b/i.test(t) ? 'normal' : /\b(dice|die|coin|sampling|sample means?|central limit|experiment with probability|probability experiment|let me experiment)\b/i.test(t) ? 'sim' : /\b(confidence interval|hypothesis|t-test|significance)\b/i.test(t) ? 'infer' : 'describe';
       if (mode === 'describe' && !d && !/\b(histogram|box ?plot|statistics|data)\b/i.test(t)) return null;
       const params = { mode, data: d && d.nums, pairs: d && d.pairs };
