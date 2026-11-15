@@ -48,6 +48,8 @@
   }
 
   /* ---------- nav: stuck state, burger, current section, progress ---------- */
+  // pages without the student-page navigation (e.g. the Learning Studio) use only the bus, language and theme above
+  if (!document.getElementById('nav')) return;
   const nav = $('#nav');
   const links = $('.nav__links');
   const burger = $('#burger');

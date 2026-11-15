@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <title>Interactive Learning Studio · ERLY</title>
+  <meta name="description" content="ERLY Interactive Learning Studio: interactive lessons with live models, videos with clickable transcripts, practice with explanations, spaced flashcards, a notebook and Noor — consent-first, on your device.">
+  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css?v=18">
+  <link rel="stylesheet" href="assets/css/portal.css?v=18">
+  <link rel="stylesheet" href="assets/css/accents.css?v=18">
+  <link rel="stylesheet" href="assets/css/erly.css?v=18">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=18">
+  <link rel="stylesheet" href="assets/css/hand.css?v=18">
+  <link rel="stylesheet" href="assets/css/companion.css?v=18">
+  <link rel="stylesheet" href="assets/css/studio.css?v=18">
+  <link rel="stylesheet" href="assets/css/noor.css?v=18">
+  <link rel="stylesheet" href="assets/css/voice.css?v=18">
+  <link rel="stylesheet" href="assets/css/visuals.css?v=18">
+  <link rel="stylesheet" href="assets/css/lab.css?v=18">
+  <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
+  <link rel="stylesheet" href="assets/css/checkins.css?v=18">
+  <link rel="stylesheet" href="assets/css/videos.css?v=18">
+  <script>
+    // Demo portal guard — must have signed in as a student
+    try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
+  </script>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('erly-theme');
+        if (!t || t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        var ac = localStorage.getItem('erly-accent'); if (ac && ac !== 'terracotta') document.documentElement.dataset.accent = ac;
+        if (localStorage.getItem('erly-lang') === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=18">
+  <link rel="stylesheet" href="assets/css/v9.css?v=18">
+  <link rel="stylesheet" href="assets/css/companion-holo.css?v=18">
+  <link rel="stylesheet" href="assets/css/learn.css?v=19">
+</head>
+<body class="ls-page">
+<a class="skip ls-skip" href="#lsView">Skip to content</a>
+<header class="ls-top">
+  <a class="ls-top__back" href="student.html"><span aria-hidden="true">←</span> <span>ERLY</span></a>
+  <a class="ls-brand" href="#/home" aria-label="Learning Studio home"><img src="assets/img/erly-mark.svg" alt="" class="ls-brand__mark"><span><b>ERLY</b> Learning Studio</span></a>
+  <form class="ls-ask" id="lsAsk" role="search" aria-label="Ask Noor"><label class="sr-only" for="lsAskQ">Ask Noor anything about what you are learning</label><input id="lsAskQ" name="q" placeholder="Ask Noor about anything you are learning…" autocomplete="off"><button type="submit" class="ls-btn ls-btn--sm">Ask</button></form>
+  <div class="ls-top__tools"><button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button><div data-accent-picker></div>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button></div>
+</header>
+<div class="ls-banner" id="lsBanner" role="status" hidden></div>
+<div class="ls-shell">
+  <nav class="ls-nav" id="lsNav" aria-label="Learning Studio"></nav>
+  <main class="ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Loading the Learning Studio…</p></main>
+</div>
+<nav class="ls-mob" id="lsMob" aria-label="Learning Studio (short)"></nav>
+<div class="ls-toast toast" id="lsToast" role="status" aria-live="polite"></div>
+<div class="sr-only" id="lsLive" aria-live="polite"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p style="padding:2rem">The Learning Studio needs JavaScript.</p></noscript>
+<p class="ls-foot">Acubins University is a fictional institution used to demonstrate ERLY; ERLY is not an officially deployed university service. Lessons and questions are ERLY demonstration content, not official exam material.</p>
+<script src="assets/js/icons.js?v=18"></script>
+<script src="assets/js/i18n.js?v=18"></script>
+<script src="assets/js/fun.js?v=18"></script>
+<script src="assets/js/main.js?v=18"></script>
+<script src="assets/js/accent.js?v=18"></script>
+<script src="assets/js/study-tools.js?v=18"></script>
+<script src="assets/js/studio-content.js?v=18"></script>
+<script src="assets/js/studio.js?v=18"></script>
+<script src="assets/js/companion/config.js?v=18"></script>
+<script src="assets/js/companion/signals.js?v=18"></script>
+<script src="assets/js/companion/dialogue.js?v=18"></script>
+<script src="assets/js/companion/store.js?v=18"></script>
+<script src="assets/js/companion/llm.js?v=18"></script>
+<script src="assets/js/companion/md.js?v=18"></script>
+<script src="assets/js/noor/research.js?v=18"></script>
+<script src="assets/js/noor/validate.js?v=18"></script>
+<script src="assets/js/noor/usage.js?v=18"></script>
+<script src="assets/js/companion/ai.js?v=18"></script>
+<script src="assets/js/companion/prosody.js?v=18"></script>
+<script src="assets/js/companion/voicelib.js?v=18"></script>
+<script src="assets/js/companion/neural-voice.js?v=18"></script>
+<script src="assets/js/companion/voice.js?v=18"></script>
+<script src="assets/js/companion/summary.js?v=18"></script>
+<script src="assets/js/companion/kb-extra.js?v=18"></script>
+<script src="assets/js/companion/knowledge.js?v=18"></script>
+<script src="assets/js/companion/interview.js?v=18"></script>
+<script src="assets/js/companion/evidence.js?v=18"></script>
+<script src="assets/js/companion/ui.js?v=18"></script>
+<script src="assets/js/page-context.js?v=18"></script>
+<script src="assets/js/companion/noor-brain.js?v=18"></script>
+<script src="assets/js/companion/noor-tools.js?v=18"></script>
+<script src="assets/js/companion/visuals.js?v=18"></script>
+<script src="assets/js/companion/visual-spec.js?v=18"></script>
+<script src="assets/js/companion/visual-library.js?v=18"></script>
+<script src="assets/js/lab/lab-core.js?v=18"></script>
+<script src="assets/js/lab/lab-math.js?v=18"></script>
+<script src="assets/js/lab/lab-geo3d.js?v=18"></script>
+<script src="assets/js/lab/lab-physics.js?v=18"></script>
+<script src="assets/js/lab/lab-problems.js?v=18"></script>
+<script src="assets/js/lab/lab-concepts.js?v=18"></script>
+<script src="assets/js/lab/syl-core.js?v=18"></script>
+<script src="assets/js/lab/syl-math.js?v=18"></script>
+<script src="assets/js/lab/syl-physics.js?v=18"></script>
+<script src="assets/js/lab/syl-chem.js?v=18"></script>
+<script src="assets/js/lab/syl-life.js?v=18"></script>
+<script src="assets/js/lab/syl-applied.js?v=18"></script>
+<script src="assets/js/lab/syl-extra.js?v=18"></script>
+<script src="assets/js/lab/syl-studio.js?v=19"></script>
+<script src="assets/js/companion/audio-lesson.js?v=18"></script>
+<script src="assets/js/session.js?v=18"></script>
+<script src="assets/js/theme-fx.js?v=18"></script>
+<script src="assets/js/ambient.js?v=18" defer></script>
+<script src="assets/js/a11y.js?v=18"></script>
+<script src="assets/js/companion/holo.js?v=18" defer></script>
+<script src="assets/js/learn/ls-core.js?v=19"></script>
+<script src="assets/js/learn/ls-grade.js?v=19"></script>
+<script src="assets/js/learn/ls-schema.js?v=19"></script>
+<script src="assets/js/learn/ls-srs.js?v=19"></script>
+<script src="assets/js/learn/ls-intel.js?v=19"></script>
+<script src="assets/js/learn/ls-figures.js?v=19"></script>
+<script src="assets/js/learn/ls-registry.js?v=19"></script>
+<script src="assets/js/learn/ls-lessons-bio-chem.js?v=19"></script>
+<script src="assets/js/learn/ls-lessons-math-phys.js?v=19"></script>
+<script src="assets/js/learn/ls-bank.js?v=19"></script>
+<script src="assets/js/learn/ls-activities.js?v=19"></script>
+<script src="assets/js/learn/ls-noor.js?v=19"></script>
+<script src="assets/js/learn/ls-lesson.js?v=19"></script>
+<script src="assets/js/learn/ls-notes.js?v=19"></script>
+<script src="assets/js/learn/ls-revise.js?v=19"></script>
+<script src="assets/js/learn/ls-practice.js?v=19"></script>
+<script src="assets/js/learn/ls-video.js?v=19"></script>
+<script src="assets/js/learn/ls-lab.js?v=19"></script>
+<script src="assets/js/learn/ls-app.js?v=19"></script>
+<script>
+  // main.js switches language and theme; the Studio re-renders so its own text follows the language
+  document.getElementById('langToggle').addEventListener('click', function () { setTimeout(function () { LS.render(); }, 0); });
+  LS.start();
+</script>
+</body>
+</html>
