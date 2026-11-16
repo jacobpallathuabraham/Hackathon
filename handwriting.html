@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="assets/css/erly.css?v=19">
   <link rel="stylesheet" href="assets/css/checkins.css?v=19">
   <link rel="stylesheet" href="assets/css/hand.css?v=19">
+  <link rel="stylesheet" href="assets/css/hand-studio.css?v=20">
   <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
   <link rel="stylesheet" href="assets/css/v9.css?v=19">
   <link rel="stylesheet" href="assets/css/ui.css?v=20">
@@ -52,22 +53,32 @@
     </div>
   </header>
 
-  <main class="hws" id="main">
-    <section class="hws__hero" data-ink-stagger>
-      <svg class="hws__ripple" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="10"/><circle cx="60" cy="60" r="10"/><circle cx="60" cy="60" r="10"/></svg>
-      <p class="kicker"><span data-i18n="hws.kicker">Writing studio · exploratory, not a test</span></p>
-      <h1 class="hws__title" data-ink-origin data-i18n="hws.title">Handwriting Check</h1>
-      <p class="hws__lead" data-i18n="hws.lead">Copy three short sentences — on screen with your finger, a stylus or the mouse, or on paper with a photo. Text-recognition software running on this device tries to read them back and shows which words it recognised.</p>
-    </section>
-    <div class="hws__grid">
-      <aside class="hws__aside" data-ink-stagger>
-        <div class="hws__card"><b data-i18n="hws.does">What it does</b><ul><li data-i18n="hws.d1">Tries to read your writing with open-source text recognition (Tesseract), inside this page</li><li data-i18n="hws.d2">Shows which words were recognised and which weren’t</li><li data-i18n="hws.d3">Says “inconclusive” when it can’t read enough</li></ul></div>
-        <div class="hws__card"><b data-i18n="hws.not">What it cannot do</b><ul><li data-i18n="hws.n1">Judge your handwriting, spelling, intelligence or personality</li><li data-i18n="hws.n2">Detect dyslexia, dysgraphia, ADHD or any condition</li><li data-i18n="hws.n3">Replace a conversation with Student Accessibility Services</li></ul></div>
-        <p class="hw2-privacy" data-i18n="hws.privacy">🔒 Your writing and photos stay on this device: nothing is uploaded or saved, and Discard deletes them.</p>
-        <div class="hws__card"><b data-i18n="hws.lang">Language</b><div class="hw2-seg" role="radiogroup" aria-label="Language" id="hwsLang"><button type="button" role="radio" data-l="en">English</button><button type="button" role="radio" data-l="ar">العربية</button><button type="button" role="radio" data-l="mix" data-i18n="hws.mix">Mixed (experimental)</button></div></div>
-      </aside>
-      <div id="hwStudio" class="hws__studio" data-ink-stagger></div>
-    </div>
+  <main class="hs" id="main">
+    <header class="hs-head" data-ink-stagger>
+      <p class="kicker" data-i18n="hws.kicker">Writing studio · exploratory, not a test</p>
+      <h1 class="hs-title" data-ink-origin data-i18n="hws.title">Handwriting Check</h1>
+      <p class="hs-lead">Write by hand on screen or on paper. Text-recognition software in this page tries to read it back and tells you how sure it is.</p>
+      <div class="hs-meta">
+        <div class="hs-seg hs-seg--sm" role="radiogroup" aria-label="Language of your writing" id="hwsLang"><button type="button" role="radio" data-l="en">English</button><button type="button" role="radio" data-l="ar" lang="ar">العربية</button><button type="button" role="radio" data-l="mix">Mixed (experimental)</button></div>
+        <details class="hs-privacy"><summary>🔒 Privacy: stays on this device</summary>
+          <ul>
+            <li>Your writing and photos are held in this page’s memory only. They are never uploaded and never saved to your device’s storage.</li>
+            <li>Recognition runs inside this page. The quick reader’s language files come from this website.</li>
+            <li>The optional handwriting reader (about 64 MB) is downloaded only if you press its button, from the Hugging Face model hub, and your browser keeps that model for next time. Your writing is not sent with it.</li>
+            <li>Only your display choices — paper, pen size, colour and guide — are remembered on this device.</li>
+            <li><b>Discard</b> removes the strokes, undo history, photo, prepared image and recognised text from the page. Leaving the page drops them too.</li>
+          </ul>
+        </details>
+      </div>
+    </header>
+    <div id="hwStudio" class="hs-studio" data-ink-stagger></div>
+    <details class="hs-about">
+      <summary>What this can and cannot do</summary>
+      <div class="hs-about__grid">
+        <div><b>It can</b><ul><li>Try to read your writing with open-source text recognition</li><li>Show which words it read clearly and which it was unsure about</li><li>Say “inconclusive” when it can’t read enough</li></ul></div>
+        <div><b>It cannot</b><ul><li>Judge your handwriting, spelling, intelligence or personality</li><li>Detect dyslexia, dysgraphia, ADHD or any condition</li><li>Replace a conversation with Student Accessibility Services</li></ul></div>
+      </div>
+    </details>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -92,19 +103,17 @@
   </script>
   <script src="assets/js/accent.js?v=19"></script>
   <script src="assets/js/handwriting.js?v=19"></script>
-  <script src="assets/js/hand-rec.js?v=19"></script>
-  <script src="assets/js/ink-pad.js?v=19"></script>
+  <script src="assets/js/hand-rec.js?v=20"></script>
   <script src="assets/js/ink-transition.js?v=19"></script>
-  <script src="assets/js/hand-practice.js?v=19"></script>
-  <script src="assets/js/hand-ui.js?v=19"></script>
+  <script src="assets/js/hand-canvas.js?v=20"></script>
+  <script src="assets/js/hand-studio.js?v=20"></script>
   <script>
-    // the language picker in the side panel drives the studio
+    // the language picker drives the studio
     (function () {
       const seg = document.getElementById('hwsLang');
       const sync = () => { const s = ERLY.handwriting && ERLY.handwriting.state(); seg.querySelectorAll('[data-l]').forEach(b => b.setAttribute('aria-checked', String(!!s && s.lang === b.dataset.l))); };
-      seg.addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (!b) return; const inner = document.querySelector(`#hwStudio [data-lang="${b.dataset.l}"]`); const s = ERLY.handwriting.state(); if (s) { s.lang = b.dataset.l; s.set = 0; s.step = 'write'; ERLY.emit('hws:lang'); } sync(); document.dispatchEvent(new CustomEvent('hws:render')); });
-      document.addEventListener('hws:render', () => ERLY.handwriting.rerender && ERLY.handwriting.rerender());
-      setTimeout(sync, 0);
+      seg.addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (!b || !ERLY.handwriting) return; ERLY.handwriting.setLang(b.dataset.l); sync(); });
+      sync();
     })();
     ERLY.ink.reveal();
   </script>
