@@ -15,7 +15,7 @@ const WEEK = 'I have football practice on Tuesdays 5-7pm. I am free after 4pm on
   const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
   await ctx.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); localStorage.setItem('erly-theme', 'light'); window.__growthToday = '2026-11-16'; });
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message));
-  await p.goto(BASE + 'support.html'); await p.evaluate(() => localStorage.setItem('erly-gplan-v10', '{"old":1}'));
+  await p.goto(BASE + 'support.html#/timetable'); await p.evaluate(() => localStorage.setItem('erly-gplan-v10', '{"old":1}')); // v20: the timetable is a tab of the Growth Plan
   await p.waitForSelector('.gx--onb');
   const G = (fn, a) => p.evaluate(fn, a);
 

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="assets/css/checkins.css?v=19">
   <link rel="stylesheet" href="assets/css/growth.css?v=19">
   <link rel="stylesheet" href="assets/css/growth-v18.css?v=19">
+  <link rel="stylesheet" href="assets/css/growth-v20.css?v=20">
   <script>
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
     (function () {
@@ -39,7 +40,7 @@
 <body class="quest-page growth-page">
   <div class="q-bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <header class="q-top">
-    <a class="q-back" href="student.html#insight"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
+    <a class="q-back" href="student.html"><span aria-hidden="true">←</span> <span data-i18n="q.back">Back to ERLY</span></a>
     <a href="student.html" class="brand" aria-label="ERLY home">
       <img class="brand__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
       <span class="brand__word brand__word--caps">ERLY</span>
@@ -56,12 +57,13 @@
 
   <main class="q-main" id="main">
     <div class="amb amb--page" data-ambient="aurora" aria-hidden="true"></div>
-    <div class="q-head">
+    <div class="q-head gp-head">
       <p class="kicker"><span data-i18n="g.kicker">Growth Plan · with Noor</span></p>
-      <h1 class="q-title">A plan that fits your real week.</h1>
-      <p class="q-lead">Tell ERLY when you are free, what else you do and what you want to work on. It builds a timetable around your commitments, links every session to something you can actually do in ERLY — a lesson, a model, practice with Noor — and changes it with you each week. It plans time; it never scores you.</p>
+      <h1 class="q-title">Small, steady practice — on your terms.</h1>
+      <p class="q-lead">Pick a programme for reading, writing, maths, memory, planning or study confidence. Set your goals, choose the days and the length, and do a few minutes of activities. Optional study support: not a test, not a diagnosis, not treatment.</p>
     </div>
-    <div id="growthApp"></div>
+    <div id="gpApp" class="gpx"></div>
+    <div id="growthApp" hidden></div>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -89,6 +91,8 @@
     })();
   </script>
   <script src="assets/js/accent.js?v=19"></script>
+  <script src="assets/js/growth-v20-core.js?v=20"></script>
+  <script src="assets/js/growth-v20.js?v=20"></script>
   <script src="assets/js/growth-sched.js?v=19"></script>
   <script src="assets/js/growth-studio.js?v=19"></script>
   <script src="assets/js/theme-fx.js?v=19"></script>
