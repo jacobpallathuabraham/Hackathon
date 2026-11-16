@@ -30,8 +30,8 @@ const FAKE_YT = `window.YT = { Player: function (id, o) {
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(900);
 
   await check('"what am I looking at?" describes the visible section from the page itself', async () => {
-    await p.evaluate(() => document.getElementById('reading-studio').scrollIntoView({ block: 'start', behavior: 'instant' })); await p.waitForTimeout(300);
-    const heading = await p.evaluate(() => document.querySelector('#reading-studio h2').textContent.trim());
+    await p.evaluate(() => document.getElementById('handoff').scrollIntoView({ block: 'start', behavior: 'instant' })); await p.waitForTimeout(300);
+    const heading = await p.evaluate(() => document.querySelector('#handoff h2').textContent.trim());
     await p.click('.cmp-launch'); await p.waitForTimeout(800);
     const r = await ask('Can you explain what I’m looking at?');
     assert.match(r, /What you’re looking at/);

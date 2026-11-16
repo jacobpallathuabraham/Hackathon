@@ -1150,3 +1150,42 @@ Tests: `npm test`. With the local server running, also run:
 - **Consent first:** nothing is stored until the student chooses "this device" or "this visit". Demonstration data is labelled and kept apart. The Profile page exports or deletes everything.
 
 Tests: `npm test` (272 unit tests, including content validation and insight safeguards). With the local server running, `tests/e2e/learning-studio.e2e.js` runs 34 acceptance checks.
+
+## v20: website overhaul, Learning Studio reimagined, Handwriting Studio and Growth Plan rebuilt
+
+The full report, with tests run and screenshots, is in [`docs/V20-REPORT.md`](docs/V20-REPORT.md). The audit is in [`docs/V20-AUDIT.md`](docs/V20-AUDIT.md).
+
+### Learning Studio (`learn.html`)
+- The shell is now an icon rail, breadcrumbs and universal search (⌘K or "/"), with a bottom bar on phones.
+- The home page offers subjects, a topic graph (`#/topic/the-heart`) and six environments:
+  - Reading & Resources;
+  - Interactive Lessons;
+  - Visual Lab;
+  - Video & Audio;
+  - Practice & Revision;
+  - Study Workspace.
+- **The Reading Studio is no longer a separate place.** Its reader opens from Reading & Resources (`learn.html#/read`), and old links redirect there.
+
+### Handwriting Check (`handwriting.html`)
+- A layered canvas engine (`hand-canvas.js`) with pressure, smoothing, palm rejection and four paper styles.
+- A letter-height guide, zoom, and undo/redo.
+- The flow is review → recognise → correct → discard (`hand-studio.js`).
+- Writing never leaves the page. Only display preferences are remembered.
+- Benchmark: `node tests/bench/ink-bench.js`.
+
+### Growth Plan (`support.html`)
+- Six optional study-support programmes, with goals and configuration.
+- Daily interactive activities with feedback and reflection, and weekly reviews.
+- Pause, resume, restart, remove and a history timeline (`growth-v20-core.js`, `growth-v20.js`).
+- The v18 weekly timetable is the **Timetable** tab.
+
+### Student dashboard
+Opens on an action hub. Background reading moves into "How ERLY works".
+
+### Interaction layer
+`assets/css/ui.css` and `assets/js/ui.js` are shared by every page. One focus treatment per field, so there are no boxes inside boxes.
+
+### Tests
+- `npm test` (unit tests).
+- New end-to-end suites: `tests/e2e/handwriting-v20.e2e.js` and `tests/e2e/growth-v20.e2e.js`.
+- Tests for the removed v12–v19 handwriting interface are kept in `tests/e2e/retired/`.
