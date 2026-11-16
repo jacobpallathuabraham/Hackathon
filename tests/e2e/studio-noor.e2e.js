@@ -35,7 +35,7 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.evaluate(() => window.scrollTo(0, 0));
 
   /* ---------- the library ---------- */
-  await page.click('.studio-cta [data-studio].btn');
+  await page.evaluate(() => ERLY.openStudio()); // v20: the student page's button is gone; the Learning Studio entry is tested in learning-studio.e2e.js
   await page.waitForSelector('.slib.is-in');
   await page.waitForTimeout(900);
   assert.ok(await page.locator('.sbook[data-open]').count() >= 6, 'six course readings');
