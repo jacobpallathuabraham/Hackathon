@@ -40,6 +40,10 @@
 /* composite fields (a pill that contains an input + button): the CONTAINER shows focus; the inner field is bare */
 .ui-field { display: flex; align-items: center; gap: 6px; background: var(--surface, #fff); border: 1px solid var(--line-2, var(--line, #ddd)); border-radius: 999px; padding: 4px 4px 4px 14px; transition: border-color var(--ui-mid) var(--ui-ease), box-shadow var(--ui-mid) var(--ui-ease); }
 .ui-field:focus-within { border-color: var(--accent, #BA4A26); box-shadow: var(--ui-ring); }
+/* existing composite fields across ERLY whose container already shows focus (Noor's composer, the gateway search,
+   login fields, Learning Studio "Ask", lab inputs, header searches): the inner field must not draw a second frame */
+:is(.cmp__input, .acu-search, .fld__box, .search, .ls-ask, .lab-ex) :is(input, textarea):focus,
+:is(.cmp__input, .acu-search, .fld__box, .search, .ls-ask, .lab-ex) :is(input, textarea):focus-visible { outline: none !important; box-shadow: none !important; border-color: transparent !important; }
 .ui-field > input, .ui-field > label > input { flex: 1; min-width: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; outline: none !important; padding: 8px 0 !important; min-height: 0 !important; font: inherit; color: inherit; }
 /* writing surfaces (note editors, long answers in "write" mode): no frame appears when you start typing */
 .ui-write { outline: none; caret-color: var(--accent, #BA4A26); }

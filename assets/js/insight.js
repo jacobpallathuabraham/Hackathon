@@ -132,7 +132,7 @@
           <p class="small muted">${bp.learn ? T('Ordered by your Learning Blueprint.', 'مرتبة حسب مخطط تعلّمك.') : T('Fill in your Learning Blueprint to personalise these.', 'املأ مخطط تعلّمك لتخصيص هذه.')}</p>
           <div class="ins-helps">${(sum.crisis ? ['talk', 'rest', 'load', 'room'] : helpsFor(areas[0] || 'reading', bp)).map(k => `<div><span>${ICON(HELP[k][0])}</span>${T(HELP[k][1], HELP[k][2])}</div>`).join('')}</div>
           <h4 class="ins-sub">${T('What worked for you', 'ما نجح معك')}</h4>
-          ${Object.keys(worked).length ? `<ul class="ins-worked">${Object.entries(worked).map(([k, [ok, n]]) => `<li><span>${T(...(TOOL_N[k] || [k, k]))}</span><b class="mono">${Math.round(ok / n * 100)}%</b><small>${T(`helped ${ok.toFixed(ok % 1 ? 1 : 0)} of ${n}`, `ساعد ${ok} من ${n}`)}</small></li>`).join('')}</ul>` : `<p class="small muted">${T('Use a tool in the Reading Studio and answer Noor’s “Did that help?” — ERLY learns what works for you.', 'استخدم أداة في استوديو القراءة وأجب عن سؤال نور «هل ساعد ذلك؟» — يتعلّم إيرلي ما يناسبك.')}</p>`}
+          ${Object.keys(worked).length ? `<ul class="ins-worked">${Object.entries(worked).map(([k, [ok, n]]) => `<li><span>${T(...(TOOL_N[k] || [k, k]))}</span><b class="mono">${Math.round(ok / n * 100)}%</b><small>${T(`helped ${ok.toFixed(ok % 1 ? 1 : 0)} of ${n}`, `ساعد ${ok} من ${n}`)}</small></li>`).join('')}</ul>` : `<p class="small muted">${T('Use a tool in the Learning Studio reader and answer Noor’s “Did that help?” — ERLY learns what works for you.', 'استخدم أداة في قارئ استوديو التعلّم وأجب عن سؤال نور «هل ساعد ذلك؟» — يتعلّم إيرلي ما يناسبك.')}</p>`}
         </div>
       </div>
       <div class="ins-next">

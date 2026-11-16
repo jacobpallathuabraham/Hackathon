@@ -9,7 +9,7 @@
        support   → coping & help-seeking: personalises support, never flags
        control   → confounders that normalise other signals, never flag
      en / ar (name), how (what is counted), tag (what it may reflect),
-     live: measured for real by the Reading Studio in this demo,
+     live: measured for real by the Learning Studio reader in this demo,
      dir: +1 when a higher value means more friction than the student's normal. */
 (function () {
   const AREA_COLOR = { reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)', support: 'var(--muted)', control: 'var(--muted)' };

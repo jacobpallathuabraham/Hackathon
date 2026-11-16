@@ -227,3 +227,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .lh__aura i, .ls-page .ls-heart .flow path { animation: none; } }
 html.a11y-still .lh__aura i, html.a11y-still .ls-page .ls-heart .flow path { animation: none !important; }
+
+/* v20 phone polish: the More sheet sits above the floating buttons; its Back link is a plain row */
+body.ls-sheet-on .a11y-fab, body.ls-sheet-on .cmp-launch, body.ls-sheet-on [class*="holo-launch"] { visibility: hidden; }
+.lss .lss__back { background: transparent !important; border-top: 1px solid var(--line); border-radius: 0 !important; margin-top: 6px; padding-top: 16px; }
+/* the floating accessibility button sits bottom-left over the rail: keep the rail's last links clear of it */
+@media (min-width: 821px) { .lsr { padding-bottom: 84px; } }

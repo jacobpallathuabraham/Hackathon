@@ -121,7 +121,7 @@
 
   /* ---------------- navigation ---------------- */
   const PLACES = [
-    [/reading studio|library|\bpdf\b|\breading(s)?\b|my book/i, 'studio', ['the Reading Studio', 'استوديو القراءة']],
+    [/reading studio|library|\bpdf\b|\breading(s)?\b|my book/i, 'studio', ['the Learning Studio reader', 'قارئ استوديو التعلّم']],
     [/learning games?|daily quest|check-?ins?|\bgames?\b|\bquest\b/i, 'games', ['Learning Games', 'ألعاب التعلّم']],
     [/growth plan|\bskills? plan\b/i, 'growth', ['your Growth Plan', 'خطة النمو']],
     [/insight/i, '#insight', ['your insight', 'رؤيتك']],

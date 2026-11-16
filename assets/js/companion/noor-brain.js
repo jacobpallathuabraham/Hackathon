@@ -448,7 +448,7 @@
     if (/(email|e-mail|mail|message|write|text).*(professor|prof\b|lecturer|instructor|\bdr\b|doctor|teacher|tutor|advis[eo]r)|(professor|lecturer|instructor).*(email|message)|بريد.*(الدكتور|الأستاذ|المحاضر)/i.test(t)) { await emailDraft(); return true; }
     if (/pomodoro|focus timer|\btimer\b|مؤقت/i.test(t)) {
       if (R && R.isOpen()) R.act('timer');
-      await mdSay(`${R && R.isOpen() ? 'I’ve started a **focus timer** in the Reading Studio. ' : ''}Try the **Pomodoro** rhythm:\n1. Pick **one** small task.\n2. Work for **25 minutes** — phone face down.\n3. Take a **5-minute** break: stand, stretch, water.\n4. After four rounds, take a longer 20-minute break.`, `${R && R.isOpen() ? 'بدأت **مؤقت تركيز** في استوديو القراءة. ' : ''}جرّب إيقاع **بومودورو**:\n1. اختر مهمة **واحدة** صغيرة.\n2. اعمل **٢٥ دقيقة** — والهاتف مقلوب.\n3. خذ استراحة **٥ دقائق**: قف وتمدّد واشرب الماء.\n4. بعد أربع جولات، خذ استراحة أطول ٢٠ دقيقة.`);
+      await mdSay(`${R && R.isOpen() ? 'I’ve started a **focus timer** in the Learning Studio reader. ' : ''}Try the **Pomodoro** rhythm:\n1. Pick **one** small task.\n2. Work for **25 minutes** — phone face down.\n3. Take a **5-minute** break: stand, stretch, water.\n4. After four rounds, take a longer 20-minute break.`, `${R && R.isOpen() ? 'بدأت **مؤقت تركيز** في قارئ استوديو التعلّم. ' : ''}جرّب إيقاع **بومودورو**:\n1. اختر مهمة **واحدة** صغيرة.\n2. اعمل **٢٥ دقيقة** — والهاتف مقلوب.\n3. خذ استراحة **٥ دقائق**: قف وتمدّد واشرب الماء.\n4. بعد أربع جولات، خذ استراحة أطول ٢٠ دقيقة.`);
       return true;
     }
     const def = t.match(/^(?:what does|what is|what's|whats|define|meaning of)\s+["“']?(.+?)["”']?(?:\s+mean)?\s*\??$/i);
@@ -519,7 +519,7 @@
     const vid = ERLY.videos && ERLY.videos.current && ERLY.videos.current();
     const range = vid ? pc.parseRange(text) : null;
     if (range && vid) { history.push({ role: 'user', text }); await videoRange(text, vid, range); ERLY.emit('noor:turn-end'); return true; }
-    // a passage the student attached (Reading Studio selection, "Ask about what I'm reading") is more precise than a screen snapshot
+    // a passage the student attached (Learning Studio reader selection, "Ask about what I'm reading") is more precise than a screen snapshot
     if (U.attached && U.attached()) return false;
     if (ERLY.reader && ERLY.reader.isOpen && ERLY.reader.isOpen() && !vid) return false; // the studio supplies its own page context
     if (!pc.isLooking(text) && !(vid && /\b(this|the) (video|lecture|clip|lesson)\b/i.test(text))) return false;
@@ -659,7 +659,7 @@
     const L = lang() === 'ar' ? 1 : 0;
     const lv = { none: 0, early: 1, some: 2, strong: 3 };
     pane.innerHTML = `
-      <p class="cmp-lead">${T('Everything ERLY has noticed across the site — Check-ins, lecture videos, the Reading Studio and your 14-day tracking — plus anything we’ve talked through. An area only rises when different sources agree.', 'كل ما لاحظه إيرلي عبر الموقع — الفحوصات، وفيديوهات المحاضرات، واستوديو القراءة، والتتبّع لـ١٤ يوماً — إضافة إلى ما تحدثنا عنه. لا يرتفع مجال إلا عندما تتفق مصادر مختلفة.')}</p>
+      <p class="cmp-lead">${T('Everything ERLY has noticed across the site — Check-ins, lecture videos, the Learning Studio reader and your 14-day tracking — plus anything we’ve talked through. An area only rises when different sources agree.', 'كل ما لاحظه إيرلي عبر الموقع — الفحوصات، وفيديوهات المحاضرات، وقارئ استوديو التعلّم، والتتبّع لـ١٤ يوماً — إضافة إلى ما تحدثنا عنه. لا يرتفع مجال إلا عندما تتفق مصادر مختلفة.')}</p>
       ${!on ? `<p class="cmp-empty">${T('Noticing is off, so only Check-ins and our conversations count. Turn on noticing in Reading signals to include videos and reading.', 'الملاحظة متوقفة، لذا تُحتسب الفحوصات ومحادثاتنا فقط. شغّل الملاحظة من إشارات القراءة لتضمين الفيديوهات والقراءة.')}</p>` : ''}
       <div class="cprof">${prof ? Object.values(prof).map((o, i) => {
         const r = res[o.area];

@@ -1,4 +1,4 @@
-/* ERLY Reading Studio — a full-screen reader for course PDFs.
+/* ERLY Learning Studio reader — a full-screen reader for course PDFs.
 
    - Library: pick one of the course readings, or open your own PDF / text
      file (read on this device with pdf.js; it is never uploaded).
@@ -972,7 +972,7 @@
   }
   function exportNotes() {
     const ns = notesOf().slice().sort((a, b) => a.from - b.from), marks = marksOf().slice().sort((a, b) => a - b);
-    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Reading Studio', 'مُصدَّر من استوديو القراءة في إيرلي')}_`].join('\n');
+    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Learning Studio reader', 'مُصدَّر من قارئ استوديو التعلّم في إيرلي')}_`].join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
     a.download = `notes-${DOC.title.replace(/\.(pdf|txt)$/i, '').replace(/[^\w-]+/g, '_')}.md`;

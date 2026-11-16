@@ -1,4 +1,4 @@
-/* ERLY Reading Studio — the course-reading library.
+/* ERLY Learning Studio reader — the course-reading library.
    Each reading has pages of paragraphs ([term] marks a glossary word), the
    course team's prepared help for each paragraph (plain-words summary and a
    quick check), an optional diagram with step-by-step notes, and a bilingual

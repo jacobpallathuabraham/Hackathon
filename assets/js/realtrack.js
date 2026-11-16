@@ -1,6 +1,6 @@
 /* ERLY — real tracking. The strict, calendar-driven version of the Support
    Pact: one real day at a time, no simulating, no fast-forward.
-     - Each calendar day holds the Reading Studio counts measured that day and
+     - Each calendar day holds the Learning Studio reader counts measured that day and
        one timed daily check-in, answered on the day (no back-filling).
      - A day is excluded from judgement when it was missed, paused, followed a
        short night (< 6 h sleep) or was unusual (ill, travel, family event,
