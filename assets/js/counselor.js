@@ -41,7 +41,7 @@
   };
   const FEEL = {
     reading: 'Profile A — re-reading, longer dwell and slower pace than their own normal, in both Arabic and English, through the watched week.',
-    executive: 'Profile B — 11th-hour spikes, abandoned submissions and late starts against their own baseline.',
+    executive: 'Profile B — work concentrated just before deadlines, unsent submissions and late starts against their own baseline.',
     language: 'Reading friction on English pages only — the per-language baselines point to language load rather than a learning difference.',
     strain: 'Profile C — a sudden drop across almost every baseline at once. Route to a counsellor first; never tools.',
   };
@@ -50,7 +50,7 @@
   const SEM = ['Spr 25', 'Fall 25', 'Spr 26', 'Fall 26*'];
   const S = [
     { id: '2026-0311', name: 'Mariam Al Hammadi', prog: 'Mechanical Eng.', year: 2, status: 'new', track: ['reading'], dw: [2.4, 1.9], gpa: [3.6, 3.4, 3.1, 2.9], on: [92, 88, 80, 71], req: -1, ally: 'Sara (sister)', note: 'Re-reading spikes in English PDFs after 11pm. Read-aloud helped (“easier”). Asked Noor for plain-words summaries 9 times.' },
-    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['executive'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: '11th-hour submissions on most judged days; three abandoned drafts. Says starting is the hard part.' },
+    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['executive'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: 'Submissions close to the deadline on most judged days; three abandoned drafts. Says starting is the hard part.' },
     { id: '2026-0129', name: 'Aisha Rahman', prog: 'Law', year: 1, status: 'new', track: null, gpa: [null, null, 3.4, 3.2], on: [null, null, 88, 84], req: 0, ally: null, note: 'Self-referred without tracking: “I suspect I might have dyslexia; reading cases takes me hours.”' },
     { id: '2026-0442', name: 'Noura Al Ketbi', prog: 'Mechanical Eng.', year: 2, status: 'scheduled', slot: 1, slotT: '10:30', track: ['reading'], dw: [2.6, 1.3], gpa: [3.8, 3.6, 3.4, 3.0], on: [95, 90, 86, 72], req: -4, ally: 'Sara (sister)', note: 'Much slower on English pages than Arabic — check language load vs. decoding.' },
     { id: '2026-0618', name: 'Rahul Menon', prog: 'Business', year: 3, status: 'scheduled', slot: 3, slotT: '13:30', track: ['strain'], dw: [1.3, null], gpa: [3.3, 3.1, 3.0, 2.6], on: [90, 88, 84, 76], req: -5, ally: null, note: 'Late-night study and shorter sessions since a family move. Took the breathing break with Noor often.' },

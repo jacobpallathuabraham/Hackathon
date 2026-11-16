@@ -116,7 +116,7 @@
       ${areas.length && !sum.crisis ? `<div class="ins-feel">${areas.map(a => `<article class="ins-card ins-feel__c ${areas.length === 1 ? 'is-wide' : ''}"><div class="ins-illo">${ILLO[a === 'language' ? 'language' : a]}</div><h4>${T(...FEEL[a].h)}</h4><p>${T(...FEEL[a].p)}</p></article>`).join('')}</div>` : ''}
       <div class="ins-grid">
         <div class="ins-card">
-          <h4>${T('Friction fingerprint', 'بصمة الاحتكاك')}</h4>
+          <h4>${T('Where study felt hardest', 'أين كانت الدراسة أصعب')}</h4>
           <p class="small muted">${T('Where strain happened — metadata only.', 'أين حدث الضغط — بيانات وصفية فقط.')}</p>
           <div class="fp">${sum.fp.lang.map(r => bar(T(r[0], r[1]), r[2], 'var(--c-R)')).join('')}<hr>${sum.fp.format.map(r => bar(T(r[0], r[1]), r[2], 'var(--c-R)')).join('')}<hr>${sum.fp.time.map(r => bar(T(r[0], r[1]), r[2], 'var(--c-W)')).join('')}<hr>${sum.fp.deadline.map(r => bar(T(r[0], r[1]), r[2], 'var(--c-L)')).join('')}</div>
           <p class="small fp__note">${sum.englishOnly ? T('Strain showed up in English only — more like language load than a learning difference.', 'ظهر الضغط في الإنجليزية فقط — أقرب إلى عبء اللغة منه إلى صعوبة تعلّم.') : sum.lang.ar > .3 ? T('Strain showed up in both languages — the pattern worth a closer look.', 'ظهر الضغط في اللغتين — وهذا النمط يستحق نظرة أقرب.') : T('No clear language difference.', 'لا فرق واضح بين اللغتين.')}</p>
@@ -137,7 +137,7 @@
       </div>
       <div class="ins-next">
         <p>${sum.crisis ? T('A counsellor first. If you want, SAS can look at learning support later — there’s no rush.', 'المرشد أولاً. وإن أردت، يمكن لخدمات الطلبة النظر في دعم التعلّم لاحقاً — لا عجلة.') : sum.strong ? T('Your month points clearly in one direction. That\'s enough to talk to SAS — they can tell you <b>why</b>, and what support you\'re entitled to.', 'شهرك يشير بوضوح إلى اتجاه واحد. هذا كافٍ للحديث مع خدمات الطلبة — يمكنهم إخبارك <b>لماذا</b>، وما الدعم الذي يحق لك.') : T('You can take this picture to SAS whenever you like — or keep using your tools.', 'يمكنك أخذ هذه الصورة إلى خدمات الطلبة متى شئت — أو الاستمرار في استخدام أدواتك.')}</p>
-        <div class="row-btns"><button class="btn btn--accent" data-report>${T('View my report (PDF)', 'اعرض تقريري (PDF)')}</button><a href="#handoff" class="btn btn--ghost">${sum.crisis ? T('Talk to a counsellor', 'تحدّث مع مرشد') : T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><button class="btn btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
+        <div class="row-btns"><button class="btn btn--accent" data-report>${T('View my report (PDF)', 'اعرض تقريري (PDF)')}</button><a href="#handoff" class="btn btn--ghost">${sum.crisis ? T('Talk to a counsellor', 'تحدّث مع مرشد') : T('Take it to SAS', 'خذها إلى خدمات الطلبة')}</a><a class="btn btn--ghost" href="learn.html#/read">${T('Open the Learning Studio', 'افتح استوديو التعلّم')}</a></div>
       </div>`;
   }
   box && box.addEventListener('click', e => {

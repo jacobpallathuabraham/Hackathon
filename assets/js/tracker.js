@@ -520,7 +520,7 @@
     return `<div class="livefeed" id="liveFeed">
       <div class="livefeed__head"><p class="panel__h mono">${T('Live from your Reading Studio', 'مباشر من استوديو القراءة')}</p>
         <span class="livefeed__st ${tracking ? 'is-on' : ''}"><i></i>${tracking ? T('recording on this device', 'يُسجَّل على هذا الجهاز') : S.status === 'ended' ? T('tracking ended — preview only, nothing is saved', 'انتهى التتبّع — معاينة فقط، لا يُحفظ شيء') : S.pause ? T('paused — nothing is recorded', 'متوقف مؤقتاً — لا يُسجَّل شيء') : T('preview only — nothing saved until you sign', 'معاينة فقط — لا يُحفظ شيء حتى توقّع')}</span>
-        <button class="btn btn--xs btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
+        <a class="btn btn--xs btn--ghost" href="learn.html#/read">${T('Open the Learning Studio', 'افتح استوديو التعلّم')}</a></div>
       <div class="livefeed__grid">${live.map(i => `<div class="lf" data-id="${i.id}"><b class="mono" data-lv="${i.id}">${fmtLive(i)}</b><span>${T(i.en, i.ar)}</span><small class="mono">${i.id} · ${i.tag}</small></div>`).join('')}</div>
     </div>`;
   }
