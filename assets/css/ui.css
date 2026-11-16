@@ -13,11 +13,11 @@
 }
 
 /* ---------- buttons: hover, press, keyboard focus, loading, disabled ---------- */
-:where(button, [role="button"], .btn, a.btn, .ls-btn, .icon-btn, .chip, [role="tab"]) {
+:where(button, [role="button"]:not(svg *), .btn, a.btn, .ls-btn, .icon-btn, .chip, [role="tab"]) { /* SVG parts are excluded: a CSS transform would override their own transform attribute */
   transition: background-color var(--ui-mid) var(--ui-ease), border-color var(--ui-mid) var(--ui-ease), color var(--ui-mid) var(--ui-ease), box-shadow var(--ui-mid) var(--ui-ease), transform var(--ui-fast) var(--ui-ease), opacity var(--ui-mid) var(--ui-ease);
   -webkit-tap-highlight-color: transparent;
 }
-:where(button, [role="button"], .btn, .ls-btn, .icon-btn):not(:disabled):not([aria-disabled="true"]):active { transform: translateY(1px) scale(.985); transition-duration: 60ms; }
+:where(button, [role="button"]:not(svg *), .btn, .ls-btn, .icon-btn):not(:disabled):not([aria-disabled="true"]):active { transform: translateY(1px) scale(.985); transition-duration: 60ms; }
 :where(button, [role="button"], .btn, a.btn, .ls-btn, .icon-btn, [role="tab"], a):focus-visible { outline: none; box-shadow: var(--ui-ring-strong); }
 :where(button, .btn, .ls-btn):disabled, :where(button, .btn, .ls-btn)[aria-disabled="true"] { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 /* a button that is working: label stays (no width jump), a small spinner sits over it */
@@ -81,11 +81,11 @@ html:not(.vt-theme)::view-transition-new(root) { animation: ui-page-in 260ms var
 @keyframes ui-page-in { from { opacity: 0; transform: translateY(6px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --ui-fast: 1ms; --ui-mid: 1ms; --ui-slow: 1ms; }
-  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  :root { --ui-fast: .001ms; --ui-mid: .001ms; --ui-slow: .001ms; }
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; transition-delay: 0s !important; }
   html:not(.vt-theme)::view-transition-old(root), html:not(.vt-theme)::view-transition-new(root) { animation: none; }
 }
-html.a11y-still *, html.a11y-still *::before, html.a11y-still *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+html.a11y-still *, html.a11y-still *::before, html.a11y-still *::after { animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; transition-delay: 0s !important; }
 
 /* ===== Student action hub (v20) ===== */
 .hub { position: relative; isolation: isolate; padding: clamp(84px, 9vw, 112px) 0 clamp(36px, 5vw, 64px); }

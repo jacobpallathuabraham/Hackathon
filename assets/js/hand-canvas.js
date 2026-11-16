@@ -98,7 +98,7 @@
       if (e.pointerType === 'pen') penSeen = true;
       if (e.pointerType === 'touch') { touches.set(e.pointerId, [e.clientX, e.clientY]); if (touches.size === 2) { cancelStroke(); startPinch(); return; } if (penSeen) return; }
       if (e.button > 0 || touches.size > 1) return;
-      vp.setPointerCapture(e.pointerId);
+      try { vp.setPointerCapture(e.pointerId); } catch (er) { /* not capturable (synthetic or already released) */ }
       if (st.tool === 'pan') { cur = null; pinch = { x: e.clientX, y: e.clientY, px: pan.x, py: pan.y, one: true }; return; }
       e.preventDefault(); vp.focus({ preventScroll: true });
       cur = { tool: st.tool, size: st.size, color: st.color, pressure: e.pointerType === 'pen' && e.pressure > 0 && e.pressure !== 0.5, pts: [], id: e.pointerId, drawn: 0 };
