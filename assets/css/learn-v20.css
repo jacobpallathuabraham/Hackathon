@@ -233,3 +233,7 @@ body.ls-sheet-on .a11y-fab, body.ls-sheet-on .cmp-launch, body.ls-sheet-on [clas
 .lss .lss__back { background: transparent !important; border-top: 1px solid var(--line); border-radius: 0 !important; margin-top: 6px; padding-top: 16px; }
 /* the floating accessibility button sits bottom-left over the rail: keep the rail's last links clear of it */
 @media (min-width: 821px) { .lsr { padding-bottom: 84px; } }
+/* lesson cards carry their subject's art, quietly */
+.ls-card--art { position: relative; overflow: hidden; }
+.ls-card--art > * { position: relative; }
+.ls-card--art > .lcard__art { position: absolute; inset-inline-end: -10px; top: -6px; width: 120px; opacity: .22; pointer-events: none; }

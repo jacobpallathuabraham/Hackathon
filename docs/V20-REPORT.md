@@ -348,4 +348,4 @@ REGRESSION_TABLE
     - axe clean on 10 Learning Studio states in both themes.
 12. **Screenshots and remaining:**
     - `compare/learning-studio-home.png`, `compare/lesson.png`, and `after/desktop-*-learn_html*.png`.
-    - Remaining: lesson cards do not yet use the subject art.
+    - Lesson cards now carry their subject's art too.

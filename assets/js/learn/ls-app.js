@@ -16,7 +16,8 @@
 
   function lessonCard(L) {
     const p = st.data().lessons[L.id], n = p ? L.sections.filter(s => (p.done || {})[s.id]).length : 0;
-    return `<a class="ls-card" href="#/lesson/${L.id}"><span class="ls-card__k">${esc(L.subject)} · ${esc(L.level)}</span><b>${esc(L.title)}</b><small>${L.mins} min · ${L.sections.length} ${T('sections', 'أقسام')} · ${(L.formats || []).map(f => ({ text: 'read', visual: 'model', video: 'video', practice: 'practice', audio: 'audio' })[f]).join(' · ')}</small>${p ? `<span class="ls-meter ls-meter--sm" role="progressbar" aria-label="${T('Progress', 'التقدم')}" aria-valuemin="0" aria-valuemax="${L.sections.length}" aria-valuenow="${n}"><i style="width:${100 * n / L.sections.length}%"></i></span><small>${p.completed ? '✓ ' + T('Finished', 'مكتمل') : n + '/' + L.sections.length + ' ' + T('done', 'منجز')}</small>` : ''}${LS.provBadge(L.provenance.kind)}</a>`;
+    const S = LS.subjectOf && LS.subjectOf(L.subject);
+    return `<a class="ls-card ls-card--art" href="#/lesson/${L.id}" style="--hue:${S ? S.hue : 30}">${S && LS.subjectArt ? LS.subjectArt(S.id, 'lcard__art') : ''}<span class="ls-card__k">${esc(L.subject)} · ${esc(L.level)}</span><b>${esc(L.title)}</b><small>${L.mins} min · ${L.sections.length} ${T('sections', 'أقسام')} · ${(L.formats || []).map(f => ({ text: 'read', visual: 'model', video: 'video', practice: 'practice', audio: 'audio' })[f]).join(' · ')}</small>${p ? `<span class="ls-meter ls-meter--sm" role="progressbar" aria-label="${T('Progress', 'التقدم')}" aria-valuemin="0" aria-valuemax="${L.sections.length}" aria-valuenow="${n}"><i style="width:${100 * n / L.sections.length}%"></i></span><small>${p.completed ? '✓ ' + T('Finished', 'مكتمل') : n + '/' + L.sections.length + ' ' + T('done', 'منجز')}</small>` : ''}${LS.provBadge(L.provenance.kind)}</a>`;
   }
   /* ---------------- Library ---------------- */
   function resources() {
