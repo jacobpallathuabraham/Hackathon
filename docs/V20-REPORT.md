@@ -270,7 +270,31 @@ These names were replaced in student, counsellor, report, insight and Arabic tex
 
 **Full regression run** (`tests/e2e/*.e2e.js`; `audio-lessons` and `neural-voice` need large model downloads and were not run):
 
-REGRESSION_TABLE
+**First batch run:** 30 suites, 21 passing. The 9 failures, and what was done about each:
+
+| Suite | Batch result | Cause | Action | Result now |
+|---|---|---|---|---|
+| `companion-quality` | fail | **Real v20 regression.** The new press style moved SVG nodes with `role="button"`. | Fixed in `ui.css` | passes |
+| `a11y` | fail | **Real v20 regression.** "Stop animations" used 1 ms transitions. A second cause was that the test targeted the removed ticker. | Fixed in `ui.css`; the test now checks the ambient background | passes |
+| `nav` | fail | The test waited for the old Growth Plan view | Wait updated | passes |
+| `page-video` | 7/8 | The test scrolled to the removed `#reading-studio` section | Points at "Get support" instead | 8/8 |
+| `studio-noor` | fail | The test clicked the removed student-page reader button | Opens the reader directly; the entry point is covered by `learning-studio` | passes |
+| `v9` | fail | The test read the old hero headline | Uses the new hub heading | passes |
+| `v10` | fail | The test waited for the old Growth Plan view | Checks both views for streaks | passes |
+| `human3d` | fail | Lip-sync latency median over 200 ms under batch load (software WebGL). The v19 build failed the same check in this session. | none | passes alone |
+| `visual-chat` | 17/18 | 3D drag-rotation timing under batch load | none | 18/18 alone |
+
+**All other suites passed in the batch:**
+- a11y-centre, avatar-lab, chat, companion;
+- growth-v18 (15/15), growth-v20 (16/16), handwriting-v20 (16/16);
+- lab (34/34), learning-studio (34/34);
+- noor, noor-platform, noor-tools, noor-v12, noor-v17 (9/9);
+- problems (14/14), realtrack, syllabus-chat;
+- visual-acceptance (10/10), visual-library, visuals, vspec.
+
+**After the fixes:** every suite passes. The two load-sensitive suites (`human3d`, `visual-chat`) pass when run on their own.
+
+**Also run:** axe on 50 page states (0 violations); the 56-load sweep (0 page errors, 0 overflow); `tests/bench/ink-bench.js`.
 
 ### 16. Before and after screenshots
 - `docs/v20-shots/compare/`:
