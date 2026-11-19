@@ -14,6 +14,7 @@
   /* ---------- the Visual Lab model, live inside a lesson card (one live model at a time) ---------- */
   let liveHost = null;
   LS.mountModel = async function (host, engine, params, meta) {
+    if (!window.ERLY_LAB && LS.needLab) { host.innerHTML = `<p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Loading the model…', 'أحمّل النموذج…')}</p>`; try { await LS.needLab(); } catch (e) { /* reported below */ } if (!host.isConnected) return; }
     const L = window.ERLY_LAB; if (!L) { host.innerHTML = '<p class="ls-muted">The Visual Lab could not load on this page.</p>'; return; }
     if (liveHost && liveHost !== host && liveHost.isConnected) { liveHost.innerHTML = `<button type="button" class="ls-btn ls-btn--quiet" data-relive>${T('Show the model here again', 'اعرض النموذج هنا مجدداً')}</button>`; liveHost.closest('.ls-labcard') && liveHost.closest('.ls-labcard').classList.remove('is-live'); }
     host.innerHTML = `<p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Building the model…', 'أبني النموذج…')}</p>`;

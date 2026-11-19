@@ -38,7 +38,7 @@
   const preview = {}; // live counts before consent — memory only, never saved
   const previewLedger = {};
 
-  /* ---------- public API used by the Reading Studio ---------- */
+  /* ---------- public API used by the Learning Studio ---------- */
   const LEDGER_OF = { V01: 'scroll', V04: 'line', V05: 'dwell', V02: 'zoom', V07: 'layout', V08: 'tts', U02: 'replay', U03: 'speed', M03: 'lookup', H01: 'tts', H07: 'tap', O07: 'summary', Q02: 'answer' };
   ERLY.track = (id, v = 1, mode = 'add') => {
     const on = ERLY.isTracking();
@@ -405,7 +405,7 @@
           ${real() ? `<div class="real-rules">${ICON('lock')}<div><b>${T('Strict mode — for an actual student', 'الوضع الصارم — لطالب حقيقي')}</b><ul>
             <li>${T('Day 1 is today. Days follow the real calendar — nothing can be simulated or skipped ahead.', 'اليوم الأول هو اليوم. تتبع الأيام التقويم الحقيقي — لا يمكن محاكاة شيء أو تخطّيه.')}</li>
             <li>${T('Each day: an 8-question check-in (sleep, mood, stress, study time, what was hard), timed and stamped. Only today can be answered.', 'كل يوم: تسجيل من ٨ أسئلة (النوم، المزاج، التوتر، وقت الدراسة، ما كان صعباً)، موقّت ومختوم. لا يُجاب إلا عن اليوم.')}</li>
-            <li>${T('Only what this device actually measures in the Reading Studio, plus your answers, is used. LMS indicators are left out.', 'لا يُستخدم إلا ما يقيسه هذا الجهاز فعلاً في استوديو القراءة، مع إجاباتك. تُستبعد مؤشرات نظام التعلّم.')}</li>
+            <li>${T('Only what this device actually measures in the Learning Studio, plus your answers, is used. LMS indicators are left out.', 'لا يُستخدم إلا ما يقيسه هذا الجهاز فعلاً في استوديو التعلّم، مع إجاباتك. تُستبعد مؤشرات نظام التعلّم.')}</li>
             <li>${T('Missed, paused, short-sleep (< 6 h) and unusual days are excluded. A baseline needs 7+ clean days.', 'تُستبعد الأيام الفائتة والمتوقفة وقصيرة النوم (أقل من ٦ ساعات) وغير العادية. يحتاج الأساس ٧ أيام نظيفة أو أكثر.')}</li>
           </ul></div></div>` : ''}
           <section class="pstep">
@@ -518,9 +518,9 @@
     const live = LIST.filter(i => i.live);
     const tracking = ERLY.isTracking();
     return `<div class="livefeed" id="liveFeed">
-      <div class="livefeed__head"><p class="panel__h mono">${T('Live from your Reading Studio', 'مباشر من استوديو القراءة')}</p>
+      <div class="livefeed__head"><p class="panel__h mono">${T('Live from your Learning Studio', 'مباشر من استوديو التعلّم')}</p>
         <span class="livefeed__st ${tracking ? 'is-on' : ''}"><i></i>${tracking ? T('recording on this device', 'يُسجَّل على هذا الجهاز') : S.status === 'ended' ? T('tracking ended — preview only, nothing is saved', 'انتهى التتبّع — معاينة فقط، لا يُحفظ شيء') : S.pause ? T('paused — nothing is recorded', 'متوقف مؤقتاً — لا يُسجَّل شيء') : T('preview only — nothing saved until you sign', 'معاينة فقط — لا يُحفظ شيء حتى توقّع')}</span>
-        <button class="btn btn--xs btn--ghost" data-studio>${T('Open the Reading Studio', 'افتح استوديو القراءة')}</button></div>
+        <button class="btn btn--xs btn--ghost" data-studio>${T('Open the Learning Studio', 'افتح استوديو التعلّم')}</button></div>
       <div class="livefeed__grid">${live.map(i => `<div class="lf" data-id="${i.id}"><b class="mono" data-lv="${i.id}">${fmtLive(i)}</b><span>${T(i.en, i.ar)}</span><small class="mono">${i.id} · ${i.tag}</small></div>`).join('')}</div>
     </div>`;
   }

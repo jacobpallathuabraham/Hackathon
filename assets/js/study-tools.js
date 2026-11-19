@@ -1,4 +1,4 @@
-/* ERLY Reading Studio — on-device study helpers (pure, no DOM).
+/* ERLY Learning Studio — on-device study helpers (pure, no DOM).
 
    - structurePage(items): turns the positioned text runs that pdf.js gives
      for one PDF page into a heading and readable paragraphs (joins lines,

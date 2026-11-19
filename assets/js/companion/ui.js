@@ -1,4 +1,4 @@
-/* ERLY AI Reading Companion — the interface inside the Reading Studio.
+/* ERLY AI Reading Companion — the interface inside the Learning Studio.
 
    Floating launcher -> a panel with four tabs:
      Chat           text + optional voice conversation, support tools
@@ -136,7 +136,7 @@
             <div class="cmp__plusmenu" id="cmpPlusMenu" hidden role="menu">
               <button type="button" role="menuitem" data-plus="read">${ICON('book')}<span><b>${T('Ask about what I’m reading', 'اسأل عما أقرؤه')}</b><small>${T('Attach the open page as context', 'أرفق الصفحة المفتوحة كسياق')}</small></span></button>
               <button type="button" role="menuitem" data-plus="image">${ICON('upload')}<span><b>${T('Add an image or screenshot', 'أضف صورة أو لقطة شاشة')}</b><small>${T('PNG, JPEG or WebP — read by a vision AI model if one is connected', 'PNG أو JPEG أو WebP — يقرأها نموذج يرى الصور إن كان متصلاً')}</small></span></button>
-              <button type="button" role="menuitem" data-plus="pdf">${ICON('upload')}<span><b>${T('Open a PDF', 'افتح ملف PDF')}</b><small>${T('In the Reading Studio — stays on this device', 'في استوديو القراءة — يبقى على جهازك')}</small></span></button>
+              <button type="button" role="menuitem" data-plus="pdf">${ICON('upload')}<span><b>${T('Open a PDF', 'افتح ملف PDF')}</b><small>${T('In the Learning Studio — stays on this device', 'في استوديو التعلّم — يبقى على جهازك')}</small></span></button>
               <button type="button" role="menuitem" data-plus="voice">${ICON('wave')}<span><b>${T('Voice conversation', 'محادثة صوتية')}</b><small>${T('Talk it through, hands-free', 'تحدث دون استخدام يديك')}</small></span></button>
               <button type="button" role="menuitem" data-plus="brain">${ICON('chip')}<span><b>${T('Noor’s brain', 'عقل نور')}</b><small>${T('Built-in, on-device AI or cloud', 'مدمج، أو ذكاء على الجهاز، أو سحابي')}</small></span></button>
               <button type="button" role="menuitem" data-plus="new">${ICON('edit')}<span><b>${T('New chat', 'محادثة جديدة')}</b><small>${T('Clear this conversation', 'امسح هذه المحادثة')}</small></span></button>
@@ -864,7 +864,7 @@
     zoom: { icon: 'search', t: ['Zooming in and out a lot?', 'تكبّر وتصغّر كثيراً؟'], b: ['Is the text hard to see, or is something not clear? I can make it bigger and easier on the eyes so you don’t have to keep zooming.', 'هل النص صعب الرؤية، أم أن شيئاً غير واضح؟ يمكنني تكبيره وجعله أريح للعين حتى لا تضطر للتكبير باستمرار.'], acts: [['bigger', 'Make text bigger & clearer', 'كبّري النص ووضّحيه'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
     pinch: { icon: 'eyeScan', t: ['Is the text too small?', 'هل النص صغير جداً؟'], b: ['I noticed some pinch-zooming. Are you having trouble reading? I can make the text bigger so you don’t have to pinch.', 'لاحظت بعض التكبير بإصبعين. هل تجد صعوبة في القراءة؟ يمكنني تكبير النص حتى لا تضطر لذلك.'], acts: [['bigger', 'Yes, bigger text', 'نعم، نص أكبر'], ['tts', 'Read it to me', 'اقرئيه لي'], ['tint', 'Softer page colour', 'لون صفحة أهدأ']] },
     scroll: { icon: 'scroll', t: ['Scrolling up and down a lot?', 'تمرّر للأعلى والأسفل كثيراً؟'], b: ['Are you looking for something, or is this part hard to follow? I can help you find it or break it down.', 'هل تبحث عن شيء، أم أن هذا الجزء صعب المتابعة؟ يمكنني مساعدتك في إيجاده أو تبسيطه.'], acts: [['sum', 'Summarise this page', 'لخّصي هذه الصفحة'], ['find', 'Search the reading', 'ابحثي في القراءة'], ['focus', 'Line focus', 'تركيز السطر']] },
-    pscroll: { icon: 'scroll', t: ['Looking for something?', 'تبحث عن شيء؟'], b: ['You’ve been scrolling up and down — is anything confusing, or can I help you find something?', 'كنت تمرّر للأعلى والأسفل — هل هناك شيء محيّر، أو يمكنني مساعدتك في إيجاد شيء؟'], acts: [['where', 'Help me find it', 'ساعديني في إيجاده'], ['studio', 'Open the Reading Studio', 'افتحي استوديو القراءة'], ['ptext', 'Bigger text on this site', 'نص أكبر في الموقع']] },
+    pscroll: { icon: 'scroll', t: ['Looking for something?', 'تبحث عن شيء؟'], b: ['You’ve been scrolling up and down — is anything confusing, or can I help you find something?', 'كنت تمرّر للأعلى والأسفل — هل هناك شيء محيّر، أو يمكنني مساعدتك في إيجاد شيء؟'], acts: [['where', 'Help me find it', 'ساعديني في إيجاده'], ['studio', 'Open the Learning Studio', 'افتحي استوديو التعلّم'], ['ptext', 'Bigger text on this site', 'نص أكبر في الموقع']] },
     ppinch: { icon: 'eyeScan', t: ['Is the text too small?', 'هل النص صغير جداً؟'], b: ['I noticed some pinch-zooming. Shall I make everything on this site a bit bigger?', 'لاحظت بعض التكبير بإصبعين. هل أكبّر كل شيء في الموقع قليلاً؟'], acts: [['ptext', 'Yes, bigger text', 'نعم، نص أكبر'], ['studio', 'Read in the Studio instead', 'اقرأ في الاستوديو بدلاً من ذلك']] },
     stall: { icon: 'clock', t: ['Still on this part?', 'ما زلت عند هذا الجزء؟'], b: ['You’ve been on this section for a while — totally fine. Is something tricky? I can explain it or read it aloud.', 'أنت عند هذا القسم منذ مدة — وهذا طبيعي تماماً. هل هناك شيء صعب؟ يمكنني شرحه أو قراءته بصوت عالٍ.'], acts: [['explain', 'Explain it', 'اشرحيه'], ['tts', 'Read it aloud', 'اقرئيه بصوت'], ['break', '5-minute break', 'استراحة ٥ دقائق']] }
   };
@@ -880,7 +880,7 @@
     if (ev.type === 'zoom' || ev.type === 'pinch' || ev.type === 'scrolldir') { clearTimeout(nudgeRecord.t); nudgeRecord.t = setTimeout(nudgeCheck, 700); }
   }
   const trimNud = t => ['zoom', 'pinch', 'scroll', 'pscroll'].forEach(k => { while (nud[k].length && t - nud[k][0] > 60e3) nud[k].shift(); });
-  // outside the Reading Studio: the student site itself (scrolling back and forth, pinch-zoom)
+  // outside the Learning Studio: the student site itself (scrolling back and forth, pinch-zoom)
   let pY = scrollY, pDir = 0, pinchS = window.visualViewport ? visualViewport.scale : 1;
   addEventListener('scroll', () => {
     if (R.isOpen()) return;
@@ -1446,7 +1446,7 @@
     inCall: false, brain: null,
     submitText: t => submit(t),
     ai,
-    // ask Noor something from elsewhere (the Reading Studio's selection tools, study tab…)
+    // ask Noor something from elsewhere (the Learning Studio's selection tools, study tab…)
     ask(text, o) {
       o = o || {};
       openPanel('chat');

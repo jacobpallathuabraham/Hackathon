@@ -1,4 +1,4 @@
-/* ERLY Reading Studio — a full-screen reader for course PDFs.
+/* ERLY Learning Studio — a full-screen reader for course PDFs.
 
    - Library: pick one of the course readings, or open your own PDF / text
      file (read on this device with pdf.js; it is never uploaded).
@@ -46,7 +46,9 @@
   const KEY = 'erly-studio-v1';
   let db = { notes: {}, marks: {}, prog: {} };
   try { db = Object.assign(db, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* private mode */ }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* storage full or blocked */ } };
+  // inside the Learning Studio the student's storage choice decides: only "Save on this device" writes anything
+  const mayStore = () => { const LS = window.LS; if (!LS || !LS.store || !document.body.classList.contains('at')) return true; const c = LS.store.consent(); return !!c && c.store === 'device' && LS.store.mode() !== 'demo'; };
+  const save = () => { if (!mayStore()) return; try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* storage full or blocked */ } };
   const notesOf = () => (db.notes[DOC.id] = db.notes[DOC.id] || []);
   const marksOf = () => (db.marks[DOC.id] = db.marks[DOC.id] || []);
 
@@ -62,7 +64,7 @@
   root.hidden = true;
   root.setAttribute('role', 'dialog');
   root.setAttribute('aria-modal', 'true');
-  root.setAttribute('aria-label', 'ERLY Reading Studio');
+  root.setAttribute('aria-label', 'ERLY Learning Studio');
   document.body.appendChild(root);
 
   const termKey = t => { if (!t) return null; if (DOC.terms[t]) return t; const k = Object.keys(DOC.terms).find(x => x.toLowerCase() === String(t).toLowerCase()); return k || null; };
@@ -83,7 +85,7 @@
 
   root.innerHTML = `
     <header class="studio__top">
-      <button class="studio__close" id="stClose" aria-label="${T('Close the Reading Studio', 'إغلاق استوديو القراءة')}">${ICON('x')}</button>
+      <button class="studio__close" id="stClose" aria-label="${T('Close the Learning Studio', 'إغلاق استوديو التعلّم')}">${ICON('x')}</button>
       <button class="icon-btn st-ib" id="stLibBtn" aria-label="${T('Library', 'المكتبة')}" title="${T('Library', 'المكتبة')}">${ICON('grid')}</button>
       <div class="studio__file">${ICON('file')}<span><b id="stTitle"></b><small id="stCourse"></small></span></div>
       <div class="studio__pages" id="stPages"></div>
@@ -179,9 +181,9 @@
       <div class="slib__glow" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="slib__in">
         <header class="slib__head">
-          <div><p class="slib__k mono">${T('Reading Studio', 'استوديو القراءة')}</p><h2>${T('Choose what to read', 'اختر ما تقرؤه')}</h2><p class="slib__lead">${T('Your course readings, ready with read-aloud, highlights, flashcards and Noor. Or open your own PDF — it stays on this device.', 'قراءات موادك جاهزة مع القراءة الصوتية والتمييز والبطاقات ونور. أو افتح ملف PDF خاصاً بك — يبقى على هذا الجهاز.')}</p></div>
+          <div><p class="slib__k mono">${T('Learning Studio', 'استوديو التعلّم')}</p><h2>${T('Choose what to read', 'اختر ما تقرؤه')}</h2><p class="slib__lead">${T('Your course readings, ready with read-aloud, highlights, flashcards and Noor. Or open your own PDF — it stays on this device.', 'قراءات موادك جاهزة مع القراءة الصوتية والتمييز والبطاقات ونور. أو افتح ملف PDF خاصاً بك — يبقى على هذا الجهاز.')}</p></div>
           <button class="btn btn--sm btn--ghost slib__back" id="stLibBack" hidden></button>
-          <button class="studio__close slib__x" id="stLibX" aria-label="${T('Close the Reading Studio', 'إغلاق استوديو القراءة')}">${ICON('x')}</button>
+          <button class="studio__close slib__x" id="stLibX" aria-label="${T('Close the Learning Studio', 'إغلاق استوديو التعلّم')}">${ICON('x')}</button>
         </header>
         <div class="slib__bar">
           <label class="slib__search">${ICON('search')}<input id="stLibQ" type="search" autocomplete="off" placeholder="${T('Search readings, courses, topics…', 'ابحث في القراءات والمواد والمواضيع…')}" aria-label="${T('Search the library', 'ابحث في المكتبة')}"></label>
@@ -450,7 +452,7 @@
     setTimeout(() => { if (!root.classList.contains('is-open')) { root.hidden = true; $('#stLib', root).hidden = true; $('#stLib', root).classList.remove('is-in'); root.classList.remove('lib-open'); } }, reduce ? 0 : 560);
   }
   ERLY.openStudio = open;
-  document.addEventListener('click', e => { const b = e.target.closest('[data-studio]'); if (b) { e.preventDefault(); open(b, { doc: b.dataset.studio || null }); } });
+  document.addEventListener('click', e => { const b = e.target.closest('[data-studio]'); if (b) { e.preventDefault(); ERLY.openStudio(b, { doc: b.dataset.studio || null }); } });
   $('#stClose', root).addEventListener('click', close);
   addEventListener('keydown', e => {
     if (e.key !== 'Escape' || root.hidden) return;
@@ -888,7 +890,7 @@
     sel.classList.remove('is-in'); void sel.offsetWidth; sel.classList.add('is-in');
     clearTimeout(selMeasure); selMeasure = setTimeout(() => { if (!String(getSelection()).trim()) track('M07'); }, 2500);
   }
-  function hideSel() { sel.hidden = true; selNow = null; }
+  function hideSel() { sel.hidden = true; selNow = null; restoreSelTools(); }
   document.addEventListener('selectionchange', () => {
     if (root.hidden) return;
     clearTimeout(selT);
@@ -911,8 +913,28 @@
       if (showTermAt(key, r)) return;
       askNoor(act === 'define' ? T(`What does “${s.text}” mean here? Explain it simply in one or two sentences.`, `ما معنى «${s.text}» هنا؟ اشرحه ببساطة في جملة أو جملتين.`) : T(`Translate into Arabic and explain briefly: “${s.text}”`, `ترجم إلى العربية واشرح باختصار: «${s.text}»`), s.text);
     }
-    if (act === 'ask') { hideSel(); getSelection().removeAllRanges(); askNoor(T(`Explain this passage in simple words: “${s.text.slice(0, 700)}”`, `اشرح هذا المقطع بكلمات بسيطة: «${s.text.slice(0, 700)}»`), s.text); }
+    if (act === 'ask') { showAskMenu(); return; }
+    const q = e.target.closest('[data-sq]');
+    if (q) { const k = q.dataset.sq, txt = s.text.slice(0, 900); hideSel(); getSelection().removeAllRanges(); askNoor(ASKS[k][1](txt), s.text); }
   });
+  // the ways a student can ask about a selected passage (the passage always travels with the question)
+  const ASKS = {
+    explain: [['Explain this', 'اشرح هذا'], t => T(`Explain this passage clearly, at my level: “${t}”`, `اشرح هذا المقطع بوضوح: «${t}»`)],
+    simplify: [['Simplify', 'بسّط'], t => T(`Explain this in simpler words, as if I am meeting it for the first time: “${t}”`, `اشرح هذا بكلمات أبسط: «${t}»`)],
+    example: [['Give an example', 'مثال'], t => T(`Give me one concrete example of the idea in this passage: “${t}”`, `أعطني مثالاً على فكرة هذا المقطع: «${t}»`)],
+    summary: [['Summarise', 'لخّص'], t => T(`Summarise this passage in two or three short bullet points: “${t}”`, `لخّص هذا المقطع في نقطتين أو ثلاث: «${t}»`)],
+    word: [['Difficult word', 'كلمة صعبة'], t => T(`Which word or term in this passage is the hardest, and what does it mean here? Explain simply: “${t}”`, `ما أصعب كلمة هنا وما معناها؟ «${t}»`)],
+    questions: [['Revision questions', 'أسئلة مراجعة'], t => T(`Write three revision questions on this passage. Don't give the answers yet — I'll try first: “${t}”`, `اكتب ثلاثة أسئلة مراجعة دون إجابات: «${t}»`)],
+    steps: [['Step by step', 'خطوة بخطوة'], t => T(`Teach this passage step by step. Show one step, then ask me to try the next one myself: “${t}”`, `علّمني هذا المقطع خطوة بخطوة: «${t}»`)]
+  };
+  let selTools = null;
+  function showAskMenu() {
+    if (!selTools) selTools = sel.innerHTML;
+    sel.innerHTML = Object.entries(ASKS).map(([k, v]) => `<button data-sq="${k}">${T(v[0][0], v[0][1])}</button>`).join('') + `<button data-sa="back" aria-label="${T('Back', 'رجوع')}">←</button>`;
+    sel.classList.add('is-ask'); const f = sel.querySelector('button'); if (f) f.focus({ preventScroll: true });
+  }
+  sel.addEventListener('click', e => { if (e.target.closest('[data-sa="back"]') && selTools) { sel.innerHTML = selTools; sel.classList.remove('is-ask'); } }, true);
+  const restoreSelTools = () => { if (selTools && sel.classList.contains('is-ask')) { sel.innerHTML = selTools; sel.classList.remove('is-ask'); } };
   function askNoor(q, quote) {
     track('H07'); tool('ask');
     const ctx = contextFor(focusedPara() || `${currentPage()}-0`, quote);
@@ -970,7 +992,7 @@
   }
   function exportNotes() {
     const ns = notesOf().slice().sort((a, b) => a.from - b.from), marks = marksOf().slice().sort((a, b) => a - b);
-    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Reading Studio', 'مُصدَّر من استوديو القراءة في إيرلي')}_`].join('\n');
+    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Learning Studio', 'مُصدَّر من استوديو التعلّم في إيرلي')}_`].join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
     a.download = `notes-${DOC.title.replace(/\.(pdf|txt)$/i, '').replace(/[^\w-]+/g, '_')}.md`;
@@ -1397,6 +1419,13 @@
     docs: () => LIB.map(d => ({ id: d.id, title: d.title, course: d.course, uploaded: !!d.uploaded })),
     openDoc(id) { const d = LIB.find(x => x.id === id); if (d) { docChosen = true; if (root.hidden) open(null, { doc: id }); else loadDoc(d); } },
     openLibrary: () => (root.hidden ? open(null, { library: true }) : showLibrary()),
+    // Learning Studio: add a document built in the Studio (e.g. a lesson study guide) to the reader's shelf
+    addDoc(d) { if (!d || !d.id || !Array.isArray(d.pages)) return false; const i = LIB.findIndex(x => x.id === d.id); const doc = Object.assign({ short: '', unit: ['', ''], field: 'mine', hue: 230, startPage: 1, name: [d.title, d.title], terms: {} }, d); if (i >= 0) LIB[i] = doc; else LIB.push(doc); return true; },
+    // Learning Studio: open a PDF or .txt chosen or dropped in the Studio (read on this device; never uploaded)
+    openFile(f) { if (root.hidden) open(null, { library: false }); return openFile(f); },
+    progressOf: id => (db.prog[id] ? Object.assign({}, db.prog[id]) : null),
+    // Learning Studio "delete my data": forget highlights, notes, bookmarks and reading positions
+    forget() { db = { notes: {}, marks: {}, prog: {} }; try { localStorage.removeItem(KEY); } catch (e) { /* none */ } if (!root.hidden) { applyHighlights(); renderMarks(); } },
     close: () => close(),
     isOpen: () => !root.hidden,
     isReading: () => !!reading,
@@ -1433,4 +1462,14 @@
   addEventListener('pagehide', saveProgress);
   renderDoc();
   apply();
+
+  /* The reader now lives in the Learning Studio (learn.html → Reading & Resources). On every other page, each way of
+     opening it — buttons, the command palette, Noor, the Support Pact feed — goes there instead of opening an
+     overlay here, so there is one place to read. Old links to the Learning Studio therefore still work. */
+  if (!document.body.classList.contains('at')) {
+    const goRead = id => { location.href = 'learn.html#/read' + (id ? '/doc/' + encodeURIComponent(id) : ''); };
+    ERLY.openStudio = (el, o) => goRead(o && o.doc);
+    ERLY.reader.openDoc = id => goRead(id);
+    ERLY.reader.openLibrary = () => goRead();
+  }
 })();

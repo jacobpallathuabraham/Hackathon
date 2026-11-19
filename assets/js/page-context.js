@@ -8,7 +8,7 @@
      - the text of the blocks that are actually visible (paragraphs, list items, table cells, captions)
      - the student's selection, if they made one
      - visible tables (caption, headers, the first rows), figures (only their labels / alt text), and maths
-     - what is open on top: the Reading Studio page, a video (title, position, authored key points),
+     - what is open on top: the Learning Studio page, a video (title, position, authored key points),
        Noor Lab's model, or an interactive visual
 
    It also says what it cannot see: the inside of pictures and drawings beyond their labels, and what is said in
@@ -115,7 +115,7 @@
     return out;
   }
 
-  // the same shape as the Reading Studio's context, so Noor's AI path can use it unchanged
+  // the same shape as the Learning Studio's context, so Noor's AI path can use it unchanged
   function forNoor(s) {
     s = s || snapshot();
     const L = [];
@@ -123,7 +123,7 @@
     if (s.section) L.push(`Section in view: ${s.section}`);
     if (s.headings.length) L.push(`Visible headings: ${s.headings.join(' | ')}`);
     if (s.video) L.push(`Video open: "${s.video.title}" (${s.video.by}) at ${mmss(s.video.time)}${s.video.duration ? ' of ' + mmss(s.video.duration) : ''}, ${s.video.playing ? 'playing' : 'paused'}. ERLY's key points for it: ${s.video.notes.join(' / ')}. No transcript is available, so what is said in the video is unknown.`);
-    if (s.reading) L.push(`Reading Studio open: "${s.reading.title}", page ${s.reading.page} — ${s.reading.heading}. Page text: ${String(s.reading.text).slice(0, 1500)}`);
+    if (s.reading) L.push(`Learning Studio open: "${s.reading.title}", page ${s.reading.page} — ${s.reading.heading}. Page text: ${String(s.reading.text).slice(0, 1500)}`);
     if (s.lab) L.push(`Noor Lab model open: ${s.lab.title}. State: ${JSON.stringify(s.lab.state || {}).slice(0, 600)}`);
     if (s.visual) L.push(`Interactive visual open: "${s.visual.title}", step ${s.visual.step + 1} of ${s.visual.steps.length}: ${s.visual.steps[s.visual.step] || ''}`);
     s.tables.forEach(t => L.push(`Table${t.caption ? ' "' + t.caption + '"' : ''} (${t.size[0]} rows × ${t.size[1]} columns): ${t.head.join(' | ')}${t.rows.length ? ' — first rows: ' + t.rows.map(r => r.join(' | ')).join(' ; ') : ''}`));

@@ -132,7 +132,7 @@
       { label: T('The gap: two different measurements', 'الفجوة: قياسان مختلفان'), hint: '01', run: go('#gap') },
       { label: T('How it works', 'آلية العمل'), hint: '02', run: go('#flow') },
       { label: T('Tracking — start or check', 'التتبّع — ابدأ أو راجع'), hint: '03', run: go('#tracking') },
-      { label: T('Open the Reading Studio', 'افتح استوديو القراءة'), hint: '04', run: () => ERLY.openStudio && ERLY.openStudio() },
+      { label: T('Open the Learning Studio', 'افتح استوديو التعلّم'), hint: '04', run: () => ERLY.openStudio && ERLY.openStudio() },
       { label: T('Your insight', 'رؤيتك'), hint: '05', run: go('#insight') },
       { label: T('Get support — book SAS', 'احصل على الدعم — احجز موعداً'), hint: '06', run: go('#handoff') },
       { label: T('Privacy', 'الخصوصية'), hint: '07', run: go('#privacy') },

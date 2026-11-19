@@ -44,7 +44,7 @@
       profile: 'A steady month',
       why: 'Nothing stayed above this student’s own normal across three or more domains for the watched week. ERLY does not suggest a learning difficulty — but self-referral to SAS is always open.',
       assess: ['None indicated by this screening. The student can self-refer at any time.'],
-      accom: ['Keep using the Reading Studio and Start-Ramp tools that helped']
+      accom: ['Keep using the Learning Studio and Start-Ramp tools that helped']
     }
   };
   const DOM_SHORT = { V: 'Visual & reading', U: 'Auditory & video', M: 'Working memory', E: 'Executive & starting', P: 'Endurance & pacing', O: 'Output & drafting', N: 'Navigation', Q: 'Assessment', H: 'Help-seeking', C: 'Collaboration' };

@@ -57,5 +57,12 @@
     });
   }
   LS.labMap = MAP;
-  LS.route('lab', (view, parts) => (parts[0] ? model(view, parts[0]) : catalogue(view)));
+  LS.route('lab', (view, parts) => {
+    if (!window.ERLY_LAB && LS.needLab) { // the models load on first use (ls-lazy.js)
+      view.innerHTML = `<p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Loading the Visual Lab…', 'أحمّل المختبر…')}</p>`;
+      LS.needLab().then(() => { if (LS.current()[0] === 'lab') LS.render(); }).catch(() => { view.innerHTML = `<p class="ls-fb ls-fb--warn" role="alert">${T('The Visual Lab could not load. Check your connection and try again.', 'تعذّر تحميل المختبر.')}</p>`; });
+      return;
+    }
+    return parts[0] ? model(view, parts[0]) : catalogue(view);
+  });
 })();

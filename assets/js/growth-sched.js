@@ -107,7 +107,7 @@
     timed: { title: ['Timed practice', 'تدريب بوقت'], why: ['Exam-style questions under time, then mark them', 'أسئلة بنمط الامتحان بوقت محدد'], launch: 'noor' },
     write: { title: ['Write', 'اكتب'], why: ['Plan and write a short piece, then compare with the checklist', 'خطط واكتب نصاً قصيراً'], launch: 'noor' },
     hand: { title: ['Handwriting practice', 'تدريب الكتابة'], why: ['Letters, words and tracing in the Handwriting Check', 'حروف وكلمات وتتبع'], launch: 'hand' },
-    read: { title: ['Read', 'اقرأ'], why: ['A focused reading session in Reading Studio', 'جلسة قراءة مركزة'], launch: 'read' },
+    read: { title: ['Read', 'اقرأ'], why: ['A focused reading session in Learning Studio', 'جلسة قراءة مركزة'], launch: 'read' },
     reflect: { title: ['Reflect', 'تأمّل'], why: ['Five minutes: what went well, what to change next week', 'خمس دقائق: ما الذي نجح وما الذي يتغير'], launch: 'reflect' },
     calm: { title: ['Reset', 'استرخِ'], why: ['A short breathing or planning reset before study', 'تمرين تنفس أو تخطيط قصير'], launch: 'reflect' }
   };
@@ -131,7 +131,7 @@
     timed: t => [`Set a timer and do exam-style questions on ${t}`, 'Mark them with Noor', 'Note one thing to do differently'],
     write: t => [`Plan a short piece about ${t}: point, evidence, explanation`, 'Write for the planned time', 'Check against the plan'],
     hand: () => ['Open Handwriting Check → Practice', 'Letters or tracing for most of the time', 'Finish with one sentence written freely'],
-    read: t => [`Read about ${t} in Reading Studio for the planned time`, 'Stop every few pages and summarise in one line', 'Ask Noor about anything unclear'],
+    read: t => [`Read about ${t} in Learning Studio for the planned time`, 'Stop every few pages and summarise in one line', 'Ask Noor about anything unclear'],
     reflect: () => ['What went well this week?', 'What got in the way?', 'One change for next week'],
     calm: () => ['Two minutes of slow breathing (in for 4, out for 6)', 'Write the three things you will do today', 'Start with the easiest']
   };
@@ -148,7 +148,7 @@
     if (k === 'quiz') return { href: `student.html?ask=${q('Quiz me on ' + topic + ' — five questions, one at a time')}`, label: ['Quiz with Noor', 'اختبار مع نور'] };
     if (k === 'noor') return { href: `student.html?ask=${q('Give me practice questions on ' + topic + ', one at a time, and check my working')}`, label: ['Practise with Noor', 'تدرّب مع نور'] };
     if (k === 'hand') return { href: 'handwriting.html?practice=letters', label: ['Open handwriting practice', 'افتح تدريب الكتابة'] };
-    if (k === 'read') return { href: 'student.html#reading', label: ['Open Reading Studio', 'افتح استوديو القراءة'] };
+    if (k === 'read') return { href: 'learn.html#/read', label: ['Open Learning Studio', 'افتح استوديو التعلّم'] };
     return null;
   }
 

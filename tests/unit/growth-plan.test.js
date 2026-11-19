@@ -25,7 +25,7 @@ test('classes and commitments are placed first and study fits around them', () =
   assert.deepEqual([cls.from, cls.to, cls.label[0]], ['09:00', '10:30', 'Biology lecture']);
   assert.ok(!tt.days.mon.some(b => b.kind === 'study' && P.toMin(b.from) < 630 && P.toMin(b.to) > 540), 'no study during the class');
   assert.ok(tt.days.tue.some(b => b.kind === 'commit'));
-  assert.ok(tt.days.mon.some(b => b.kind === 'study' && /Reading Studio session/.test(b.label[0])), 'week 2 activities');
+  assert.ok(tt.days.mon.some(b => b.kind === 'study' && /Learning Studio session/.test(b.label[0])), 'week 2 activities');
 });
 
 test('settings are validated and customisable', () => {

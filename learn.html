@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="robots" content="noindex, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
-  <title>Interactive Learning Studio · ERLY</title>
-  <meta name="description" content="ERLY Interactive Learning Studio: interactive lessons with live models, videos with clickable transcripts, practice with explanations, spaced flashcards, a notebook and Noor — consent-first, on your device.">
+  <title>Learning Studio · ERLY</title>
+  <meta name="description" content="ERLY Learning Studio: read, learn, watch, explore, practise, revise and take notes in one place — course readings and your own PDFs in a focused reader, interactive lessons, 174 live models, narrated videos, practice with explanations, spaced flashcards and Noor in context.">
   <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
@@ -45,23 +45,33 @@
   <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
   <link rel="stylesheet" href="assets/css/v9.css?v=19">
   <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
-  <link rel="stylesheet" href="assets/css/learn.css?v=19">
+  <link rel="stylesheet" href="assets/css/learn.css?v=21">
+  <link rel="stylesheet" href="assets/css/learn-atelier.css?v=21">
 </head>
-<body class="ls-page">
+<body class="ls-page at">
 <a class="skip ls-skip" href="#lsView">Skip to content</a>
-<header class="ls-top">
-  <a class="ls-top__back" href="student.html"><span aria-hidden="true">←</span> <span>ERLY</span></a>
-  <a class="ls-brand" href="#/home" aria-label="Learning Studio home"><img src="assets/img/erly-mark.svg" alt="" class="ls-brand__mark"><span><b>ERLY</b> Learning Studio</span></a>
-  <form class="ls-ask" id="lsAsk" role="search" aria-label="Ask Noor"><label class="sr-only" for="lsAskQ">Ask Noor anything about what you are learning</label><input id="lsAskQ" name="q" placeholder="Ask Noor about anything you are learning…" autocomplete="off"><button type="submit" class="ls-btn ls-btn--sm">Ask</button></form>
-  <div class="ls-top__tools"><button class="icon-btn" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button><div data-accent-picker></div>
-    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button></div>
+<header class="at-spine">
+  <div class="at-brand"><a class="at-brand__back" href="student.html" aria-label="Back to ERLY"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a><a href="#/home" style="display:flex;align-items:center;gap:10px;text-decoration:none" aria-label="Learning Studio home"><img src="assets/img/erly-mark.svg" alt="" class="at-brand__mark"><span class="at-brand__word">Learning Studio <i>· ERLY</i></span></a></div>
+  <nav class="at-tabs" id="atTabs" aria-label="Learning Studio"></nav>
+  <div class="at-tools">
+    <button type="button" class="at-tool" id="atSearch" aria-label="Search the Learning Studio (Ctrl or Command + K)"></button>
+    <button type="button" class="at-tool at-tool--noor" id="atNoorBtn" aria-controls="atNoor" aria-label="Ask Noor about what you are learning"></button>
+    <a class="at-tool at-tool--icon" id="atYou" href="#/profile" aria-label="Privacy &amp; data"></a>
+    <button class="at-tool at-tool--icon" id="langToggle" aria-label="Switch language"><span class="lang-en">ع</span><span class="lang-ar">EN</span></button>
+    <button class="at-tool at-tool--icon" id="themeToggle" aria-label="Toggle dark mode"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+  </div>
 </header>
 <div class="ls-banner" id="lsBanner" role="status" hidden></div>
-<div class="ls-shell">
-  <nav class="ls-nav" id="lsNav" aria-label="Learning Studio"></nav>
-  <main class="ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Loading the Learning Studio…</p></main>
-</div>
-<nav class="ls-mob" id="lsMob" aria-label="Learning Studio (short)"></nav>
+<main class="at-main ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Opening the Learning Studio…</p></main>
+<nav class="at-dock" id="atDock" aria-label="Learning Studio (short)"></nav>
+<div class="at-sheet" id="atSheet" hidden></div>
+<div class="at-scrim" id="atScrim" aria-hidden="true"></div>
+<aside class="at-noor" id="atNoor" aria-label="Ask Noor" aria-hidden="true">
+  <div class="at-noor__h"><div style="flex:1"><b>Noor</b><small id="atNoorWhere"></small></div><button type="button" class="at-iconbtn" id="atNoorX" aria-label="Close Noor"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="at-noor__b" id="atNoorBody"></div>
+  <div class="at-noor__f"><form id="atNoorForm"><label class="sr-only" for="atNoorQ">Ask Noor a question</label><textarea id="atNoorQ" rows="1" maxlength="1200" placeholder="Ask anything about what you are learning…"></textarea><button type="submit" class="ls-btn ls-btn--accent">Ask</button></form><p>Only your question and the passage you selected are sent — never your notes, answers or history. The label above says whether Noor is answering on this device or online.</p></div>
+</aside>
+<div class="at-pal" id="atPal" hidden><div class="at-pal__box" role="dialog" aria-modal="true" aria-label="Search the Learning Studio"><div class="at-pal__in"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4"/></svg><input id="atPalQ" type="text" role="combobox" aria-expanded="true" aria-controls="atPalList" aria-autocomplete="list" placeholder="Search lessons, readings, videos, models, notes…" autocomplete="off"></div><ul class="at-pal__list" id="atPalList" role="listbox" aria-label="Results"></ul><div class="at-pal__f"><span>↑↓ move</span><span>↵ open</span><span>Esc close</span></div></div></div>
 <div class="ls-toast toast" id="lsToast" role="status" aria-live="polite"></div>
 <div class="sr-only" id="lsLive" aria-live="polite"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -74,7 +84,7 @@
 <script src="assets/js/accent.js?v=19"></script>
 <script src="assets/js/study-tools.js?v=19"></script>
 <script src="assets/js/studio-content.js?v=19"></script>
-<script src="assets/js/studio.js?v=19"></script>
+<script src="assets/js/studio.js?v=21"></script>
 <script src="assets/js/companion/config.js?v=19"></script>
 <script src="assets/js/companion/signals.js?v=19"></script>
 <script src="assets/js/companion/dialogue.js?v=19"></script>
@@ -101,27 +111,17 @@
 <script src="assets/js/companion/visuals.js?v=19"></script>
 <script src="assets/js/companion/visual-spec.js?v=19"></script>
 <script src="assets/js/companion/visual-library.js?v=19"></script>
-<script src="assets/js/lab/lab-core.js?v=19"></script>
-<script src="assets/js/lab/lab-math.js?v=19"></script>
-<script src="assets/js/lab/lab-geo3d.js?v=19"></script>
-<script src="assets/js/lab/lab-physics.js?v=19"></script>
-<script src="assets/js/lab/lab-problems.js?v=19"></script>
-<script src="assets/js/lab/lab-concepts.js?v=19"></script>
-<script src="assets/js/lab/syl-core.js?v=19"></script>
-<script src="assets/js/lab/syl-math.js?v=19"></script>
-<script src="assets/js/lab/syl-physics.js?v=19"></script>
-<script src="assets/js/lab/syl-chem.js?v=19"></script>
-<script src="assets/js/lab/syl-life.js?v=19"></script>
-<script src="assets/js/lab/syl-applied.js?v=19"></script>
-<script src="assets/js/lab/syl-extra.js?v=19"></script>
-<script src="assets/js/lab/syl-studio.js?v=19"></script>
 <script src="assets/js/companion/audio-lesson.js?v=19"></script>
 <script src="assets/js/session.js?v=19"></script>
+<script src="assets/js/indicators.js?v=19"></script>
+<script src="assets/js/realtrack.js?v=19"></script>
+<script src="assets/js/tracker.js?v=19"></script>
 <script src="assets/js/theme-fx.js?v=19"></script>
 <script src="assets/js/ambient.js?v=19" defer></script>
 <script src="assets/js/a11y.js?v=19"></script>
 <script src="assets/js/companion/holo.js?v=19" defer></script>
-<script src="assets/js/learn/ls-core.js?v=19"></script>
+<script src="assets/js/learn/ls-core.js?v=21"></script>
+<script src="assets/js/learn/ls-lazy.js?v=21"></script>
 <script src="assets/js/learn/ls-grade.js?v=19"></script>
 <script src="assets/js/learn/ls-schema.js?v=19"></script>
 <script src="assets/js/learn/ls-srs.js?v=19"></script>
@@ -133,13 +133,16 @@
 <script src="assets/js/learn/ls-bank.js?v=19"></script>
 <script src="assets/js/learn/ls-activities.js?v=19"></script>
 <script src="assets/js/learn/ls-noor.js?v=19"></script>
-<script src="assets/js/learn/ls-lesson.js?v=19"></script>
+<script src="assets/js/learn/ls-lesson.js?v=21"></script>
 <script src="assets/js/learn/ls-notes.js?v=19"></script>
 <script src="assets/js/learn/ls-revise.js?v=19"></script>
 <script src="assets/js/learn/ls-practice.js?v=19"></script>
 <script src="assets/js/learn/ls-video.js?v=19"></script>
-<script src="assets/js/learn/ls-lab.js?v=19"></script>
-<script src="assets/js/learn/ls-app.js?v=19"></script>
+<script src="assets/js/learn/ls-lab.js?v=21"></script>
+<script src="assets/js/learn/ls-app.js?v=21"></script>
+<script src="assets/js/learn/ls-shell.js?v=21"></script>
+<script src="assets/js/learn/ls-home.js?v=21"></script>
+<script src="assets/js/learn/ls-read.js?v=21"></script>
 <script>
   // main.js switches language and theme; the Studio re-renders so its own text follows the language
   document.getElementById('langToggle').addEventListener('click', function () { setTimeout(function () { LS.render(); }, 0); });
