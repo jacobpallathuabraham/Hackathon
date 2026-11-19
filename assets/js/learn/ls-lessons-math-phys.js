@@ -7,7 +7,7 @@
 
   /* ================= 5 · Quadratic functions ================= */
   LS.addLesson({
-    id: 'math-quad', v: '1.0', why: 'Parabolas describe projectiles, profits and optimisation; quadratics are the gateway to calculus.', title: 'Quadratic functions and their graphs', subject: 'Mathematics', level: 'Secondary / JEE foundation', course: 'Algebra', chapter: 'Quadratics', topic: 'Quadratic functions',
+    id: 'math-quad', v: '1.0', title: 'Quadratic functions and their graphs', subject: 'Mathematics', level: 'Secondary / JEE foundation', course: 'Algebra', chapter: 'Quadratics', topic: 'Quadratic functions',
     mins: 25, tags: ['quadratic', 'parabola', 'roots', 'discriminant', 'vertex'],
     objectives: ['Recognise a quadratic function and the shape of its graph.', 'Find roots by factorising and read them from a graph.', 'Use the discriminant to count real roots.', 'Find the vertex from the completed-square form.'],
     prereq: [{ text: 'Expanding brackets and solving linear equations.' }],
@@ -45,7 +45,7 @@
 
   /* ================= 6 · The derivative ================= */
   LS.addLesson({
-    id: 'math-deriv', v: '1.0', why: 'Derivatives turn “how fast is this changing?” into a calculation — the language of physics, economics and engineering.', title: 'The derivative as a rate of change', subject: 'Mathematics', level: 'Pre-university / JEE', course: 'Calculus', chapter: 'Differentiation', topic: 'Derivatives',
+    id: 'math-deriv', v: '1.0', title: 'The derivative as a rate of change', subject: 'Mathematics', level: 'Pre-university / JEE', course: 'Calculus', chapter: 'Differentiation', topic: 'Derivatives',
     mins: 30, tags: ['derivative', 'gradient', 'tangent', 'first principles', 'power rule'],
     objectives: ['Interpret the derivative as the gradient of a tangent and as a rate of change.', 'Differentiate x² from first principles.', 'Use the power rule for polynomials.'],
     prereq: [{ text: 'Gradient of a straight line; quadratic graphs.', lesson: 'math-quad' }],
@@ -77,7 +77,7 @@
 
   /* ================= 7 · Newton's second law ================= */
   LS.addLesson({
-    id: 'phys-newton', v: '1.0', why: 'F = ma explains every push, crash and launch, and is the starting point of mechanics.', title: 'Newton’s second law: force and acceleration', subject: 'Physics', level: 'Secondary / JEE foundation', course: 'Mechanics', chapter: 'Forces and motion', topic: 'Newton’s second law',
+    id: 'phys-newton', v: '1.0', title: 'Newton’s second law: force and acceleration', subject: 'Physics', level: 'Secondary / JEE foundation', course: 'Mechanics', chapter: 'Forces and motion', topic: 'Newton’s second law',
     mins: 25, tags: ['force', 'acceleration', 'mass', 'friction', 'F = ma'],
     objectives: ['Find the resultant (net) force on an object.', 'Use F = ma to calculate force, mass or acceleration.', 'Explain why constant velocity needs no resultant force.'],
     prereq: [{ text: 'Speed, velocity and acceleration; forces as pushes and pulls.' }],
@@ -111,7 +111,7 @@
 
   /* ================= 8 · Current, voltage and resistance ================= */
   LS.addLesson({
-    id: 'phys-circuits', v: '1.0', why: 'Every device you own is a circuit; V = IR lets you predict and design them safely.', title: 'Current, voltage and resistance', subject: 'Physics', level: 'Secondary / JEE foundation', course: 'Electricity', chapter: 'Circuits', topic: 'Electric circuits',
+    id: 'phys-circuits', v: '1.0', title: 'Current, voltage and resistance', subject: 'Physics', level: 'Secondary / JEE foundation', course: 'Electricity', chapter: 'Circuits', topic: 'Electric circuits',
     mins: 25, tags: ['current', 'voltage', 'resistance', 'ohm', 'series', 'parallel'],
     objectives: ['Define current, potential difference and resistance.', 'Use V = IR.', 'Combine resistors in series and in parallel.'],
     prereq: [{ text: 'Charge is carried by electrons in metals.' }],

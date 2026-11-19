@@ -44,7 +44,7 @@
       profile: 'A steady month',
       why: 'Nothing stayed above this student’s own normal across three or more domains for the watched week. ERLY does not suggest a learning difficulty — but self-referral to SAS is always open.',
       assess: ['None indicated by this screening. The student can self-refer at any time.'],
-      accom: ['Keep using the Learning Studio reader and Start-Ramp tools that helped']
+      accom: ['Keep using the Reading Studio and Start-Ramp tools that helped']
     }
   };
   const DOM_SHORT = { V: 'Visual & reading', U: 'Auditory & video', M: 'Working memory', E: 'Executive & starting', P: 'Endurance & pacing', O: 'Output & drafting', N: 'Navigation', Q: 'Assessment', H: 'Help-seeking', C: 'Collaboration' };
@@ -113,7 +113,7 @@
         <table class="rp-table"><thead><tr><th>ID</th><th>Indicator</th><th>Days above normal</th></tr></thead><tbody>${D.top.map(p => `<tr><td>${p.id}</td><td>${esc(p.en)}</td><td><span class="rp-dots">${Array.from({ length: s.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span> ${p.up}/${s.judged}</td></tr>`).join('') || '<tr><td colspan="3">None</td></tr>'}</tbody></table></section>
       <section class="rp-grid2">
         <div><p class="rp-k">Per-language baselines</p>${s.fp.lang.map(r => `<div class="rp-mini"><span>${r[0]}</span><i><b style="--w:${Math.round(r[2] * 100)}%"></b></i><strong>${Math.round(r[2] * 100)}%</strong></div>`).join('')}<p class="rp-small">${s.englishOnly ? 'English only — points to language load.' : s.lang.ar > .3 ? 'Both languages — consistent with a reading difficulty.' : 'No clear language difference.'}</p></div>
-        <div><p class="rp-k">Where study felt hardest</p>${s.fp.time.concat(s.fp.deadline).map(r => `<div class="rp-mini"><span>${r[0]}</span><i><b style="--w:${Math.round(Math.min(1, r[2]) * 100)}%"></b></i><strong>${Math.round(Math.min(1, r[2]) * 100)}%</strong></div>`).join('')}</div>
+        <div><p class="rp-k">Friction fingerprint</p>${s.fp.time.concat(s.fp.deadline).map(r => `<div class="rp-mini"><span>${r[0]}</span><i><b style="--w:${Math.round(Math.min(1, r[2]) * 100)}%"></b></i><strong>${Math.round(Math.min(1, r[2]) * 100)}%</strong></div>`).join('')}</div>
       </section>`;
     const p3 = `
       <section><p class="rp-k">Recommended next steps</p><ol class="rp-steps">${D.L.assess.map(a => `<li>${esc(a)}</li>`).join('')}${D.primary !== 'none' ? '<li>Bring this report and the Evidence Pack to the SAS intake. ' + (D.ally ? esc(D.ally) + ' may attend, as named in the Support Pact.' : 'An ally may attend if the student wishes.') + '</li>' : ''}</ol></section>
@@ -244,7 +244,7 @@
     let ly = label('Per-language baselines', y), ry = y;
     s.fp.lang.forEach(r => { text(r[0], M, ly + 2.6, { size: 9 }); bar(M + 30, ly, colW - 44, r[2], [42, 120, 214]); text(Math.round(r[2] * 100) + '%', M + colW, ly + 2.6, { size: 8.5, align: 'right' }); ly += 7; });
     ly += text(s.englishOnly ? 'English only — points to language load.' : s.lang.ar > .3 ? 'Both languages — consistent with a reading difficulty.' : 'No clear language difference.', M, ly + 1, { size: 8, color: MUT, w: colW });
-    text('WHERE STUDY FELT HARDEST', M + colW + 8, ry, { size: 7.5, bold: true, color: MUT }); ry += 5;
+    text('FRICTION FINGERPRINT', M + colW + 8, ry, { size: 7.5, bold: true, color: MUT }); ry += 5;
     s.fp.time.concat(s.fp.deadline).forEach(r => { const v = Math.min(1, r[2]); text(r[0], M + colW + 8, ry + 2.6, { size: 9 }); bar(M + colW + 40, ry, colW - 50, v, [27, 175, 122]); text(Math.round(v * 100) + '%', W - M, ry + 2.6, { size: 8.5, align: 'right' }); ry += 7; });
 
     // page 3

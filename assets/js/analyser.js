@@ -4,7 +4,7 @@
    small summaries on this device (localStorage "erly-analyser-v1"):
      - lecture videos: per video, how often the same part was replayed,
        slow-downs, restarts and notes/transcript use (from videos.js)
-     - the Learning Studio reader: how many sessions had repeated re-reading
+     - the Reading Studio: how many sessions had repeated re-reading
      - Check-ins and the 14-day tracker are read from their own stores
    Recording only happens when the student has agreed to noticing (Noor's
    consent card) or has an active Support Pact. Raw events stay in memory.

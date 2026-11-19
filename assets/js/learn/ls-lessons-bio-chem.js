@@ -8,7 +8,7 @@
 
   /* ================= 1 · The heart and circulation ================= */
   LS.addLesson({
-    id: 'bio-heart', v: '1.0', why: 'Every organ depends on this pump; understanding it explains exercise, blood pressure and many medical tests.', title: 'The heart and double circulation', subject: 'Biology', level: 'Secondary / NEET foundation', course: 'Human biology', chapter: 'Transport in humans', topic: 'The heart',
+    id: 'bio-heart', v: '1.0', title: 'The heart and double circulation', subject: 'Biology', level: 'Secondary / NEET foundation', course: 'Human biology', chapter: 'Transport in humans', topic: 'The heart',
     mins: 25, tags: ['heart', 'circulation', 'blood', 'cardiac output'],
     objectives: ['Name the four chambers of the heart and the main blood vessels attached to them.', 'Trace the path of blood through the heart, lungs and body.', 'Explain why the left ventricle has a thicker wall.', 'Calculate cardiac output from heart rate and stroke volume.'],
     prereq: [{ text: 'Cells need oxygen and glucose for respiration.' }],
@@ -62,7 +62,7 @@
 
   /* ================= 2 · Photosynthesis ================= */
   LS.addLesson({
-    id: 'bio-photo', v: '1.0', why: 'Almost all the food and oxygen on Earth comes from photosynthesis — and growers use limiting factors every day.', title: 'Photosynthesis and limiting factors', subject: 'Biology', level: 'Secondary / NEET foundation', course: 'Plant biology', chapter: 'Plant nutrition', topic: 'Photosynthesis',
+    id: 'bio-photo', v: '1.0', title: 'Photosynthesis and limiting factors', subject: 'Biology', level: 'Secondary / NEET foundation', course: 'Plant biology', chapter: 'Plant nutrition', topic: 'Photosynthesis',
     mins: 20, tags: ['photosynthesis', 'chloroplast', 'limiting factor', 'light'],
     objectives: ['Write the word and balanced symbol equations for photosynthesis.', 'Say where in the chloroplast the two stages happen.', 'Explain how light intensity, carbon dioxide and temperature limit the rate.'],
     prereq: [{ text: 'Plants are made of cells; cells contain organelles.' }],
@@ -95,7 +95,7 @@
 
   /* ================= 3 · Acids, bases and pH ================= */
   LS.addLesson({
-    id: 'chem-ph', v: '1.0', why: 'pH decides how medicines, soils, oceans and your own blood behave; titration is a core lab skill.', title: 'Acids, bases and the pH scale', subject: 'Chemistry', level: 'Secondary / JEE foundation', course: 'Physical chemistry', chapter: 'Acids and bases', topic: 'pH',
+    id: 'chem-ph', v: '1.0', title: 'Acids, bases and the pH scale', subject: 'Chemistry', level: 'Secondary / JEE foundation', course: 'Physical chemistry', chapter: 'Acids and bases', topic: 'pH',
     mins: 25, tags: ['acid', 'base', 'pH', 'neutralisation', 'titration'],
     objectives: ['Describe acids and bases in terms of hydrogen ions.', 'Calculate pH from [H⁺] and [H⁺] from pH.', 'Explain the difference between a strong and a weak acid.', 'Describe neutralisation and read a titration curve.'],
     prereq: [{ text: 'Ions are charged particles; concentration is measured in mol/dm³.' }],
@@ -134,7 +134,7 @@
 
   /* ================= 4 · Shapes of molecules ================= */
   LS.addLesson({
-    id: 'chem-vsepr', v: '1.0', why: 'A molecule’s shape decides how it reacts, dissolves and fits into enzymes and drugs.', title: 'Shapes of molecules (VSEPR)', subject: 'Chemistry', level: 'Pre-university / JEE', course: 'Chemical bonding', chapter: 'Molecular structure', topic: 'Molecular shape',
+    id: 'chem-vsepr', v: '1.0', title: 'Shapes of molecules (VSEPR)', subject: 'Chemistry', level: 'Pre-university / JEE', course: 'Chemical bonding', chapter: 'Molecular structure', topic: 'Molecular shape',
     mins: 20, tags: ['VSEPR', 'bond angle', 'lone pair', 'molecular geometry'],
     objectives: ['Count bonding pairs and lone pairs around a central atom.', 'Predict molecular shapes and approximate bond angles with VSEPR.', 'Explain why lone pairs reduce bond angles.'],
     prereq: [{ text: 'Covalent bonds are shared pairs of electrons; dot-and-cross diagrams.' }],

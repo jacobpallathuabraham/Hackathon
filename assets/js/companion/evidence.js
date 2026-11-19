@@ -6,7 +6,7 @@
      - the 14-day Support Pact tracker (100 indicators, own baseline)
      - lecture videos (rewinds to the same part, slowing playback, restarts,
        transcript use)
-     - the Learning Studio reader (sessions with repeated reading friction)
+     - the Reading Studio (sessions with repeated reading friction)
    and turns them into a per-area evidence level:
      none · early · some · strong
    An area reaches "some" only when two independent sources agree (or one
@@ -74,8 +74,8 @@
     if (hw && hw.level === 'several') add('writing', 'handwriting', 1, 'Handwriting check: several features often seen with dysgraphia or dyslexia', 'فحص الكتابة: عدة سمات تظهر غالباً مع عسر الكتابة أو القراءة');
     if (hw && hw.spelling === 'notable') add('reading', 'handwriting', 1, 'Dictation: several words were spelled differently', 'الإملاء: كُتبت عدة كلمات بشكل مختلف');
     const rd = src.reading || {};
-    if (rd.frictionSessions >= 4) add('reading', 'studio', 2, `Learning Studio reader: repeated re-reading in ${rd.frictionSessions} sessions`, `قارئ استوديو التعلّم: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);
-    else if (rd.frictionSessions >= 2) add('reading', 'studio', 1, `Learning Studio reader: repeated re-reading in ${rd.frictionSessions} sessions`, `قارئ استوديو التعلّم: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);
+    if (rd.frictionSessions >= 4) add('reading', 'studio', 2, `Reading Studio: repeated re-reading in ${rd.frictionSessions} sessions`, `استوديو القراءة: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);
+    else if (rd.frictionSessions >= 2) add('reading', 'studio', 1, `Reading Studio: repeated re-reading in ${rd.frictionSessions} sessions`, `استوديو القراءة: إعادة قراءة متكررة في ${rd.frictionSessions} جلسات`);
     Object.values(out).forEach(o => {
       const n = o.sources.length;
       o.level = (o.score >= 5 && n >= 2) ? 'strong' : ((o.score >= 3 && n >= 2) || o.score >= 3) ? 'some' : o.score >= 1 ? 'early' : 'none';

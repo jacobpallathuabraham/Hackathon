@@ -216,7 +216,7 @@
 @keyframes qStreak { 0% { opacity: 0; transform: rotate(var(--a)) translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-60vmax); } }
 
 /* ================= the quest page ================= */
-.quest-page { min-height: 100vh; background: var(--bg); overflow-x: clip; }
+.quest-page { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
 html.q-arrive .quest-page { animation: qArrive .9s cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes qArrive { from { clip-path: circle(0 at 50% 50%); filter: brightness(1.4); } to { clip-path: circle(150vmax at 50% 50%); } }
 .q-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }

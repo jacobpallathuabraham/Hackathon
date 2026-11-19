@@ -100,7 +100,7 @@
 
   /* ---------------- marquee + stats ---------------- */
   // a fictional university: no real accreditations, rankings or partner organisations are named or implied
-  const partners = ['Fictional university · ERLY hackathon demo', 'No accreditation, ranking or partnership is claimed', 'Programmes, fees, people and news are illustrative', 'ERLY, the Learning Studio reader, Noor and the Growth Plan are the working prototype'];
+  const partners = ['Fictional university · ERLY hackathon demo', 'No accreditation, ranking or partnership is claimed', 'Programmes, fees, people and news are illustrative', 'ERLY, the Reading Studio, Noor and the Growth Plan are the working prototype'];
   $('#marq').innerHTML = [...partners, ...partners].map(p => `<span>${esc(p)}</span>`).join('<i>✦</i>');
   const total = window.CAMPUS ? window.CAMPUS.COLLEGES.reduce((a, c) => a + c.students, 0) : 12480;
   const STATS = [[total, '', 'students from 90 countries'], [120, '+', 'degree programmes'], [412, '', 'faculty members'], [94, '%', 'graduates employed in 6 months'], [180, '+', 'student clubs'], [62, 'M', 'AED research funding']];

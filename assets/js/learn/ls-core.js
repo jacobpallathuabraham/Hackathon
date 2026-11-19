@@ -136,7 +136,7 @@
     const parts = LS.current(), area = routes[parts[0]] ? parts[0] : 'home';
     const view = document.getElementById('lsView'); if (!view) return;
     emit('leave', lastArea); view.onclick = null; view.onkeydown = null;
-    try { routes[area](view, parts.slice(1)); if (window.ERLY && ERLY.ui && !ERLY.ui.still()) { view.classList.remove('ui-view-in'); void view.offsetWidth; view.classList.add('ui-view-in'); } }
+    try { routes[area](view, parts.slice(1)); }
     catch (e) { console.error(e); view.innerHTML = `<section class="ls-err" role="alert"><h1>${T('Something went wrong on this screen', 'حدث خطأ في هذه الشاشة')}</h1><p>${esc(e.message)}</p><p>${T('Your saved work is not affected.', 'عملك المحفوظ لم يتأثر.')}</p><button class="ls-btn" type="button" onclick="LS.go('home')">${T('Back to Home', 'العودة')}</button></section>`; }
     emit('route', { area, parts });
     if (lastArea !== null) { const h = view.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } window.scrollTo({ top: 0 }); }

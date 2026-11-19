@@ -72,7 +72,6 @@
       <article class="ls-lesson__main" data-lesson="${L.id}">
         <header class="ls-lesson__head"><p class="ls-kicker">${esc(L.subject)} · ${esc(L.course || '')} · ${esc(L.level)}</p><h1>${esc(ix < L.sections.length ? sec.title : T('Summary and revision', 'الخلاصة والمراجعة'))}</h1>
           <p class="ls-meta">${LS.provBadge(L.provenance.kind)} <span>${esc(L.title)}</span> · <span>${L.mins} min</span> · <span>v${esc(L.v)}</span></p></header>
-        ${ix < L.sections.length ? orient(L, sec, ix) : ''}
         ${ix === 0 ? `<details class="ls-before" open><summary>${T('Before you start', 'قبل أن تبدأ')}</summary><div><p><b>${T('You will be able to:', 'ستتمكن من:')}</b></p><ul>${L.objectives.map(o => `<li>${IL(o)}</li>`).join('')}</ul>${L.prereq && L.prereq.length ? `<p><b>${T('It helps to know:', 'يفيد أن تعرف:')}</b></p><ul>${L.prereq.map(r => `<li>${IL(r.text)}${r.lesson && LS.lesson(r.lesson) ? ` — <a href="#/lesson/${r.lesson}">${esc(LS.lesson(r.lesson).title)}</a>` : ''}</li>`).join('')}</ul>` : ''}</div></details>` : ''}
         <div class="ls-blocks">${ix < L.sections.length ? sec.blocks.map(b => block(b, L, sec)).join('') : summaryHTML(L)}</div>
         <footer class="ls-lesson__foot">${ix > 0 ? `<a class="ls-btn ls-btn--quiet" href="#/lesson/${L.id}/${L.sections[ix - 1].id}">← ${esc(L.sections[ix - 1].title)}</a>` : '<span></span>'}
@@ -101,14 +100,6 @@
       const addc = t.closest('[data-addcards]'); if (addc) { const n = LS.cards.addMany((L.cards || []).map(c => Object.assign({ topic: L.topic, src: { type: 'lesson', id: L.id, title: L.title } }, c))); addc.disabled = true; addc.textContent = n ? `${T('Added', 'أُضيفت')} ${n} ${T('cards', 'بطاقات')} ✓` : T('Already in your revision', 'موجودة مسبقاً'); return; }
       const term = t.closest('.ls-term'); if (term) { LS.noor.ask('explain', { text: term.dataset.term, lesson: L }); }
     });
-  }
-
-  // what you're learning, why it matters, what to do here, what comes next
-  function orient(L, sec, ix) {
-    const acts = sec.blocks.filter(b => b.k === 'activity').length, labs = sec.blocks.filter(b => b.k === 'lab').length, vids = sec.blocks.filter(b => b.k === 'video').length, ex = sec.blocks.filter(b => b.k === 'example').length;
-    const todo = [T('Read', 'اقرأ')].concat(ex ? [T('follow the worked example', 'تابع المثال')] : [], vids ? [T('watch the video', 'شاهد الفيديو')] : [], labs ? [T('explore the model', 'استكشف النموذج')] : [], acts ? [acts === 1 ? T('try the activity', 'جرّب النشاط') : T(`try the ${acts} activities`, 'جرّب الأنشطة')] : []);
-    const next = L.sections[ix + 1];
-    return `<dl class="ls-lmeta"><div><dt>${T('You are learning', 'أنت تتعلم')}</dt><dd>${esc(sec.title)} — ${T('part', 'الجزء')} ${ix + 1} ${T('of', 'من')} ${L.sections.length} ${T('of', 'من')} “${esc(L.title)}”</dd></div>${L.why ? `<div><dt>${T('Why it matters', 'لماذا يهم')}</dt><dd>${IL(L.why)}</dd></div>` : ''}<div><dt>${T('What to do', 'ماذا تفعل')}</dt><dd>${esc(todo.join(', ').replace(/^./, c => c.toUpperCase()))}.</dd></div><div><dt>${T('What comes next', 'ما التالي')}</dt><dd>${next ? esc(next.title) : T('Summary, revision questions and flashcards', 'الخلاصة والمراجعة')}</dd></div></dl>`;
   }
 
   function summaryHTML(L) {

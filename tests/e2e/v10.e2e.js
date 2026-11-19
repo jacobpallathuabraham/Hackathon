@@ -117,10 +117,8 @@ const ORIGIN = new URL(BASE).origin;
   await p.click('[data-c="stop"]'); await p.click('[data-c="close"]');
 
   /* ================= Growth Plan (v18 rebuild; full coverage in tests/e2e/growth-v18.e2e.js) ================= */
-  await p.goto(BASE + 'support.html'); await p.waitForSelector('#gpApp .gp-first, #gpApp .gp-tabs'); // v20: programmes view first
-  assert.doesNotMatch(await p.textContent('#gpApp'), /streak/i, 'no streaks in the programmes view');
-  await p.goto(BASE + 'support.html#/timetable'); await p.waitForSelector('#growthApp .gx');
-  assert.doesNotMatch(await p.textContent('#growthApp'), /streak/i, 'no streaks in the timetable');
+  await p.goto(BASE + 'support.html'); await p.waitForSelector('#growthApp .gx');
+  assert.doesNotMatch(await p.textContent('#growthApp'), /streak/i, 'no streaks anywhere');
   await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(300);
   const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov <= 1, 'Growth Plan: no horizontal scroll at 390px (' + ov + ')');
   await p.goto(BASE + 'games.html'); await p.waitForTimeout(500);

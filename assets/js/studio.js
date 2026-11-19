@@ -1,4 +1,4 @@
-/* ERLY Learning Studio reader — a full-screen reader for course PDFs.
+/* ERLY Reading Studio — a full-screen reader for course PDFs.
 
    - Library: pick one of the course readings, or open your own PDF / text
      file (read on this device with pdf.js; it is never uploaded).
@@ -46,9 +46,7 @@
   const KEY = 'erly-studio-v1';
   let db = { notes: {}, marks: {}, prog: {} };
   try { db = Object.assign(db, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* private mode */ }
-  // v20: the reader is part of the Learning Studio; if the student chose "just this visit" there, nothing is written
-  const visitOnly = () => { try { const c = JSON.parse(localStorage.getItem('erly-learn-v1') || 'null'); return !!(c && c.consent && c.consent.store === 'visit'); } catch (e) { return false; } };
-  const save = () => { if (visitOnly()) return; try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* storage full or blocked */ } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* storage full or blocked */ } };
   const notesOf = () => (db.notes[DOC.id] = db.notes[DOC.id] || []);
   const marksOf = () => (db.marks[DOC.id] = db.marks[DOC.id] || []);
 
@@ -64,7 +62,7 @@
   root.hidden = true;
   root.setAttribute('role', 'dialog');
   root.setAttribute('aria-modal', 'true');
-  root.setAttribute('aria-label', 'ERLY Learning Studio · Reading');
+  root.setAttribute('aria-label', 'ERLY Reading Studio');
   document.body.appendChild(root);
 
   const termKey = t => { if (!t) return null; if (DOC.terms[t]) return t; const k = Object.keys(DOC.terms).find(x => x.toLowerCase() === String(t).toLowerCase()); return k || null; };
@@ -85,7 +83,7 @@
 
   root.innerHTML = `
     <header class="studio__top">
-      <button class="studio__close" id="stClose" aria-label="${T('Close the reader', 'إغلاق القارئ')}">${ICON('x')}</button>
+      <button class="studio__close" id="stClose" aria-label="${T('Close the Reading Studio', 'إغلاق استوديو القراءة')}">${ICON('x')}</button>
       <button class="icon-btn st-ib" id="stLibBtn" aria-label="${T('Library', 'المكتبة')}" title="${T('Library', 'المكتبة')}">${ICON('grid')}</button>
       <div class="studio__file">${ICON('file')}<span><b id="stTitle"></b><small id="stCourse"></small></span></div>
       <div class="studio__pages" id="stPages"></div>
@@ -181,9 +179,9 @@
       <div class="slib__glow" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="slib__in">
         <header class="slib__head">
-          <div><p class="slib__k mono">${T('Learning Studio · Reading', 'استوديو التعلم · القراءة')}</p><h2>${T('Choose what to read', 'اختر ما تقرؤه')}</h2><p class="slib__lead">${T('Your course readings, ready with read-aloud, highlights, flashcards and Noor. Or open your own PDF — it stays on this device.', 'قراءات موادك جاهزة مع القراءة الصوتية والتمييز والبطاقات ونور. أو افتح ملف PDF خاصاً بك — يبقى على هذا الجهاز.')}</p></div>
+          <div><p class="slib__k mono">${T('Reading Studio', 'استوديو القراءة')}</p><h2>${T('Choose what to read', 'اختر ما تقرؤه')}</h2><p class="slib__lead">${T('Your course readings, ready with read-aloud, highlights, flashcards and Noor. Or open your own PDF — it stays on this device.', 'قراءات موادك جاهزة مع القراءة الصوتية والتمييز والبطاقات ونور. أو افتح ملف PDF خاصاً بك — يبقى على هذا الجهاز.')}</p></div>
           <button class="btn btn--sm btn--ghost slib__back" id="stLibBack" hidden></button>
-          <button class="studio__close slib__x" id="stLibX" aria-label="${T('Close the reader', 'إغلاق القارئ')}">${ICON('x')}</button>
+          <button class="studio__close slib__x" id="stLibX" aria-label="${T('Close the Reading Studio', 'إغلاق استوديو القراءة')}">${ICON('x')}</button>
         </header>
         <div class="slib__bar">
           <label class="slib__search">${ICON('search')}<input id="stLibQ" type="search" autocomplete="off" placeholder="${T('Search readings, courses, topics…', 'ابحث في القراءات والمواد والمواضيع…')}" aria-label="${T('Search the library', 'ابحث في المكتبة')}"></label>
@@ -972,7 +970,7 @@
   }
   function exportNotes() {
     const ns = notesOf().slice().sort((a, b) => a.from - b.from), marks = marksOf().slice().sort((a, b) => a - b);
-    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Learning Studio reader', 'مُصدَّر من قارئ استوديو التعلّم في إيرلي')}_`].join('\n');
+    const md = [`# ${T('My notes', 'ملاحظاتي')} — ${DOC.title}`, `${DOC.course}`, '', ...ns.map(n => `- **p. ${(DOC.startPage || 1) + n.page}** · “${n.text}”${n.note ? `\n  - ${n.note}` : ''}`), '', marks.length ? `## ${T('Bookmarks', 'العلامات')}\n` + marks.map(i => `- p. ${(DOC.startPage || 1) + i} — ${DOC.pages[i].h}`).join('\n') : '', '', `_${T('Exported from the ERLY Reading Studio', 'مُصدَّر من استوديو القراءة في إيرلي')}_`].join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
     a.download = `notes-${DOC.title.replace(/\.(pdf|txt)$/i, '').replace(/[^\w-]+/g, '_')}.md`;

@@ -41,7 +41,7 @@
   };
   const FEEL = {
     reading: 'Profile A — re-reading, longer dwell and slower pace than their own normal, in both Arabic and English, through the watched week.',
-    executive: 'Profile B — work concentrated just before deadlines, unsent submissions and late starts against their own baseline.',
+    executive: 'Profile B — 11th-hour spikes, abandoned submissions and late starts against their own baseline.',
     language: 'Reading friction on English pages only — the per-language baselines point to language load rather than a learning difference.',
     strain: 'Profile C — a sudden drop across almost every baseline at once. Route to a counsellor first; never tools.',
   };
@@ -50,7 +50,7 @@
   const SEM = ['Spr 25', 'Fall 25', 'Spr 26', 'Fall 26*'];
   const S = [
     { id: '2026-0311', name: 'Mariam Al Hammadi', prog: 'Mechanical Eng.', year: 2, status: 'new', track: ['reading'], dw: [2.4, 1.9], gpa: [3.6, 3.4, 3.1, 2.9], on: [92, 88, 80, 71], req: -1, ally: 'Sara (sister)', note: 'Re-reading spikes in English PDFs after 11pm. Read-aloud helped (“easier”). Asked Noor for plain-words summaries 9 times.' },
-    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['executive'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: 'Submissions close to the deadline on most judged days; three abandoned drafts. Says starting is the hard part.' },
+    { id: '2026-0507', name: 'Omar Khalid', prog: 'Computer Science', year: 1, status: 'new', track: ['executive'], dw: [1.2, 1.1], gpa: [null, null, 3.1, 2.7], on: [null, null, 74, 58], req: -2, ally: null, note: '11th-hour submissions on most judged days; three abandoned drafts. Says starting is the hard part.' },
     { id: '2026-0129', name: 'Aisha Rahman', prog: 'Law', year: 1, status: 'new', track: null, gpa: [null, null, 3.4, 3.2], on: [null, null, 88, 84], req: 0, ally: null, note: 'Self-referred without tracking: “I suspect I might have dyslexia; reading cases takes me hours.”' },
     { id: '2026-0442', name: 'Noura Al Ketbi', prog: 'Mechanical Eng.', year: 2, status: 'scheduled', slot: 1, slotT: '10:30', track: ['reading'], dw: [2.6, 1.3], gpa: [3.8, 3.6, 3.4, 3.0], on: [95, 90, 86, 72], req: -4, ally: 'Sara (sister)', note: 'Much slower on English pages than Arabic — check language load vs. decoding.' },
     { id: '2026-0618', name: 'Rahul Menon', prog: 'Business', year: 3, status: 'scheduled', slot: 3, slotT: '13:30', track: ['strain'], dw: [1.3, null], gpa: [3.3, 3.1, 3.0, 2.6], on: [90, 88, 84, 76], req: -5, ally: null, note: 'Late-night study and shorter sessions since a family move. Took the breathing break with Noor often.' },
@@ -553,7 +553,7 @@ ${s.name.replace(' (you)', '')} · ${s.id}`;
       </section>
       <section class="dr__sec">
         <h4>Indicators that stood out <span class="mono muted small">${fx.per.filter(p => p.frac >= .5).length} of ${fx.per.length} above normal on ≥ half of watched days</span></h4>
-        <div class="itable">${topInd.map(p => `<div class="itable__r ${p.frac >= .5 ? 'is-flag' : ''}" style="--c:${{ reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)' }[p.area] || 'var(--muted)'}"><span class="mono itable__id">${p.id}</span><span class="itable__n"><b>${esc(p.en)}</b><small>${p.id[0]} · ${esc(CATS[p.cat].en)} · ${p.live ? 'Learning Studio reader' : 'LMS'}</small></span><span class="itable__bar" title="${p.up} of ${fx.judged} judged days">${Array.from({ length: fx.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${p.up}/${fx.judged}</b></div>`).join('')}</div>
+        <div class="itable">${topInd.map(p => `<div class="itable__r ${p.frac >= .5 ? 'is-flag' : ''}" style="--c:${{ reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)' }[p.area] || 'var(--muted)'}"><span class="mono itable__id">${p.id}</span><span class="itable__n"><b>${esc(p.en)}</b><small>${p.id[0]} · ${esc(CATS[p.cat].en)} · ${p.live ? 'Reading Studio' : 'LMS'}</small></span><span class="itable__bar" title="${p.up} of ${fx.judged} judged days">${Array.from({ length: fx.judged }, (_, k) => `<i class="${k < p.up ? 'is-on' : ''}"></i>`).join('')}</span><b class="mono">${p.up}/${fx.judged}</b></div>`).join('')}</div>
         ${s.dw && s.dw[1] != null ? `<p class="panel__h mono" style="margin-top:16px">Per-language baselines · dwell vs. expected</p><div class="lgap">${[['English pages', s.dw[0]], ['Arabic pages', s.dw[1]]].map(([l, v]) => `<div class="lgap__row"><span>${l}</span><span class="lgap__bar"><i style="--w:${Math.min(100, v / 3 * 100)}%"></i></span><b class="mono">${v.toFixed(1)}×</b></div>`).join('')}</div><p class="small muted">${s.dw[0] / s.dw[1] > 1.5 ? 'Much heavier in English only — consider second-language load before decoding.' : 'Similar in both languages — friction is not only about English.'}</p>` : ''}
         <p class="small muted">Screening indicators only. LMS-side values are synthetic in this demo.</p>
       </section>` : ''}

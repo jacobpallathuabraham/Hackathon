@@ -5,30 +5,30 @@
   <meta name="robots" content="noindex, follow">
   <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
   <title>ERLY — Early Recognition of Learning barriers, on Your terms · SAS</title>
-  <meta name="description" content="ERLY by SAS: a consent-first study companion. Under a Support Pact it notices study strain against your own normal for two weeks, then stops. Learning Studio reader, Noor, and a warm hand-off to SAS.">
+  <meta name="description" content="ERLY by SAS: a consent-first study companion. Under a Support Pact it notices study strain against your own normal for two weeks, then stops. Reading Studio, Noor, and a warm hand-off to SAS.">
   <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
   <meta property="og:title" content="ERLY — Notice sooner, on your terms.">
-  <meta property="og:description" content="Indicators measured against your own normal, a Learning Studio reader, and a friendly study buddy. SAS confirms; ERLY never diagnoses.">
+  <meta property="og:description" content="Indicators measured against your own normal, a Reading Studio, and a friendly study buddy. SAS confirms; ERLY never diagnoses.">
   <link rel="icon" href="assets/img/mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=20">
-  <link rel="stylesheet" href="assets/css/portal.css?v=20">
-  <link rel="stylesheet" href="assets/css/accents.css?v=20">
-  <link rel="stylesheet" href="assets/css/erly.css?v=20">
-  <link rel="stylesheet" href="assets/css/realtrack.css?v=20">
-  <link rel="stylesheet" href="assets/css/hand.css?v=20">
-  <link rel="stylesheet" href="assets/css/companion.css?v=20">
-  <link rel="stylesheet" href="assets/css/studio.css?v=20">
-  <link rel="stylesheet" href="assets/css/noor.css?v=20">
-  <link rel="stylesheet" href="assets/css/voice.css?v=20">
-  <link rel="stylesheet" href="assets/css/visuals.css?v=20">
-  <link rel="stylesheet" href="assets/css/lab.css?v=20">
+  <link rel="stylesheet" href="assets/css/style.css?v=19">
+  <link rel="stylesheet" href="assets/css/portal.css?v=19">
+  <link rel="stylesheet" href="assets/css/accents.css?v=19">
+  <link rel="stylesheet" href="assets/css/erly.css?v=19">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=19">
+  <link rel="stylesheet" href="assets/css/hand.css?v=19">
+  <link rel="stylesheet" href="assets/css/companion.css?v=19">
+  <link rel="stylesheet" href="assets/css/studio.css?v=19">
+  <link rel="stylesheet" href="assets/css/noor.css?v=19">
+  <link rel="stylesheet" href="assets/css/voice.css?v=19">
+  <link rel="stylesheet" href="assets/css/visuals.css?v=19">
+  <link rel="stylesheet" href="assets/css/lab.css?v=19">
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
-  <link rel="stylesheet" href="assets/css/checkins.css?v=20">
-  <link rel="stylesheet" href="assets/css/videos.css?v=20">
+  <link rel="stylesheet" href="assets/css/checkins.css?v=19">
+  <link rel="stylesheet" href="assets/css/videos.css?v=19">
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -44,10 +44,9 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="assets/css/theme-fx.css?v=20">
-  <link rel="stylesheet" href="assets/css/v9.css?v=20">
-  <link rel="stylesheet" href="assets/css/companion-holo.css?v=20">
-  <link rel="stylesheet" href="assets/css/ui.css?v=20">
+  <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
+  <link rel="stylesheet" href="assets/css/v9.css?v=19">
+  <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
 </head>
 <body>
   <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
@@ -60,12 +59,15 @@
         <span class="brand__word brand__word--caps">ERLY</span><span class="brand__sub mono">by SAS</span>
       </a>
       <nav class="nav__links" aria-label="Primary">
+        <a href="#flow" data-i18n="nav.flow">How it works</a>
+        <a href="#tracking" data-i18n="nav.tracking">Tracking</a>
         <a href="learn.html" class="nav__learn">Learning Studio</a>
-        <a href="support.html" class="nav__growth" data-i18n="nav.growth">Growth Plan</a>
-        <a href="handwriting.html">Handwriting</a>
-        <a href="games.html">Games</a>
+        <a href="#reading-studio" data-i18n="nav.studio">Reading Studio</a>
+        <a href="#videos" data-i18n="nav.videos">Videos</a>
+        <a href="games.html" data-i18n="nav.lgames">Learning Games</a>
+        <a href="#insight" data-i18n="nav.insight">Insight</a>
         <a href="#handoff" data-i18n="nav.handoff">Get support</a>
-        <a href="#about">How ERLY works</a>
+        <a href="support.html" class="nav__growth" data-i18n="nav.growth">Growth Plan</a>
       </nav>
       <div class="nav__tools">
         <button class="kbd-btn" id="cmdOpen" aria-label="Open quick jump (Ctrl K)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><kbd>⌘K</kbd></button>
@@ -92,60 +94,290 @@
 
   <main id="main">
 
-  <!-- ============ ACTION HUB ============ -->
-  <section class="hub" id="top" aria-labelledby="hubH">
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
     <div class="amb amb--fade-b" data-ambient="aurora constellation" aria-hidden="true"></div>
-    <div class="wrap">
-      <p class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">Student Accessibility Services · Welcome back, Acubins</span></p>
-      <h1 class="hub__title" id="hubH">What would you like to do?</h1>
-      <p class="hub__lead">Learn, plan, practise or ask for help. Everything here is optional and stays under your control.</p>
-      <div class="hub__cont" id="hubCont" hidden></div>
-      <ul class="hub__grid">
-        <li class="hub__t hub__t--lead"><a href="learn.html"><span class="hub__ic" data-ic="book"></span><b>Learning Studio</b><span>Lessons, readings, videos, interactive models, practice, flashcards and notes.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><button type="button" data-hub-noor><span class="hub__ic" data-ic="chat"></span><b>Ask Noor</b><span>Your study companion — explains, quizzes, plans.</span><i aria-hidden="true">→</i></button></li>
-        <li class="hub__t"><a href="support.html"><span class="hub__ic" data-ic="calendar"></span><b>Growth Plan</b><span>Choose a support programme, set goals, do short daily activities.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><a href="handwriting.html"><span class="hub__ic" data-ic="text"></span><b>Handwriting Check</b><span>A calm writing studio with optional on-device recognition.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><a href="games.html"><span class="hub__ic" data-ic="target"></span><b>Learning Games</b><span>Short practice games — practice, not a test.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><a href="learn.html#/progress"><span class="hub__ic" data-ic="chart"></span><b>My Progress</b><span>What you have learned, from your own activity.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><a href="#tracking"><span class="hub__ic" data-ic="shield"></span><b>Support Pact</b><span>Optional two-week noticing, with your consent.</span><i aria-hidden="true">→</i></a></li>
-        <li class="hub__t"><a href="#handoff"><span class="hub__ic" data-ic="users"></span><b>Get support</b><span>Talk to Student Accessibility Services.</span><i aria-hidden="true">→</i></a></li>
-      </ul>
+    <div class="wrap hero__grid">
+      <div class="hero__copy">
+        <p class="eyebrow reveal"><span class="dot"></span><span data-i18n="hero.eyebrow">Student Accessibility Services · Welcome back, Acubins</span></p>
+        <h1 class="display reveal" data-i18n="h3.title">Notice sooner.<br><em>On your terms.</em></h1>
+        <p class="lead reveal" data-i18n="h3.lead">ERLY is a consent-first study companion. After you sign a Support Pact, it quietly notices study strain — re-reads, pace, abandoned drafts, 11th-hour spikes — measured only against your own normal. No quizzes, no labels. If a pattern persists, you see it first, and you choose who comes with you to SAS.</p>
+        <div class="hero__cta reveal">
+          <button class="btn btn--accent btn--glow" data-studio><span class="ic-wrap" id="heroIc1"></span><span data-i18n="h2.cta1">Open the Reading Studio</span></button>
+          <a href="#tracking" class="btn btn--ghost" data-i18n="h2.cta2">Start tracking, with consent →</a>
+        </div>
+        <ul class="hero__facts reveal">
+          <li><b data-i18n="h3.f1a">100</b><span data-i18n="h3.f1b">indicators across 10 domains</span></li>
+          <li><b data-i18n="h3.f2a">14</b><span data-i18n="h3.f2b">days: one week to learn your normal, one to notice</span></li>
+          <li><b data-i18n="h2.f3a">0</b><span data-i18n="h2.f3b">bytes of tracking data leave your device — not even to Noor Online, which only receives the messages you send</span></li>
+        </ul>
+      </div>
+
+      <div class="hero__stage hero__stage--v2 reveal" aria-hidden="true">
+        <div class="hcard hcard--track">
+          <div class="hcard__head"><span class="mono" data-i18n="h3.c1">Example · day 10 of 14</span><span class="hcard__rec"><i></i><span data-i18n="h2.c2">on this device</span></span></div>
+          <div class="hbars">
+            <div><span data-i18n="h2.b1">Re-read loops</span><i style="--w:72%;--c:var(--c-R)"></i></div>
+            <div><span data-i18n="h2.b2">Dwell vs. expected</span><i style="--w:58%;--c:var(--c-R)"></i></div>
+            <div><span data-i18n="h2.b3">11th-hour work</span><i style="--w:30%;--c:var(--c-W)"></i></div>
+            <div><span data-i18n="h2.b4">Late-night study</span><i style="--w:22%;--c:var(--c-T)"></i></div>
+          </div>
+        </div>
+        <div class="hcard hcard--noor">
+          <span class="mini-noor"><i></i></span>
+          <div><b>Noor</b><p data-i18n="h2.c3">I noticed you returned to this section a few times. Would you like to talk about how the reading is going?</p><span class="hcard__chips"><em data-i18n="h2.c4">Talk about it</em><em data-i18n="h2.c5">Later</em></span></div>
+        </div>
+        <div class="hcard hcard--voice"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span><div><b data-i18n="h2.c6">Reading aloud</b> <small class="muted" data-i18n="h2.c7">your choice of voice · 0.9×</small></div></div>
+      </div>
+    </div>
+
+    <div class="ticker" aria-label="Principles">
+      <div class="ticker__track">
+        <span data-i18n="tk3.1">No quizzes, no labels</span><span data-i18n="tk3.2">A Support Pact, not surveillance</span><span data-i18n="tk3.3">You vs. you</span><span data-i18n="tk3.4">A baseline week first</span><span data-i18n="tk3.5">3+ signals, a whole week</span><span data-i18n="tk3.6">Looks at your textbook, never at you</span><span data-i18n="tk3.7">Arabic & English baselines</span><span data-i18n="tk3.8">SAS confirms, ERLY never diagnoses</span>
+      </div>
     </div>
   </section>
+
+  <!-- ============ GAP ============ -->
+  <section class="section" id="gap">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="kicker"><span class="num">01</span><span data-i18n="gap.kicker">The gap</span></p>
+        <h2 class="h2 reveal" data-i18n="gap.title">Two different measurements — and the question they leave open.</h2>
+      </header>
+      <div class="gap">
+        <article class="gap__stat reveal">
+          <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">≈94</span><small>%</small></p>
+          <p class="gap__label" data-i18n="gap.a">pass rate in Grade 12 end-of-year exams, Ministry of Education curriculum, 2021–22 (28,775 students in public and private MoE-curriculum schools).</p>
+          <p class="gap__src mono" data-i18n="gap.asrc">94.4% · reported by Khaleej Times, 29 June 2022, from Emirates Schools Establishment results · a pass rate, not a measure of reading difficulty</p>
+          <div class="bar"><span style="--w:94%"></span></div>
+        </article>
+        <div class="gap__vs reveal" aria-hidden="true" title="different measurements"><span>≠</span></div>
+        <article class="gap__stat gap__stat--hot reveal">
+          <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">17.6</span><small>%</small></p>
+          <p class="gap__label" data-i18n="gap.b">of female Emirati students screened at UAE University in 2007/08 showed dyslexic <em>features</em> on a new screening test, in Arabic and English — not diagnoses.</p>
+          <p class="gap__src mono">Aboudan, Eapen &amp; Bayshak, 2011 · Int. J. English Linguistics 1(2):64–72 · doi:10.5539/ijel.v1n2p64 · pilot of the Emirates Dyslexia Indicator Test</p>
+          <div class="bar bar--hot"><span style="--w:17.6%"></span></div>
+        </article>
+      </div>
+      <div class="gap__foot">
+        <p class="gap__claim reveal" data-i18n="gap.claim">School exams measure whether you <em>can</em> read. University measures whether you can keep reading 40 dense pages a week, in your second language, at 1am. That is where difficulties a pass mark can hide may surface — and we could not find recent, published UAE university data on it.</p>
+        <aside class="fineprint reveal">
+          <p class="mono fineprint__h" data-i18n="gap.fp.h">Our own critique of our own evidence</p>
+          <ul>
+            <li data-i18n="gap.fp.1">2007/08 data — almost two decades old</li>
+            <li data-i18n="gap.fp.2">One university, female students only</li>
+            <li data-i18n="gap.fp.3">Screening features, not clinical diagnoses</li>
+            <li data-i18n="gap.fp.4">A pass rate and a screening estimate are different measurements and can’t be compared directly; neither tells us how many university students struggle today</li>
+          </ul>
+          <p data-i18n="gap.fp.p">So we don’t claim a current rate. We found no newer published UAE university figure (that is a search result, not proof none exists); a consented pilot would give a current, local picture — of study strain, not of diagnoses.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW ============ -->
+  <section class="section section--tint" id="flow">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">02</span><span data-i18n="fl.kicker">How it works</span></p>
+          <h2 class="h2 reveal" data-i18n="fl3.title">No quizzes. No labels. Just studying, with someone quietly paying attention.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="fl3.lead">Smart students mask until university workload catches up. ERLY replaces one-off screening with something that fits real student life — passive, on-device, measured only against your own normal, and finished after two weeks.</p>
+      </header>
+      <ol class="flow4">
+        <li class="flow4__step reveal"><span class="flow4__n mono">01</span><h3 data-i18n="fl3.1h">Sign a Support Pact</h3><p data-i18n="fl3.1p">Choose what ERLY may notice and who may be involved if a pattern persists. Four quick taps build your Learning Blueprint — used to pick support, never to detect.</p><span class="flow4__meta mono" data-i18n="fl3.1m">revocable · expires each semester</span></li>
+        <li class="flow4__step reveal"><span class="flow4__n mono">02</span><h3 data-i18n="fl3.2h">A baseline week</h3><p data-i18n="fl3.2p">For 7 days ERLY only learns your normal from 100 metadata indicators. Nothing is judged — but every tool, from read-aloud to Noor, works from day one.</p><span class="flow4__meta mono" data-i18n="fl3.2m">days 1–7 · you vs. you</span></li>
+        <li class="flow4__step reveal"><span class="flow4__n mono">03</span><h3 data-i18n="fl3.3h">Convergence, then you first</h3><p data-i18n="fl3.3p">An insight appears only if 3+ of 10 domains stay above your normal for the whole next week. A bilingual evidence card shows you the three signals behind it — and nobody else.</p><span class="flow4__meta mono" data-i18n="fl3.3m">days 8–14 · then it stops</span></li>
+        <li class="flow4__step reveal"><span class="flow4__n mono">04</span><h3 data-i18n="fl3.4h">Ally Bridge to SAS</h3><p data-i18n="fl3.4p">Invite the ally you named — they get a Support Playbook, never your data. Book SAS in one tap with an Evidence Pack and a drafted accommodation request. SAS confirms; ERLY never does.</p><span class="flow4__meta mono" data-i18n="fl3.4m">a squad, not a snitch</span></li>
+      </ol>
+      <div class="flow-notes">
+        <div class="flow-note reveal"><b data-i18n="fl2.n1h">Help from day one</b><span data-i18n="fl2.n1p">The Reading Studio and Noor work whether or not you track.</span></div>
+        <div class="flow-note reveal"><b data-i18n="fl3.n2h">Already diagnosed?</b><span data-i18n="fl3.n2p">Utility mode: every tool, telemetry off. And self-referral is always open.</span></div>
+        <div class="flow-note reveal"><b data-i18n="fl2.n3h">Exam weeks</b><span data-i18n="fl3.n3p">Exam Mode syncs your calendar so normal exam stress is never read as a pattern.</span></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ TRACKING ============ -->
   <section class="section section--ink" id="tracking">
     <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span data-i18n="tk3.kicker">Support Pact · opt-in · 14 days</span></p>
+          <p class="kicker"><span class="num">03</span><span data-i18n="tk3.kicker">Support Pact · opt-in · 14 days</span></p>
           <h2 class="h2 reveal" data-i18n="tk3.title">A pact with a start, an end, a pause button and a delete button.</h2>
         </div>
-        <p class="section__lead reveal" data-i18n="tk3.lead">Choose what ERLY may notice and who may be involved. The Privacy Ledger shows every count it keeps. Learning Studio reader indicators are measured live, right here; LMS indicators are simulated in this demo.</p>
+        <p class="section__lead reveal" data-i18n="tk3.lead">Choose what ERLY may notice and who may be involved. The Privacy Ledger shows every count it keeps. Reading Studio indicators are measured live, right here; LMS indicators are simulated in this demo.</p>
       </header>
       <div id="trackBox"></div>
     </div>
   </section>
+
+  <!-- ============ STUDIO ============ -->
+  <section class="section" id="reading-studio">
+    <div class="wrap">
+      <div class="studio-cta reveal">
+        <div class="studio-cta__copy">
+          <p class="kicker"><span class="num">04</span><span data-i18n="sc2.kicker">The Reading Studio</span></p>
+          <h2 class="h2" data-i18n="sc2.title">Every reading, made to fit you.</h2>
+          <p class="section__lead" data-i18n="sc2.lead">Pick a reading from your course library, or open your own PDF — it is read on your device and never uploaded. Highlight in four colours and add notes, search, bookmark, listen in the voice you like, and revise with summaries, flip flashcards and quizzes. Noor, the AI reading companion, is there when you want her: talk it through by text or voice. She only checks in if you allow it — and never diagnoses.</p>
+          <ul class="studio-cta__list">
+            <li><span id="scIc1"></span><span data-i18n="sc2.l1">A library of readings from 6 courses, or open your own PDF or text file</span></li>
+            <li><span id="scIc2"></span><span data-i18n="sc2.l2">Highlights in 4 colours with notes, bookmarks, search, page thumbnails and time left</span></li>
+            <li><span id="scIc3"></span><span data-i18n="sc2.l3">Summaries, key terms, flip flashcards and quizzes — plus Noor to explain by text or voice</span></li>
+            <li><span id="scIc4"></span><span data-i18n="sc2.l4">Read-aloud in any voice, 5 fonts, 6 page tints, line focus, a focus timer and auto-scroll</span></li>
+          </ul>
+          <button class="btn btn--accent btn--big" data-studio><span data-i18n="sc2.btn">Open the library</span><span id="scIc5"></span></button>
+          <p class="studio-cta__more"><a class="btn btn--ghost" href="learn.html">Open the Interactive Learning Studio →</a> <span class="muted">Lessons with live models, ERLY videos with transcripts, practice, flashcards and a notebook — the Reading Studio is part of it.</span></p>
+        </div>
+        <button class="studio-cta__peek" data-studio aria-label="Open the Reading Studio">
+          <span class="peek__page">
+            <span class="peek__bar"><i></i><i></i><i></i><b>MECH210_Week4_Reading.pdf</b></span>
+            <span class="peek__h">4.1 Energy that moves with matter</span>
+            <span class="peek__l" style="--w:94%"></span><span class="peek__l peek__l--hl" style="--w:88%"></span><span class="peek__l" style="--w:91%"></span><span class="peek__l" style="--w:70%"></span><span class="peek__l" style="--w:86%"></span><span class="peek__l" style="--w:60%"></span>
+          </span>
+          <span class="peek__noor"><span class="mini-noor mini-noor--lg"><i></i></span><span class="peek__bubble" data-i18n="sc2.bubble">Want me to explain this part?</span></span>
+          <span class="peek__go" id="scIc6"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ VIDEOS ============ -->
+  <section class="section" id="videos">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">05</span><span data-i18n="vd.kicker">Lecture videos</span></p>
+          <h2 class="h2 reveal" data-i18n="vd.title">Watch and learn — Noor notices the tricky parts.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="vd.lead">Lectures and short lessons inside ERLY. Play them at your own speed and open the key points. If you keep going back to the same part, Noor will gently ask whether it’s hard to follow — only with your permission.</p>
+      </header>
+      <div class="vid-grid" id="videos-app"></div>
+      <p class="vid-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span data-i18n="vd.note">ERLY only reads playback info — rewinds, speed, restarts — never your camera or microphone.</span></p>
+    </div>
+  </section>
+
+  <!-- ============ LEARNING GAMES (replaced the Daily Quest in v12) ============ -->
+  <section class="section section--tint" id="games">
+    <span id="checkins" class="anchor-alias" aria-hidden="true"></span>
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">06</span><span data-i18n="lg.kicker">Learning Games · practice, not a test</span></p>
+          <h2 class="h2 reveal" data-i18n="lg.title">Learning Games</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="lg.lead">Twelve short games across ten areas of studying. For practice and enjoyment only — they don’t test or diagnose anything, and your activity stays on this device.</p>
+      </header>
+      <div id="lgHome" class="lg-home"></div>
+      <div class="lg-ctas">
+        <a class="hw-cta games-cta reveal" href="games.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01"/></svg></span><span><b data-i18n="lg.open">Open Learning Games</b> <small data-i18n="gm.cta.s">Twelve short games: reading, vocabulary, memory, planning, focus, listening, writing, spatial thinking, patterns and problem-solving.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
+        <button type="button" class="hw-cta reveal" data-hand-open><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></span><span><b data-i18n="hw.cta.t2">Handwriting Check — your handwriting, your pace</b> <small data-i18n="hw.cta.s">Copy three sentences by hand and take a photo — ERLY tries to read them on this device, with nothing uploaded or saved and no judgement of your writing.</small></span><em data-i18n="hw.cta.go">Try it →</em></button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ START-RAMP ============ -->
+  <section class="section section--tint" id="ramp">
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">07</span><span data-i18n="rp.kicker">Day-one tools · Start-Ramp</span></p>
+          <h2 class="h2 reveal" data-i18n="rp.title">When starting is the hard part, make the first step tiny.</h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="rp.lead">For the “11th-hour spike” and the “Forum Ghost”: deadline-aware nudges you choose, a five-minute first step, big tasks split into micro-tasks, and a quiet body-doubling room. Works from day one — no tracking needed.</p>
+      </header>
+      <div class="ramp reveal" id="ramp-app">
+        <div class="ramp__task">
+          <p class="panel__h mono" data-i18n="rp.next">Next deadline</p>
+          <h3>MECH 210 · Lab report 3</h3>
+          <p class="ramp__due"><span class="mono" id="rampDue">due in 3 days</span></p>
+          <div class="ramp__nudges">
+            <label class="rnudge"><input type="checkbox" checked><span><b>72 h</b> <small data-i18n="rp.n1">“Five minutes today?”</small></span></label>
+            <label class="rnudge"><input type="checkbox" checked><span><b>24 h</b> <small data-i18n="rp.n2">“One micro-task left”</small></span></label>
+            <label class="rnudge"><input type="checkbox"><span><b>3 h</b> <small data-i18n="rp.n3">“Submit the draft you have”</small></span></label>
+          </div>
+        </div>
+        <div class="ramp__steps">
+          <p class="panel__h mono" data-i18n="rp.micro">Micro-tasks · tick as you go</p>
+          <ol class="micro" id="micro"></ol>
+          <div class="ramp__prog"><i id="rampBar"></i></div>
+        </div>
+        <div class="ramp__go">
+          <div class="timer5" id="timer5"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring__bg"/><circle cx="60" cy="60" r="52" class="ring__fg" id="t5ring"/></svg><b class="mono" id="t5txt">5:00</b></div>
+          <button class="btn btn--accent btn--block" id="t5go" data-i18n="rp.go">Start a 5-minute first step</button>
+          <button class="room" id="roomBtn"><span class="room__dots"><i></i><i></i><i></i><i></i></span><span><b data-i18n="rp.room">Body-doubling room</b> <small id="roomN" data-i18n="rp.roomn">4 students studying quietly · cameras off</small></span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW ERLY THINKS ============ -->
+  <section class="section section--ink" id="ai">
+    <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
+    <div class="wrap">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker"><span class="num">08</span><span data-i18n="ai.kicker">How ERLY thinks</span></p>
+          <h2 class="h2 reveal" data-i18n="ai.title">It looks at your textbook. <em>Never at you.</em></h2>
+        </div>
+        <p class="section__lead reveal" data-i18n="ai.lead">Everything that analyses your activity runs in this browser: simple, inspectable statistics compared only with your own baseline — not a trained model, and no labelled disability data. Demo mode uses a synthetic LMS feed; Real mode uses your own actions on these pages.</p>
+      </header>
+      <div class="sig-cluster reveal">
+        <article class="sigc"><span class="mono">S1</span><h3 data-i18n="ai.s1">Visual tracking friction</h3><p data-i18n="ai.s1p">Scroll regressions — re-reading the same paragraph.</p><small data-i18n="ai.s1m">scroll events only</small></article>
+        <article class="sigc"><span class="mono">S2</span><h3 data-i18n="ai.s2">Submission abandonment</h3><p data-i18n="ai.s2p">The “Forum Ghost” — posted then deleted, drafts never sent.</p><small data-i18n="ai.s2m">button events only, never text</small></article>
+        <article class="sigc"><span class="mono">S3</span><h3 data-i18n="ai.s3">Modality shifting</h3><p data-i18n="ai.s3p">The “audio bailout” — switching to read-aloud on dense pages.</p><small data-i18n="ai.s3m">feature-use counts only</small></article>
+        <article class="sigc"><span class="mono">S4</span><h3 data-i18n="ai.s4">Deadline proximity paralysis</h3><p data-i18n="ai.s4p">The “11th-hour spike” — nothing, then a chaotic rush, repeatedly.</p><small data-i18n="ai.s4m">timestamps only</small></article>
+      </div>
+      <ol class="layers4">
+        <li class="reveal"><span class="layers4__k mono">L1</span><div><h3 data-i18n="ai.l1">Self-baseline anomaly detection</h3><p data-i18n="ai.l1p">Unsupervised. Learns your normal in the baseline week, per language, then flags only what persists.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
+        <li class="reveal"><span class="layers4__k mono">L2</span><div><h3 data-i18n="ai.l2">On-device insight cards</h3><p data-i18n="ai.l2p">Bilingual templates, built in this browser, that always list the three contributing signals. Your tracking data is never sent to any AI model.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
+        <li class="reveal"><span class="layers4__k mono">L3</span><div><h3 data-i18n="ai.l3">Outcome calibration</h3><p data-i18n="ai.l3p">Semi-supervised, from consented and anonymised SAS outcomes. Federated only.</p></div><em class="honesty honesty--road" data-i18n="ai.road">roadmap</em></li>
+        <li class="reveal"><span class="layers4__k mono">L4</span><div><h3 data-i18n="ai.l4">Contextual RL via 1-tap micro-nudges</h3><p data-i18n="ai.l4p">Noor’s “Did that help?” and “too dense / tired / lost thread” taps update which support you’re offered — without survey fatigue.</p></div><em class="honesty honesty--sim" data-i18n="ai.sim">simulated</em></li>
+      </ol>
+      <div class="rejected-grid">
+        <article class="rej reveal"><h3 data-i18n="ai.rh">Evaluated and rejected</h3>
+          <ul>
+            <li><b data-i18n="ai.r1">Webcam eye-tracking</b><span data-i18n="ai.r1p">Biometric class under PDPL, not accurate enough, and confirmation belongs with validated instruments.</span></li>
+            <li><b data-i18n="ai.r2">Keystroke write–delete ratio</b><span data-i18n="ai.r2p">A privacy violation — and it flags bad typists.</span></li>
+            <li><b data-i18n="ai.r3">Tab-switching counts</b><span data-i18n="ai.r3p">Too weak to mean anything alone.</span></li>
+            <li><b data-i18n="ai.r4">Quizzes and alerts that imply disability</b><span data-i18n="ai.r4p">Nobody takes them, and they stigmatise.</span></li>
+          </ul></article>
+        <article class="rej reveal"><h3 data-i18n="ai.mh">How ERLY could be misused — and what stops it</h3>
+          <ul>
+            <li><b data-i18n="ai.m1">A parent demands the data</b><span data-i18n="ai.m1p">There is none to hand over: raw logs never leave the device and are deleted when the 14 days end (the next time ERLY is opened).</span></li>
+            <li><b data-i18n="ai.m2">A university wants to rank students</b><span data-i18n="ai.m2p">SAS sees only what a student shares; cohort views hide any group under 10 students.</span></li>
+            <li><b data-i18n="ai.m3">An employer asks for “ERLY results”</b><span data-i18n="ai.m3p">ERLY never produces a label or a score — only a private picture the student owns.</span></li>
+          </ul></article>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ INSIGHT ============ -->
   <section class="section section--insight" id="insight">
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span data-i18n="in.kicker">Your insight</span></p>
+          <p class="kicker"><span class="num">09</span><span data-i18n="in.kicker">Your insight</span></p>
           <h2 class="h2 reveal" data-i18n="in.title">A picture, not a label.</h2>
         </div>
-        <p class="section__lead reveal" data-i18n="in3.lead">After day 14, all 100 indicators come together in a page made for you: a bilingual evidence card, your month as weather, a summary of where study felt hardest, what stayed steady — and what actually helped you.</p>
+        <p class="section__lead reveal" data-i18n="in3.lead">After day 14, all 100 indicators come together in a page made for you: a bilingual evidence card, your month as weather, a friction fingerprint, what stayed steady — and what actually helped you.</p>
       </header>
       <div id="insightBox"></div>
       <a class="hw-cta growth-cta reveal" href="support.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 11c0-4 3-7 8-7 0 5-3 8-8 7zM12 14c0-3-2.5-5.5-7-5.5 0 4.5 2.5 6.5 7 5.5z"/></svg></span><span><b data-i18n="gp.cta.t">Growth Plan — build the skills, slowly</b> <small data-i18n="gp.cta.s">A six-week programme of short daily exercises and strategies, with a weekly review with Noor. Like coaching, at your pace.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
     </div>
   </section>
+
   <!-- ============ HANDOFF ============ -->
   <section class="section" id="handoff">
     <div class="wrap">
       <header class="section__head section__head--split">
         <div>
-          <p class="kicker"><span data-i18n="ho.kicker">The hand-off</span></p>
+          <p class="kicker"><span class="num">10</span><span data-i18n="ho.kicker">The hand-off</span></p>
           <h2 class="h2 reveal" data-i18n="ho2.title">From a private insight to a real appointment, with someone beside you.</h2>
         </div>
         <p class="section__lead reveal" data-i18n="ho3.lead">Two weeks of indicators can build evidence strong enough to justify a referral. Only a professional assessment can confirm a learning disability, and SAS does that part.</p>
@@ -195,179 +427,13 @@
       <p class="selfref reveal"><span data-i18n="ho2.self">Don't want to be tracked? You don't have to be.</span> <button class="link" id="selfRef" data-i18n="ho.selfb">Self-refer to SAS directly →</button></p>
     </div>
   </section>
-  <!-- ============ VIDEOS ============ -->
-  <section class="section" id="videos">
-    <div class="wrap">
-      <header class="section__head section__head--split">
-        <div>
-          <p class="kicker"><span data-i18n="vd.kicker">Lecture videos</span></p>
-          <h2 class="h2 reveal" data-i18n="vd.title">Watch and learn — Noor notices the tricky parts.</h2>
-        </div>
-        <p class="section__lead reveal" data-i18n="vd.lead">Lectures and short lessons inside ERLY. Play them at your own speed and open the key points. If you keep going back to the same part, Noor will gently ask whether it’s hard to follow — only with your permission.</p>
-      </header>
-      <div class="vid-grid" id="videos-app"></div>
-      <p class="vid-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span data-i18n="vd.note">ERLY only reads playback info — rewinds, speed, restarts — never your camera or microphone.</span></p>
-    </div>
-  </section>
-  <!-- ============ LEARNING GAMES (replaced the Daily Quest in v12) ============ -->
-  <section class="section section--tint" id="games">
-    <span id="checkins" class="anchor-alias" aria-hidden="true"></span>
-    <div class="wrap">
-      <header class="section__head section__head--split">
-        <div>
-          <p class="kicker"><span data-i18n="lg.kicker">Learning Games · practice, not a test</span></p>
-          <h2 class="h2 reveal" data-i18n="lg.title">Learning Games</h2>
-        </div>
-        <p class="section__lead reveal" data-i18n="lg.lead">Twelve short games across ten areas of studying. For practice and enjoyment only — they don’t test or diagnose anything, and your activity stays on this device.</p>
-      </header>
-      <div id="lgHome" class="lg-home"></div>
-      <div class="lg-ctas">
-        <a class="hw-cta games-cta reveal" href="games.html"><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 11v3M6.5 12.5h3M15.5 12h.01M17.5 14h.01"/></svg></span><span><b data-i18n="lg.open">Open Learning Games</b> <small data-i18n="gm.cta.s">Twelve short games: reading, vocabulary, memory, planning, focus, listening, writing, spatial thinking, patterns and problem-solving.</small></span><em data-i18n="gp.cta.go">Open →</em></a>
-        <button type="button" class="hw-cta reveal" data-hand-open><span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg></span><span><b data-i18n="hw.cta.t2">Handwriting Check — your handwriting, your pace</b> <small data-i18n="hw.cta.s">Copy three sentences by hand and take a photo — ERLY tries to read them on this device, with nothing uploaded or saved and no judgement of your writing.</small></span><em data-i18n="hw.cta.go">Try it →</em></button>
-      </div>
-    </div>
-  </section>
-  <!-- ============ START-RAMP ============ -->
-  <section class="section section--tint" id="ramp">
-    <div class="wrap">
-      <header class="section__head section__head--split">
-        <div>
-          <p class="kicker"><span data-i18n="rp.kicker">Day-one tools · Start-Ramp</span></p>
-          <h2 class="h2 reveal" data-i18n="rp.title">When starting is the hard part, make the first step tiny.</h2>
-        </div>
-        <p class="section__lead reveal" data-i18n="rp.lead">For work that bunches up before deadlines and drafts that are started but not sent: deadline-aware nudges you choose, a five-minute first step, big tasks split into micro-tasks, and a quiet body-doubling room. Works from day one — no tracking needed.</p>
-      </header>
-      <div class="ramp reveal" id="ramp-app">
-        <div class="ramp__task">
-          <p class="panel__h mono" data-i18n="rp.next">Next deadline</p>
-          <h3>MECH 210 · Lab report 3</h3>
-          <p class="ramp__due"><span class="mono" id="rampDue">due in 3 days</span></p>
-          <div class="ramp__nudges">
-            <label class="rnudge"><input type="checkbox" checked><span><b>72 h</b> <small data-i18n="rp.n1">“Five minutes today?”</small></span></label>
-            <label class="rnudge"><input type="checkbox" checked><span><b>24 h</b> <small data-i18n="rp.n2">“One micro-task left”</small></span></label>
-            <label class="rnudge"><input type="checkbox"><span><b>3 h</b> <small data-i18n="rp.n3">“Submit the draft you have”</small></span></label>
-          </div>
-        </div>
-        <div class="ramp__steps">
-          <p class="panel__h mono" data-i18n="rp.micro">Micro-tasks · tick as you go</p>
-          <ol class="micro" id="micro"></ol>
-          <div class="ramp__prog"><i id="rampBar"></i></div>
-        </div>
-        <div class="ramp__go">
-          <div class="timer5" id="timer5"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="ring__bg"/><circle cx="60" cy="60" r="52" class="ring__fg" id="t5ring"/></svg><b class="mono" id="t5txt">5:00</b></div>
-          <button class="btn btn--accent btn--block" id="t5go" data-i18n="rp.go">Start a 5-minute first step</button>
-          <button class="room" id="roomBtn"><span class="room__dots"><i></i><i></i><i></i><i></i></span><span><b data-i18n="rp.room">Body-doubling room</b> <small id="roomN" data-i18n="rp.roomn">4 students studying quietly · cameras off</small></span></button>
-        </div>
-      </div>
-    </div>
-  </section>
-  <div class="about-band" id="about"><div class="wrap"><p class="kicker">How ERLY works</p><h2 class="h2">The ideas, the method and the privacy behind ERLY.</h2><p class="section__lead">Background reading — you do not need any of it to use ERLY.</p></div></div>
-  <!-- ============ GAP ============ -->
-  <section class="section" id="gap">
-    <div class="wrap">
-      <header class="section__head">
-        <p class="kicker"><span data-i18n="gap.kicker">The gap</span></p>
-        <h2 class="h2 reveal" data-i18n="gap.title">Two different measurements — and the question they leave open.</h2>
-      </header>
-      <div class="gap">
-        <article class="gap__stat reveal">
-          <p class="gap__num"><span class="count" data-to="94" data-prefix="≈">≈94</span><small>%</small></p>
-          <p class="gap__label" data-i18n="gap.a">pass rate in Grade 12 end-of-year exams, Ministry of Education curriculum, 2021–22 (28,775 students in public and private MoE-curriculum schools).</p>
-          <p class="gap__src mono" data-i18n="gap.asrc">94.4% · reported by Khaleej Times, 29 June 2022, from Emirates Schools Establishment results · a pass rate, not a measure of reading difficulty</p>
-          <div class="bar"><span style="--w:94%"></span></div>
-        </article>
-        <div class="gap__vs reveal" aria-hidden="true" title="different measurements"><span>≠</span></div>
-        <article class="gap__stat gap__stat--hot reveal">
-          <p class="gap__num"><span class="count" data-to="17.6" data-dec="1">17.6</span><small>%</small></p>
-          <p class="gap__label" data-i18n="gap.b">of female Emirati students screened at UAE University in 2007/08 showed dyslexic <em>features</em> on a new screening test, in Arabic and English — not diagnoses.</p>
-          <p class="gap__src mono">Aboudan, Eapen &amp; Bayshak, 2011 · Int. J. English Linguistics 1(2):64–72 · doi:10.5539/ijel.v1n2p64 · pilot of the Emirates Dyslexia Indicator Test</p>
-          <div class="bar bar--hot"><span style="--w:17.6%"></span></div>
-        </article>
-      </div>
-      <div class="gap__foot">
-        <p class="gap__claim reveal" data-i18n="gap.claim">School exams measure whether you <em>can</em> read. University measures whether you can keep reading 40 dense pages a week, in your second language, at 1am. That is where difficulties a pass mark can hide may surface — and we could not find recent, published UAE university data on it.</p>
-        <aside class="fineprint reveal">
-          <p class="mono fineprint__h" data-i18n="gap.fp.h">Our own critique of our own evidence</p>
-          <ul>
-            <li data-i18n="gap.fp.1">2007/08 data — almost two decades old</li>
-            <li data-i18n="gap.fp.2">One university, female students only</li>
-            <li data-i18n="gap.fp.3">Screening features, not clinical diagnoses</li>
-            <li data-i18n="gap.fp.4">A pass rate and a screening estimate are different measurements and can’t be compared directly; neither tells us how many university students struggle today</li>
-          </ul>
-          <p data-i18n="gap.fp.p">So we don’t claim a current rate. We found no newer published UAE university figure (that is a search result, not proof none exists); a consented pilot would give a current, local picture — of study strain, not of diagnoses.</p>
-        </aside>
-      </div>
-    </div>
-  </section>
-  <!-- ============ FLOW ============ -->
-  <section class="section section--tint" id="flow">
-    <div class="wrap">
-      <header class="section__head section__head--split">
-        <div>
-          <p class="kicker"><span data-i18n="fl.kicker">How it works</span></p>
-          <h2 class="h2 reveal" data-i18n="fl3.title">No quizzes. No labels. Just studying, with someone quietly paying attention.</h2>
-        </div>
-        <p class="section__lead reveal" data-i18n="fl3.lead">Smart students mask until university workload catches up. ERLY replaces one-off screening with something that fits real student life — passive, on-device, measured only against your own normal, and finished after two weeks.</p>
-      </header>
-      <ol class="flow4">
-        <li class="flow4__step reveal"><span class="flow4__n mono">01</span><h3 data-i18n="fl3.1h">Sign a Support Pact</h3><p data-i18n="fl3.1p">Choose what ERLY may notice and who may be involved if a pattern persists. Four quick taps build your Learning Blueprint — used to pick support, never to detect.</p><span class="flow4__meta mono" data-i18n="fl3.1m">revocable · expires each semester</span></li>
-        <li class="flow4__step reveal"><span class="flow4__n mono">02</span><h3 data-i18n="fl3.2h">A baseline week</h3><p data-i18n="fl3.2p">For 7 days ERLY only learns your normal from 100 metadata indicators. Nothing is judged — but every tool, from read-aloud to Noor, works from day one.</p><span class="flow4__meta mono" data-i18n="fl3.2m">days 1–7 · you vs. you</span></li>
-        <li class="flow4__step reveal"><span class="flow4__n mono">03</span><h3 data-i18n="fl3.3h">Convergence, then you first</h3><p data-i18n="fl3.3p">An insight appears only if 3+ of 10 domains stay above your normal for the whole next week. A bilingual evidence card shows you the three signals behind it — and nobody else.</p><span class="flow4__meta mono" data-i18n="fl3.3m">days 8–14 · then it stops</span></li>
-        <li class="flow4__step reveal"><span class="flow4__n mono">04</span><h3 data-i18n="fl3.4h">Ally Bridge to SAS</h3><p data-i18n="fl3.4p">Invite the ally you named — they get a Support Playbook, never your data. Book SAS in one tap with an Evidence Pack and a drafted accommodation request. SAS confirms; ERLY never does.</p><span class="flow4__meta mono" data-i18n="fl3.4m">a squad, not a snitch</span></li>
-      </ol>
-      <div class="flow-notes">
-        <div class="flow-note reveal"><b data-i18n="fl2.n1h">Help from day one</b><span data-i18n="fl2.n1p">The Learning Studio reader and Noor work whether or not you track.</span></div>
-        <div class="flow-note reveal"><b data-i18n="fl3.n2h">Already diagnosed?</b><span data-i18n="fl3.n2p">Utility mode: every tool, telemetry off. And self-referral is always open.</span></div>
-        <div class="flow-note reveal"><b data-i18n="fl2.n3h">Exam weeks</b><span data-i18n="fl3.n3p">Exam Mode syncs your calendar so normal exam stress is never read as a pattern.</span></div>
-      </div>
-    </div>
-  </section>
-  <!-- ============ HOW ERLY THINKS ============ -->
-  <section class="section section--ink" id="ai">
-    <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
-    <div class="wrap">
-      <header class="section__head section__head--split">
-        <div>
-          <p class="kicker"><span data-i18n="ai.kicker">How ERLY thinks</span></p>
-          <h2 class="h2 reveal" data-i18n="ai.title">It looks at your textbook. <em>Never at you.</em></h2>
-        </div>
-        <p class="section__lead reveal" data-i18n="ai.lead">Everything that analyses your activity runs in this browser: simple, inspectable statistics compared only with your own baseline — not a trained model, and no labelled disability data. Demo mode uses a synthetic LMS feed; Real mode uses your own actions on these pages.</p>
-      </header>
-      <div class="sig-cluster reveal">
-        <article class="sigc"><span class="mono">S1</span><h3 data-i18n="ai.s1">Visual tracking friction</h3><p data-i18n="ai.s1p">Scroll regressions — re-reading the same paragraph.</p><small data-i18n="ai.s1m">scroll events only</small></article>
-        <article class="sigc"><span class="mono">S2</span><h3 data-i18n="ai.s2">Submission abandonment</h3><p data-i18n="ai.s2p">Posts deleted soon after posting, and drafts that are never sent.</p><small data-i18n="ai.s2m">button events only, never text</small></article>
-        <article class="sigc"><span class="mono">S3</span><h3 data-i18n="ai.s3">Modality shifting</h3><p data-i18n="ai.s3p">Choosing read-aloud more often on dense pages.</p><small data-i18n="ai.s3m">feature-use counts only</small></article>
-        <article class="sigc"><span class="mono">S4</span><h3 data-i18n="ai.s4">Starting close to deadlines</h3><p data-i18n="ai.s4p">Little activity until shortly before a deadline, then most of the work at once — repeatedly.</p><small data-i18n="ai.s4m">timestamps only</small></article>
-      </div>
-      <ol class="layers4">
-        <li class="reveal"><span class="layers4__k mono">L1</span><div><h3 data-i18n="ai.l1">Self-baseline anomaly detection</h3><p data-i18n="ai.l1p">Unsupervised. Learns your normal in the baseline week, per language, then flags only what persists.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
-        <li class="reveal"><span class="layers4__k mono">L2</span><div><h3 data-i18n="ai.l2">On-device insight cards</h3><p data-i18n="ai.l2p">Bilingual templates, built in this browser, that always list the three contributing signals. Your tracking data is never sent to any AI model.</p></div><em class="honesty honesty--live" data-i18n="ai.live">live in demo</em></li>
-        <li class="reveal"><span class="layers4__k mono">L3</span><div><h3 data-i18n="ai.l3">Outcome calibration</h3><p data-i18n="ai.l3p">Semi-supervised, from consented and anonymised SAS outcomes. Federated only.</p></div><em class="honesty honesty--road" data-i18n="ai.road">roadmap</em></li>
-        <li class="reveal"><span class="layers4__k mono">L4</span><div><h3 data-i18n="ai.l4">Contextual RL via 1-tap micro-nudges</h3><p data-i18n="ai.l4p">Noor’s “Did that help?” and “too dense / tired / lost thread” taps update which support you’re offered — without survey fatigue.</p></div><em class="honesty honesty--sim" data-i18n="ai.sim">simulated</em></li>
-      </ol>
-      <div class="rejected-grid">
-        <article class="rej reveal"><h3 data-i18n="ai.rh">Evaluated and rejected</h3>
-          <ul>
-            <li><b data-i18n="ai.r1">Webcam eye-tracking</b><span data-i18n="ai.r1p">Biometric class under PDPL, not accurate enough, and confirmation belongs with validated instruments.</span></li>
-            <li><b data-i18n="ai.r2">Keystroke write–delete ratio</b><span data-i18n="ai.r2p">A privacy violation — and it flags bad typists.</span></li>
-            <li><b data-i18n="ai.r3">Tab-switching counts</b><span data-i18n="ai.r3p">Too weak to mean anything alone.</span></li>
-            <li><b data-i18n="ai.r4">Quizzes and alerts that imply disability</b><span data-i18n="ai.r4p">Nobody takes them, and they stigmatise.</span></li>
-          </ul></article>
-        <article class="rej reveal"><h3 data-i18n="ai.mh">How ERLY could be misused — and what stops it</h3>
-          <ul>
-            <li><b data-i18n="ai.m1">A parent demands the data</b><span data-i18n="ai.m1p">There is none to hand over: raw logs never leave the device and are deleted when the 14 days end (the next time ERLY is opened).</span></li>
-            <li><b data-i18n="ai.m2">A university wants to rank students</b><span data-i18n="ai.m2p">SAS sees only what a student shares; cohort views hide any group under 10 students.</span></li>
-            <li><b data-i18n="ai.m3">An employer asks for “ERLY results”</b><span data-i18n="ai.m3p">ERLY never produces a label or a score — only a private picture the student owns.</span></li>
-          </ul></article>
-      </div>
-    </div>
-  </section>
+
   <!-- ============ PRIVACY ============ -->
   <section class="section section--ink" id="privacy">
     <div class="amb" data-ambient="constellation" aria-hidden="true"></div>
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span data-i18n="pv.kicker">Privacy by design</span></p>
+        <p class="kicker"><span class="num">11</span><span data-i18n="pv.kicker">Privacy by design</span></p>
         <h2 class="h2 reveal" data-i18n="pv.title">The best privacy feature is a finish line.</h2>
       </header>
       <div class="privacy-grid">
@@ -401,11 +467,12 @@
       </div>
     </div>
   </section>
+
   <!-- ============ DATA + PLAN ============ -->
   <section class="section section--tint" id="data">
     <div class="wrap">
       <header class="section__head">
-        <p class="kicker"><span data-i18n="dt.kicker">Impact &amp; data</span></p>
+        <p class="kicker"><span class="num">12</span><span data-i18n="dt.kicker">Impact &amp; data</span></p>
         <h2 class="h2 reveal" data-i18n="dt.title">Move the assumptions. We'll replace each one with a measured number.</h2>
       </header>
       <div class="calc reveal">
@@ -440,18 +507,19 @@
       </div>
 
       <div class="plan plan--mt">
-        <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.1w">Weeks 1–4</span><h3 data-i18n="pl.1h">Build &amp; friend-test</h3><ul><li data-i18n="pl2.1a">Learning Studio reader + tracker on the indicator catalogue, Arabic and English</li><li data-i18n="pl.1b">30-student friend test</li><li data-i18n="pl2.1c">Check each indicator against noise on consented data</li></ul></article>
+        <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.1w">Weeks 1–4</span><h3 data-i18n="pl.1h">Build &amp; friend-test</h3><ul><li data-i18n="pl2.1a">Reading Studio + tracker on the indicator catalogue, Arabic and English</li><li data-i18n="pl.1b">30-student friend test</li><li data-i18n="pl2.1c">Check each indicator against noise on consented data</li></ul></article>
         <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.2w">Weeks 5–8</span><h3 data-i18n="pl.2h">Orientation-week pilot</h3><ul><li data-i18n="pl.2a">One university, whole first-year cohort</li><li data-i18n="pl2.2b">LMS feed for the submission and routine indicators</li><li data-i18n="pl.2c">Consent-flow &amp; PDPL review</li></ul></article>
         <article class="phase reveal"><span class="phase__wk mono" data-i18n="pl.3w">Weeks 9–13</span><h3 data-i18n="pl.3h">Calibrate &amp; hand off</h3><ul><li data-i18n="pl.3a">Compare scores with SAS assessments</li><li data-i18n="pl2.3b">Tune thresholds against assessments</li><li data-i18n="pl.3c">Test the Evidence Pack with clinicians</li></ul></article>
         <article class="phase phase--gate reveal"><span class="phase__wk mono" data-i18n="pl.gw">Day 90</span><h3 data-i18n="pl.gh">Scale / no-scale gate</h3><ul><li data-i18n="pl2.ga">Flags agree with assessments better than chance</li><li data-i18n="pl.gb">Zero data kept past day 14</li><li data-i18n="pl.gc">Students call it useful, not scary</li></ul></article>
       </div>
     </div>
   </section>
+
   <!-- ============ FAQ ============ -->
   <section class="section" id="faq">
     <div class="wrap faq-wrap">
       <header class="section__head">
-        <p class="kicker"><span data-i18n="fq.kicker">Hard questions</span></p>
+        <p class="kicker"><span class="num">13</span><span data-i18n="fq.kicker">Hard questions</span></p>
         <h2 class="h2 reveal" data-i18n="fq.title">Ask us anything. We already asked ourselves.</h2>
       </header>
       <div class="faq">
@@ -469,30 +537,13 @@
     </div>
   </section>
 
-
-
-
-  <!-- ============ STUDIO ============ -->
-
-
-
-
-
-
-
-
-
-
-
-
-
   <section class="close">
     <div class="wrap close__inner">
       <img class="close__mark erly-mark" src="assets/img/erly-mark.svg" alt="" aria-hidden="true">
       <h2 class="display display--close reveal" data-i18n="cl2.title">Notice sooner.<br><em>On your terms.</em></h2>
       <p class="lead reveal" data-i18n="cl.p">ERLY — Early Recognition of Learning barriers, on Your terms.</p>
       <div class="hero__cta reveal" style="justify-content:center">
-        <a class="btn btn--accent" href="learn.html">Open the Learning Studio</a>
+        <button class="btn btn--accent" data-studio data-i18n="h2.cta1">Open the Reading Studio</button>
         <button class="btn btn--ghost" id="pitchStart" data-i18n="cl.b2">Start 5-minute pitch timer</button>
       </div>
     </div>
@@ -541,90 +592,86 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script>if (location.hash === "#reading-studio") location.replace("learn.html#/read");</script>
-<script src="assets/js/ui.js?v=20"></script>
-<script src="assets/js/icons.js?v=20"></script>
-  <script src="assets/js/i18n.js?v=20"></script>
-  <script src="assets/js/fun.js?v=20"></script>
-  <script src="assets/js/main.js?v=20"></script>
-  <script src="assets/js/accent.js?v=20"></script>
-  <script src="assets/js/indicators.js?v=20"></script>
-  <script src="assets/js/domain-art.js?v=20"></script>
-  <script src="assets/js/realtrack.js?v=20"></script>
-  <script src="assets/js/handwriting.js?v=20"></script>
-  <script src="assets/js/tracker.js?v=20"></script>
-  <script src="assets/js/study-tools.js?v=20"></script>
-  <script src="assets/js/studio-content.js?v=20"></script>
-  <script src="assets/js/studio.js?v=20"></script>
-  <script src="assets/js/companion/config.js?v=20"></script>
-  <script src="assets/js/companion/signals.js?v=20"></script>
-  <script src="assets/js/companion/dialogue.js?v=20"></script>
-  <script src="assets/js/companion/store.js?v=20"></script>
-  <script src="assets/js/companion/llm.js?v=20"></script>
-  <script src="assets/js/companion/md.js?v=20"></script>
-  <script src="assets/js/noor/research.js?v=20"></script>
-  <script src="assets/js/noor/validate.js?v=20"></script>
-  <script src="assets/js/noor/usage.js?v=20"></script>
-  <script src="assets/js/companion/ai.js?v=20"></script>
-  <script src="assets/js/companion/prosody.js?v=20"></script>
-  <script src="assets/js/companion/voicelib.js?v=20"></script>
-  <script src="assets/js/companion/neural-voice.js?v=20"></script>
-  <script src="assets/js/companion/voice.js?v=20"></script>
-  <script src="assets/js/companion/summary.js?v=20"></script>
-  <script src="assets/js/companion/kb-extra.js?v=20"></script>
-  <script src="assets/js/companion/knowledge.js?v=20"></script>
-  <script src="assets/js/companion/interview.js?v=20"></script>
-  <script src="assets/js/companion/evidence.js?v=20"></script>
-  <script src="assets/js/companion/ui.js?v=20"></script>
-  <script src="assets/js/page-context.js?v=20"></script>
-  <script src="assets/js/companion/noor-brain.js?v=20"></script>
-  <script src="assets/js/companion/noor-tools.js?v=20"></script>
-  <script src="assets/js/companion/lipsync.js?v=20"></script>
-  <script src="assets/js/companion/photoreal.js?v=20"></script>
-  <script src="assets/js/companion/avatar.js?v=20"></script>
-  <script src="assets/js/companion/visuals.js?v=20"></script>
-  <script src="assets/js/companion/visual-spec.js?v=20"></script>
-  <script src="assets/js/companion/visual-library.js?v=20"></script>
-  <script src="assets/js/lab/lab-core.js?v=20"></script>
-  <script src="assets/js/lab/lab-math.js?v=20"></script>
-  <script src="assets/js/lab/lab-geo3d.js?v=20"></script>
-  <script src="assets/js/lab/lab-physics.js?v=20"></script>
-  <script src="assets/js/lab/lab-problems.js?v=20"></script>
-  <script src="assets/js/lab/lab-concepts.js?v=20"></script>
-  <script src="assets/js/lab/syl-core.js?v=20"></script>
-  <script src="assets/js/lab/syl-math.js?v=20"></script>
-  <script src="assets/js/lab/syl-physics.js?v=20"></script>
-  <script src="assets/js/lab/syl-chem.js?v=20"></script>
-  <script src="assets/js/lab/syl-life.js?v=20"></script>
-  <script src="assets/js/lab/syl-applied.js?v=20"></script>
-  <script src="assets/js/lab/syl-extra.js?v=20"></script>
-<script src="assets/js/lab/syl-studio.js?v=20"></script>
-  <script src="assets/js/companion/audio-lesson.js?v=20"></script>
-  <script src="assets/js/companion/realtime.js?v=20"></script>
-  <script src="assets/js/companion/call.js?v=20"></script>
-  <script type="module" src="assets/js/companion/human3d.js?v=20"></script>
-  <script src="assets/js/checkins-score.js?v=20"></script>
-  <script src="assets/js/analyser.js?v=20"></script>
-  <script src="assets/js/ink-transition.js?v=20"></script>
-  <script src="assets/js/hand-ui.js?v=20"></script>
-  <script src="assets/js/growth-warp.js?v=20"></script>
-  <script src="assets/js/games-home.js?v=20"></script>
-  <script src="assets/js/videos.js?v=20"></script>
-  <script src="assets/js/insight.js?v=20"></script>
+  <script src="assets/js/icons.js?v=19"></script>
+  <script src="assets/js/i18n.js?v=19"></script>
+  <script src="assets/js/fun.js?v=19"></script>
+  <script src="assets/js/main.js?v=19"></script>
+  <script src="assets/js/accent.js?v=19"></script>
+  <script src="assets/js/indicators.js?v=19"></script>
+  <script src="assets/js/domain-art.js?v=19"></script>
+  <script src="assets/js/realtrack.js?v=19"></script>
+  <script src="assets/js/handwriting.js?v=19"></script>
+  <script src="assets/js/tracker.js?v=19"></script>
+  <script src="assets/js/study-tools.js?v=19"></script>
+  <script src="assets/js/studio-content.js?v=19"></script>
+  <script src="assets/js/studio.js?v=19"></script>
+  <script src="assets/js/companion/config.js?v=19"></script>
+  <script src="assets/js/companion/signals.js?v=19"></script>
+  <script src="assets/js/companion/dialogue.js?v=19"></script>
+  <script src="assets/js/companion/store.js?v=19"></script>
+  <script src="assets/js/companion/llm.js?v=19"></script>
+  <script src="assets/js/companion/md.js?v=19"></script>
+  <script src="assets/js/noor/research.js?v=19"></script>
+  <script src="assets/js/noor/validate.js?v=19"></script>
+  <script src="assets/js/noor/usage.js?v=19"></script>
+  <script src="assets/js/companion/ai.js?v=19"></script>
+  <script src="assets/js/companion/prosody.js?v=19"></script>
+  <script src="assets/js/companion/voicelib.js?v=19"></script>
+  <script src="assets/js/companion/neural-voice.js?v=19"></script>
+  <script src="assets/js/companion/voice.js?v=19"></script>
+  <script src="assets/js/companion/summary.js?v=19"></script>
+  <script src="assets/js/companion/kb-extra.js?v=19"></script>
+  <script src="assets/js/companion/knowledge.js?v=19"></script>
+  <script src="assets/js/companion/interview.js?v=19"></script>
+  <script src="assets/js/companion/evidence.js?v=19"></script>
+  <script src="assets/js/companion/ui.js?v=19"></script>
+  <script src="assets/js/page-context.js?v=19"></script>
+  <script src="assets/js/companion/noor-brain.js?v=19"></script>
+  <script src="assets/js/companion/noor-tools.js?v=19"></script>
+  <script src="assets/js/companion/lipsync.js?v=19"></script>
+  <script src="assets/js/companion/photoreal.js?v=19"></script>
+  <script src="assets/js/companion/avatar.js?v=19"></script>
+  <script src="assets/js/companion/visuals.js?v=19"></script>
+  <script src="assets/js/companion/visual-spec.js?v=19"></script>
+  <script src="assets/js/companion/visual-library.js?v=19"></script>
+  <script src="assets/js/lab/lab-core.js?v=19"></script>
+  <script src="assets/js/lab/lab-math.js?v=19"></script>
+  <script src="assets/js/lab/lab-geo3d.js?v=19"></script>
+  <script src="assets/js/lab/lab-physics.js?v=19"></script>
+  <script src="assets/js/lab/lab-problems.js?v=19"></script>
+  <script src="assets/js/lab/lab-concepts.js?v=19"></script>
+  <script src="assets/js/lab/syl-core.js?v=19"></script>
+  <script src="assets/js/lab/syl-math.js?v=19"></script>
+  <script src="assets/js/lab/syl-physics.js?v=19"></script>
+  <script src="assets/js/lab/syl-chem.js?v=19"></script>
+  <script src="assets/js/lab/syl-life.js?v=19"></script>
+  <script src="assets/js/lab/syl-applied.js?v=19"></script>
+  <script src="assets/js/lab/syl-extra.js?v=19"></script>
+<script src="assets/js/lab/syl-studio.js?v=19"></script>
+  <script src="assets/js/companion/audio-lesson.js?v=19"></script>
+  <script src="assets/js/companion/realtime.js?v=19"></script>
+  <script src="assets/js/companion/call.js?v=19"></script>
+  <script type="module" src="assets/js/companion/human3d.js?v=19"></script>
+  <script src="assets/js/checkins-score.js?v=19"></script>
+  <script src="assets/js/analyser.js?v=19"></script>
+  <script src="assets/js/ink-transition.js?v=19"></script>
+  <script src="assets/js/hand-ui.js?v=19"></script>
+  <script src="assets/js/growth-warp.js?v=19"></script>
+  <script src="assets/js/games-home.js?v=19"></script>
+  <script src="assets/js/videos.js?v=19"></script>
+  <script src="assets/js/insight.js?v=19"></script>
   <script src="assets/vendor/jspdf.umd.min.js" defer></script>
-  <script src="assets/js/report.js?v=20"></script>
-  <script src="assets/js/handoff.js?v=20"></script>
-  <script src="assets/js/ramp.js?v=20"></script>
-  <script src="assets/js/flow.js?v=20"></script>
-  <script src="assets/js/session.js?v=20"></script>
-  <script src="assets/js/growth-v20-core.js?v=20"></script>
-  <script src="assets/js/hub.js?v=20"></script>
+  <script src="assets/js/report.js?v=19"></script>
+  <script src="assets/js/handoff.js?v=19"></script>
+  <script src="assets/js/ramp.js?v=19"></script>
+  <script src="assets/js/flow.js?v=19"></script>
+  <script src="assets/js/session.js?v=19"></script>
   <script>
-    document.querySelectorAll('[data-ic]').forEach(function (el) { el.innerHTML = ICON(el.dataset.ic); });
+    [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });
   </script>
-  <script src="assets/js/theme-fx.js?v=20"></script>
-  <script src="assets/js/ambient.js?v=20" defer></script>
-  <script src="assets/js/a11y.js?v=20"></script>
-  <script src="assets/js/companion/holo.js?v=20" defer></script>
+  <script src="assets/js/theme-fx.js?v=19"></script>
+  <script src="assets/js/ambient.js?v=19" defer></script>
+  <script src="assets/js/a11y.js?v=19"></script>
+  <script src="assets/js/companion/holo.js?v=19" defer></script>
 </body>
 </html>

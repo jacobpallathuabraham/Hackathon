@@ -264,7 +264,7 @@ fieldset { border: 0; padding: 0; margin: 0 0 16px; } legend { font-weight: 650;
   .ls-num input { width: 140px; } .ls-math__tx { font-size: 1.1rem; } .ls-flash__f p { font-size: 1.15rem; }
 }
 @media (prefers-reduced-motion: reduce) { .ls-page *, .ls-page *::before, .ls-page *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; } .ls-card:hover { transform: none; } }
-html.a11y-still .ls-page * { transition: none !important; animation: none !important; }
+html.a11y-reduce-motion .ls-page *, html.reduce-motion .ls-page * { transition: none !important; animation: none !important; }
 @media print { .ls-top, .ls-nav, .ls-mob, .ls-ed__bar, .ls-ed__foot, .ls-nb__side, .ls-foot, .ls-toast, .cmp, .cmp-launch { display: none !important; } .ls-shell, .ls-nb { display: block; } .ls-main { padding: 0; } }
 
 /* the live Visual Lab model inside the Studio: taller stage, its own explanation visible, readouts out of the way */

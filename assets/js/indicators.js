@@ -9,7 +9,7 @@
        support   → coping & help-seeking: personalises support, never flags
        control   → confounders that normalise other signals, never flag
      en / ar (name), how (what is counted), tag (what it may reflect),
-     live: measured for real by the Learning Studio reader in this demo,
+     live: measured for real by the Reading Studio in this demo,
      dir: +1 when a higher value means more friction than the student's normal. */
 (function () {
   const AREA_COLOR = { reading: 'var(--c-R)', executive: 'var(--c-L)', strain: 'var(--c-W)', support: 'var(--muted)', control: 'var(--muted)' };
@@ -68,7 +68,7 @@
     E: [
       ['Blank-canvas dwell', 'البقاء أمام صفحة فارغة', 'Editor focused with no interaction events for minutes, then exit — silence, never strokes', 'initiation', 'executive', 0],
       ['Approach–avoidance cycles', 'دورات الاقتراب والتجنّب', 'Opening the assignment and leaving within 60 s, 3+ times a day', 'initiation', 'executive', 0],
-      ['Submission abandonment', 'التراجع عن التسليم', 'A posted answer deleted by its author shortly after', 'regulation', 'executive', 0],
+      ['Submission abandonment', 'التراجع عن التسليم', 'A posted answer deleted by its author shortly after — the “Forum Ghost”', 'regulation', 'executive', 0],
       ['Stall-save pattern', 'الحفظ دون تقدّم', 'Repeated draft saves with almost no edit events between them', 'initiation', 'executive', 0],
       ['Funnel drop-off point', 'نقطة الانقطاع في التسليم', 'The submit stage where sessions repeatedly end', 'execution', 'executive', 0],
       ['Confirm-step abort', 'الإلغاء عند التأكيد', 'Starting a submission then aborting at the final confirm', 'regulation', 'executive', 0],
@@ -80,7 +80,7 @@
     P: [
       ['Cognitive endurance curve', 'منحنى التحمّل الذهني', 'Within-session decay of interaction quality — the fatigue-wall minute', 'endurance', 'strain', 1],
       ['Session-length contraction', 'تقلّص مدة الجلسة', 'Effective session length shrinking across weeks', 'endurance', 'strain', 0],
-      ['Deadline compression index', 'مؤشر الضغط قبل الموعد', 'Share of task work squeezed into the final hours', 'executive', 'executive', 0],
+      ['Deadline compression index', 'مؤشر الضغط قبل الموعد', 'Share of task work squeezed into the final hours — the “11th-hour spike”', 'executive', 'executive', 0],
       ['Circadian drift', 'انجراف الساعة البيولوجية', 'Productive time shifting toward late night versus your own baseline', 'regulation', 'strain', 0],
       ['Post-break recovery slope', 'منحنى التعافي بعد الاستراحة', 'Interaction quality after a self-initiated short break', 'regulation', 'strain', 1],
       ['Rhythm volatility', 'تقلّب الإيقاع', 'Week-over-week instability of the engagement pattern', 'regulation', 'strain', 0],
@@ -160,7 +160,7 @@
     { id: 'S1', en: 'Visual tracking friction', ar: 'احتكاك التتبّع البصري', ind: ['V01', 'V04', 'V05', 'V06'] },
     { id: 'S2', en: 'Submission abandonment', ar: 'التراجع عن التسليم', ind: ['E03', 'E05', 'E06', 'O05'] },
     { id: 'S3', en: 'Modality shifting', ar: 'تبديل الوسيلة', ind: ['V08', 'U06', 'U02', 'H01'] },
-    { id: 'S4', en: 'Starting close to deadlines', ar: 'البدء قرب الموعد النهائي', ind: ['P03', 'E09', 'E01', 'C09'] }
+    { id: 'S4', en: 'Deadline proximity paralysis', ar: 'الشلل قرب الموعد النهائي', ind: ['P03', 'E09', 'E01', 'C09'] }
   ];
   const AREAS = {
     reading: { en: 'Visual decoding', ar: 'فك الرموز البصري', profile: 'A', color: 'var(--c-R)' },
