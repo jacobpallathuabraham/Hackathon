@@ -1150,3 +1150,21 @@ Tests: `npm test`. With the local server running, also run:
 - **Consent first:** nothing is stored until the student chooses "this device" or "this visit". Demonstration data is labelled and kept apart. The Profile page exports or deletes everything.
 
 Tests: `npm test` (272 unit tests, including content validation and insight safeguards). With the local server running, `tests/e2e/learning-studio.e2e.js` runs 34 acceptance checks.
+
+## v21: the Learning Studio replaces the Reading Studio
+
+Everything outside the Learning Studio is the stable v19 website, restored as it was. The v20 overhaul is kept only on the `backup/v20-overhaul` branch.
+
+**One place to learn.** `learn.html` has a new interface and design, scoped to that page only:
+- read (the full reader, now inside Reading & Resources);
+- learn, explore, watch, practise, revise;
+- notes and paths;
+- Noor in a side margin.
+
+**Old links still work.** Every old way into the Reading Studio now opens the Learning Studio's Reading & Resources.
+
+**Details:** the full report, with what changed, what was tested and what remains, is in [`docs/LEARNING-STUDIO-V21.md`](docs/LEARNING-STUDIO-V21.md).
+
+**Tests:**
+- `npm test` (unit tests);
+- with the local server running: `tests/e2e/learning-studio-v21.e2e.js` and `tests/e2e/learning-studio.e2e.js`.

@@ -5,7 +5,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
-const URL = process.env.ERLY_URL || 'http://localhost:8765/student.html';
+const URL = process.env.ERLY_URL || 'http://localhost:8765/learn.html#/read'; // v21: the reader lives in the Learning Studio
 
 (async () => {
   const browser = await chromium.launch();

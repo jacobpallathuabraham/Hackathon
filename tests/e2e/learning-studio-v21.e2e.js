@@ -121,6 +121,16 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   await check('no page errors in the Studio', async () => { assert.deepEqual(p.errs, []); });
   await ctx.close();
 
+  /* ---------- with a signed Support Pact, reading in the Learning Studio is measured exactly as before ---------- */
+  ({ ctx, p } = await fresh());
+  await ctx.addInitScript(() => { if (!localStorage.getItem('erly-track-v2')) localStorage.setItem('erly-track-v2', JSON.stringify({ status: 'active', start: Date.now(), day: 1, mode: 'demo', live: {} })); });
+  await check('with an active Support Pact the tracker loads here and records reading interactions', async () => {
+    await p.goto(BASE + 'learn.html#/read'); await p.waitForFunction(() => window.ERLY && ERLY.getTrack, null, { timeout: 8000 });
+    assert.equal(await p.evaluate(() => ERLY.isTracking()), true);
+    await p.evaluate(() => ERLY.track('V01')); const t = JSON.parse(await stored(p, 'erly-track-v2')); assert.ok(t.live && t.live.V01 >= 1, JSON.stringify(t.live));
+  });
+  await ctx.close();
+
   /* ---------- the rest of ERLY now leads here ---------- */
   ({ ctx, p } = await fresh());
   await check('every old way into the Reading Studio now opens the Learning Studio', async () => {

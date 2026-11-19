@@ -5,6 +5,18 @@
 (function () {
   'use strict';
   const LS = window.LS;
+
+  /* The Support Pact's tracker (tracker.js) records reading only while a pact is active. If one is active, load it so
+     reading here keeps counting exactly as it did in the Reading Studio; if not, a tiny stand-in records nothing —
+     the same outcome as the tracker without a pact, without building its 14-day data on every page load. */
+  (function supportPact() {
+    let active = false; try { const t = JSON.parse(localStorage.getItem('erly-track-v2') || 'null'); active = !!(t && t.status === 'active'); } catch (e) { /* none */ }
+    const E = window.ERLY = window.ERLY || {};
+    if (!active) { E.track = E.track || (() => {}); E.isTracking = E.isTracking || (() => false); E.liveValue = E.liveValue || (() => 0); return; }
+    const q = []; E.track = (...a) => q.push(a); E.isTracking = () => true; E.liveValue = () => 0;
+    const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    ['indicators', 'realtrack', 'tracker'].reduce((a, f) => a.then(() => load(`assets/js/${f}.js?v=19`)), Promise.resolve()).then(() => { q.splice(0).forEach(a => E.track(...a)); }).catch(() => {});
+  })();
   const FILES = ['lab-core', 'lab-math', 'lab-geo3d', 'lab-physics', 'lab-problems', 'lab-concepts', 'syl-core', 'syl-math', 'syl-physics', 'syl-chem', 'syl-life', 'syl-applied', 'syl-extra', 'syl-studio'];
   const V = '?v=21';
   let p = null;
@@ -15,5 +27,8 @@
     return p;
   };
   const idle = window.requestIdleCallback || (f => setTimeout(f, 1500));
-  addEventListener('load', () => idle(() => LS.needLab().catch(() => {}), { timeout: 4000 }));
+  // preload a few seconds after the page has settled, so it never competes with the first interactions…
+  addEventListener('load', () => setTimeout(() => idle(() => LS.needLab().catch(() => {}), { timeout: 6000 }), 4000));
+  // …or at once when the student turns to Noor, whose visuals use the same models
+  document.addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.cmp-launch, #atNoorBtn, [data-open-noor]')) LS.needLab().catch(() => {}); }, { capture: true, passive: true });
 })();

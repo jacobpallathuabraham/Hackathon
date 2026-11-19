@@ -35,7 +35,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.evaluate(() => window.scrollTo(0, 0));
 
   /* ---------- the library ---------- */
-  await page.click('.studio-cta [data-studio].btn');
+  // v21: the reader lives in the Learning Studio — the student page's button now leads there
+  await page.click('.studio-cta [data-studio].btn'); await page.waitForURL(/learn\.html#\/read/); await page.waitForTimeout(1200);
+  await page.evaluate(() => ERLY.reader.openLibrary());
   await page.waitForSelector('.slib.is-in');
   await page.waitForTimeout(900);
   assert.ok(await page.locator('.sbook[data-open]').count() >= 6, 'six course readings');
