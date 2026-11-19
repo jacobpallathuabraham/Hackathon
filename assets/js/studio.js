@@ -902,6 +902,8 @@
     const s = selNow; if (!s) return;
     const c = e.target.closest('[data-hl]'), a = e.target.closest('[data-sa]');
     if (c) { addHighlight(s, c.dataset.hl); getSelection().removeAllRanges(); hideSel(); return; }
+    const q = e.target.closest('[data-sq]');
+    if (q) { const k = q.dataset.sq, txt = s.text.slice(0, 900); hideSel(); getSelection().removeAllRanges(); askNoor(ASKS[k][1](txt), s.text); return; }
     if (!a) return;
     const act = a.dataset.sa;
     if (act === 'note') { const n = addHighlight(s, 'sun'); getSelection().removeAllRanges(); hideSel(); setTimeout(() => showHlPop(n, wordEls[n.to], true), 60); }
@@ -914,8 +916,6 @@
       askNoor(act === 'define' ? T(`What does “${s.text}” mean here? Explain it simply in one or two sentences.`, `ما معنى «${s.text}» هنا؟ اشرحه ببساطة في جملة أو جملتين.`) : T(`Translate into Arabic and explain briefly: “${s.text}”`, `ترجم إلى العربية واشرح باختصار: «${s.text}»`), s.text);
     }
     if (act === 'ask') { showAskMenu(); return; }
-    const q = e.target.closest('[data-sq]');
-    if (q) { const k = q.dataset.sq, txt = s.text.slice(0, 900); hideSel(); getSelection().removeAllRanges(); askNoor(ASKS[k][1](txt), s.text); }
   });
   // the ways a student can ask about a selected passage (the passage always travels with the question)
   const ASKS = {
@@ -931,7 +931,7 @@
   function showAskMenu() {
     if (!selTools) selTools = sel.innerHTML;
     sel.innerHTML = Object.entries(ASKS).map(([k, v]) => `<button data-sq="${k}">${T(v[0][0], v[0][1])}</button>`).join('') + `<button data-sa="back" aria-label="${T('Back', 'رجوع')}">←</button>`;
-    sel.classList.add('is-ask'); const f = sel.querySelector('button'); if (f) f.focus({ preventScroll: true });
+    sel.classList.add('is-ask'); // focus stays put: moving it would collapse the selection the question is about
   }
   sel.addEventListener('click', e => { if (e.target.closest('[data-sa="back"]') && selTools) { sel.innerHTML = selTools; sel.classList.remove('is-ask'); } }, true);
   const restoreSelTools = () => { if (selTools && sel.classList.contains('is-ask')) { sel.innerHTML = selTools; sel.classList.remove('is-ask'); } };

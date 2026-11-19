@@ -19,31 +19,32 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
 
   /* ---------- Learning Studio ---------- */
   await check('opens with a consent choice; nothing is stored before the student chooses', async () => {
-    assert.ok(await p.isVisible('.ls-consent'), 'consent card');
+    assert.ok(await p.isVisible('.at-choice'), 'consent card');
     assert.equal(await p.evaluate(() => localStorage.getItem('erly-learn-v1')), null);
     await p.click('[data-consent="device"]'); await p.waitForTimeout(400);
     assert.ok(await p.evaluate(() => !!localStorage.getItem('erly-learn-v1')), 'saved after choosing device storage');
-    await p.reload(); await p.waitForTimeout(1800); assert.equal(await p.isVisible('.ls-consent'), false, 'choice remembered');
+    await p.reload(); await p.waitForTimeout(1800); assert.equal(await p.isVisible('.at-choice'), false, 'choice remembered');
   });
   await check('navigation: every area opens from the side navigation, with a heading and no errors', async () => {
-    const areas = await p.$$eval('#lsNav a[data-nav]', as => as.map(a => a.dataset.nav));
-    assert.ok(areas.length >= 12, 'areas ' + areas.length);
-    for (const a of areas) { await p.click(`#lsNav a[data-nav="${a}"]`); await p.waitForTimeout(450); assert.ok((await h1()).trim().length > 3, a + ' heading'); assert.equal(await p.getAttribute(`#lsNav a[data-nav="${a}"]`, 'aria-current'), 'page', a + ' current'); assert.equal(await p.$('.ls-err'), null, a + ' error screen'); }
+    const areas = await p.$$eval('#atTabs a[data-env]', as => as.map(a => a.dataset.env));
+    assert.ok(areas.length >= 9, 'areas ' + areas.length);
+    for (const a of areas) { await p.click(`#atTabs a[data-env="${a}"]`); await p.waitForTimeout(450); assert.ok((await h1()).trim().length > 3, a + ' heading'); assert.equal(await p.getAttribute(`#atTabs a[data-env="${a}"]`, 'aria-current'), 'page', a + ' current'); assert.equal(await p.$('.ls-err'), null, a + ' error screen'); }
   });
   await check('the dashboard shows real (empty) state and an onboarding path — no invented numbers', async () => {
     await go('home'); const t = await p.textContent('#lsView');
-    assert.match(t, /Lessons finished\s*0 \/ 8/); assert.match(t, /shown after 10 answers/); assert.doesNotMatch(t, /\d+%/, 'no percentages without data');
+    assert.match(t, /0\s*\/\s*8\s*lessons finished/); assert.match(t, /0\s*flashcards due/); assert.match(t, /Nothing to resume yet/); assert.doesNotMatch(t, /\d+%/, 'no percentages without data');
   });
-  await check('the library lists real resources and search filters them', async () => {
-    await go('library'); const counts = await p.evaluate(() => ({ lessons: LS.lessons.length, readings: (window.STUDIO_LIBRARY || []).length, models: ERLY_LAB.engines.length }));
-    const lead = await p.textContent('.ls-lead'); assert.match(lead, new RegExp(counts.lessons + ' lessons')); assert.match(lead, new RegExp(counts.readings + ' course readings')); assert.match(lead, new RegExp(counts.models + ' interactive models'));
-    await p.fill('[data-libq]', 'heart'); await p.waitForTimeout(500);
-    const titles = await p.$$eval('.ls-res b', bs => bs.map(x => x.textContent)); assert.ok(titles.some(t => /heart and double circulation/i.test(t)) && titles.some(t => /double journey/i.test(t)) && titles.some(t => /cardiac/i.test(t)), titles.join('|'));
-    await p.click('[data-libt="model"]'); await p.waitForTimeout(300); assert.ok((await p.$$eval('.ls-res__type', x => x.map(y => y.textContent))).every(t => /model/i.test(t)));
-    await p.click('[data-libt="all"]'); await p.fill('[data-libq]', ''); await p.waitForTimeout(400);
+  await check('search finds real resources of every kind (v21: the ⌘K palette searches everything)', async () => {
+    await go('home'); await p.evaluate(() => LS.needLab()); await p.keyboard.press('Control+k'); await p.waitForTimeout(200); await p.fill('#atPalQ', 'heart'); await p.waitForTimeout(300);
+    const titles = await p.$$eval('#atPalList [role="option"]', os => os.map(x => x.textContent)); assert.ok(titles.some(t => /heart and double circulation/i.test(t)) && titles.some(t => /double journey/i.test(t)) && titles.some(t => /cardiac/i.test(t)), titles.join('|'));
+    await p.keyboard.press('Escape');
+    await go('read'); const counts = await p.evaluate(() => ({ readings: (window.STUDIO_LIBRARY || []).length, lessons: LS.lessons.length }));
+    assert.match(await p.textContent('[data-kind="reading"]'), new RegExp(String(counts.readings))); assert.match(await p.textContent('[data-kind="guide"]'), new RegExp(String(counts.lessons)));
+    await p.fill('#atReadQ', 'membrane'); await p.waitForTimeout(500); const rows = await p.$$eval('#atShelf .at-row__t', x => x.map(y => y.textContent)); assert.ok(rows.length >= 1 && rows.every(t => /membrane/i.test(t)), rows.join('|'));
+    await p.fill('#atReadQ', ''); await p.waitForTimeout(400);
   });
-  await check('a course reading opens in the Reading Studio from the library (PDF reader kept)', async () => {
-    await go('library'); await p.click('[data-libt="reading"]'); await p.waitForTimeout(300); await p.click('.ls-res--reading >> nth=0'); await p.waitForTimeout(1200);
+  await check('a course reading opens in the reader from Reading & Resources (PDF reader kept)', async () => {
+    await go('read'); await p.click('[data-kind="reading"]'); await p.waitForTimeout(300); await p.click('#atShelf [data-open^="reading:"] >> nth=0'); await p.waitForTimeout(1200);
     assert.ok(await p.evaluate(() => document.documentElement.classList.contains('studio-open')), 'reader open');
     await p.keyboard.press('Escape'); await p.waitForTimeout(600); if (await p.evaluate(() => document.documentElement.classList.contains('studio-open'))) await p.evaluate(() => document.querySelector('[data-st="close"], .st__close, #stClose') && document.querySelector('[data-st="close"], .st__close, #stClose').click());
   });
@@ -64,7 +65,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     await p.click('[data-next]'); await p.waitForTimeout(600); assert.match(await h1(), /Four chambers/);
     await p.reload(); await p.waitForTimeout(1800); await go('lesson/bio-heart', 900);
     assert.match(await h1(), /Four chambers/, 'resumed at section 2'); assert.ok(await p.locator('.ls-toc a.is-done').count() >= 1);
-    await go('home', 600); assert.match(await p.textContent('.ls-continue'), /The heart and double circulation[\s\S]*Section 2/);
+    await go('home', 600); assert.match(await p.textContent('.at-resume'), /The heart and double circulation[\s\S]*1 of 6 sections/);
   });
   await check('diagram labelling works with the lists (keyboard path) and with tap-to-place', async () => {
     await go('lesson/bio-heart/chambers', 900); const act = p.locator('.ls-act[data-q="h-label"]');
@@ -288,7 +289,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   await check('keyboard: skip link first, nav reachable, Enter navigates; dialogs trap focus and Escape closes them', async () => {
     await p.goto(BASE + 'learn.html?fresh=1#/home'); await p.waitForTimeout(1800); await p.keyboard.press('Tab');
     assert.match(await p.evaluate(() => document.activeElement.textContent), /Skip to content/);
-    await p.focus('#lsNav a[data-nav="practice"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(500); assert.match(await h1(), /Practise/);
+    await p.focus('#atTabs a[data-env="practice"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(500); assert.match(await h1(), /Practise/);
     await go('revise', 400); await p.click('[data-newcard]'); await p.waitForTimeout(150);
     for (let i = 0; i < 8; i++) await p.keyboard.press('Tab'); assert.ok(await p.evaluate(() => !!document.activeElement.closest('.ls-dlg')), 'focus stays in the dialog');
     await p.keyboard.press('Escape'); await p.waitForTimeout(150); assert.equal(await p.$('.ls-dlg'), null);
@@ -301,8 +302,8 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   await check('phone layout: bottom navigation, the drawer opens and closes, no horizontal scrolling', async () => {
     const m = await b.newContext({ ...devices['iPhone 13'] }); await m.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); localStorage.setItem('erly-learn-v1', JSON.stringify({ v: 1, consent: { store: 'device', at: 1 } })); });
     const q = await m.newPage(); await q.goto(BASE + 'learn.html'); await q.waitForTimeout(2000);
-    assert.ok(await q.isVisible('#lsMob')); await q.click('#lsMob [data-more]'); await q.waitForTimeout(350); assert.ok(await q.evaluate(() => document.body.classList.contains('ls-navopen')));
-    await q.click('#lsNav a[data-nav="lab"]'); await q.waitForTimeout(500); assert.equal(await q.evaluate(() => document.body.classList.contains('ls-navopen')), false);
+    assert.ok(await q.isVisible('#atDock')); await q.click('#atDock [data-more]'); await q.waitForTimeout(350); assert.ok(await q.evaluate(() => document.body.classList.contains('at-sheet-on')));
+    await q.click('#atSheet a[data-env="lab"]'); await q.waitForTimeout(500); assert.equal(await q.evaluate(() => document.body.classList.contains('at-sheet-on')), false);
     for (const r of ['home', 'lesson/bio-heart/chambers', 'practice', 'revise', 'notebook', 'progress', 'video/erly-quad', 'profile']) { await q.evaluate(r => { location.hash = '#/' + r; }, r); await q.waitForTimeout(700); const ov = await q.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov <= 1, `${r}: horizontal overflow ${ov}px`); }
     await m.close();
   });

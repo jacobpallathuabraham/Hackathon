@@ -155,7 +155,9 @@
     view.querySelector('[data-wave-noor]').addEventListener('click', () => LS.noor && LS.noor.ask('explain', { text: `Wave interference: two waves with frequency ratio ${(+f2.value).toFixed(2)} and phase difference ${ph.value}° are added together. ${waveText(+f2.value, +ph.value)}`, title: T('Two waves meeting', 'موجتان تلتقيان') }));
     view.addEventListener('click', e => { const r = e.target.closest('[data-read]'); if (r) LS.openReading(r.dataset.read); });
     const setLab = () => { const w = lab().find(x => /superposition|interference|standing wave|waves/i.test((x.title || '') + ' ' + x.id)); const a = view.querySelector('#atWaveLab'); if (w && a) a.href = '#/lab/' + w.id; };
-    if (window.ERLY_LAB) setLab(); else if (LS.needLab) LS.needLab().then(() => { if (!view.isConnected) return; setLab(); view.querySelectorAll('[data-count]').forEach(s => { const S = SUBJECTS.find(x => x.id === s.dataset.count); s.textContent = countLine(contents(S)) || s.textContent; }); });
+    // the Lab is not requested from Home: when it arrives (idle load or first use), the counts and the link update
+    const labIn = () => { if (!view.isConnected) return; setLab(); view.querySelectorAll('[data-count]').forEach(s => { const S = SUBJECTS.find(x => x.id === s.dataset.count); s.textContent = countLine(contents(S)) || s.textContent; }); };
+    if (window.ERLY_LAB && ERLY_LAB.engines.length > 100) setLab(); else { const off = LS.on('lab-ready', () => { off(); labIn(); }); }
   }
 
   /* ---------- subject page ---------- */

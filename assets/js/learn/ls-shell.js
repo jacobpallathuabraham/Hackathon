@@ -85,10 +85,10 @@
   }
   function banner() {
     const b = document.getElementById('lsBanner'); if (!b) return;
-    if (st.mode() === 'demo') { b.hidden = false; b.innerHTML = `<p><b>${T('Demonstration data', 'بيانات تجريبية')}</b> — ${T('everything you see is made up for exploring the Studio. It is never saved and never mixed with your own learning.', 'كل ما تراه مصطنع ولا يُحفظ.')} <button type="button" class="ls-linkbtn" data-demo-off>${T('Leave the demonstration', 'اخرج من العرض التجريبي')}</button></p>`; }
+    if (st.mode() === 'demo') { b.hidden = false; b.innerHTML = `<p><b>${T('Demonstration data', 'بيانات تجريبية')}</b> — ${T('everything you see is made up for exploring the Studio. It is never saved and never mixed with your own learning.', 'كل ما تراه مصطنع ولا يُحفظ.')} <button type="button" class="ls-linkbtn" data-demooff>${T('Leave the demonstration', 'اخرج من العرض التجريبي')}</button></p>`; }
     else b.hidden = true;
   }
-  const sheetOpen = on => { const s = document.getElementById('atSheet'), m = document.querySelector('#atDock [data-more]'); s.hidden = !on; document.body.classList.toggle('at-sheet-on', on); if (m) m.setAttribute('aria-expanded', String(on)); if (on) { const a = s.querySelector('a'); if (a) a.focus(); } };
+  const sheetOpen = on => { const s = document.getElementById('atSheet'), m = document.querySelector('#atDock [data-more]'); s.hidden = !on; document.body.classList.toggle('at-sheet-on', on); document.documentElement.classList.toggle('at-sheet-on', on); if (m) m.setAttribute('aria-expanded', String(on)); if (on) { const a = s.querySelector('a'); if (a) a.focus(); } };
 
   /* ---------- command palette ---------- */
   let palItems = [], palSel = 0, palBack = null;
@@ -148,8 +148,8 @@
       <div id="atCmp" hidden><label class="at-range">${T('First idea', 'الفكرة الأولى')}<input type="text" id="atCmpA" maxlength="80"></label><label class="at-range" style="margin-top:8px">${T('Second idea', 'الفكرة الثانية')}<input type="text" id="atCmpB" maxlength="80"></label><p style="margin:10px 0 0"><button type="button" class="ls-btn" data-noor-cmp>${T('Compare', 'قارن')}</button></p></div>`;
     document.getElementById('atNoorWhere').textContent = w.label || '';
   }
-  function noorOpen() { noorRender(); const m = document.getElementById('atNoor'); m.classList.add('is-on'); document.body.classList.add('at-noor-on'); document.getElementById('atScrim').classList.add('is-on'); m.setAttribute('aria-hidden', 'false'); setTimeout(() => { const f = m.querySelector('.at-act:not(:disabled)') || document.getElementById('atNoorQ'); f && f.focus(); }, 60); }
-  function noorClose(refocus) { const m = document.getElementById('atNoor'); if (!m.classList.contains('is-on')) return; m.classList.remove('is-on'); document.body.classList.remove('at-noor-on'); m.setAttribute('aria-hidden', 'true'); document.getElementById('atScrim').classList.remove('is-on'); if (refocus !== false) document.getElementById('atNoorBtn').focus(); }
+  function noorOpen() { noorRender(); const m = document.getElementById('atNoor'); m.classList.add('is-on'); document.body.classList.add('at-noor-on'); document.documentElement.classList.add('at-noor-on'); document.getElementById('atScrim').classList.add('is-on'); m.setAttribute('aria-hidden', 'false'); setTimeout(() => { const f = m.querySelector('.at-act:not(:disabled)') || document.getElementById('atNoorQ'); f && f.focus(); }, 60); }
+  function noorClose(refocus) { const m = document.getElementById('atNoor'); if (!m.classList.contains('is-on')) return; m.classList.remove('is-on'); document.body.classList.remove('at-noor-on'); document.documentElement.classList.remove('at-noor-on'); m.setAttribute('aria-hidden', 'true'); document.getElementById('atScrim').classList.remove('is-on'); if (refocus !== false) document.getElementById('atNoorBtn').focus(); }
   LS.margin = { open: noorOpen, close: noorClose };
   function noorAct(kind) {
     if (!LS.noor) return;
@@ -197,10 +197,10 @@
       // Tab stays inside the palette while it is open
       if (e.key === 'Tab' && !pal.hidden) { e.preventDefault(); q.focus(); }
     });
-    document.addEventListener('click', e => { if (e.target.closest('[data-demo-off]')) { st.demo(false); LS.render(); } if (e.target.closest('[data-open-noor]')) noorOpen(); if (e.target.closest('[data-open-search]')) palOpen(); });
+    document.addEventListener('click', e => { if (e.target.closest('[data-demooff]')) { st.demo(false); LS.render(); } if (e.target.closest('[data-open-noor]')) noorOpen(); if (e.target.closest('[data-open-search]')) palOpen(); });
     LS.on('route', ({ area }) => { mark(area); badges(); banner(); const v = document.getElementById('lsView'); if (v && !document.documentElement.classList.contains('a11y-still')) { v.classList.remove('at-view-in'); void v.offsetWidth; v.classList.add('at-view-in'); } });
     LS.on('change', () => badges());
     tabs.addEventListener('scroll', () => requestAnimationFrame(moveInk), { passive: true });
   }
-  LS.startShell = () => { build(); wire(); };
+  LS.startShell = () => { document.documentElement.classList.add('at-html'); build(); wire(); };
 })();

@@ -190,7 +190,7 @@ body.at a { color: inherit; }
 .at-kinds { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
 .at-kind { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; color: var(--ink-2); font: 500 .86rem/1 var(--f-body); cursor: pointer; transition: all var(--at-fast); }
 .at-kind[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.at-kind span { color: inherit; opacity: .6; margin-inline-start: 4px; font-variant-numeric: tabular-nums; }
+.at-kind span { color: inherit; margin-inline-start: 4px; font-variant-numeric: tabular-nums; font-weight: 400; }
 .at-kind:hover { border-color: var(--ink-2); }
 .at-index { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .at-index > li { border-bottom: 1px solid var(--line); }
@@ -289,7 +289,6 @@ body.at a { color: inherit; }
   .at-sheet a { display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 12px; text-decoration: none; color: var(--ink); font-weight: 600; }
   .at-sheet a:hover, .at-sheet a[aria-current="page"] { background: var(--surface-2); }
   .at-sheet svg { width: 20px; height: 20px; color: var(--muted); }
-  body.at-sheet-on .a11y-fab, body.at-sheet-on .cmp-launch { visibility: hidden; }
   .at-noor { width: 100vw; top: auto; height: min(86vh, 720px); border-radius: 18px 18px 0 0; transform: translateY(104%); }
   [dir="rtl"] .at-noor { transform: translateY(104%); }
   .at-row { grid-template-columns: 40px minmax(0, 1fr) auto; } .at-row__p { display: none; }
@@ -305,7 +304,7 @@ body.at a { color: inherit; }
   .at-brand__word i { display: none; }
 }
 /* the site-wide floating accessibility button sits bottom-left: keep it above the dock on phones */
-@media (max-width: 900px) { body.at .a11y-fab { bottom: calc(78px + env(safe-area-inset-bottom)); } body.at .cmp-launch { bottom: calc(78px + env(safe-area-inset-bottom)) !important; } }
+@media (max-width: 900px) { html.at-html > .a11y-fab { bottom: calc(78px + env(safe-area-inset-bottom)); } body.at .cmp-launch { bottom: calc(78px + env(safe-area-inset-bottom)) !important; } }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) { body.at *, body.at *::before, body.at *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
@@ -317,4 +316,9 @@ body.at .at-find input, body.at .at-pal__in input, body.at .at-noor__f textarea 
 body.at .at-find input { padding: 4px 0 !important; font-size: 1.02rem !important; }
 body.at .at-pal__in input { padding: 4px 0 !important; font-size: 1.1rem !important; }
 body.at .at-noor__f textarea { padding: 7px 0 !important; }
-body.at-noor-on .cmp-launch, body.at-noor-on .a11y-fab { visibility: hidden; }
+/* the site's accessibility button is a child of <html>, so these are scoped with a class only the Studio sets */
+body.at-noor-on .cmp-launch, html.at-noor-on > .a11y-fab, html.at-sheet-on > .a11y-fab, body.at-sheet-on .cmp-launch { visibility: hidden !important; }
+/* phones: keep every tool in the spine reachable (Privacy & data is in the More sheet) */
+@media (max-width: 560px) { .at-spine { gap: 8px; } #atYou { display: none; } .at-brand__word { font-size: 1rem; } .at-brand__back { width: 28px; } }
+/* reader page numbers: readable contrast inside the Learning Studio (the site-wide rule is left as it is) */
+body.at .spage__ftr { opacity: .75; }
