@@ -1168,3 +1168,33 @@ Everything outside the Learning Studio is the stable v19 website, restored as it
 **Tests:**
 - `npm test` (unit tests);
 - with the local server running: `tests/e2e/learning-studio-v21.e2e.js` and `tests/e2e/learning-studio.e2e.js`.
+
+## v22: the learning engine, Cinematic Worlds, and the Handwriting Studio
+
+Full report: [`docs/ERLY-V22-REPORT.md`](docs/ERLY-V22-REPORT.md) (screenshots in `docs/v22-shots/`).
+
+- **Learning Studio (`learn.html`)**
+  - A personal learning engine (`assets/js/learn/ls-engine.js`):
+    - 35 objectives;
+    - evidence from learning actions only;
+    - eight transparent states with their reasons;
+    - today's plan (move, skip, swap, add your own);
+    - insights you can hide or correct;
+    - milestones and cosmetic themes, with no streaks.
+  - Navigation has five places with sub-places.
+  - A new Home.
+  - The adaptive "learn it another way" loop (`#/learn/obj/...`).
+  - Nine subject worlds and 15 interactive experiences, loaded on first use.
+  - Two new lessons: linear functions and motion.
+  - Knowledge Universe, My Library and the Discovery Archive.
+  - Reading passages link to questions, flashcards, visuals and lessons.
+- **Handwriting Studio (`handwriting.html`)**
+  - Practice, Scan & Analyze, Assess and History.
+  - The Signature Ink Engine (`assets/js/hand-ink.js`), with four ink personalities. It uses real pressure only when the pen reports it.
+  - Layout measurements, each saying what they do not mean.
+  - Recognition on the device: TrOCR, or Tesseract for Arabic.
+  - The student confirms the text before anything is compared.
+- **Tests**, with the local server running:
+  - `tests/e2e/learning-studio-v22.e2e.js`;
+  - `tests/e2e/handwriting-v22.e2e.js`;
+  - the benchmark `tests/bench/hand-bench.js` (needs `tests/bench/iam-extract.py` first).

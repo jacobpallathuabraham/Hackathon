@@ -1,13 +1,13 @@
 # Handwriting recognition benchmark — results
 
-Run 2026-11-15 07:26 UTC in Chromium (WebAssembly, CPU), from `tests/bench/hand-bench.js`, on **150 real handwritten lines** from the IAM test split (Teklia/IAM-line test split; every 19th of 2915 lines, so many writers). Model load: 4.2 s (from the browser cache after the first download).
+Run 2026-11-20 02:02 UTC in Chromium (WebAssembly, CPU), from `tests/bench/hand-bench.js`, on **150 real handwritten lines** from the IAM test split (Teklia/IAM-line test split; every 19th of 2915 lines, so many writers). Model load: 5.6 s (from the browser cache after the first download).
 
 ## Line level (each line image read on its own)
 
 | Engine | CER (normalised, as the app reports it) | WER (normalised) | CER (exact characters) | Time per line |
 |---|---|---|---|---|
-| Handwriting model — TrOCR-small-handwritten (v18) | **15.2%** | **25.4%** | 16.2% | 2102 ms |
-| Tesseract 5 (printed-text OCR, v12–v17) | 50.0% | 86.4% | 53.8% | 131 ms |
+| Handwriting model — TrOCR-small-handwritten (v18) | **15.2%** | **25.4%** | 16.2% | 2270 ms |
+| Tesseract 5 (printed-text OCR, v12–v17) | 50.0% | 86.4% | 53.8% | 144 ms |
 
 ## Page level (three lines stacked into a page: segmentation + reading)
 

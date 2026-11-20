@@ -117,21 +117,21 @@
   }
 
   /* ================= the Knowledge Universe ================= */
-  const SUBJ_POS = { Biology: [0.2, 0.32], Chemistry: [0.5, 0.2], Mathematics: [0.8, 0.32], Physics: [0.62, 0.72] };
+  const SUBJ_POS = { Biology: [0.2, 0.36], Chemistry: [0.5, 0.3], Mathematics: [0.8, 0.36], Physics: [0.5, 0.76] };
   const BRIGHT = { not: 0.18, exploring: 0.35, learning: 0.45, practising: 0.55, revisit: 0.6, developing: 0.75, demonstrated: 1, review: 0.85 };
   function universe() {
-    const W = 1000, H = 560, groups = {};
+    const W = 1000, H = 640, groups = {};
     LS.lessons.forEach(L => { (groups[L.subject] = groups[L.subject] || []).push(L); });
     let svg = '', labels = '', k = 0;
     Object.entries(groups).forEach(([sub, Ls], si) => {
       const c = SUBJ_POS[sub] || [0.15 + 0.2 * si, 0.8];
-      labels += `<text x="${c[0] * W}" y="${c[1] * H - 92}" class="at-uni__sub" text-anchor="middle">${esc(sub)}</text>`;
+      labels += `<text x="${c[0] * W}" y="${c[1] * H - (Ls.length > 2 ? 120 : Ls.length > 1 ? 80 : 70)}" class="at-uni__sub" text-anchor="middle">${esc(sub)}</text>`;
       Ls.forEach((L, li) => {
-        const ang0 = li * 2.4 + si, cx = c[0] * W + Math.cos(ang0) * 70 * (li ? 1 : 0.2), cy = c[1] * H + Math.sin(ang0) * 50 * (li ? 1 : 0.2);
-        const S = E().objectivesOf(L.id), pts = S.map((s, i) => { const a = ang0 + i * (2 * Math.PI / Math.max(3, S.length)) + 0.6, r = 34 + (i % 2) * 14; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r, s]; });
+        const n = Ls.length, th = -Math.PI / 2 + li * 2 * Math.PI / Math.max(1, n) + (n === 2 ? Math.PI / 2 : 0), R = n === 2 ? 66 : n > 2 ? 84 : 0, ang0 = li * 2.4 + si, cx = c[0] * W + Math.cos(th) * R * 1.2, cy = c[1] * H + Math.sin(th) * R * 0.75;
+        const S = E().objectivesOf(L.id), pts = S.map((s, i) => { const a = ang0 + i * (2 * Math.PI / Math.max(3, S.length)) + 0.6, r = 24 + (i % 2) * 10; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r, s]; });
         svg += `<g class="at-uni__con"><path d="M${pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L')}" class="at-uni__line"/>`;
         pts.forEach(([x, y, s]) => { k++; const b = BRIGHT[s.state]; svg += `<a href="#/learn/obj/${esc(s.key)}" class="at-uni__star at-uni__star--${s.state}" aria-label="${esc(s.obj.text)} — ${esc(E().STATES[s.state].label)}"><title>${esc(s.obj.text)} — ${esc(E().STATES[s.state].label)}</title><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(3 + 5 * b).toFixed(1)}" style="opacity:${(0.35 + 0.65 * b).toFixed(2)}"/>${s.state === 'demonstrated' || s.state === 'review' ? `<circle class="at-uni__halo" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(10 + 6 * b).toFixed(1)}"/>` : ''}</a>`; });
-        svg += `<text x="${cx.toFixed(1)}" y="${(cy + 70).toFixed(1)}" text-anchor="middle" class="at-uni__name">${esc(L.topic)}</text></g>`;
+        svg += `<text x="${cx.toFixed(1)}" y="${(cy + 52).toFixed(1)}" text-anchor="middle" class="at-uni__name">${esc(L.topic)}</text></g>`;
       });
     });
     return `<svg class="at-uni" viewBox="0 0 ${W} ${H}" role="group" aria-label="${T('Your Knowledge Universe: each star is a learning objective; brighter stars are understood more securely', 'كونك المعرفي')}"><rect width="${W}" height="${H}" class="at-uni__bg" rx="18"/>${bgStars(W, H)}${labels}${svg}</svg>`;
@@ -147,7 +147,8 @@
       <section class="at-sec"><div class="at-sec__head"><h2 class="at-h2">${T('Milestones', 'المحطات')}</h2><span class="at-muted at-small">${T('Earned only by learning — never by time spent or days in a row.', 'تُكتسب بالتعلم فقط.')}</span></div>
         <ul class="at-ms">${ms.map(m => `<li class="${m.earned ? 'is-earned' : ''}"><span class="at-ms__ic" aria-hidden="true">${m.earned ? '✦' : '·'}</span><b>${esc(m.title)}</b><small>${esc(m.desc)}</small>${m.earned ? `<small class="at-ms__when">${T('Earned', 'اكتُسب')} ${m.earned === 'now' ? T('just now', 'للتو') : esc(LS.fmtDate(m.earned))}${m.theme ? ' · ' + T('unlocks the theme', 'يفتح سمة') + ' ' + esc(E().THEMES[m.theme].label) : ''}</small>` : `<span class="at-bar" role="img" aria-label="${T('Progress', 'التقدّم')}: ${m.progress[0]} / ${m.progress[1]}"><i style="--w:${Math.round(100 * m.progress[0] / m.progress[1])}%"></i></span>`}</li>`).join('')}</ul></section>
       <section class="at-sec"><div class="at-sec__head"><h2 class="at-h2">${T('Studio themes', 'سمات الاستوديو')}</h2><span class="at-muted at-small">${T('Cosmetic only. Every learning feature is open to everyone.', 'تجميلية فقط.')}</span></div>
-        <div class="at-themes" role="radiogroup" aria-label="${T('Studio theme', 'سمة الاستوديو')}">${themes.map(t => `<button type="button" role="radio" aria-checked="${t.id === cur}" class="at-theme at-theme--${t.id}" data-lstheme="${t.id}" ${t.unlocked ? '' : 'disabled'}><span class="at-theme__sw" aria-hidden="true"></span>${esc(t.label)}${t.unlocked ? '' : `<small>${T('from', 'من')} “${esc(t.from)}”</small>`}</button>`).join('')}</div></section></div>`;
+        <p><label class="ls-chk"><input type="checkbox" data-effects ${st.data().settings.effects === false ? '' : 'checked'}> ${T('Show a short sparkle when a milestone is reached (never with reduced motion; never a sound)', 'أظهر وميضاً قصيراً عند بلوغ محطة')}</label></p><div class="at-themes" role="radiogroup" aria-label="${T('Studio theme', 'سمة الاستوديو')}">${themes.map(t => `<button type="button" role="radio" aria-checked="${t.id === cur}" class="at-theme at-theme--${t.id}" data-lstheme="${t.id}" ${t.unlocked ? '' : 'disabled'}><span class="at-theme__sw" aria-hidden="true"></span>${esc(t.label)}${t.unlocked ? '' : `<small>${T('from', 'من')} “${esc(t.from)}”</small>`}</button>`).join('')}</div></section></div>`;
+    view.querySelector('[data-effects]').addEventListener('change', e => { st.update(d => { d.settings.effects = e.target.checked; }); });
     view.querySelector('.at-themes').addEventListener('click', e => { const b = e.target.closest('[data-lstheme]'); if (!b || b.disabled) return; st.update(d => { d.settings.lsTheme = b.dataset.lstheme; }); applyTheme(); LS.render(); });
   }
   function applyTheme() { const t = st.data().settings.lsTheme; if (t && t !== 'ink') document.documentElement.dataset.lsTheme = t; else delete document.documentElement.dataset.lsTheme; }
