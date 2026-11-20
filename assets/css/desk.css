@@ -1,0 +1,28 @@
+/* ERLY — "Your desk" on the student portal (v23). Calm, plain surfaces; the next step is the only emphasised thing. */
+.desk { padding: 28px 0 28px; background: var(--bg, var(--surface)); border-bottom: 1px solid var(--line); }
+.desk__in { display: grid; gap: 18px; }
+.desk__date { margin: 0; color: var(--muted); font: 600 .78rem/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; }
+.desk__h { margin: 4px 0 0; font: 500 clamp(2rem, 4vw, 2.8rem)/1.05 var(--f-display); letter-spacing: -.02em; color: var(--ink); }
+.desk__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.desk__next { display: flex; flex-direction: column; gap: 8px; padding: 24px 26px; border-radius: 18px; background: var(--ink); color: var(--surface); text-decoration: none; min-height: 190px; transition: transform .22s cubic-bezier(.2, .8, .2, 1), box-shadow .22s; }
+.desk__next:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .5); }
+.desk__next:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.desk__k { font: 600 .74rem/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
+.desk__t { font: 500 clamp(1.35rem, 2.4vw, 1.75rem)/1.2 var(--f-display); }
+.desk__p { opacity: .82; max-width: 52ch; line-height: 1.5; }
+.desk__go { margin-top: auto; font-weight: 700; color: var(--accent-2, #f3a27f); }
+.desk__tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.desk__tiles a { display: flex; gap: 12px; align-items: flex-start; height: 100%; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color .18s, background-color .18s; }
+.desk__tiles a:hover { border-color: var(--line-2); background: var(--surface-2); }
+.desk__tiles a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.desk__tiles b { display: block; font-size: .95rem; } .desk__tiles small { display: block; margin-top: 3px; color: var(--muted); font-size: .84rem; line-height: 1.35; }
+.desk__ic { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--surface-2); font: 700 .8rem/1 var(--f-mono); color: var(--accent); }
+.desk__jump { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .9rem; color: var(--muted); }
+.desk__jump a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.desk__jump a:hover { text-decoration-color: var(--accent); }
+.desk__note { margin: 0; color: var(--muted); font-size: .84rem; }
+@media (max-width: 860px) { .desk__grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .desk__tiles { grid-template-columns: 1fr; } .desk__next { padding: 20px; min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .desk__next, .desk__next:hover { transition: none; transform: none; } }
+/* with the desk above it, the explainer hero no longer needs to fill the screen */
+.desk + .hero { min-height: 0; }

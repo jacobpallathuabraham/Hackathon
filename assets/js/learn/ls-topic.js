@@ -52,13 +52,14 @@
     LS.paintWorlds(view);
     const ink = view.querySelector('.at-modes__ink'), cur = view.querySelector('.at-modes [aria-selected="true"]');
     if (ink && cur) requestAnimationFrame(() => { ink.style.transform = `translateX(${cur.offsetLeft}px) scaleX(${cur.offsetWidth})`; });
-    view.querySelector('.at-tpb').addEventListener('click', e => { const a = e.target.closest('[data-addcards]'); if (!a) return; const n = LS.cards.addMany((L.cards || []).map(c => Object.assign({ topic: L.topic, src: { type: 'lesson', id: L.id, title: L.title } }, c))); LS.toast(n ? `${n} ${T('cards added to your revision.', 'بطاقات أُضيفت.')}` : T('These cards are already in your revision.', 'البطاقات موجودة.')); LS.render(); });
+    view.querySelector('.at-tpb').addEventListener('click', e => { const nb = e.target.closest('[data-tpnoor]'); if (nb && LS.noor) { /* only the topic title and its objectives go to Noor — never the student's history */ LS.noor.ask(nb.dataset.tpnoor, { lesson: L, section: L.topic, text: `${L.title.indexOf(L.topic) === 0 ? L.title : L.topic + ': ' + L.title}. ${(L.objectives || []).map(o => typeof o === 'string' ? o : o.text).filter(Boolean).join('; ')}` }); return; } const a = e.target.closest('[data-addcards]'); if (!a) return; const n = LS.cards.addMany((L.cards || []).map(c => Object.assign({ topic: L.topic, src: { type: 'lesson', id: L.id, title: L.title } }, c))); LS.toast(n ? `${n} ${T('cards added to your revision.', 'بطاقات أُضيفت.')}` : T('These cards are already in your revision.', 'البطاقات موجودة.')); LS.render(); });
   }
   function learnP(L, objs, xs, labs, p) {
     const done = (p && p.done) || {}, ix = p ? Math.min(p.secIx || 0, L.sections.length - 1) : 0;
     return `<div class="at-tp2"><section><h2 class="at-h2">${T('What you will understand', 'ما ستفهمه')}</h2><ul class="at-objs">${objs.map(LS.objRow).join('')}</ul></section>
       <section><h2 class="at-h2">${T('The lesson', 'الدرس')}</h2><ol class="at-steps">${L.sections.map((s, i) => `<li class="${done[s.id] ? 'is-done' : i === ix && p ? 'is-here' : ''}"><a href="#/lesson/${L.id}/${s.id}"><span aria-hidden="true">${done[s.id] ? '✓' : i + 1}</span>${esc(s.title)}</a></li>`).join('')}</ol>
         <p><a class="ls-btn ls-btn--accent" href="#/lesson/${L.id}${p ? '/' + L.sections[ix].id : ''}">${p ? T('Continue the lesson', 'تابع الدرس') : T('Start the lesson', 'ابدأ الدرس')} →</a></p>
+        <p class="ls-row at-tpnoor"><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-tpnoor="explain">${T('Ask Noor: the big idea', 'اسأل نور: الفكرة الكبرى')}</button><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-tpnoor="practice">${T('Ask Noor: quiz me first', 'اسأل نور: اختبرني أولاً')}</button></p>
         ${(L.prereq || []).length ? `<p class="at-muted at-small">${T('Helps to know first:', 'يفيد أن تعرف أولاً:')} ${L.prereq.map(r => r.lesson ? `<a href="#/topic/${r.lesson}">${esc(r.text)}</a>` : esc(r.text)).join('; ')}</p>` : ''}</section></div>`;
   }
   function exploreP(L, objs, xs, labs) {

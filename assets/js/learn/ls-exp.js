@@ -22,7 +22,8 @@
     const frame = t => { raf = 0; if (dead || !on || !vis || document.hidden) return; const dt = last ? Math.min(0.05, (t - last) / 1000) : 0.016; last = t; tick(dt); kick(); };
     function kick() { if (!raf && on && vis && !document.hidden && !dead) raf = requestAnimationFrame(t => { frame(t); }); if (!on || !vis) last = 0; }
     const onVis = () => { last = 0; kick(); }; document.addEventListener('visibilitychange', onVis);
-    return { start() { on = true; last = 0; kick(); }, stop() { on = false; }, running: () => on, destroy() { dead = true; on = false; if (io) io.disconnect(); document.removeEventListener('visibilitychange', onVis); cancelAnimationFrame(raf); } };
+    const told = () => el.dispatchEvent(new CustomEvent('ls-loop', { bubbles: true })); // lets the frame keep Play/Pause honest when a model stops itself
+    return { start() { const was = on; on = true; last = 0; kick(); if (!was) told(); }, stop() { const was = on; on = false; if (was) told(); }, running: () => on, destroy() { dead = true; on = false; if (io) io.disconnect(); document.removeEventListener('visibilitychange', onVis); cancelAnimationFrame(raf); } };
   }
   function canvas(host, w, h) {
     const c = document.createElement('canvas'); c.className = 'at-x__cv'; host.appendChild(c);
@@ -51,7 +52,7 @@
     if (LS.paintWorlds) LS.paintWorlds(view);
     const pauseBtn = view.querySelector('[data-x="pause"]');
     syncPause = () => { const t = M.running && M.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); if (pauseBtn.textContent !== t) pauseBtn.textContent = t; pauseBtn.disabled = !M.running; };
-    syncPause();
+    syncPause(); stage.addEventListener('ls-loop', () => syncPause());
 
     function show(k) {
       ses.step = k; view.querySelectorAll('[data-step]').forEach(b => { if (b.dataset.step === k) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });

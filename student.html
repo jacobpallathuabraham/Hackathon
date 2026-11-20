@@ -46,6 +46,7 @@
   </script>
   <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
   <link rel="stylesheet" href="assets/css/v9.css?v=23">
+  <link rel="stylesheet" href="assets/css/desk.css?v=23">
   <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
 </head>
 <body>
@@ -94,12 +95,14 @@
   <main id="main">
 
   <!-- ============ HERO ============ -->
+  <section class="desk" id="desk" aria-label="Your desk"><noscript><p class="wrap">Your desk needs JavaScript.</p></noscript></section>
+
   <section class="hero" id="top">
     <div class="amb amb--fade-b" data-ambient="aurora constellation" aria-hidden="true"></div>
     <div class="wrap hero__grid">
       <div class="hero__copy">
         <p class="eyebrow reveal"><span class="dot"></span><span data-i18n="hero.eyebrow">Student Accessibility Services · Welcome back, Acubins</span></p>
-        <h1 class="display reveal" data-i18n="h3.title">Notice sooner.<br><em>On your terms.</em></h1>
+        <h2 class="display reveal" data-i18n="h3.title">Notice sooner.<br><em>On your terms.</em></h2>
         <p class="lead reveal" data-i18n="h3.lead">ERLY is a consent-first study companion. After you sign a Support Pact, it quietly notices study strain — re-reads, pace, abandoned drafts, 11th-hour spikes — measured only against your own normal. No quizzes, no labels. If a pattern persists, you see it first, and you choose who comes with you to SAS.</p>
         <div class="hero__cta reveal">
           <a class="btn btn--accent btn--glow" href="learn.html"><span class="ic-wrap" id="heroIc1"></span><span data-i18n="h2.cta1">Open the Learning Studio</span></a>
@@ -664,7 +667,8 @@
   <script src="assets/js/handoff.js?v=19"></script>
   <script src="assets/js/ramp.js?v=19"></script>
   <script src="assets/js/flow.js?v=19"></script>
-  <script src="assets/js/session.js?v=19"></script>
+  <script src="assets/js/desk.js?v=23" defer></script>
+<script src="assets/js/session.js?v=19"></script>
   <script>
     [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });
   </script>
