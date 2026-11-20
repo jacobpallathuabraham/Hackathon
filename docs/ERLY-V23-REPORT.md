@@ -173,7 +173,28 @@ Branch: `claude/erly-hackathon-website-8txbtd`. **Not deployed.** The live site 
 
 ## I. Tests (actually run)
 
-TESTS_PLACEHOLDER
+Full regression on 2026-11-20: every one of the 35 e2e suites was run against the v23 code. Each suspicious failure was then re-run against the pre-v23 commit (`cbe97db`) from a separate worktree on another port, to separate regressions from existing problems.
+
+| Result | Suites |
+|---|---|
+| **Passed (29)** | a11y-centre, a11y, avatar-lab, chat, companion-quality, companion, growth-v18 (15/15), handwriting-v22 (22/22), human3d, learning-studio-v21 (21/21), learning-studio-v22 (22/22), **learning-studio-v23 (18/18, new)**, nav, neural-voice (6/6), noor-platform, noor-tools, noor-v12, noor-v17 (9/9), noor, page-video (8/8), problems (14/14), realtrack, studio-noor, syllabus-chat, v10, v9, visual-acceptance, visual-chat (18/18), visual-library, vspec (exit code 0) |
+| **lab: 33/34 in the full run** | P10 "wave interference animated" failed once under load. Re-run alone, it passed 34/34 twice on v23 code. This is a timing flake, not a regression. |
+| **learning-studio: 33/34** | "Explain my mistake": the known intermittent failure, present since v22 (see K). |
+| **ink-studio: intermittent** | "the eraser removes the stroke it touches". It also fails on the pre-v23 commit (2 of 3 runs), so this is a pre-existing, load-sensitive flake. |
+| **visuals: failed** | The step "audio lesson about the heart" timed out. Network logging showed Wikipedia answering **HTTP 429 (rate limited)** to this container, and the pre-v23 commit fails identically when rate-limited. This is not a v23 regression, but it is **not verified passing** either. |
+| **audio-lessons: not verified** | The 50-topic sweep calls Wikipedia and exceeded the 10-minute cap. The player-only mode (`AL_PLAYER_ONLY=1`) got 1/5, and all four failures wait on the same rate-limited Wikipedia call. |
+
+Also run:
+- the axe-core WCAG 2 A/AA scan of `student.html`, the physics and biology world pages, the Newton topic hub, the Newton lab and Into the leaf. After raising the contrast of one small label in the Newton lab, **0 violations**;
+- a scripted play-through of all 12 Learning Games;
+- a chirality check of the Rotate 3D shapes;
+- the Newton lab physics against hand calculations.
+
+**Regressions found by the suites and fixed before the final run:**
+- `studio-noor`: a skipped view transition raised a console error.
+- the v22 subject-page test: it expected the old card grid; updated to the new trail.
+- the v9 test: it expected the hero `h1`, which is now an `h2` under the desk.
+- the v23 suite itself: it caught the stale Play/Pause label.
 
 ## J. Performance and accessibility
 
@@ -197,6 +218,8 @@ TESTS_PLACEHOLDER
 
 ## K. Remaining problems (honest)
 
+- **Network-dependent suites:** while this container is rate-limited by Wikipedia, `visuals` and `audio-lessons` cannot be verified. Re-run them from a different network before deploying.
+- **Pre-existing flaky test:** the eraser check in `ink-studio` (it also fails on the pre-v23 commit).
 - **Flaky test:** "Explain my mistake" in `learning-studio.e2e.js` still fails intermittently (about 1 run in 4, as in v22). It passed when re-run with diagnostics. The button is present and unobstructed when it fails, and the root cause is not identified.
 - **Feature gaps:** the original directive features listed in C (Curiosity Portal, What-If Lab, Mystery Case, Build & Break, cross-subject trails) were not built. Chemistry, history, geography, English, language and social worlds have new scenes but no new interactive experiences.
 - **Lab breadth:** the Newton lab has no "predict your number before the run" input inside each mission. Prediction happens once, in the frame's Predict step.
