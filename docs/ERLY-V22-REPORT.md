@@ -1,6 +1,6 @@
 # ERLY v22 — Learning Studio master build, Cinematic Worlds, Handwriting Studio and the Signature Ink Engine
 
-**Branch:** `claude/erly-hackathon-website-8txbtd`. **Not deployed**: the live site changes only when you say "Deploy". Screenshots are in [`v22-shots/`](v22-shots/). Acubins University is fictional.
+**Branch:** `claude/erly-hackathon-website-8txbtd`. **Deployed** on request to GitHub Pages at commit `ea28d74`. The fixes listed in D4 came after that deploy; they are on the branch and go live with the next "Deploy". Screenshots are in [`v22-shots/`](v22-shots/). Acubins University is fictional.
 
 ## Contents
 
@@ -490,11 +490,11 @@ No scores or grades are produced.
 | Unit (`npm test`) | 272 / 272 |
 | `learning-studio-v22.e2e.js` (new) | 22 / 22 |
 | `learning-studio-v21.e2e.js` (updated: 5 places, 9 worlds) | 21 / 21 |
-| `learning-studio.e2e.js` (updated to the new navigation) | 34 / 34 |
+| `learning-studio.e2e.js` (updated to the new navigation) | 34 / 34 (one intermittent check, D4) |
 | `handwriting-v22.e2e.js` (new) | 21 / 21 |
 | `ink-studio.e2e.js` (ported) | passes |
-| `studio-noor.e2e.js` (updated: v21's Ask menu needs a choice) | see D4 |
-| Full regression | see D4 |
+| `studio-noor.e2e.js` (updated: v21's Ask menu needs a choice) | passes, after two fixes (D4) |
+| Full regression | D4: all pass after fixes; one intermittent check noted |
 
 ## D2. Accessibility
 
@@ -536,11 +536,56 @@ Through the app's Scan path, three real IAM lines were composed into a page and 
 
 ## D4. Full regression
 
-REGRESSION
+A full run of every end-to-end suite was made against v22 (`tests/e2e/*.e2e.js`). It skips `audio-lessons` and `neural-voice`, which download large voice models. The run took about 40 minutes.
+
+**First full run:** 29 suites passed, and 5 failed.
+
+**Each failure was then re-run on its own and fixed:**
+
+| Suite | First run | Cause | Fix | Now |
+|---|---|---|---|---|
+| `studio-noor` | timeout | **Two real bugs:** (1) v22 hid ERLY's side check-in in the whole Studio, including the reader's "zooming a lot?" tip; (2) **since v21 the Noor voice-call button in the Studio did nothing**: the call and avatar scripts were never part of `learn.html`. That was found here, because the v21 Ask-menu change had stopped this test before it reached that point. | The check-in shows inside the reader again; the voice-call stack now loads on the first press (`ls-lazy.js`), and was checked to open with its avatar. | passes |
+| `learning-studio-v22` | 21/22 | The test's forbidden-word scan read the whole page, which now includes the v19 disclaimer "ERLY does not diagnose". | Scan limited to the insight cards. | 22/22 |
+| `learning-studio` | 33/34 | "Explain my mistake" click intercepted. A visible toast caught every click on its box, and the new milestone toast appears unprompted. | Toasts now let clicks through except on their own buttons. | 34/34 in 3 of 4 runs after the fix. The one later failure had no identified cause: it is recorded as **intermittent**, not fixed. |
+| `ink-studio` | eraser check failed | Did not reproduce. | — | passes |
+| `noor-tools` | timeout | Did not reproduce. It only uses `student.html`, which v22 did not change. | — | passes |
+
+**Passed in the full run:**
+- a11y-centre, a11y, avatar-lab, chat;
+- companion-quality, companion;
+- growth-v18 (15/15);
+- handwriting-v22 (22/22, including real IAM lines read through the app's Scan path);
+- human3d;
+- lab (34/34);
+- learning-studio-v21 (21/21);
+- nav, noor-platform, noor-v12, noor-v17 (9/9), noor;
+- page-video (8/8), problems (14/14), realtrack, syllabus-chat;
+- v10, v9;
+- visual-acceptance (10/10), visual-chat (18/18), visual-library;
+- visuals: it timed out once on clean v21 and passes here;
+- vspec.
+
+**Retired:** handwriting v12, v17 and v18 (they tested the removed UI; see `tests/e2e/retired/README.md`).
 
 ## D5. Performance
 
-PERF
+Cold load, Chromium, local server (no network latency), medians:
+
+| Page | DOMContentLoaded | Load | Long tasks until load + 0.3 s (median of 7) | Long tasks until load + 1.5 s (median of 5) |
+|---|---|---|---|---|
+| Studio Home, v21 | 267 ms | 361 ms | 56 ms | 54 ms |
+| Studio Home, v22 | 329 ms | 403 ms | 52 ms | **114 ms** |
+| Handwriting, v21 | 181 ms | 514 ms | — | 0 ms |
+| Handwriting, v22 | 180 ms | **296 ms** | — | 0 ms |
+
+- **The Studio Home costs more in v22.** DOMContentLoaded is about 60 ms later: six more scripts, mostly the engine, the new lessons and the journey code.
+- About 60 ms more main-thread time falls in the second after load. The likely cause is the subject worlds loading and the portal canvas starting, but this was not measured separately. It is the cost of the new Home and was not optimised away.
+- **What is not slower:**
+  - the engine itself: 0.4 ms to compute all 35 states;
+  - the Home render: about 10 ms;
+  - the ink: 0.05 ms per frame.
+- The experiences (about 120 KB) and the worlds load only when used.
+- The Handwriting page loads faster than v21, because it no longer runs the old studio at start-up.
 
 ## D6. Not done, or limited
 
@@ -551,4 +596,4 @@ PERF
   - Arabic recognition is weak (Tesseract).
   - No real stylus hardware was available.
 - **Insights:** the "improved after a visual" insight needs at least 2 answers before and 2 after on the same objective, so it will be rare at first. That is deliberate.
-- **Not deployed.**
+- **The D4 fixes are not yet live.** They are on the branch; the live site is at commit `ea28d74`.

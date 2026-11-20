@@ -32,3 +32,20 @@
   // …or at once when the student turns to Noor, whose visuals use the same models
   document.addEventListener('pointerdown', e => { if (e.target.closest && e.target.closest('.cmp-launch, #atNoorBtn, [data-open-noor]')) LS.needLab().catch(() => {}); }, { capture: true, passive: true });
 })();
+
+/* v22: Noor's voice-call mode inside the Studio. The companion's voice button emits 'noor:call', which call.js
+   handles — but the call and avatar scripts were never part of learn.html, so since v21 the button did nothing here.
+   They are now loaded on the first press (same order as student.html) and the press is replayed. */
+(function () {
+  'use strict';
+  const E = window.ERLY; if (!E || !E.on) return;
+  let loading = null;
+  const add = (src, module) => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; if (module) s.type = 'module'; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); });
+  E.on('noor:call', () => {
+    if ((E.companion && E.companion.call) || loading) return;
+    const B = 'assets/js/companion/';
+    loading = ['lipsync', 'photoreal', 'avatar', 'realtime', 'call'].reduce((p, f) => p.then(() => add(B + f + '.js?v=19')), Promise.resolve())
+      .then(() => { add(B + 'human3d.js?v=19', true).catch(() => {}); E.emit('noor:call'); })
+      .catch(e => { loading = null; console.error('Voice mode could not load', e); if (E.toast) E.toast('Voice mode could not load here. Please try again.'); });
+  });
+})();

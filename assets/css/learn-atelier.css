@@ -564,7 +564,7 @@ body.at #lsView h1[tabindex="-1"]:focus, body.at #lsView h1:focus:not(:focus-vis
 .at-portal::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, hsl(var(--at-hue) 40% 14% / .92) 0%, hsl(var(--at-hue) 40% 14% / .55) 60%, transparent 100%); }
 .at-portal__b { z-index: 1; } .at-portal__b p { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
 body.at [hidden] { display: none !important; }
-html.at-html .cside { display: none !important; } /* the Studio has its own Noor margin; the site-wide side check-in would cover content here */
+html.at-html:not(.studio-open) .cside { display: none !important; } /* the Studio has its own Noor margin; the site-wide side check-in would cover Studio content — it stays available inside the reader, where its reading tips belong */
 .at-noor__grip { position: absolute; inset-inline-start: -5px; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 2; }
 .at-noor__grip:hover, .at-noor__grip:focus-visible { background: linear-gradient(90deg, transparent 4px, var(--accent) 4px, var(--accent) 6px, transparent 6px); box-shadow: none; }
 @media (max-width: 900px) { .at-noor__grip { display: none; } }
@@ -575,3 +575,5 @@ html.at-html .cside { display: none !important; } /* the Studio has its own Noor
 .at-objs summary { grid-template-columns: 13.5rem minmax(0, 1fr); }
 body.at .ls-tag--warn { color: #6E4508; background: #F6E7CF; border-color: #E6C998; }
 [data-theme="dark"] body.at .ls-tag--warn { color: #F6D9A8; background: #3A2A12; border-color: #5C4420; }
+/* a toast never blocks the page underneath it: only its own buttons take clicks (milestone toasts can appear unprompted) */
+body.at .ls-toast.is-on { pointer-events: none; } body.at .ls-toast.is-on button, body.at .ls-toast.is-on a { pointer-events: auto; }

@@ -100,7 +100,8 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
     for (const w of ['What I noticed', 'Why it may matter', 'The evidence', 'Learn it another way', 'This isn’t right']) assert.ok(tx.includes(w), w);
     await card.locator('[data-insx="wrong"]').click(); await p.fill('#lsDlg textarea, .ls-dlg textarea', 'I was rushing'); await p.click('[data-ok]'); await p.waitForTimeout(300);
     assert.equal(await p.locator('[data-ins="revisit:phys-motion:2"]').count(), 0); assert.match(await p.textContent('.at-ins__hidden'), /I was rushing/);
-    const banned = await p.evaluate(() => LS.intel.FORBIDDEN.test(document.body.innerText)); assert.equal(banned, false);
+    // the insight cards themselves never use diagnostic wording (the page's own disclaimer, "ERLY does not diagnose", is allowed)
+    const banned = await p.evaluate(() => [...document.querySelectorAll('.at-ins')].some(e => LS.intel.FORBIDDEN.test(e.innerText))); assert.equal(banned, false);
   });
 
   await t('progress separates opened, completed, attempted, demonstrated, retained', async () => {
