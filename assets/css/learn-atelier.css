@@ -710,7 +710,7 @@ html[data-ls-env="off"] .at-x__head::after { display: none; }
 .nl__cv:focus-visible { outline: 3px solid #9aa8ff; outline-offset: -3px; }
 .nl__read { font: 500 .82rem/1.5 var(--f-mono); color: var(--ink-2); margin: 8px 0; }
 .nl__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; } @media (max-width: 560px) { .nl__grid { grid-template-columns: 1fr; } }
-.nl__surf { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; } .nl__surf small { opacity: .7; font-size: .72rem; }
+.nl__surf { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; } .nl__surf small { opacity: .92; font-size: .74rem; }
 .nl__muted { color: var(--muted); font-size: .84rem; } .nl__ok { color: var(--good); font-weight: 600; }
 .nl__tab { border-collapse: collapse; margin: 8px 0; font-size: .88rem; } .nl__tab th, .nl__tab td { padding: 5px 12px; border-bottom: 1px solid var(--line); text-align: end; } .nl__tab th:first-child, .nl__tab td:first-child { text-align: start; } .nl__tab caption { text-align: start; font-weight: 700; padding-bottom: 4px; }
 .at-x--wide .at-x__grid { grid-template-columns: 1fr; } .at-x--wide .at-x__model { position: static; }
