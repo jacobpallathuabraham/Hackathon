@@ -1,5 +1,5 @@
 {
- "date": "2026-11-15T18:02:26.379Z",
+ "date": "2026-11-20T02:27:35.444Z",
  "models": 133,
  "pass": 133,
  "negatives": 15,
@@ -322,7 +322,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 577,
-   "ink": 301,
+   "ink": 299,
    "pass": true
   },
   {
@@ -509,7 +509,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 584,
-   "ink": 1030,
+   "ink": 1031,
    "pass": true
   },
   {
@@ -531,7 +531,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 747,
-   "ink": 477,
+   "ink": 480,
    "pass": true
   },
   {
@@ -564,7 +564,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 678,
-   "ink": 300,
+   "ink": 305,
    "pass": true
   },
   {
@@ -608,7 +608,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 519,
-   "ink": 42,
+   "ink": 46,
    "pass": true
   },
   {
@@ -861,7 +861,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 635,
-   "ink": 34,
+   "ink": 32,
    "pass": true
   },
   {
@@ -1070,7 +1070,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 939,
-   "ink": 35,
+   "ink": 31,
    "pass": true
   },
   {
@@ -1125,7 +1125,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 672,
-   "ink": 41,
+   "ink": 42,
    "pass": true
   },
   {
@@ -1290,7 +1290,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 779,
-   "ink": 1866,
+   "ink": 1870,
    "pass": true
   },
   {
@@ -1301,7 +1301,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 552,
-   "ink": 967,
+   "ink": 975,
    "pass": true
   },
   {
@@ -1400,7 +1400,7 @@
    "inline": true,
    "fullScreenLab": false,
    "replyChars": 717,
-   "ink": 87,
+   "ink": 89,
    "pass": true
   },
   {
