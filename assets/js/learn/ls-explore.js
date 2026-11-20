@@ -38,7 +38,7 @@
   /* ---------- lazy loading of the heavy parts ---------- */
   const once = {};
   const script = src => once[src] || (once[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
-  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=22').then(() => script('assets/js/learn/ls-exp2.js?v=22'));
+  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=22').then(() => script('assets/js/learn/ls-exp2.js?v=22b'));
   LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=22');
 
   /* ---------- the subject worlds (Explore → Subjects) ---------- */
@@ -69,7 +69,7 @@
   }
   function objRow(s) {
     const S = LS.engine.STATES[s.state];
-    return `<li><details><summary><span class="at-state at-state--${s.state}"><i aria-hidden="true"></i>${T(S.label, S.label)}</span><span class="at-objs__t">${esc(s.obj.text)}</span><a class="ls-btn ls-btn--sm ls-btn--quiet" href="#/learn/obj/${esc(s.key)}">${s.state === 'not' ? T('Start', 'ابدأ') : s.state === 'demonstrated' ? T('Challenge me', 'تحدَّني') : T('Continue', 'تابع')}</a></summary><div class="at-objs__why"><p class="at-muted">${esc(S.desc)}</p><ul>${s.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div></details></li>`;
+    return `<li><details><summary><span class="at-state at-state--${s.state}"><i aria-hidden="true"></i>${T(S.label, S.label)}</span><span class="at-objs__t">${esc(s.obj.text)}</span></summary><div class="at-objs__why"><p class="at-muted">${esc(S.desc)}</p><ul>${s.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div></details><a class="ls-btn ls-btn--sm ls-btn--quiet" href="#/learn/obj/${esc(s.key)}" aria-label="${s.state === 'not' ? T('Start', 'ابدأ') : s.state === 'demonstrated' ? T('Challenge me', 'تحدَّني') : T('Continue', 'تابع')}: ${esc(s.obj.text)}">${s.state === 'not' ? T('Start', 'ابدأ') : s.state === 'demonstrated' ? T('Challenge me', 'تحدَّني') : T('Continue', 'تابع')}</a></li>`;
   }
   LS.objRow = objRow;
 

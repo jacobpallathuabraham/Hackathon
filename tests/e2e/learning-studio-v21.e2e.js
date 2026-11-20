@@ -23,11 +23,11 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     assert.equal(early, 0);
     await p.evaluate(() => LS.needLab()); assert.ok(await p.evaluate(() => ERLY_LAB.engines.length >= 170), 'loads on demand');
   });
-  await check('home: one spine with nine places, a verb sentence, the atlas and an honest empty shelf', async () => {
+  await check('home: one spine with five places, a verb sentence, the atlas and an honest empty shelf', async () => {
     assert.equal(await p.locator('#atTabs a[data-env]').count(), 5); // v22: five places, each with its own sub-places
     assert.equal(await p.getAttribute('#atTabs a[data-env="home"]', 'aria-current'), 'page');
     assert.equal(await p.locator('.at-verbs a').count(), 8);
-    assert.equal(await p.locator('#atAtlas > li').count(), 7);
+    assert.equal(await p.locator('#atAtlas > li').count(), 9); // v22: nine subject worlds
     assert.match(await p.textContent('.at-shelf'), /Nothing to resume yet/);
   });
   await check('first visit asks where learning is kept; nothing is stored before choosing', async () => {

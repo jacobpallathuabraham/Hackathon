@@ -178,6 +178,14 @@
     const tabs = document.getElementById('atTabs');
     addEventListener('resize', () => { clearTimeout(moveInk.t); moveInk.t = setTimeout(moveInk, 120); });
     document.getElementById('atSearch').addEventListener('click', palOpen);
+    // the Noor margin can be resized (drag the edge, or arrow keys on the handle); never wider than 60% of the screen
+    (function () { const m = document.getElementById('atNoor'); if (!m || m.querySelector('.at-noor__grip')) return; const g = document.createElement('div'); g.className = 'at-noor__grip'; g.setAttribute('role', 'separator'); g.setAttribute('aria-orientation', 'vertical'); g.setAttribute('aria-label', T('Resize Noor', 'غيّر حجم نور')); g.tabIndex = 0; m.prepend(g);
+      const setW = w => { w = Math.max(320, Math.min(Math.round(innerWidth * 0.6), w)); m.style.width = w + 'px'; document.documentElement.style.setProperty('--at-noor-w', w + 'px'); g.setAttribute('aria-valuenow', w); try { localStorage.setItem('ls-noor-w', w); } catch (e) { /* none */ } };
+      try { const w0 = +localStorage.getItem('ls-noor-w'); if (w0 && innerWidth > 900) m.style.width = Math.min(w0, innerWidth * 0.6) + 'px'; } catch (e) { /* none */ }
+      g.addEventListener('pointerdown', e => { if (innerWidth <= 900) return; g.setPointerCapture(e.pointerId); const rtl = document.dir === 'rtl'; const mv = ev => setW(rtl ? ev.clientX : innerWidth - ev.clientX); const up = () => { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); }; g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up); });
+      g.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const d = (e.key === 'ArrowLeft') !== (document.dir === 'rtl') ? 40 : -40; setW(m.getBoundingClientRect().width + d); } }); })();
+    // a question handed over from another ERLY page (e.g. Handwriting results): shown ready to send, never sent automatically
+    setTimeout(() => { let q = null; try { q = sessionStorage.getItem('erly-noor-prefill'); sessionStorage.removeItem('erly-noor-prefill'); } catch (e) { /* none */ } if (q) { noorOpen(); const f = document.getElementById('atNoorQ'); if (f) { f.value = q; f.focus(); } } }, 400);
     document.getElementById('atNoorBtn').addEventListener('click', () => (document.getElementById('atNoor').classList.contains('is-on') ? noorClose() : noorOpen()));
     document.getElementById('atScrim').addEventListener('click', () => noorClose());
     document.getElementById('atNoorX').addEventListener('click', () => noorClose());

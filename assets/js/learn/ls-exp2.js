@@ -39,7 +39,7 @@
           <rect x="240" y="125" width="70" height="50" rx="8" fill="hsl(352 55% 55% / .18)" stroke="currentColor"/><text x="275" y="145" text-anchor="middle" font-size="11" fill="currentColor">${T('Left atrium', 'الأذين الأيسر')}</text>
           <rect x="240" y="180" width="70" height="55" rx="8" fill="hsl(352 55% 55% / .18)" stroke="currentColor" stroke-width="3"/><text x="275" y="212" text-anchor="middle" font-size="11" fill="currentColor">${T('Left ventricle', 'البطين الأيسر')}</text>
           <rect x="120" y="270" width="160" height="32" rx="16" fill="hsl(30 50% 60% / .15)" stroke="currentColor"/><text x="200" y="291" text-anchor="middle" font-size="12" fill="currentColor">${T('Body', 'الجسم')}</text>
-          <text x="8" y="120" font-size="10" fill="currentColor" opacity=".7">${T('Viewer’s left = heart’s right', 'يسار المشاهد = يمين القلب')}</text>
+          <text x="8" y="120" font-size="10" fill="currentColor">${T('Viewer’s left = heart’s right', 'يسار المشاهد = يمين القلب')}</text>
           <path d="M${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 4" opacity=".7"/>
           <circle cx="${x}" cy="${y}" r="10" fill="${ox ? '#D23B3B' : '#4A5DBF'}" stroke="var(--bg)" stroke-width="2"/>`;
         svg.setAttribute('aria-label', `${T('Stop', 'محطة')} ${i + 1}: ${name}. ${ox ? T('Oxygen-rich', 'غني بالأكسجين') : T('Oxygen-poor', 'فقير بالأكسجين')}.`);

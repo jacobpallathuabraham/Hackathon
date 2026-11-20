@@ -565,3 +565,13 @@ body.at #lsView h1[tabindex="-1"]:focus, body.at #lsView h1:focus:not(:focus-vis
 .at-portal__b { z-index: 1; } .at-portal__b p { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
 body.at [hidden] { display: none !important; }
 html.at-html .cside { display: none !important; } /* the Studio has its own Noor margin; the site-wide side check-in would cover content here */
+.at-noor__grip { position: absolute; inset-inline-start: -5px; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 2; }
+.at-noor__grip:hover, .at-noor__grip:focus-visible { background: linear-gradient(90deg, transparent 4px, var(--accent) 4px, var(--accent) 6px, transparent 6px); box-shadow: none; }
+@media (max-width: 900px) { .at-noor__grip { display: none; } }
+/* while Noor is open on a wide screen, the page makes room instead of being covered */
+@media (min-width: 1200px) { html.at-noor-on body.at .at-main { margin-inline-end: min(var(--at-noor-w, 420px), 40vw); } }
+.at-objs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.at-objs li > .ls-btn { margin-top: 6px; }
+.at-objs summary { grid-template-columns: 13.5rem minmax(0, 1fr); }
+body.at .ls-tag--warn { color: #6E4508; background: #F6E7CF; border-color: #E6C998; }
+[data-theme="dark"] body.at .ls-tag--warn { color: #F6D9A8; background: #3A2A12; border-color: #5C4420; }

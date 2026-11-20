@@ -36,10 +36,10 @@ const SHOT = process.env.ERLY_SHOTS;
   assert.match(p.url(), /handwriting\.html/, 'navigates to the Handwriting Check');
   assert.ok(navMs > 0 && navMs < 2500, 'the page change is requested within 2.5 s of the click (' + navMs + ' ms)');
   // coverage just before navigation is checked on a repeat run below (the old page is gone now)
-  await p.waitForSelector('#hwPad canvas');
+  await p.waitForSelector('.hxs__vp canvas');
   await p.waitForFunction(() => !document.querySelector('canvas.ink-fx'), null, { timeout: 4000 });
   assert.equal(await p.evaluate(() => document.documentElement.classList.contains('ink-arrive')), false, 'no ink cover left');
-  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.hws__studio')).opacity), '1', 'workspace revealed');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#hx')).opacity), '1', 'workspace revealed');
   assert.equal(await p.evaluate(() => sessionStorage.getItem('erly-ink')), null, 'transition flag consumed');
   // the ink spread over the whole viewport: sample the full sequence on a second run, stopping navigation
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(600);
@@ -54,9 +54,9 @@ const SHOT = process.env.ERLY_SHOTS;
 
   /* ---------- 2 · direct load, refresh, Back/Forward, rapid clicks ---------- */
   c = await ctxFor(); p = await c.newPage(); watch(p);
-  await p.goto(BASE + 'handwriting.html'); await p.waitForSelector('#hwPad canvas');
+  await p.goto(BASE + 'handwriting.html'); await p.waitForSelector('.hxs__vp canvas');
   assert.equal(await p.locator('canvas.ink-fx').count(), 0, 'direct load: no transition');
-  await p.reload(); await p.waitForSelector('#hwPad canvas'); await p.waitForTimeout(200);
+  await p.reload(); await p.waitForSelector('.hxs__vp canvas'); await p.waitForTimeout(200);
   assert.equal(await p.locator('canvas.ink-fx').count(), 0, 'refresh: no transition replay');
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(700);
   let navs = 0; p.on('framenavigated', f => { if (f === p.mainFrame() && /handwriting/.test(f.url())) navs++; });
@@ -66,7 +66,7 @@ const SHOT = process.env.ERLY_SHOTS;
   await p.goBack(); await p.waitForURL(/student\.html/); await p.waitForTimeout(500);
   assert.equal(await p.locator('canvas.ink-fx').count(), 0, 'Back: no stale ink overlay');
   assert.ok(await p.evaluate(() => { const el = document.elementFromPoint(innerWidth / 2, innerHeight / 2); return !el.closest('canvas.ink-fx'); }), 'Back: page is clickable');
-  await p.goForward(); await p.waitForURL(/handwriting\.html/); await p.waitForSelector('#hwPad canvas'); await p.waitForTimeout(300);
+  await p.goForward(); await p.waitForURL(/handwriting\.html/); await p.waitForSelector('.hxs__vp canvas'); await p.waitForTimeout(300);
   assert.equal(await p.locator('canvas.ink-fx').count(), 0, 'Forward: no replay');
   // the user menu entry also uses the transition
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(600);
@@ -93,82 +93,75 @@ const SHOT = process.env.ERLY_SHOTS;
   await p.waitForFunction(() => !document.querySelector('canvas.ink-fx'), null, { timeout: 2000 });
   await c.close();
 
-  /* ---------- 5 · the writing pad ---------- */
+  /* ---------- 5 · the writing surface (v22 Handwriting Studio, Signature Ink Engine) ---------- */
   c = await ctxFor({ viewport: { width: 1100, height: 900 }, hasTouch: true }); p = await c.newPage(); watch(p);
-  await p.goto(BASE + 'handwriting.html'); await p.waitForSelector('#hwPad canvas');
-  const pad = await p.locator('#hwPad').boundingBox();
-  const strokes = () => p.evaluate(() => ERLY.handwriting.pad().strokes.length);
-  const inked = () => p.evaluate(() => { const cv = document.querySelector('#hwPad canvas'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 16) if (d[i] > 0) n++; return n; });
+  await p.goto(BASE + 'handwriting.html'); await p.waitForSelector('.hxs__vp canvas');
+  const pad = await p.locator('.hxs__vp').boundingBox();
+  const strokes = () => p.evaluate(() => ERLY.handStudio._surface().strokes.length);
+  const inked = () => p.evaluate(() => { const cv = document.querySelector('.hxs__base'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 16) if (d[i] > 0) n++; return n; });
   const scroll0 = await p.evaluate(() => scrollY);
-  // mouse
   await p.mouse.move(pad.x + 60, pad.y + 60); await p.mouse.down(); await p.mouse.move(pad.x + 300, pad.y + 120, { steps: 20 }); await p.mouse.up();
   assert.equal(await strokes(), 1, 'mouse stroke recorded'); assert.ok(await inked() > 50, 'stroke rendered');
   assert.equal(await p.evaluate(() => scrollY), scroll0, 'writing does not scroll the page');
-  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#hwPad canvas')).touchAction), 'none', 'touch never scrolls or zooms the canvas');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.hxs__vp')).touchAction), 'none', 'touch never scrolls or zooms the surface');
+  assert.equal(await p.evaluate(() => ERLY.handStudio._surface().strokes[0].pressure), false, 'a mouse stroke never claims pressure');
   // touch and stylus (pressure) through real PointerEvents
-  const fire = (type, x, y, pt, pressure) => p.evaluate(([type, x, y, pt, pressure]) => { const cv = document.querySelector('#hwPad canvas'); cv.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: pt === 'pen' ? 7 : 9, pointerType: pt, pressure, isPrimary: true, bubbles: true, cancelable: true, button: 0, buttons: type === 'pointerup' ? 0 : 1 })); }, [type, x, y, pt, pressure]);
+  const fire = (type, x, y, pt, pressure) => p.evaluate(([type, x, y, pt, pressure]) => { const v = document.querySelector('.hxs__vp'); v.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: pt === 'pen' ? 7 : 9, pointerType: pt, pressure, bubbles: true, cancelable: true, isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1 })); }, [type, x, y, pt, pressure]);
   await fire('pointerdown', pad.x + 80, pad.y + 200, 'pen', 0.2); for (let i = 1; i <= 10; i++) await fire('pointermove', pad.x + 80 + i * 20, pad.y + 200, 'pen', 0.2 + i * 0.07); await fire('pointerup', pad.x + 280, pad.y + 200, 'pen', 0);
   assert.equal(await strokes(), 2, 'stylus stroke recorded');
-  assert.ok(await p.evaluate(() => { const s = ERLY.handwriting.pad().strokes[1]; return s.pts.some(q => q[2] > 0.5) && s.pts.some(q => q[2] < 0.4); }), 'stylus pressure captured');
+  assert.ok(await p.evaluate(() => { const s = ERLY.handStudio._surface().strokes[1]; return s.pressure === true && s.pts.some(q => q[2] > 0.5) && s.pts.some(q => q[2] < 0.4); }), 'real stylus pressure captured and used');
   await fire('pointerdown', pad.x + 400, pad.y + 260, 'touch', 0.5); await fire('pointermove', pad.x + 420, pad.y + 280, 'touch', 0.5); await fire('pointerup', pad.x + 420, pad.y + 280, 'touch', 0);
-  assert.equal(await strokes(), 2, 'a resting palm right after the stylus is ignored');
-  await p.waitForTimeout(1600);
-  await fire('pointerdown', pad.x + 400, pad.y + 300, 'touch', 0.5); for (let i = 1; i <= 6; i++) await fire('pointermove', pad.x + 400 + i * 15, pad.y + 300 + i * 5, 'touch', 0.5); await fire('pointerup', pad.x + 490, pad.y + 330, 'touch', 0);
-  assert.equal(await strokes(), 3, 'finger stroke recorded');
-  // undo / redo / eraser / clear
-  await p.click('[data-a="undo"]'); assert.equal(await strokes(), 2); await p.click('[data-a="redo"]'); assert.equal(await strokes(), 3);
-  await p.keyboard.press('Control+z'); assert.equal(await strokes(), 2, 'Ctrl+Z undoes');
-  const before = await inked();
-  await p.click('[data-tool="eraser"]'); await p.mouse.move(pad.x + 60, pad.y + 60); await p.mouse.down(); await p.mouse.move(pad.x + 300, pad.y + 120, { steps: 20 }); await p.mouse.up();
-  assert.ok(await inked() < before, 'eraser removes ink');
-  await p.click('[data-tool="pen"]');
-  // resize keeps the writing
+  assert.equal(await strokes(), 2, 'once a pen is in use, a resting palm does not draw');
+  await p.click('[data-a="undo"]'); assert.equal(await strokes(), 1); await p.click('[data-a="redo"]'); assert.equal(await strokes(), 2);
+  await p.locator('.hxs__vp').focus(); await p.keyboard.press('Control+z'); assert.equal(await strokes(), 1, 'Ctrl+Z undoes'); await p.keyboard.press('Control+Shift+z'); assert.equal(await strokes(), 2, 'Ctrl+Shift+Z redoes');
+  await p.click('[data-tool="eraser"]'); await p.mouse.move(pad.x + 60, pad.y + 60); await p.mouse.down(); await p.mouse.move(pad.x + 120, pad.y + 75, { steps: 6 }); await p.mouse.up();
+  assert.equal(await strokes(), 1, 'the eraser removes the stroke it touches'); await p.click('[data-tool="pen"]');
   const n0 = await strokes(); await p.setViewportSize({ width: 700, height: 900 }); await p.waitForTimeout(300);
   assert.equal(await strokes(), n0, 'resizing keeps every stroke'); assert.ok(await inked() > 20, 'and it is redrawn at the new size');
   await p.setViewportSize({ width: 1100, height: 900 }); await p.waitForTimeout(200);
-  // theme switch while open recolours the ink (light ink on the dark page)
-  const colour = () => p.evaluate(() => { const cv = document.querySelector('#hwPad canvas'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200) return d[i] + d[i + 1] + d[i + 2]; return null; });
-  const lightInk = await colour(); await p.click('#themeToggle'); await p.waitForTimeout(700); const darkInk = await colour();
-  assert.ok(lightInk < 200 && darkInk > 500, `ink colour follows the theme (${lightInk} → ${darkInk})`);
-  if (SHOT) await p.screenshot({ path: SHOT + '/studio-dark.png' });
+  // v22: the page stays paper-white in dark mode (like real paper), so dark ink keeps its contrast in both themes
   await p.click('#themeToggle'); await p.waitForTimeout(500);
-  // v17: Clear asks first; cancelling keeps the page, accepting clears it (and Undo brings it back)
-  p.once('dialog', d => d.dismiss()); await p.click('[data-a="clearpad"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 3, 'cancelled clear keeps the writing');
-  p.once('dialog', d => d.accept()); await p.click('[data-a="clearpad"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 0, 'clear');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.hxs__sheet')).backgroundColor), 'rgb(255, 255, 255)', 'paper stays light in dark mode');
+  if (SHOT) await p.screenshot({ path: SHOT + '/studio-dark.png' });
+  await p.click('#themeToggle'); await p.waitForTimeout(400);
+  p.once('dialog', d => d.dismiss()); await p.click('[data-a="clear"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 1, 'cancelled clear keeps the writing');
+  p.once('dialog', d => d.accept()); await p.click('[data-a="clear"]'); await p.waitForTimeout(100); assert.equal(await strokes(), 0, 'clear');
 
-  /* ---------- 6 · analysing on-screen writing uses the real recognition pipeline ---------- */
+  /* ---------- 6 · reading on-screen writing with the real recognition pipeline ---------- */
   // simulate a writer: the three sentences rendered in a handwriting-style font, traced into short pen strokes
-  await p.evaluate(async () => {
-    const lines = ERLY_HAND.PROMPTS.en[0], pd = ERLY.handwriting.pad(), W = pd.w, H = pd.h;
+  const traced = await p.evaluate(async () => {
+    const lines = ERLY_HAND.PROMPTS.en[0], S = ERLY.handStudio._surface(), W = S.W, H = 360;
     const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
-    g.fillStyle = '#000'; g.font = '34px Caveat, cursive'; await document.fonts.ready;
-    lines.forEach((l, i) => g.fillText(l, 70, 52 + i * 64));
-    const d = g.getImageData(0, 0, W, H).data, strokes = [];
-    for (let y = 0; y < H; y += 2) { let run = null; for (let x = 0; x <= W; x++) { const on = x < W && d[(y * W + x) * 4 + 3] > 100; if (on && !run) run = x; if (!on && run !== null) { strokes.push({ id: 1, tool: 'pen', ink: 'auto', size: 2.2, pts: [[run / W, y / W, -1, 0], [x / W, y / W, -1, 16]] }); run = null; } } }
-    pd.strokes = strokes; pd.render(); document.querySelector('[data-a="analysepad"]').disabled = false;
+    g.fillStyle = '#000'; g.font = '52px "Comic Sans MS", cursive'; lines.forEach((l, i) => g.fillText(l, 60, 80 + i * 100));
+    const d = g.getImageData(0, 0, W, H).data, out = [];
+    for (let y = 0; y < H; y += 3) { let run = null; for (let x = 0; x <= W; x++) { const on = x < W && d[(y * W + x) * 4 + 3] > 100; if (on && run === null) run = x; if (!on && run !== null) { out.push({ pts: [[run, y + 40, 0, 0], [x, y + 40, 0, 16]], size: 2.6, ink: 'precision', color: '#1c1b19', pressure: false }); run = null; } } }
+    S.load({ W, H: S.H, strokes: out }); return out.length;
   });
-  await p.click('[data-a="analysepad"]');
-  await p.waitForSelector('.hw2-result', { timeout: 120000 });
-  const res = await p.textContent('.hw2-result');
-  assert.match(res, /writing area/, 'result describes the writing area, not a photo');
-  assert.match(res, /recognised|difficult|conclusive/);
+  assert.ok(traced > 200, 'traced strokes ' + traced);
+  const ocr = {};
+  for (const eng of ['tesseract', 'trocr']) {
+    if (eng === 'trocr' && process.env.SKIP_MODEL) continue;
+    const r = await p.evaluate(async e => { if (e === 'trocr') await ERLY.handOCR.ENGINES.trocr.load(); const R = await ERLY.handOCR.recognize(ERLY.handStudio._surface().exportImage({}), { lang: 'en', engine: e }); const ref = ERLY_HAND.PROMPTS.en[0].join(' '); const rt = ERLY_HAND.errorRates(ref, R.text, 'en'); return { text: R.text.replace(/\s+/g, ' '), conf: R.conf, cer: +(rt.cer * 100).toFixed(1), wer: +(rt.wer * 100).toFixed(1), ms: R.ms }; }, eng);
+    ocr[eng] = r; console.log('on-screen strokes →', eng, JSON.stringify(r));
+  }
+  assert.ok(ocr.tesseract && ocr.tesseract.cer < 60, 'the clean export of on-screen strokes is readable by the quick reader');
+  // the app path: Read it back shows the software's reading with its own confidence, then can be corrected
+  await p.evaluate(() => { ERLY.handStudio.state().engine = 'tesseract'; });
+  await p.click('[data-act="readback"]'); await p.waitForSelector('.hx-read', { timeout: 120000 });
+  const res = await p.textContent('.hx-out');
+  assert.match(res, /What the software read/); assert.match(res, /its mistakes are not your mistakes/);
   assert.doesNotMatch(res, /dyslex|dysgraph|disorder|messy|poor handwriting/i);
-  const found = await p.locator('.hw2-words .is-found').count();
-  console.log('on-screen writing: words recognised', found, '/', await p.locator('.hw2-words span').count());
-  if (SHOT) await p.screenshot({ path: SHOT + '/studio-result.png' });
-  await p.click('.hw2 [data-a="discard"]'); await p.waitForTimeout(300);
-  assert.equal(await strokes(), 0, 'discard clears the writing'); assert.equal(await p.evaluate(() => ERLY.handwriting.state().ocr), null);
-  assert.doesNotMatch(await p.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage)), /strokes|"pts"|data:image/, 'nothing about the writing is stored');
+  assert.doesNotMatch(await p.evaluate(() => JSON.stringify(localStorage) + JSON.stringify(sessionStorage)), /strokes|"pts"|data:image/, 'nothing about the writing is stored without consent');
   await c.close();
 
   /* ---------- 7 · phone ---------- */
   c = await ctxFor({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, theme: 'dark' }); p = await c.newPage(); watch(p);
   await p.goto(BASE + 'student.html'); await p.waitForTimeout(700);
   await p.evaluate(() => document.querySelector('#games [data-hand-open]').scrollIntoView({ block: 'center' }));
-  await p.tap('#games [data-hand-open]'); await p.waitForURL(/handwriting\.html/, { timeout: 5000 }); await p.waitForSelector('#hwPad canvas');
+  await p.tap('#games [data-hand-open]'); await p.waitForURL(/handwriting\.html/, { timeout: 5000 }); await p.waitForSelector('.hxs__vp canvas');
   await p.waitForFunction(() => !document.querySelector('canvas.ink-fx'), null, { timeout: 4000 });
   assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'phone: no sideways scroll');
-  const pb = await p.locator('#hwPad').boundingBox(); assert.ok(pb.width > 330 && pb.height > 280, 'phone: a large writing area');
+  const pb = await p.locator('.hxs__vp').boundingBox(); assert.ok(pb.width > 330 && pb.height > 280, 'phone: a large writing area');
   if (SHOT) await p.screenshot({ path: SHOT + '/studio-phone-dark.png' });
   await c.close();
 

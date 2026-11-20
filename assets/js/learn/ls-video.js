@@ -98,7 +98,7 @@
     vid.addEventListener('play', () => { playBtn.textContent = '❚❚'; playBtn.setAttribute('aria-label', T('Pause', 'إيقاف')); st.useFormat('video'); st.touch('video', v.id, v.title); });
     vid.addEventListener('pause', () => { playBtn.textContent = '▶'; playBtn.setAttribute('aria-label', T('Play', 'تشغيل')); vp.t = vid.currentTime; st.save(); });
     vid.addEventListener('timeupdate', () => {
-      const t = vid.currentTime; seek.value = t; time.textContent = `${fmt(t)} / ${fmt(vid.duration || M.duration)}`;
+      const t = vid.currentTime; seek.value = t; if (LS.engine && (M.chapters || []).length) { const k = chapterAt(t); const nx = M.chapters[k + 1]; const end = nx ? nx.t : (vid.duration || M.duration); if (t >= end - 0.6 && !(vid._seg || (vid._seg = {}))[k]) { vid._seg[k] = 1; LS.engine.event('video', { id: v.id, chapter: k, mode: 'visual', label: 'Watched: ' + (M.chapters[k].title || 'chapter ' + (k + 1)) }); } } time.textContent = `${fmt(t)} / ${fmt(vid.duration || M.duration)}`;
       if (loopEnd != null && t >= loopEnd) { vid.pause(); loopEnd = null; LS.announce(T('End of the section.', 'نهاية القسم.')); }
       const i = M.cues.findIndex(c => t >= c.start && t < c.end);
       if (i !== lastCue) { lastCue = i; trl.querySelectorAll('.is-now').forEach(x => x.classList.remove('is-now')); if (i >= 0) { const b = trl.querySelector(`[data-cue="${i}"]`); b.parentElement.classList.add('is-now'); if (!trl.matches(':hover')) { const box = trl.closest('.ls-tabp'); const top = b.offsetTop - box.clientHeight / 3; box.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); } } }

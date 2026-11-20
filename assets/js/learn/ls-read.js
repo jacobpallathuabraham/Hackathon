@@ -58,6 +58,7 @@
   }
   LS.openReading = openReading; LS.openGuide = openGuide;
   // when the reader closes after being opened from a link (#/read/doc/…), return to the shelf without re-opening it
+  if (R() && R().on) R().on(ev => { if (ev.type === 'open' && LS.engine) LS.engine.event('read', { doc: ev.doc, label: 'Opened a reading' }); });
   if (R() && R().on) R().on(ev => { if (ev.type === 'close' && /^read\/(doc|guide)\//.test(LS.current().join('/'))) history.replaceState(null, '', '#/read'); });
 
   /* ---------- the Reading & Resources page ---------- */
