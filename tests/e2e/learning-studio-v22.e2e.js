@@ -169,7 +169,7 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
   });
 
   await t('subject world: ambient canvas, experiences and objectives; worlds pause offscreen', async () => {
-    await go('subject/physics', 1200); assert.ok(await p.isVisible('.at-world--hero')); assert.ok(await p.locator('.at-xlist li').count() >= 4); assert.ok(await p.locator('.at-objs li').count() >= 4);
+    await go('subject/physics', 1200); assert.ok(await p.isVisible('.at-world--hero')); assert.ok(await p.locator('.at-xlist li').count() >= 4); assert.ok(await p.locator('.at-trail__list li').count() >= 3); // v23: objectives live on each topic hub; the world page lists topics as a trail
     assert.ok(await p.evaluate(() => LS.worlds && LS.worlds.count() >= 1));
   });
 

@@ -41,15 +41,16 @@
     const ses = { pred: null, step: 'hook', obs: null };
     LS.engine.event('experience', { id: x.id, subject: x.subject, objs: x.objs, mode: 'visual', label: x.title });
     st.touch('exp', x.id, x.title); st.useFormat('visual');
-    view.innerHTML = `<div class="at-x at-subj-${x.subject}"><header class="at-x__head"><canvas class="at-world at-world--band" data-world="${x.subject}" aria-hidden="true"></canvas><p class="at-k"><a href="#/subject/${x.subject}">${T(S.name || '', S.ar || '')}</a> · ${esc(LS.expKinds[x.kind])} · ${x.mins} min</p><h1>${esc(x.title)}</h1><p class="at-x__hook">${esc(x.hook)}</p></header>
+    view.innerHTML = `<div class="at-x at-subj-${x.subject}${def.wide ? ' at-x--wide' : ''}"><header class="at-x__head"><canvas class="at-world at-world--band" style="view-transition-name: world-hero" data-vt-keep data-world="${x.subject}" aria-hidden="true"></canvas><p class="at-k"><a href="#/subject/${x.subject}">${T(S.name || '', S.ar || '')}</a> · ${esc(LS.expKinds[x.kind])} · ${x.mins} min</p><h1>${esc(x.title)}</h1><p class="at-x__hook">${esc(x.hook)}</p><div class="at-wh__tools"><button type="button" class="at-glassbtn" data-focus-toggle aria-pressed="false">${T('Focus', 'تركيز')}</button></div></header>
       <nav class="at-x__steps" aria-label="${T('Steps', 'الخطوات')}">${STEPS.map(([k, en, ar], i) => `<button type="button" data-step="${k}" ${k === 'hook' ? 'aria-current="step"' : ''}><span>${i + 1}</span>${T(en, ar)}</button>`).join('')}</nav>
       <div class="at-x__grid"><section class="at-x__model" aria-label="${T('The model', 'النموذج')}"><div class="at-x__stage"></div><div class="at-x__tools" role="group" aria-label="${T('Model controls', 'التحكم')}"><button type="button" class="ls-btn ls-btn--sm" data-x="pause">${T('Pause', 'إيقاف')}</button><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-x="reset">${T('Reset', 'إعادة')}</button><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-x="noor">${LS.icon('noor')} ${T('Ask Noor about this', 'اسأل نور')}</button></div><p class="at-x__simp"><b>${T('Simplified:', 'تبسيط:')}</b> ${esc(x.simplified)}</p></section>
         <section class="at-x__panel" tabindex="-1" aria-live="polite"></section></div></div>`;
     const stage = view.querySelector('.at-x__stage'), panel = view.querySelector('.at-x__panel');
-    const M = def.build(stage, { reduced: reduced(), looper, canvas, css, slider, fmt, onChange: () => { if (ses.step === 'observe') show('observe'); } });
+    let syncPause = () => {};
+    const M = def.build(stage, { reduced: reduced(), looper, canvas, css, slider, fmt, onChange: () => { syncPause(); if (ses.step === 'observe') show('observe'); } });
     if (LS.paintWorlds) LS.paintWorlds(view);
     const pauseBtn = view.querySelector('[data-x="pause"]');
-    const syncPause = () => { pauseBtn.textContent = M.running && M.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); pauseBtn.disabled = !M.running; };
+    syncPause = () => { const t = M.running && M.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); if (pauseBtn.textContent !== t) pauseBtn.textContent = t; pauseBtn.disabled = !M.running; };
     syncPause();
 
     function show(k) {

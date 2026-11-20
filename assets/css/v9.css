@@ -35,6 +35,7 @@ html.vt-lang::view-transition-new(root) { animation: tfxLangIn .62s cubic-bezier
 /* v14: every control eases — buttons, tabs, chips, cards and links (lowest specificity, so components keep their own motion) */
 :where(button, [role="button"], [role="tab"], .chip, .cmp__mini, .gm-card, .lg-tile, .hw-cta, .gp-btn, .gp-sent, .hw2-btn, .hw2-ghost, .uni-go, .uni-portal, .dcard) { transition: transform .22s cubic-bezier(.2, .8, .2, 1), translate .22s cubic-bezier(.2, .8, .2, 1), scale .12s ease, box-shadow .25s ease, background-color .22s ease, border-color .22s ease, color .22s ease, opacity .22s ease; -webkit-tap-highlight-color: transparent; }
 :where(button, [role="button"], [role="tab"], .chip, .cmp__mini, .gp-btn, .gp-sent, .hw2-btn, .hw2-ghost):where(:not(:disabled):active) { scale: .97; transition-duration: .08s; }
+svg [role="button"]:active, svg [role="tab"]:active { scale: none; } /* in SVG, scale pivots on the canvas origin and moves the target away from the pointer */
 :where(.gm-card, .lg-tile, .hw-cta, .uni-portal):where(:active) { scale: .985; transition-duration: .1s; }
 :where(a) { transition: color .2s ease, opacity .2s ease, text-decoration-color .2s ease; }
 html { scroll-behavior: smooth; }

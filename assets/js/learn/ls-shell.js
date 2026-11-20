@@ -40,8 +40,8 @@
   // the five places of the Studio (progressive disclosure: each has a few sub-places), and their routes
   const ENVS = [
     { id: 'home', en: 'Home', ar: 'الرئيسية', icon: 'home', routes: ['home'], subs: [] },
-    { id: 'explore', en: 'Explore', ar: 'استكشف', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover'],
-      subs: [['explore', 'Subjects', 'المواد', ['explore', 'subject', 'world']], ['explore/topics', 'Topics', 'المواضيع', ['explore/topics']], ['discover', 'Discover', 'اكتشف', ['discover', 'exp']]] },
+    { id: 'explore', en: 'Explore', ar: 'استكشف', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover', 'topic'],
+      subs: [['explore', 'Subjects', 'المواد', ['explore', 'subject', 'world', 'topic']], ['explore/topics', 'Topics', 'المواضيع', ['explore/topics']], ['discover', 'Discover', 'اكتشف', ['discover', 'exp']]] },
     { id: 'learn', en: 'Learn', ar: 'تعلّم', icon: 'learn', routes: ['lessons', 'lesson', 'read', 'library', 'video', 'lab', 'learn'],
       subs: [['lessons', 'Lessons', 'الدروس', ['lessons', 'lesson', 'learn']], ['read', 'Reading', 'القراءة', ['read', 'library']], ['video', 'Video', 'الفيديو', ['video']], ['lab', 'Visual Lab', 'المختبر المرئي', ['lab']]] },
     { id: 'practise', en: 'Practise', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes', 'revise'],

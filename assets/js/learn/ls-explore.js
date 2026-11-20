@@ -15,12 +15,14 @@
     journey: 'Cinematic journey', build: 'Build & break', whatif: 'What-if lab', zoom: 'Zoom through knowledge', conversation: 'Conversation', builder: 'Builder'
   };
   const X = [
+    { id: 'newton-lab', subject: 'physics', kind: 'experiment', title: 'Newton’s laws lab', hook: 'Push a crate, change its mass and the floor beneath it, crash two carts — and watch the forces.', mins: 12, objs: ['phys-newton:0', 'phys-newton:1', 'phys-newton:2'], lesson: 'phys-newton', simplified: 'One dimension; a rigid crate; constant friction coefficients (typical values, real surfaces vary); no air resistance; g = 9.8 m/s².' },
     { id: 'motion-graphs', subject: 'physics', kind: 'experiment', title: 'Motion graphs lab', hook: 'A car speeds up steadily. What shape is its distance–time graph?', mins: 8, objs: ['phys-motion:1', 'phys-motion:2', 'phys-motion:3'], lesson: 'phys-motion', simplified: 'One dimension, constant acceleration, no friction or air resistance.' },
     { id: 'orbit-whatif', subject: 'physics', kind: 'whatif', title: 'What if the Sun were heavier?', hook: 'Double the Sun’s mass and keep the planet’s speed. What happens to its orbit?', mins: 6, objs: [], simplified: 'One planet, a Sun that does not move, Newtonian gravity, no other planets. Units are scaled so Earth-like values are 1.' },
     { id: 'circuit-break', subject: 'physics', kind: 'build', title: 'Build & break a circuit', hook: 'Three bulbs, one battery. If one bulb breaks, do the others go out?', mins: 6, objs: ['phys-circuits:2'], lesson: 'phys-circuits', simplified: 'Ideal 12 V battery and wires; identical 6 Ω bulbs whose resistance does not change as they heat up.' },
     { id: 'waves', subject: 'physics', kind: 'experiment', title: 'When two waves meet', hook: 'Two waves meet. When do they cancel out completely?', mins: 4, objs: [], simplified: 'Two ideal sine waves of equal amplitude on a line.' },
     { id: 'particles', subject: 'chemistry', kind: 'simulation', title: 'Inside a substance', hook: 'Why does heating a solid make it melt — what are the particles actually doing?', mins: 7, objs: [], simplified: 'A 2-D model of 64 identical particles with a simple attraction law (Lennard-Jones). Temperatures are in model units, not °C.' },
     { id: 'line-builder', subject: 'maths', kind: 'model', title: 'Line builder', hook: 'What do m and c actually do to a line?', mins: 6, objs: ['math-linear:0', 'math-linear:1', 'math-linear:2'], lesson: 'math-linear', simplified: 'Exact: the graph is computed from y = mx + c.' },
+    { id: 'leaf-dive', subject: 'biology', kind: 'zoom', title: 'Into the leaf', hook: 'Dive from a meadow into a single chloroplast — a million-times zoom — and find where sunlight becomes food.', mins: 7, objs: ['bio-photo:1'], lesson: 'bio-photo', simplified: 'Drawn diagrams, not to scale within a level; scale bars rounded to a useful power of ten.' },
     { id: 'heart-journey', subject: 'biology', kind: 'journey', title: 'Journey of a red blood cell', hook: 'Follow one red blood cell all the way round the body and back.', mins: 6, objs: ['bio-heart:1', 'bio-heart:0'], lesson: 'bio-heart', simplified: 'Schematic heart; valves and vessels simplified; not to scale.' },
     { id: 'cell-explorer', subject: 'biology', kind: 'explore', title: 'Inside a plant cell', hook: 'What is inside a leaf cell — and which parts would an animal cell not have?', mins: 6, objs: [], simplified: 'A labelled diagram of a typical leaf cell; real cells vary in shape and number of organelles.' },
     { id: 'zoom', subject: 'biology', kind: 'zoom', title: 'From the universe to a chloroplast', hook: 'How many times bigger is the observable universe than a chloroplast?', mins: 5, objs: [], simplified: 'Sizes are rounded to the nearest useful power of ten.' },
@@ -38,8 +40,8 @@
   /* ---------- lazy loading of the heavy parts ---------- */
   const once = {};
   const script = src => once[src] || (once[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
-  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=22').then(() => script('assets/js/learn/ls-exp2.js?v=22b'));
-  LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=22');
+  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=23b').then(() => Promise.all([script('assets/js/learn/ls-exp2.js?v=22b'), script('assets/js/learn/ls-exp-newton.js?v=23b'), script('assets/js/learn/ls-exp-bio.js?v=23d')]));
+  LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=23');
 
   /* ---------- the subject worlds (Explore → Subjects) ---------- */
   const subj = () => LS.subjectsList || [];
@@ -56,7 +58,7 @@
   }
   function paintWorlds(view) {
     const cs = view.querySelectorAll('canvas[data-world]'); if (!cs.length) return;
-    LS.needWorlds().then(() => { if (view.isConnected && LS.worlds) cs.forEach(c => LS.worlds.mount(c, c.dataset.world, { still: c.classList.contains('at-world--card') })); }).catch(() => { /* the cards still work without atmosphere */ });
+    LS.needWorlds().then(() => { if (view.isConnected && LS.worlds) cs.forEach(c => LS.worlds.mount(c, c.dataset.world, { still: c.classList.contains('at-world--card'), hero: c.classList.contains('at-world--hero') || c.classList.contains('at-world--portal') })); }).catch(() => { /* the cards still work without atmosphere */ });
   }
   LS.paintWorlds = paintWorlds;
 
@@ -74,7 +76,7 @@
   LS.objRow = objRow;
 
   /* ---------- Discover: the curiosity portal, signature experiences, everything else by kind ---------- */
-  const PORTAL = ['zoom', 'orbit-whatif', 'mystery-lungs', 'seasons', 'particles', 'cafe', 'city', 'heart-journey', 'circuit-break'];
+  const PORTAL = ['newton-lab', 'zoom', 'orbit-whatif', 'mystery-lungs', 'seasons', 'particles', 'cafe', 'city', 'heart-journey', 'circuit-break'];
   LS.portalPick = () => { const dayN = Math.floor(Date.now() / 864e5); return X.find(x => x.id === PORTAL[dayN % PORTAL.length]); };
   function discover(view) {
     const p = LS.portalPick(), seen = new Set((st.data().events || []).filter(e => e.t === 'experience').map(e => e.id));
