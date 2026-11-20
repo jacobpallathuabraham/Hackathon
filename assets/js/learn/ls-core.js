@@ -22,7 +22,7 @@
 
   const blank = () => ({ v: VERSION, consent: null, profile: { explain: [], formats: [], pace: '', goals: [], helpWith: [], prefer: '', updated: 0 },
     settings: { readAloud: false, chunk: false, glossary: true, density: 'comfortable', insights: true },
-    lessons: {}, attempts: [], mistakes: {}, cards: {}, notes: {}, folders: ['General'], recent: [], bookmarks: [], video: {}, dismissed: {}, formatUse: {}, paths: {}, created: Date.now() });
+    lessons: {}, attempts: [], mistakes: {}, cards: {}, notes: {}, folders: ['General'], recent: [], bookmarks: [], video: {}, dismissed: {}, formatUse: {}, paths: {}, events: [], plan: null, milestones: {}, archive: [], created: Date.now() });
 
   let real = null, demo = null, mode = 'real';
   function load() {
@@ -54,6 +54,7 @@
     recordAttempt(a) {
       const d = D(); const prev = d.attempts.filter(x => x.qid === a.qid).length;
       const row = Object.assign({ at: Date.now(), attemptNo: prev + 1 }, a);
+      if (!row.obj && LS.engine) { const k = LS.engine.objOf(a.q || { id: a.qid, lesson: a.lesson, objective: a.objective }); if (k) row.obj = k; } delete row.q;
       d.attempts.push(row); if (d.attempts.length > 3000) d.attempts = d.attempts.slice(-3000);
       if (row.correct === false) {
         const m = d.mistakes[a.qid] || { qid: a.qid, at: row.at, first: row.answerText, topic: a.topic, subject: a.subject, lesson: a.lesson, prompt: a.prompt, type: a.type, tag: a.errorTag || null, tries: 0, laterCorrect: false, revisited: 0 };

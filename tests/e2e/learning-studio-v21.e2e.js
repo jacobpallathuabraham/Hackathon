@@ -24,7 +24,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     await p.evaluate(() => LS.needLab()); assert.ok(await p.evaluate(() => ERLY_LAB.engines.length >= 170), 'loads on demand');
   });
   await check('home: one spine with nine places, a verb sentence, the atlas and an honest empty shelf', async () => {
-    assert.equal(await p.locator('#atTabs a[data-env]').count(), 9);
+    assert.equal(await p.locator('#atTabs a[data-env]').count(), 5); // v22: five places, each with its own sub-places
     assert.equal(await p.getAttribute('#atTabs a[data-env="home"]', 'aria-current'), 'page');
     assert.equal(await p.locator('.at-verbs a').count(), 8);
     assert.equal(await p.locator('#atAtlas > li').count(), 7);

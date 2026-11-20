@@ -180,7 +180,7 @@
         if ((q.type === 'mcq' || q.type === 'graph') && q.why && q.why[r]) { why = q.why[r]; tag = q.tags && q.tags[r]; }
         if (q.type === 'numeric' && q.wrong) { const v = G.parseNum(r); const w = q.wrong.find(x => G.within(v, x.value, x.tol || Math.abs(x.value) * 0.02)); if (w) { why = w.why; tag = w.tag; } }
       }
-      const rec = o.record !== false ? LS.store.recordAttempt({ qid: q.id, type: q.type, topic: q.topic || o.topic, subject: q.subject || o.subject, lesson: q.lesson || o.lesson, from: o.from, correct: res.correct, score: res.score, answerText: String(txt).slice(0, 400), prompt: LS.plain(q.prompt).slice(0, 200), errorTag: tag || null, textHeavy: !!q.ctx, hintsUsed: shown }) : null;
+      const rec = o.record !== false ? LS.store.recordAttempt({ qid: q.id, type: q.type, topic: q.topic || o.topic, subject: q.subject || o.subject, lesson: q.lesson || o.lesson, from: o.from, correct: res.correct, score: res.score, answerText: String(txt).slice(0, 400), prompt: LS.plain(q.prompt).slice(0, 200), errorTag: tag || null, textHeavy: !!q.ctx, hintsUsed: shown, q }) : null;
       if (o.feedback === 'later' && !o.reveal) { fb.innerHTML = `<p class="ls-fb ls-fb--saved">Answer saved. Feedback comes at the end.</p>`; }
       else if (res.correct === null) {
         fb.innerHTML = `<div class="ls-fb ls-fb--self"><p><b>Compare with a model answer:</b></p><blockquote>${LS.md(q.model)}</blockquote><p>Key ideas: ${q.ideas.map((alts, i) => `<span class="ls-idea ${res.detail.ideas[i] ? 'is-hit' : ''}">${res.detail.ideas[i] ? '✓' : '○'} ${esc(alts[0])}</span>`).join(' ')}</p><p class="ls-muted">The ticks only show which key words appear in your answer — they are not a mark. How does your answer compare?</p>
@@ -209,7 +209,7 @@
         const bad = comp.invalid && comp.invalid(r); if (bad) { fb.innerHTML = `<p class="ls-fb ls-fb--warn" role="alert">${esc(bad)}</p>`; return; }
         finish(G.check(q, r), r);
       }
-      if (a === 'hint') { if (shown < hints.length) { const h = el.querySelector('.ls-act__hint'); h.hidden = false; h.innerHTML += `<p><b>Hint ${shown + 1}:</b> ${IL(hints[shown])}</p>`; shown++; b.textContent = shown < hints.length ? `Another hint (${hints.length - shown})` : 'No more hints'; b.disabled = shown >= hints.length; } }
+      if (a === 'hint') { if (shown < hints.length) { if (LS.engine) LS.engine.event('hint', { obj: LS.engine.objOf(q), qid: q.id, n: shown + 1, label: 'Hint used' }); const h = el.querySelector('.ls-act__hint'); h.hidden = false; h.innerHTML += `<p><b>Hint ${shown + 1}:</b> ${IL(hints[shown])}</p>`; shown++; b.textContent = shown < hints.length ? `Another hint (${hints.length - shown})` : 'No more hints'; b.disabled = shown >= hints.length; } }
       if (a === 'retry') api.reset();
       if (a === 'whynoor' && el._last) LS.noor.ask('mistake', { q, answer: el._last.txt });
       if (a === 'note' && el._last) LS.notes.quick({ title: 'Question: ' + LS.plain(q.prompt).slice(0, 70), html: `<p><b>Question.</b> ${IL(q.prompt)}</p><p><b>My answer.</b> ${esc(el._last.txt)}</p><p><b>Explanation.</b> ${IL(q.explain)}</p>`, src: { type: 'question', id: q.id, title: o.lessonTitle || q.topic || 'Practice', where: q.lesson ? `#/lesson/${q.lesson}` : '#/practice' } });

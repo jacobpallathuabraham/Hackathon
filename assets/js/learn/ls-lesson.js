@@ -47,11 +47,15 @@
       case 'video': { const V = LS.video && LS.video.byId(b.id); if (!V) return `<p class="ls-muted">${T('Video not available.', 'الفيديو غير متاح.')}</p>`; return `<section class="ls-b ls-vidcard" aria-label="${T('Video', 'فيديو')}"><div class="ls-vidcard__host" data-vid="${esc(b.id)}"></div>${b.objective ? `<p class="ls-muted">${IL(b.objective)}</p>` : ''}<a class="ls-btn ls-btn--sm ls-btn--quiet" href="#/video/${esc(b.id)}">${T('Open in Video Studio (transcript, chapters, notes)', 'افتح في استوديو الفيديو')}</a></section>`; }
       case 'audio': return `<div class="ls-b ls-audio"><button type="button" class="ls-btn" data-audio="${esc(b.topic)}">🎧 ${T('Listen to an audio lesson on', 'درس صوتي عن')} ${esc(b.topic)}</button></div>`;
       case 'activity': return `<div class="ls-b ls-actslot" data-q="${esc(b.q.id)}"></div>`;
+      case 'exp': { const X = LS.expMeta && LS.expMeta(b.id); return X ? `<section class="ls-b at-expcard at-subj-${esc(X.subject)}"><span class="ls-tag">${T(X.kind, X.kind)}</span><p><b>${esc(X.title)}</b> — ${IL(b.md || X.hook)}</p><a class="ls-btn" href="#/exp/${esc(X.id)}">${T('Open the experience', 'افتح التجربة')} →</a></section>` : ''; }
       case 'reading': return `<div class="ls-b ls-read"><button type="button" class="ls-btn" data-reading="${esc(b.doc)}">📖 ${T('Open the reading', 'افتح القراءة')}</button></div>`;
     }
     return '';
   }
 
+  // objectives taught in a section = the objectives of its questions
+  function secObjs(L, secId) { if (!LS.engine) return []; return [...new Set(LS.schema.questionsOf(L).filter(q => q.section === secId).map(q => LS.engine.objOf(q)).filter(Boolean))]; }
+  LS.secObjs = secObjs;
   function lessonPage(view, id, secId) {
     const L = LS.lesson(id);
     if (!L) { view.innerHTML = `<section class="ls-empty"><h1>${T('Lesson not found', 'الدرس غير موجود')}</h1><p>${T('It may have been renamed or removed.', 'ربما أعيدت تسميته.')}</p><a class="ls-btn" href="#/lessons">${T('All lessons', 'كل الدروس')}</a></section>`; return; }
@@ -60,7 +64,7 @@
     if (!p) { st.setLesson(L.id, { secIx: 0 }); p = st.lessonProgress(L.id); st.useFormat('text'); }
     let ix = secId === 'summary' ? L.sections.length : Math.max(0, L.sections.findIndex(s => s.id === secId));
     if (!secId) ix = Math.min(p.secIx || 0, L.sections.length);
-    st.setLesson(L.id, { secIx: ix });
+    st.setLesson(L.id, { secIx: ix, maxIx: Math.max(ix, (st.lessonProgress(L.id) || {}).maxIx || 0) });
     st.touch('lesson', L.id, L.title, { sec: ix });
     const done = p.done || {}, nDone = L.sections.filter(s => done[s.id]).length;
     const sec = L.sections[ix];
@@ -87,9 +91,9 @@
     const root = view.querySelector('.ls-lesson');
     root.addEventListener('click', e => {
       const t = e.target;
-      const nx = t.closest('[data-next]'); if (nx) { const d = Object.assign({}, st.lessonProgress(L.id).done); d[sec.id] = Date.now(); const allDone = L.sections.every(s => d[s.id]); st.setLesson(L.id, { done: d, secIx: ix + 1, completed: allDone ? (st.lessonProgress(L.id).completed || Date.now()) : st.lessonProgress(L.id).completed }); LS.go(`lesson/${L.id}/${ix + 1 < L.sections.length ? L.sections[ix + 1].id : 'summary'}`); return; }
-      const stp = t.closest('[data-step]'); if (stp) { const ex = stp.closest('.ls-ex'), hid = ex.querySelector('.ls-ex__steps li[hidden]'); if (hid) { hid.hidden = false; LS.announce(hid.textContent); } else { ex.querySelector('.ls-ex__a').hidden = false; stp.hidden = true; LS.announce(ex.querySelector('.ls-ex__a').textContent); } if (!ex.querySelector('.ls-ex__steps li[hidden]') && !ex.querySelector('.ls-ex__a').hidden) stp.hidden = true; else if (!ex.querySelector('.ls-ex__steps li[hidden]')) stp.textContent = T('Show the answer', 'أظهر الجواب'); return; }
-      const mdl = t.closest('[data-model]') || t.closest('[data-relive]'); if (mdl) { const h = mdl.closest('.ls-labcard__host'); let prm = {}; try { prm = JSON.parse(h.dataset.params || '{}'); } catch (er) { prm = {}; } LS.mountModel(h, h.dataset.engine, prm, { title: L.title }); return; }
+      const nx = t.closest('[data-next]'); if (nx) { const d = Object.assign({}, st.lessonProgress(L.id).done); d[sec.id] = Date.now(); if (LS.engine) LS.engine.event('section-done', { lesson: L.id, sec: sec.id, objs: secObjs(L, sec.id), label: 'Finished “' + sec.title + '”' }); const allDone = L.sections.every(s => d[s.id]); st.setLesson(L.id, { done: d, secIx: ix + 1, completed: allDone ? (st.lessonProgress(L.id).completed || Date.now()) : st.lessonProgress(L.id).completed }); LS.go(`lesson/${L.id}/${ix + 1 < L.sections.length ? L.sections[ix + 1].id : 'summary'}`); return; }
+      const stp = t.closest('[data-step]'); if (stp) { if (LS.engine && !stp.dataset.logged) { stp.dataset.logged = 1; LS.engine.event('explain', { mode: 'worked', lesson: L.id, objs: sec ? secObjs(L, sec.id) : [], label: 'Worked example' }); } const ex = stp.closest('.ls-ex'), hid = ex.querySelector('.ls-ex__steps li[hidden]'); if (hid) { hid.hidden = false; LS.announce(hid.textContent); } else { ex.querySelector('.ls-ex__a').hidden = false; stp.hidden = true; LS.announce(ex.querySelector('.ls-ex__a').textContent); } if (!ex.querySelector('.ls-ex__steps li[hidden]') && !ex.querySelector('.ls-ex__a').hidden) stp.hidden = true; else if (!ex.querySelector('.ls-ex__steps li[hidden]')) stp.textContent = T('Show the answer', 'أظهر الجواب'); return; }
+      const mdl = t.closest('[data-model]') || t.closest('[data-relive]'); if (mdl) { if (LS.engine) LS.engine.event('model', { mode: 'visual', lesson: L.id, objs: sec ? secObjs(L, sec.id) : [], label: 'Interactive model' }); const h = mdl.closest('.ls-labcard__host'); let prm = {}; try { prm = JSON.parse(h.dataset.params || '{}'); } catch (er) { prm = {}; } LS.mountModel(h, h.dataset.engine, prm, { title: L.title }); return; }
       const bm = t.closest('[data-lbm]'); if (bm) { const where = bm.dataset.lbm, title = view.querySelector('h1') ? view.querySelector('h1').textContent : ''; LS.store.update(d => { const i = d.bookmarks.findIndex(b => b.where === where); if (i >= 0) d.bookmarks.splice(i, 1); else d.bookmarks.unshift({ where, label: title, title: L.title, at: Date.now(), type: 'lesson' }); }); const on = LS.store.data().bookmarks.some(b => b.where === where); bm.setAttribute('aria-pressed', String(on)); bm.textContent = on ? T('★ Bookmarked', '★ محفوظ') : T('☆ Bookmark this section', '☆ احفظ هذا القسم'); LS.announce(on ? T('Section bookmarked — find it in Notebook → Bookmarks.', 'حُفظ القسم.') : T('Bookmark removed.', 'أُزيلت الإشارة.')); return; }
       const asl = t.closest('[data-asklab]'); if (asl) { LS.noor.ask('model', { engine: asl.dataset.asklab, lesson: L }); return; }
       const am = t.closest('[data-askmath]'); if (am) { LS.noor.ask('steps', { text: LS.plain(am.dataset.askmath), lesson: L }); return; }

@@ -158,7 +158,9 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await page.click('#cmpClose'); await page.waitForTimeout(300);
   await page.click('#stLibBtn'); await page.waitForTimeout(500); await page.click('.sbook[data-open="psyc101"]'); await page.waitForTimeout(800);
   await select(2, 9); await page.waitForTimeout(500);
-  await page.click('#stSel [data-sa="ask"]'); await page.waitForTimeout(1500);
+  await page.click('#stSel [data-sa="ask"]'); await page.waitForTimeout(200);
+  // v21: "Ask Noor" first offers seven ways to ask; the passage travels with whichever is chosen
+  await page.click('#stSel [data-sq="explain"]'); await page.waitForTimeout(1500);
   assert.match(await page.textContent('#cmpAttach'), /PSYC101/);
   assert.match(await page.evaluate(() => window.__msgs[0].content), /PSYC101_Memory_Chapter6\.pdf[\s\S]*selected this passage/);
   assert.equal(await page.locator('#cmpLog .cmsg--md h5, #cmpLog .cmsg--md h4, #cmpLog .cmsg--md h3').count() >= 1, true, 'markdown heading');

@@ -18,18 +18,24 @@
     cs: '<path d="M22 20 10 32l12 12M42 20l12 12-12 12M36 14 28 50"/>',
     english: '<path d="M14 12h22a12 12 0 0 1 0 24H24v16"/><path d="M24 12v40M40 52h10" opacity=".5"/>',
     geography: '<circle cx="32" cy="32" r="22"/><path d="M10 32h44M32 10c-8 8-8 36 0 44M32 10c8 8 8 36 0 44" opacity=".5"/><path d="M18 18c4 4 10 2 14 6s2 8 6 10 8 0 10 4"/>',
+    history: '<path d="M20 8h24M20 56h24M22 8c0 14 20 16 20 24s-20 10-20 24M42 8c0 14-20 16-20 24s20 10 20 24"/><path d="M27 50h10" opacity=".5"/>',
+    languages: '<path d="M8 14h30a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H22l-8 7v-7H8a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z"/><path d="M46 26h10a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4h-4v6l-7-6h-9a4 4 0 0 1-4-4v-4" opacity=".55"/>',
+    social: '<path d="M6 56h52M10 56V30l10-6v32M24 56V18l12-8v46M40 56V28l14 6v22"/><path d="M15 36h2M15 44h2M29 26h2M29 34h2M29 42h2M46 40h2M46 48h2" opacity=".55"/>',
     more: '<circle cx="20" cy="22" r="8"/><circle cx="44" cy="22" r="8"/><circle cx="32" cy="44" r="8"/><path d="M26 27l4 10M38 27l-4 10M28 22h8" opacity=".5"/>'
   };
   const emblem = (id, cls) => `<svg viewBox="0 0 64 64" aria-hidden="true" class="${cls || ''}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${E[id] || E.more}</svg>`;
   const SUBJECTS = [
-    { id: 'maths', name: 'Mathematics', ar: 'الرياضيات', lesson: /math/i, lab: /^(Maths|Mathematics|Statistics)$/, read: [], vid: /math/i, topics: ['Functions & graphs', 'Calculus', 'Geometry & trigonometry', 'Probability & statistics'], blurb: 'Functions, calculus, geometry and statistics you can move and test.' },
-    { id: 'physics', name: 'Physics', ar: 'الفيزياء', lesson: /physic/i, lab: /^(Physics|Engineering)$/, read: ['mech210'], vid: /physic/i, topics: ['Motion & forces', 'Energy', 'Waves & optics', 'Circuits & fields'], blurb: 'Motion, energy, waves and circuits — change the numbers and watch.' },
-    { id: 'chemistry', name: 'Chemistry', ar: 'الكيمياء', lesson: /chem/i, lab: /^(Chemistry|Chemical engineering)$/, read: [], vid: /chem/i, topics: ['Atoms & the periodic table', 'Bonding & shape', 'Acids & bases', 'Reactions'], blurb: 'Atoms, bonds, shapes and reactions in three dimensions.' },
-    { id: 'biology', name: 'Biology', ar: 'الأحياء', lesson: /bio/i, lab: /^(Biology|Medicine)$/, read: ['biol101'], vid: /bio/i, topics: ['Cells', 'The heart & circulation', 'Genetics & DNA', 'Photosynthesis'], blurb: 'Cells, body systems, genetics and the living world.' },
-    { id: 'cs', name: 'Computer science', ar: 'علوم الحاسوب', lesson: /comput/i, lab: /^(Computer science|Computing)$/, read: ['csci110'], vid: /comput/i, topics: ['Algorithms', 'Data', 'Programming ideas'], blurb: 'Algorithms and how programs think.' },
-    { id: 'english', name: 'English & study', ar: 'الإنجليزية والدراسة', lesson: /english/i, lab: /^English$/, read: [], vid: /study|english/i, topics: ['Reading with focus', 'Note-making', 'Writing clearly'], blurb: 'Reading tools, note-making and writing support for every subject.' },
-    { id: 'geography', name: 'Geography & environment', ar: 'الجغرافيا والبيئة', lesson: /geog|environ/i, lab: /^(Environment|Geography)$/, read: ['envs120'], vid: /geog|environ/i, topics: ['Energy & sustainability', 'Climate'], blurb: 'Energy, climate and the systems we live in.' },
-    { id: 'more', name: 'Economics, psychology & more', ar: 'الاقتصاد وعلم النفس والمزيد', lesson: /econ|psych|business/i, lab: /^(Economics|Commerce)$/, read: ['psyc101', 'busn210'], vid: /econ|psych/i, topics: ['Markets', 'Memory & learning', 'Marketing'], blurb: 'Markets, memory and the social sciences.' }
+    { id: 'maths', name: 'Mathematics', ar: 'الرياضيات', lesson: /math/i, lab: /^(Maths|Mathematics|Statistics)$/, read: [], vid: /math/i, topics: ['Functions & graphs', 'Calculus', 'Geometry & trigonometry', 'Probability & statistics'], blurb: 'Functions, calculus, geometry and statistics you can move and test.', world: 'Geometry' },
+    { id: 'physics', name: 'Physics', ar: 'الفيزياء', lesson: /physic/i, lab: /^(Physics|Engineering)$/, read: ['mech210'], vid: /physic/i, topics: ['Motion & forces', 'Energy', 'Waves & optics', 'Circuits & fields'], blurb: 'Motion, energy, waves and circuits — change the numbers and watch.', world: 'Space & forces' },
+    { id: 'chemistry', name: 'Chemistry', ar: 'الكيمياء', lesson: /chem/i, lab: /^(Chemistry|Chemical engineering)$/, read: [], vid: /chem/i, topics: ['Atoms & the periodic table', 'Bonding & shape', 'Acids & bases', 'Reactions'], blurb: 'Atoms, bonds, shapes and reactions in three dimensions.', world: 'Matter' },
+    { id: 'biology', name: 'Biology', ar: 'الأحياء', lesson: /bio/i, lab: /^(Biology|Medicine)$/, read: ['biol101'], vid: /bio/i, topics: ['Cells', 'The heart & circulation', 'Genetics & DNA', 'Photosynthesis'], blurb: 'Cells, body systems, genetics and the living world.', world: 'Living systems' },
+    { id: 'cs', name: 'Computer science', ar: 'علوم الحاسوب', lesson: /comput/i, lab: /^(Computer science|Computing)$/, read: ['csci110'], vid: /comput/i, topics: ['Algorithms', 'Data', 'Programming ideas'], blurb: 'Algorithms and how programs think.', world: 'Logic' },
+    { id: 'english', name: 'English & study', ar: 'الإنجليزية والدراسة', lesson: /english/i, lab: /^English$/, read: [], vid: /study|english/i, topics: ['Reading with focus', 'Note-making', 'Writing clearly'], blurb: 'Reading tools, note-making and writing support for every subject.', world: 'Story world' },
+    { id: 'geography', name: 'Geography & environment', ar: 'الجغرافيا والبيئة', lesson: /geog|environ/i, lab: /^(Environment|Geography)$/, read: ['envs120'], vid: /geog|environ/i, topics: ['Energy & sustainability', 'Climate'], blurb: 'Energy, climate and the systems we live in.', world: 'Living Earth' },
+    { id: 'history', name: 'History', ar: 'التاريخ', lesson: /histor/i, lab: /^History$/, read: [], vid: /histor/i, topics: ['History of science', 'Evidence & sources', 'Timelines'], blurb: 'How we know what we know: sources, evidence and how ideas changed.', world: 'Time explorer' },
+    { id: 'languages', name: 'Languages', ar: 'اللغات', lesson: /language|french|arabic/i, lab: /^Languages$/, read: [], vid: /language/i, topics: ['Everyday conversation', 'Useful phrases'], blurb: 'Conversations you can practise, out loud if you like.', world: 'Conversation journey' },
+    { id: 'social', name: 'Social science', ar: 'العلوم الاجتماعية', lesson: /social|civic/i, lab: /^Social science$/, read: [], vid: /social/i, topics: ['Cities & resources', 'Trade-offs'], blurb: 'Cities, resources and the choices societies make.', world: 'Civilisation lab' },
+    { id: 'more', name: 'Economics, psychology & more', ar: 'الاقتصاد وعلم النفس والمزيد', lesson: /econ|psych|business/i, lab: /^(Economics|Commerce)$/, read: ['psyc101', 'busn210'], vid: /econ|psych/i, topics: ['Markets', 'Memory & learning', 'Marketing'], blurb: 'Markets, memory and the social sciences.', world: 'Markets & minds' }
   ];
   LS.subjectsList = SUBJECTS.map(s => Object.assign({}, s, { name: s.name }));
   LS.emblem = emblem;
@@ -68,6 +74,7 @@
     return out.slice(0, 5);
   }
   LS.resumables = resumables;
+  LS.waveSVG = (a, b) => waveSVG(a, b); LS.waveText = (a, b) => waveText(a, b);
 
   /* ---------- a small live interactive: two waves meeting (computed on input only — nothing runs idle) ---------- */
   function waveSVG(f2, ph) {
@@ -80,47 +87,39 @@
 
   /* ---------- home ---------- */
   function home(view) {
-    const d = st.data(), consent = st.consent(), now = Date.now(), items = resumables();
-    const day = new Date(); const greet = day.getHours() < 12 ? T('Good morning.', 'صباح الخير.') : day.getHours() < 18 ? T('Good afternoon.', 'مساء الخير.') : T('Good evening.', 'مساء الخير.');
-    const due = Object.values(d.cards).filter(c => (c.due || 0) <= now).length, open = Object.values(d.mistakes).filter(m => !m.laterCorrect).length, notes = Object.keys(d.notes).length;
-    const done = Object.values(d.lessons).filter(p => p.completed).length;
-    const VERBS = [['read', 'read', 'اقرأ', 'Readings, open textbooks, study guides and your own PDFs — in a focused reader.', '#/read'], ['learn', 'learn', 'تعلّم', 'Step-by-step interactive lessons with live models and questions.', '#/lessons'], ['watch', 'watch', 'شاهد', 'Narrated ERLY videos with captions, chapters and a clickable transcript.', '#/video'], ['explore', 'explore', 'استكشف', `${lab().length || 174} interactive models you can change and test.`, '#/lab'], ['practise', 'practise', 'تدرّب', 'Questions that explain every answer, and a notebook of mistakes.', '#/practice'], ['revise', 'revise', 'راجع', 'Flashcards that space themselves out — each says why it is due.', '#/revise'], ['write', 'write notes', 'دوّن', 'A notebook with headings, maths, tags and saved explanations.', '#/notebook'], ['ask', 'ask Noor', 'اسأل نور', 'Select anything and ask Noor to explain, simplify or quiz you.', 'noor']];
-    const disc = discover();
-    view.innerHTML = `<div class="at-home">
+    const d = st.data(), consent = st.consent(), items = resumables(), J = LS.journey;
+    const day = new Date();
+    const VERBS = [['read', 'read', 'اقرأ', 'Readings, open textbooks, study guides and your own PDFs — in a focused reader.', '#/read'], ['learn', 'learn', 'تعلّم', 'Step-by-step interactive lessons with live models and questions.', '#/lessons'], ['watch', 'watch', 'شاهد', 'Narrated ERLY videos with captions, chapters and a clickable transcript.', '#/video'], ['explore', 'explore', 'استكشف', `${lab().length || 174} interactive models you can change and test.`, '#/explore'], ['practise', 'practise', 'تدرّب', 'Questions that explain every answer, and a notebook of mistakes.', '#/practice'], ['revise', 'revise', 'راجع', 'Flashcards that space themselves out — each says why it is due.', '#/revise'], ['write', 'write notes', 'دوّن', 'A notebook with headings, maths, tags and saved explanations.', '#/notebook'], ['ask', 'ask Noor', 'اسأل نور', 'Select anything and ask Noor to explain, simplify or quiz you.', 'noor']];
+    const f = LS.engine ? LS.engine.funnel() : null;
+    const line = !f || (!f.attempted && !Object.keys(d.lessons).length) ? T('Pick anything below. What you actually do is all this page ever shows.', 'اختر أي شيء. هذه الصفحة تعرض ما تفعله فقط.')
+      : [f.demonstrated ? `${f.demonstrated} ${T(f.demonstrated === 1 ? 'objective demonstrated' : 'objectives demonstrated', 'أهداف مُثبتة')}` : '', f.revisit ? `${f.revisit} ${T('worth another look', 'تستحق نظرة أخرى')}` : '', f.review ? `${f.review} ${T('ready for review', 'جاهزة للمراجعة')}` : ''].filter(Boolean).join(' · ') || T('Every answer you give builds the picture.', 'كل إجابة تبني الصورة.');
+    const top = items[0], rest = items.slice(1, 4);
+    view.innerHTML = `<div class="at-home at-home--v22">
       <section class="at-open" aria-labelledby="atHomeH">
         <div>
-          <p class="at-k">${T('Learning Studio', 'استوديو التعلّم')} · ${esc(day.toLocaleDateString(I18N && I18N.lang === 'ar' ? 'ar' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</p>
-          <h1 class="at-open__h" id="atHomeH">${greet} <em>${T('What will you understand today?', 'ماذا ستفهم اليوم؟')}</em></h1>
-          <p class="at-verbs">${T('I’d like to', 'أريد أن')} ${VERBS.map(([k, en, ar, hint, href], i) => `${i ? ' <span class="at-dot" aria-hidden="true">·</span> ' : ' '}<a href="${href === 'noor' ? '#' : href}" ${href === 'noor' ? 'data-open-noor role="button"' : ''} data-hint="${esc(T(hint, hint))}">${T(en, ar)}</a>`).join('')}</p>
+          <p class="at-k">${T('Learning Studio', 'استوديو التعلّم')} · ${esc(day.toLocaleDateString(window.I18N && I18N.lang === 'ar' ? 'ar' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</p>
+          <h1 class="at-open__h" id="atHomeH">${T('Let’s make something', 'لنجعل شيئاً')} <em>${T('click.', 'يتّضح.')}</em></h1>
+          <p class="at-open__line">${esc(line)}</p>
+          <p class="at-verbs">${T('I’d like to', 'أريد أن')} ${VERBS.map(([k, en, ar, hint, href], i) => `${i ? ' <span class="at-dot" aria-hidden="true">·</span> ' : ' '}<a href="${href === 'noor' ? '#' : href}" data-hint="${esc(hint)}"${href === 'noor' ? ' data-open-noor' : ''}>${T(en, ar)}</a>`).join('')}</p>
           <p class="at-verbhint" id="atVerbHint" aria-hidden="true">&nbsp;</p>
         </div>
         <aside class="at-shelf" aria-labelledby="atShelfH">
-          <p class="at-shelf__h"><b id="atShelfH">${T('Pick up where you left off', 'تابع من حيث توقفت')}</b>${items.length ? `<a class="at-more" href="#/progress">${T('Progress', 'التقدّم')}</a>` : ''}</p>
-          ${items.length ? `<ul class="at-resume">${items.map(x => `<li class="${x.cls}">${x.read ? `<button type="button" data-read="${esc(x.read)}">` : `<a href="${x.href}">`}<span class="at-glyph">${icon(x.ic)}</span><span><span class="at-resume__t">${esc(x.title)}</span><span class="at-resume__m">${esc(x.meta)} · ${LS.ago(x.at)}</span>${x.frac ? `<span class="at-resume__bar"><i style="width:${Math.round(x.frac * 100)}%"></i></span>` : ''}</span><span class="at-resume__go">${T('Resume', 'تابع')} →</span>${x.read ? '</button>' : '</a>'}</li>`).join('')}</ul>`
-            : `<p class="at-empty">${T('Nothing to resume yet. Start anything — a reading, a lesson, a video or a model — and it will wait for you here, exactly where you stopped.', 'لا شيء بعد. ابدأ أي شيء وسيبقى هنا حيث توقفت.')}</p><ul class="at-resume">${[LS.lessons[0], LS.lessons.find(L => /math/i.test(L.subject))].filter(Boolean).map(L => `<li class="at-subj-${subjOfLesson(L).id}"><a href="#/lesson/${L.id}"><span class="at-glyph">${icon('learn')}</span><span><span class="at-resume__t">${esc(L.title)}</span><span class="at-resume__m">${T('Suggested first lesson', 'درس أول مقترح')} · ${L.mins} min</span></span><span class="at-resume__go">${T('Start', 'ابدأ')} →</span></a></li>`).join('')}</ul>`}
+          <p class="at-shelf__h"><b id="atShelfH">${T('Continue learning', 'تابع التعلّم')}</b>${items.length ? `<a class="at-more" href="#/progress">${T('Progress', 'التقدّم')}</a>` : ''}</p>
+          ${top ? `<div class="at-continue ${top.cls}">${top.read ? `<button type="button" data-read="${esc(top.read)}">` : `<a href="${top.href}">`}<span class="at-glyph">${icon(top.ic)}</span><span class="at-continue__t"><b>${esc(top.title)}</b><small>${top.meta}</small></span>${top.frac != null ? `<span class="at-bar" role="progressbar" aria-label="${T('Progress', 'التقدّم')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(100 * top.frac)}"><i style="--w:${Math.round(100 * top.frac)}%"></i></span>` : ''}<span class="at-continue__go">${T('Resume', 'استأنف')} →</span>${top.read ? '</button>' : '</a>'}</div>
+            ${rest.length ? `<ul class="at-resume">${rest.map(x => `<li class="${x.cls}">${x.read ? `<button type="button" data-read="${esc(x.read)}">` : `<a href="${x.href}">`}<span class="at-glyph">${icon(x.ic)}</span><span><b>${esc(x.title)}</b><small>${x.meta}</small></span>${x.read ? '</button>' : '</a>'}</li>`).join('')}</ul>` : ''}`
+            : `<p class="at-empty">${T('Nothing to resume yet. Start anything — a reading, a lesson, a video or an experience — and it will wait for you here, exactly where you stopped.', 'لا شيء بعد. ابدأ أي شيء وسينتظرك هنا.')}</p>`}
         </aside>
       </section>
       ${!consent && st.mode() !== 'demo' ? choice() : ''}
+      ${J ? J.planHTML() : ''}
+      ${J ? `<section class="at-sec at-two" aria-label="${T('Momentum and insights', 'الزخم والرؤى')}">${J.momentumHTML()}${J.insightsHTML(2, true)}</section>` : ''}
+      <section class="at-sec at-two at-two--portal" aria-label="${T('Discover', 'اكتشف')}">
+        ${LS.portalHTML ? LS.portalHTML(LS.portalPick(), false) : ''}
+        <div><div class="at-sec__head"><h2 class="at-h2">${T('Discover', 'اكتشف')}</h2><a href="#/discover">${T('Everything', 'الكل')} →</a></div><ol class="at-list">${discover().map(x => `<li><a href="${x.href}"><b>${esc(x.title)}</b><small>${esc(x.meta)}</small></a></li>`).join('')}</ol></div>
+      </section>
       <section class="at-sec" aria-labelledby="atAtlasH">
-        <div class="at-sec__head"><h2 class="at-h2" id="atAtlasH">${T('The atlas', 'الأطلس')}</h2><a href="#" data-open-search>${T('Search everything', 'ابحث في كل شيء')} <kbd class="at-muted">⌘K</kbd></a></div>
-        <ul class="at-atlas" id="atAtlas">${SUBJECTS.slice(0, 7).map(S => atlasItem(S)).join('')}</ul>
-        <p class="at-muted" style="margin:12px 0 0;font-size:.9rem"><a class="at-more" href="#/subject/more">${T('Economics, psychology & more', 'الاقتصاد وعلم النفس والمزيد')} →</a></p>
-      </section>
-      <section class="at-sec" aria-labelledby="atDiscH">
-        <div class="at-sec__head"><h2 class="at-h2" id="atDiscH">${T('Try this now', 'جرّب هذا الآن')}</h2><a href="#/lab">${T('All interactive models', 'كل النماذج التفاعلية')} →</a></div>
-        <div class="at-disc">
-          <figure class="at-demo at-subj-physics" style="margin:0"><svg class="at-demo__fig at-hue" id="atWave" viewBox="0 0 800 280" role="img" aria-label="${T('Two waves (thin lines) and their sum (thick line).', 'موجتان ومجموعهما.')}">${waveSVG(1, 0)}</svg>
-            <figcaption class="at-demo__body"><p><b>${T('When two waves meet, they add.', 'حين تلتقي موجتان تُجمعان.')}</b> <span id="atWaveTxt">${waveText(1, 0)}</span></p>
-              <label class="at-range"><span>${T('Second wave’s frequency', 'تردد الموجة الثانية')} <output id="atF2">1.00×</output></span><input type="range" id="atF2In" min="0.5" max="2" step="0.01" value="1"></label>
-              <label class="at-range"><span>${T('Phase difference', 'فرق الطور')} <output id="atPh">0°</output></span><input type="range" id="atPhIn" min="0" max="360" step="5" value="0"></label>
-              <p style="margin:0"><a class="ls-btn" href="#/lab" id="atWaveLab">${T('Open the full wave model', 'افتح نموذج الموجات')}</a> <button type="button" class="ls-btn ls-btn--quiet" data-wave-noor>${T('Ask Noor about interference', 'اسأل نور عن التداخل')}</button></p>
-            </figcaption></figure>
-          <div><p class="at-k" style="margin-top:4px">${T('Worth exploring', 'يستحق الاستكشاف')}</p><ol class="at-list">${disc.map(x => `<li><a href="${x.href}"><b>${esc(x.title)}</b><small>${esc(x.meta)}</small></a></li>`).join('')}</ol></div>
-        </div>
-      </section>
-      <section class="at-sec" aria-labelledby="atTodayH">
-        <div class="at-sec__head"><h2 class="at-h2" id="atTodayH">${T('Today', 'اليوم')}</h2><a href="#/progress">${T('My progress', 'تقدّمي')} →</a></div>
-        <div class="at-figs"><a href="#/revise"><b>${due}</b><span>${T(due === 1 ? 'flashcard due' : 'flashcards due', 'بطاقات مستحقة')}</span></a><a href="#/mistakes"><b>${open}</b><span>${T(open === 1 ? 'mistake to revisit' : 'mistakes to revisit', 'أخطاء للمراجعة')}</span></a><a href="#/lessons"><b>${done}<small class="at-muted" style="font-size:1rem"> / ${LS.lessons.length}</small></b><span>${T('lessons finished', 'دروس مكتملة')}</span></a><a href="#/notebook"><b>${notes}</b><span>${T(notes === 1 ? 'note' : 'notes', 'ملاحظات')}</span></a></div>
+        <div class="at-sec__head"><h2 class="at-h2" id="atAtlasH">${T('Worlds', 'العوالم')}</h2><a href="#/explore">${T('Explore all', 'استكشف الكل')} →</a></div>
+        <ul class="at-atlas" id="atAtlas">${SUBJECTS.filter(S => S.id !== 'cs' && S.id !== 'more').map(S => atlasItem(S)).join('')}</ul>
       </section></div>`;
     wireHome(view);
   }
@@ -136,6 +135,7 @@
   }
   function discover() {
     const dayN = Math.floor(Date.now() / 864e5), pick = (arr, k) => arr.length ? arr[(dayN + k) % arr.length] : null, out = [];
+    const x = (LS.experiences || []).length ? pick(LS.experiences.filter(e => e.id !== (LS.portalPick && LS.portalPick().id)), 5) : null; if (x) out.push({ title: x.title, meta: T(`${LS.expKinds[x.kind]} · ${x.mins} min`, 'تجربة'), href: `#/exp/${x.id}` });
     const L = pick(LS.lessons || [], 0); if (L) out.push({ title: L.title, meta: T(`Lesson · ${L.subject} · ${L.mins} min`, 'درس'), href: `#/lesson/${L.id}` });
     const v = pick(LS.VIDEOS || [], 1); if (v) out.push({ title: v.title, meta: T(`ERLY video · ${v.subject}`, 'فيديو'), href: `#/video/${v.id}` });
     const r = pick(window.STUDIO_LIBRARY || [], 2); if (r) out.push({ title: r.title.replace(/_/g, ' ').replace(/\.pdf$/i, ''), meta: T(`Reading · ${r.course}`, 'قراءة'), href: `#/read/doc/${r.id}` });
@@ -149,15 +149,11 @@
     view.querySelector('.at-verbs').addEventListener('pointerover', e => { const a = e.target.closest('a'); if (a && hint) hint.textContent = a.dataset.hint; });
     view.querySelector('.at-verbs').addEventListener('focusin', e => { const a = e.target.closest('a'); if (a && hint) hint.textContent = a.dataset.hint; });
     view.querySelector('.at-verbs').addEventListener('click', e => { if (e.target.closest('[data-open-noor]')) e.preventDefault(); });
-    const f2 = view.querySelector('#atF2In'), ph = view.querySelector('#atPhIn'), svg = view.querySelector('#atWave');
-    let raf = 0; const draw = () => { raf = 0; const a = +f2.value, b = +ph.value; svg.innerHTML = waveSVG(a, b); view.querySelector('#atF2').textContent = a.toFixed(2) + '×'; view.querySelector('#atPh').textContent = b + '°'; view.querySelector('#atWaveTxt').textContent = waveText(a, b); };
-    [f2, ph].forEach(i => i.addEventListener('input', () => { if (!raf) raf = requestAnimationFrame(draw); }));
-    view.querySelector('[data-wave-noor]').addEventListener('click', () => LS.noor && LS.noor.ask('explain', { text: `Wave interference: two waves with frequency ratio ${(+f2.value).toFixed(2)} and phase difference ${ph.value}° are added together. ${waveText(+f2.value, +ph.value)}`, title: T('Two waves meeting', 'موجتان تلتقيان') }));
-    view.addEventListener('click', e => { const r = e.target.closest('[data-read]'); if (r) LS.openReading(r.dataset.read); });
-    const setLab = () => { const w = lab().find(x => /superposition|interference|standing wave|waves/i.test((x.title || '') + ' ' + x.id)); const a = view.querySelector('#atWaveLab'); if (w && a) a.href = '#/lab/' + w.id; };
-    // the Lab is not requested from Home: when it arrives (idle load or first use), the counts and the link update
-    const labIn = () => { if (!view.isConnected) return; setLab(); view.querySelectorAll('[data-count]').forEach(s => { const S = SUBJECTS.find(x => x.id === s.dataset.count); s.textContent = countLine(contents(S)) || s.textContent; }); };
-    if (window.ERLY_LAB && ERLY_LAB.engines.length > 100) setLab(); else { const off = LS.on('lab-ready', () => { off(); labIn(); }); }
+    if (!view._hwired) { view._hwired = true; view.addEventListener('click', e => { const r = e.target.closest('[data-read]'); if (r && LS.current()[0] === 'home') LS.openReading(r.dataset.read); }); }
+    if (LS.journey) LS.journey.wire(view);
+    const labIn = () => { if (!view.isConnected) return; view.querySelectorAll('[data-count]').forEach(x => { const S = SUBJECTS.find(y => y.id === x.dataset.count); x.textContent = countLine(contents(S)) || x.textContent; }); };
+    if (!(window.ERLY_LAB && ERLY_LAB.engines.length > 100)) { const off = LS.on('lab-ready', () => { off(); labIn(); }); }
+    if (LS.paintWorlds) LS.paintWorlds(view);
   }
 
   /* ---------- subject page ---------- */
@@ -166,7 +162,11 @@
     const c = contents(S), d = st.data();
     const row = (ic, title, meta, href, extra) => `<li class="at-subj-${S.id}"><div class="at-row"><span class="at-glyph">${icon(ic)}</span><span><a class="at-row__t" href="${href}">${esc(title)}</a><span class="at-row__m">${meta}</span></span><span class="at-row__p">${extra || ''}</span><span class="at-row__a"><a class="at-iconbtn" href="${href}" aria-label="${T('Open', 'افتح')} ${esc(title)}">→</a></span></div></li>`;
     const lessonMeta = L => { const p = d.lessons[L.id], n = p ? L.sections.filter(s => (p.done || {})[s.id]).length : 0; return { meta: `${esc(L.topic)} · ${L.mins} min · ${L.sections.length} ${T('sections', 'أقسام')}`, extra: p ? `<span>${p.completed ? T('Finished', 'مكتمل') : `${n}/${L.sections.length}`}</span><i><b style="width:${100 * n / L.sections.length}%"></b></i>` : '' }; };
-    view.innerHTML = `<div class="at-subj at-subj-${S.id}"><header class="at-subj__head">${emblem(S.id)}<div><p class="at-k">${T('Subject', 'مادة')}</p><h1 style="margin:0 0 10px">${T(S.name, S.ar)}</h1><p class="at-lead">${esc(S.blurb)}</p></div></header>
+    const xs = (LS.experiences || []).filter(x => x.subject === S.id);
+    const objs = LS.engine ? [].concat(...c.lessons.map(L => LS.engine.objectivesOf(L.id))) : [];
+    view.innerHTML = `<div class="at-subj at-subj-${S.id}"><header class="at-subj__head at-subj__head--world"><canvas class="at-world at-world--hero" data-world="${S.id}" aria-hidden="true"></canvas>${emblem(S.id)}<div><p class="at-k">${T('World', 'عالم')} · ${esc(S.world || '')}</p><h1 style="margin:0 0 10px">${T(S.name, S.ar)}</h1><p class="at-lead">${esc(S.blurb)}</p></div></header>
+      ${xs.length ? `<section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Experiences', 'تجارب')}</h2><a href="#/discover">${T('All experiences', 'كل التجارب')} →</a></div><ul class="at-xlist">${xs.map(x => LS.xItem(x, (d.events || []).some(e => e.t === 'experience' && e.id === x.id))).join('')}</ul></section>` : ''}
+      ${objs.length ? `<section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Your objectives here', 'أهدافك هنا')}</h2><a href="#/journey">${T('See your sky', 'شاهد سماءك')} →</a></div><ul class="at-objs">${objs.map(o => LS.objRow(o)).join('')}</ul></section>` : ''}
       ${c.paths.length ? `<section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Learning paths', 'مسارات التعلم')}</h2></div><ul class="at-index">${c.paths.map(p => row('paths', p.title, `${esc(p.level || '')} · ${p.steps.length} ${T('lessons', 'دروس')} · ${esc(p.desc || '')}`, `#/paths/${p.id}`)).join('')}</ul></section>` : ''}
       ${c.lessons.length ? `<section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Interactive lessons', 'دروس تفاعلية')}</h2></div><ul class="at-index">${c.lessons.map(L => { const m = lessonMeta(L); return row('learn', L.title, m.meta, `#/lesson/${L.id}`, m.extra); }).join('')}</ul></section>` : ''}
       ${c.readings.length ? `<section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Readings', 'القراءات')}</h2><a href="#/read">${T('All reading & resources', 'كل القراءة والموارد')} →</a></div><ul class="at-index">${c.readings.map(r => row('read', r.title.replace(/_/g, ' ').replace(/\.pdf$/i, ''), esc(r.course), `#/read/doc/${r.id}`)).join('')}</ul></section>` : ''}
@@ -174,6 +174,7 @@
       <section class="at-sec" style="margin-top:36px"><div class="at-sec__head"><h2 class="at-h2">${T('Interactive models', 'نماذج تفاعلية')}</h2><a href="#/lab">${T('Open the Lab', 'افتح المختبر')} →</a></div>
         ${window.ERLY_LAB ? (c.models.length ? `<div class="at-cols">${c.models.slice().sort((a, b) => (a.title || '').localeCompare(b.title || '')).map(e => `<a class="at-row__t" style="font-size:1rem;padding:8px 0;border-bottom:1px solid var(--line)" href="#/lab/${e.id}">${esc(e.title || e.id)}</a>`).join('')}</div>` : `<p class="at-muted">${T('No interactive models for this subject yet — the Lab says so honestly rather than inventing one.', 'لا نماذج لهذه المادة بعد.')}</p>`) : `<p class="at-muted" aria-busy="true">${T('Loading the models…', 'جارٍ تحميل النماذج…')}</p>`}</section></div>`;
     if (!window.ERLY_LAB && LS.needLab) LS.needLab().then(() => { if (view.isConnected && LS.current()[0] === 'subject') subject(view, parts); });
+    if (LS.paintWorlds) LS.paintWorlds(view);
   }
 
   LS.route('home', home);

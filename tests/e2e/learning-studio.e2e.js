@@ -27,12 +27,13 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   });
   await check('navigation: every area opens from the side navigation, with a heading and no errors', async () => {
     const areas = await p.$$eval('#atTabs a[data-env]', as => as.map(a => a.dataset.env));
-    assert.ok(areas.length >= 9, 'areas ' + areas.length);
-    for (const a of areas) { await p.click(`#atTabs a[data-env="${a}"]`); await p.waitForTimeout(450); assert.ok((await h1()).trim().length > 3, a + ' heading'); assert.equal(await p.getAttribute(`#atTabs a[data-env="${a}"]`, 'aria-current'), 'page', a + ' current'); assert.equal(await p.$('.ls-err'), null, a + ' error screen'); }
+    assert.ok(areas.length >= 5, 'areas ' + areas.length); // v22: five places, each with sub-places (checked below)
+    for (const a of areas) { await p.click(`#atTabs a[data-env="${a}"]`); await p.waitForTimeout(450); assert.ok((await h1()).trim().length > 3, a + ' heading'); assert.equal(await p.getAttribute(`#atTabs a[data-env="${a}"]`, 'aria-current'), 'page', a + ' current'); assert.equal(await p.$('.ls-err'), null, a + ' error screen');
+      for (const sub of await p.$$eval('#atSub a', as => as.map(x => x.dataset.sub))) { await p.click(`#atSub a[data-sub="${sub}"]`); await p.waitForTimeout(450); assert.ok((await h1()).trim().length > 3, sub + ' heading'); assert.equal(await p.$('.ls-err'), null, sub + ' error screen'); } }
   });
   await check('the dashboard shows real (empty) state and an onboarding path — no invented numbers', async () => {
     await go('home'); const t = await p.textContent('#lsView');
-    assert.match(t, /0\s*\/\s*8\s*lessons finished/); assert.match(t, /0\s*flashcards due/); assert.match(t, /Nothing to resume yet/); assert.doesNotMatch(t, /\d+%/, 'no percentages without data');
+    assert.match(t, /0\s*\/\s*\d+\s*objectives demonstrated/); assert.match(t, /0\s*flashcards recalled this week/); // v22 momentum figures assert.match(t, /Nothing to resume yet/); assert.doesNotMatch(t, /\d+%/, 'no percentages without data');
   });
   await check('search finds real resources of every kind (v21: the ⌘K palette searches everything)', async () => {
     await go('home'); await p.evaluate(() => LS.needLab()); await p.keyboard.press('Control+k'); await p.waitForTimeout(200); await p.fill('#atPalQ', 'heart'); await p.waitForTimeout(300);
@@ -65,7 +66,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     await p.click('[data-next]'); await p.waitForTimeout(600); assert.match(await h1(), /Four chambers/);
     await p.reload(); await p.waitForTimeout(1800); await go('lesson/bio-heart', 900);
     assert.match(await h1(), /Four chambers/, 'resumed at section 2'); assert.ok(await p.locator('.ls-toc a.is-done').count() >= 1);
-    await go('home', 600); assert.match(await p.textContent('.at-resume'), /The heart and double circulation[\s\S]*1 of 6 sections/);
+    await go('home', 600); assert.match(await p.textContent('.at-shelf'), /The heart and double circulation[\s\S]*1 of 6 sections/);
   });
   await check('diagram labelling works with the lists (keyboard path) and with tap-to-place', async () => {
     await go('lesson/bio-heart/chambers', 900); const act = p.locator('.ls-act[data-q="h-label"]');
@@ -289,7 +290,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
   await check('keyboard: skip link first, nav reachable, Enter navigates; dialogs trap focus and Escape closes them', async () => {
     await p.goto(BASE + 'learn.html?fresh=1#/home'); await p.waitForTimeout(1800); await p.keyboard.press('Tab');
     assert.match(await p.evaluate(() => document.activeElement.textContent), /Skip to content/);
-    await p.focus('#atTabs a[data-env="practice"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(500); assert.match(await h1(), /Practise/);
+    await p.focus('#atTabs a[data-env="practise"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(500); assert.match(await h1(), /Practise/);
     await go('revise', 400); await p.click('[data-newcard]'); await p.waitForTimeout(150);
     for (let i = 0; i < 8; i++) await p.keyboard.press('Tab'); assert.ok(await p.evaluate(() => !!document.activeElement.closest('.ls-dlg')), 'focus stays in the dialog');
     await p.keyboard.press('Escape'); await p.waitForTimeout(150); assert.equal(await p.$('.ls-dlg'), null);
@@ -303,7 +304,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     const m = await b.newContext({ ...devices['iPhone 13'] }); await m.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); localStorage.setItem('erly-learn-v1', JSON.stringify({ v: 1, consent: { store: 'device', at: 1 } })); });
     const q = await m.newPage(); await q.goto(BASE + 'learn.html'); await q.waitForTimeout(2000);
     assert.ok(await q.isVisible('#atDock')); await q.click('#atDock [data-more]'); await q.waitForTimeout(350); assert.ok(await q.evaluate(() => document.body.classList.contains('at-sheet-on')));
-    await q.click('#atSheet a[data-env="lab"]'); await q.waitForTimeout(500); assert.equal(await q.evaluate(() => document.body.classList.contains('at-sheet-on')), false);
+    await q.click('#atSheet a[data-sub="paths"]'); await q.waitForTimeout(500); assert.equal(await q.evaluate(() => document.body.classList.contains('at-sheet-on')), false);
     for (const r of ['home', 'lesson/bio-heart/chambers', 'practice', 'revise', 'notebook', 'progress', 'video/erly-quad', 'profile']) { await q.evaluate(r => { location.hash = '#/' + r; }, r); await q.waitForTimeout(700); const ov = await q.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert.ok(ov <= 1, `${r}: horizontal overflow ${ov}px`); }
     await m.close();
   });

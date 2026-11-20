@@ -150,3 +150,49 @@
   // "Delete everything" in Privacy & data also deletes what the reader kept: highlights, notes, bookmarks, positions
   LS.on('change', what => { if (what === 'deleted' && R() && R().forget) R().forget(); });
 })();
+
+/* v22 — reading connected to everything else. From a selected passage the student can make a practice question,
+   make a flashcard, explore the idea visually or open a related lesson. The question is made by a plain rule
+   (one key term from the passage is blanked) and is labelled as such; nothing is sent anywhere. */
+(function () {
+  'use strict';
+  const LS = window.LS, esc = LS.esc, T = LS.T;
+  const STOP = new Set('about above after again against because before being below between could does doing during their there these those through under until which while would should other another every things where when what with from into than then them they this that have were your yours ours also only just very more most such some many much each been here like over well made make same'.split(' '));
+  const words = t => (String(t).toLowerCase().match(/[\p{L}][\p{L}'’-]{2,}/gu) || []).filter(w => !STOP.has(w));
+  function keyTerm(text) {
+    const tags = new Set([].concat(...LS.lessons.map(L => (L.tags || []).concat(L.topic.toLowerCase().split(/\s+/)))));
+    const ws = words(text), cnt = {}; ws.forEach(w => { cnt[w] = (cnt[w] || 0) + 1; });
+    return Object.keys(cnt).sort((a, b) => ((tags.has(b) ? 10 : 0) + cnt[b] * 2 + Math.min(b.length, 12) * 0.5) - ((tags.has(a) ? 10 : 0) + cnt[a] * 2 + Math.min(a.length, 12) * 0.5))[0] || null;
+  }
+  function sentenceWith(text, term) { const ss = String(text).split(/(?<=[.!?])\s+/); return (ss.find(s => s.toLowerCase().includes(term)) || ss[0] || text).slice(0, 320); }
+  function score(text, hay) { const ws = new Set(words(text)); return words(hay).filter(w => ws.has(w)).length; }
+  function bestLesson(text) { return LS.lessons.map(L => ({ L, s: score(text, [L.title, L.topic, (L.tags || []).join(' '), L.objectives.join(' '), L.summary.join(' ')].join(' ')) })).sort((a, b) => b.s - a.s)[0]; }
+  const record = (kind, doc, extra) => LS.engine && LS.engine.event('read-link', Object.assign({ kind, doc: doc && doc.id, label: 'From reading: ' + kind }, extra || {}));
+  LS.readLinks = {
+    question(text, doc) {
+      const term = keyTerm(text); if (!term) { LS.toast(T('Select a longer passage to make a question.', 'اختر مقطعاً أطول.')); return; }
+      const sent = sentenceWith(text, term), re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const q = { id: LS.uid('rq'), type: 'fill', prompt: sent.replace(re, '___'), blanks: [{ accept: [term] }], explain: `From your reading${doc ? ' (' + doc.title + ')' : ''}: “${sent}”`, topic: doc ? doc.title : 'Reading', subject: 'Reading' };
+      const d = LS.dialog(`<h2 id="lsDlgT">${T('A question from your passage', 'سؤال من مقطعك')}</h2><p class="ls-muted ls-small">${T('Made by a simple rule: one key term from the passage is blanked out. Not written by AI.', 'صُنع بقاعدة بسيطة: حُجبت كلمة رئيسية.')}</p><div data-host></div><div class="ls-row"><button type="button" class="ls-btn ls-btn--quiet" data-close>${T('Close', 'إغلاق')}</button></div>`);
+      LS.activity(d.el.querySelector('[data-host]'), q, { from: 'reading', lessonTitle: doc ? doc.title : 'Reading' });
+      record('question', doc);
+    },
+    card(text, doc) {
+      const term = keyTerm(text), sent = term ? sentenceWith(text, term) : text.slice(0, 300);
+      LS.cards.quickEdit({ front: term ? sent.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), '___') : sent, back: term || sent, kind: 'qa', topic: doc ? doc.title : 'Reading', src: { type: 'reading', id: doc && doc.id, title: doc ? doc.title : 'Reading' } });
+      record('card', doc);
+    },
+    visual(text, doc) {
+      const xs = (LS.experiences || []).map(x => ({ href: '#/exp/' + x.id, t: x.title, s: score(text, x.title + ' ' + x.hook + ' ' + x.id.replace(/-/g, ' ')) }));
+      const go = list => { const best = list.sort((a, b) => b.s - a.s)[0]; record('visual', doc); if (best && best.s > 0) { LS.toast(T('Opening: ', 'أفتح: ') + best.t); if (window.ERLY && ERLY.reader && ERLY.reader.isOpen && ERLY.reader.isOpen()) { try { document.querySelector('#stClose, [data-st-close]') && document.querySelector('#stClose, [data-st-close]').click(); } catch (e) { /* ok */ } } LS.go(best.href.slice(2)); } else LS.toast(T('No visual model matches this passage yet — try “Ask Noor” instead.', 'لا نموذج مطابق بعد.')); };
+      if (window.ERLY_LAB) go(xs.concat(ERLY_LAB.engines.map(e => ({ href: '#/lab/' + e.id, t: e.title || e.id, s: score(text, (e.title || '') + ' ' + (e.kind || '') + ' ' + e.id) * 0.9 }))));
+      else LS.needLab().then(() => go(xs.concat(ERLY_LAB.engines.map(e => ({ href: '#/lab/' + e.id, t: e.title || e.id, s: score(text, (e.title || '') + ' ' + (e.kind || '') + ' ' + e.id) * 0.9 }))))).catch(() => go(xs));
+    },
+    lesson(text, doc) {
+      const b = bestLesson(text); record('lesson', doc);
+      if (b && b.s >= 2) { LS.toast(T('Related lesson: ', 'درس مرتبط: ') + b.L.title); const c = document.querySelector('#stClose'); if (c && window.ERLY.reader.isOpen()) c.click(); LS.go('lesson/' + b.L.id); }
+      else LS.toast(T('No lesson in the Studio covers this passage closely. Try “Ask Noor” or “Make a question”.', 'لا درس يغطي هذا المقطع.'));
+    },
+    _keyTerm: keyTerm, _bestLesson: bestLesson
+  };
+})();

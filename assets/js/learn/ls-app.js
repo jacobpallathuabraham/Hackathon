@@ -180,6 +180,6 @@
   };
 
   // v21: Home, Reading & Resources and the shell live in ls-home.js, ls-read.js and ls-shell.js
-  LS.route('lessons', lessons); LS.route('paths', paths); LS.route('progress', progress); LS.route('noor', noor); LS.route('profile', profile);
+  LS.route('lessons', lessons); LS.route('paths', paths); LS.progressClassic = progress; LS.route('progress', progress); LS.route('noor', noor); LS.route('profile', profile);
   LS.start = () => { LS.startShell(); document.documentElement.dataset.lsDensity = st.data().settings.density || 'comfortable'; LS.render(); };
 })();

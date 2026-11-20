@@ -46,7 +46,7 @@
   <link rel="stylesheet" href="assets/css/v9.css?v=19">
   <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
   <link rel="stylesheet" href="assets/css/learn.css?v=21">
-  <link rel="stylesheet" href="assets/css/learn-atelier.css?v=21">
+  <link rel="stylesheet" href="assets/css/learn-atelier.css?v=22">
 </head>
 <body class="ls-page at">
 <a class="skip ls-skip" href="#lsView">Skip to content</a>
@@ -61,6 +61,7 @@
     <button class="at-tool at-tool--icon" id="themeToggle" aria-label="Toggle dark mode"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
   </div>
 </header>
+<nav class="at-sub" id="atSub" hidden></nav>
 <div class="ls-banner" id="lsBanner" role="status" hidden></div>
 <main class="at-main ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Opening the Learning Studio…</p></main>
 <nav class="at-dock" id="atDock" aria-label="Learning Studio (short)"></nav>
@@ -117,29 +118,34 @@
 <script src="assets/js/ambient.js?v=19" defer></script>
 <script src="assets/js/a11y.js?v=19"></script>
 <script src="assets/js/companion/holo.js?v=19" defer></script>
-<script src="assets/js/learn/ls-core.js?v=21"></script>
+<script src="assets/js/learn/ls-core.js?v=22"></script>
 <script src="assets/js/learn/ls-lazy.js?v=21"></script>
 <script src="assets/js/learn/ls-grade.js?v=19"></script>
-<script src="assets/js/learn/ls-schema.js?v=19"></script>
+<script src="assets/js/learn/ls-schema.js?v=22"></script>
 <script src="assets/js/learn/ls-srs.js?v=19"></script>
 <script src="assets/js/learn/ls-intel.js?v=19"></script>
+<script src="assets/js/learn/ls-engine.js?v=22"></script>
 <script src="assets/js/learn/ls-figures.js?v=19"></script>
 <script src="assets/js/learn/ls-registry.js?v=19"></script>
 <script src="assets/js/learn/ls-lessons-bio-chem.js?v=19"></script>
 <script src="assets/js/learn/ls-lessons-math-phys.js?v=19"></script>
+<script src="assets/js/learn/ls-lessons-v22.js?v=22"></script>
 <script src="assets/js/learn/ls-bank.js?v=19"></script>
-<script src="assets/js/learn/ls-activities.js?v=19"></script>
+<script src="assets/js/learn/ls-activities.js?v=22"></script>
 <script src="assets/js/learn/ls-noor.js?v=19"></script>
-<script src="assets/js/learn/ls-lesson.js?v=21"></script>
+<script src="assets/js/learn/ls-lesson.js?v=22"></script>
 <script src="assets/js/learn/ls-notes.js?v=19"></script>
-<script src="assets/js/learn/ls-revise.js?v=19"></script>
-<script src="assets/js/learn/ls-practice.js?v=19"></script>
+<script src="assets/js/learn/ls-revise.js?v=22"></script>
+<script src="assets/js/learn/ls-practice.js?v=22"></script>
 <script src="assets/js/learn/ls-video.js?v=19"></script>
 <script src="assets/js/learn/ls-lab.js?v=21"></script>
-<script src="assets/js/learn/ls-app.js?v=21"></script>
-<script src="assets/js/learn/ls-shell.js?v=21"></script>
-<script src="assets/js/learn/ls-home.js?v=21"></script>
+<script src="assets/js/learn/ls-app.js?v=22"></script>
+<script src="assets/js/learn/ls-shell.js?v=22"></script>
+<script src="assets/js/learn/ls-home.js?v=22"></script>
 <script src="assets/js/learn/ls-read.js?v=21"></script>
+<script src="assets/js/learn/ls-explore.js?v=22"></script>
+<script src="assets/js/learn/ls-journey.js?v=22"></script>
+<script src="assets/js/learn/ls-adapt.js?v=22"></script>
 <script>
   // main.js switches language and theme; the Studio re-renders so its own text follows the language
   document.getElementById('langToggle').addEventListener('click', function () { setTimeout(function () { LS.render(); }, 0); });

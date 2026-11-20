@@ -904,6 +904,8 @@
     if (c) { addHighlight(s, c.dataset.hl); getSelection().removeAllRanges(); hideSel(); return; }
     const q = e.target.closest('[data-sq]');
     if (q) { const k = q.dataset.sq, txt = s.text.slice(0, 900); hideSel(); getSelection().removeAllRanges(); askNoor(ASKS[k][1](txt), s.text); return; }
+    const x = e.target.closest('[data-sx]');
+    if (x && window.LS && LS.readLinks) { const txt = s.text.slice(0, 900); hideSel(); getSelection().removeAllRanges(); LS.readLinks[x.dataset.sx](txt, DOC ? { id: DOC.id, title: DOC.title } : null); return; }
     if (!a) return;
     const act = a.dataset.sa;
     if (act === 'note') { const n = addHighlight(s, 'sun'); getSelection().removeAllRanges(); hideSel(); setTimeout(() => showHlPop(n, wordEls[n.to], true), 60); }
@@ -930,7 +932,8 @@
   let selTools = null;
   function showAskMenu() {
     if (!selTools) selTools = sel.innerHTML;
-    sel.innerHTML = Object.entries(ASKS).map(([k, v]) => `<button data-sq="${k}">${T(v[0][0], v[0][1])}</button>`).join('') + `<button data-sa="back" aria-label="${T('Back', 'رجوع')}">←</button>`;
+    const links = window.LS && LS.readLinks ? `<span class="ssel__sep" aria-hidden="true"></span>` + [['question', 'Make a question', 'اصنع سؤالاً'], ['card', 'Make a flashcard', 'اصنع بطاقة'], ['visual', 'Explore visually', 'استكشف بصرياً'], ['lesson', 'Related lesson', 'درس مرتبط']].map(([k, en, ar]) => `<button data-sx="${k}">${T(en, ar)}</button>`).join('') : '';
+    sel.innerHTML = Object.entries(ASKS).map(([k, v]) => `<button data-sq="${k}">${T(v[0][0], v[0][1])}</button>`).join('') + links + `<button data-sa="back" aria-label="${T('Back', 'رجوع')}">←</button>`;
     sel.classList.add('is-ask'); // focus stays put: moving it would collapse the selection the question is about
   }
   sel.addEventListener('click', e => { if (e.target.closest('[data-sa="back"]') && selTools) { sel.innerHTML = selTools; sel.classList.remove('is-ask'); } }, true);

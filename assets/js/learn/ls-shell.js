@@ -37,33 +37,44 @@
   const icon = (k, cls) => `<svg viewBox="0 0 24 24" aria-hidden="true" class="${cls || ''}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${P[k] || P.more}"/></svg>`;
   LS.icon = icon;
 
-  // the places of the Studio and which routes belong to each
+  // the five places of the Studio (progressive disclosure: each has a few sub-places), and their routes
   const ENVS = [
-    { id: 'home', en: 'Home', ar: 'الرئيسية', icon: 'home', routes: ['home', 'subject'] },
-    { id: 'read', en: 'Read', ar: 'اقرأ', icon: 'read', routes: ['read', 'library'] },
-    { id: 'lessons', en: 'Learn', ar: 'تعلّم', icon: 'learn', routes: ['lessons', 'lesson'] },
-    { id: 'lab', en: 'Explore', ar: 'استكشف', icon: 'lab', routes: ['lab'] },
-    { id: 'video', en: 'Watch', ar: 'شاهد', icon: 'watch', routes: ['video'] },
-    { id: 'practice', en: 'Practise', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes'] },
-    { id: 'revise', en: 'Revise', ar: 'راجع', icon: 'revise', routes: ['revise'] },
-    { id: 'notebook', en: 'Notebook', ar: 'الدفتر', icon: 'notebook', routes: ['notebook'] },
-    { id: 'paths', en: 'Paths', ar: 'المسارات', icon: 'paths', routes: ['paths'] }
+    { id: 'home', en: 'Home', ar: 'الرئيسية', icon: 'home', routes: ['home'], subs: [] },
+    { id: 'explore', en: 'Explore', ar: 'استكشف', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover'],
+      subs: [['explore', 'Subjects', 'المواد', ['explore', 'subject', 'world']], ['explore/topics', 'Topics', 'المواضيع', ['explore/topics']], ['discover', 'Discover', 'اكتشف', ['discover', 'exp']]] },
+    { id: 'learn', en: 'Learn', ar: 'تعلّم', icon: 'learn', routes: ['lessons', 'lesson', 'read', 'library', 'video', 'lab', 'learn'],
+      subs: [['lessons', 'Lessons', 'الدروس', ['lessons', 'lesson', 'learn']], ['read', 'Reading', 'القراءة', ['read', 'library']], ['video', 'Video', 'الفيديو', ['video']], ['lab', 'Visual Lab', 'المختبر المرئي', ['lab']]] },
+    { id: 'practise', en: 'Practise', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes', 'revise'],
+      subs: [['practice', 'Practice', 'التدريب', ['practice']], ['revise', 'Flashcards', 'البطاقات', ['revise']], ['mistakes', 'Mistakes', 'الأخطاء', ['mistakes']]] },
+    { id: 'workspace', en: 'My Workspace', ar: 'مساحتي', icon: 'notebook', routes: ['notebook', 'mylibrary', 'paths', 'progress', 'journey', 'archive', 'profile'],
+      subs: [['notebook', 'Notebook', 'الدفتر', ['notebook']], ['mylibrary', 'My Library', 'مكتبتي', ['mylibrary', 'archive']], ['paths', 'Paths', 'المسارات', ['paths']], ['progress', 'Progress', 'التقدّم', ['progress']], ['journey', 'Journey', 'رحلتي', ['journey']], ['profile', 'Privacy & data', 'الخصوصية', ['profile']]] }
   ];
-  const EXTRA = [{ id: 'progress', en: 'My progress', ar: 'تقدّمي', icon: 'progress', routes: ['progress'] }, { id: 'noor', en: 'Noor tutor', ar: 'المعلّمة نور', icon: 'noor', routes: ['noor'] }, { id: 'profile', en: 'Privacy & data', ar: 'الخصوصية والبيانات', icon: 'user', routes: ['profile'] }];
+  const EXTRA = [{ id: 'noor', en: 'Noor tutor', ar: 'المعلّمة نور', icon: 'noor', routes: ['noor'], subs: [] }];
+  LS.route('practise', v => LS.go('practice', { replace: true })); LS.route('workspace', v => LS.go('notebook', { replace: true }));
   const envOf = area => ENVS.concat(EXTRA).find(e => e.routes.includes(area)) || ENVS[0];
   LS.envs = ENVS;
 
   /* ---------- spine ---------- */
   function build() {
     const tabs = document.getElementById('atTabs');
-    tabs.innerHTML = ENVS.map(e => `<a href="#/${e.id}" data-env="${e.id}">${T(e.en, e.ar)}<span class="at-badge" data-badge="${e.id}" hidden></span></a>`).join('') + '<span class="at-ink" aria-hidden="true"></span>';
+    tabs.innerHTML = ENVS.map(e => `<a href="#/${e.subs && e.subs[0] ? e.subs[0][0] : e.id}" data-env="${e.id}">${T(e.en, e.ar)}<span class="at-badge" data-badge="${e.id}" hidden></span></a>`).join('') + '<span class="at-ink" aria-hidden="true"></span>';
     document.getElementById('atSearch').innerHTML = `${icon('search')}<span class="at-tool__label">${T('Search', 'بحث')}</span><kbd>⌘K</kbd>`;
     document.getElementById('atNoorBtn').innerHTML = `${icon('noor')}<span class="at-tool__label">${T('Ask Noor', 'اسأل نور')}</span>`;
     document.getElementById('atYou').innerHTML = icon('user');
     const dock = document.getElementById('atDock');
-    dock.innerHTML = ['home', 'read', 'lessons', 'practice'].map(id => { const e = ENVS.find(x => x.id === id); return `<a href="#/${id}" data-env="${id}">${icon(e.icon)}<span>${T(e.en, e.ar)}</span></a>`; }).join('') + `<button type="button" data-more aria-expanded="false" aria-controls="atSheet">${icon('more')}<span>${T('More', 'المزيد')}</span></button>`;
+    dock.innerHTML = ['home', 'explore', 'learn', 'practise'].map(id => { const e = ENVS.find(x => x.id === id); return `<a href="#/${e.subs && e.subs[0] ? e.subs[0][0] : id}" data-env="${id}">${icon(e.icon)}<span>${T(e.en, e.ar)}</span></a>`; }).join('') + `<button type="button" data-more aria-expanded="false" aria-controls="atSheet">${icon('more')}<span>${T('More', 'المزيد')}</span></button>`;
     const sheet = document.getElementById('atSheet');
-    sheet.innerHTML = `<ul>${ENVS.filter(e => !['home', 'read', 'lessons', 'practice'].includes(e.id)).concat(EXTRA).map(e => `<li><a href="#/${e.id}" data-env="${e.id}">${icon(e.icon)}${T(e.en, e.ar)}</a></li>`).join('')}<li><a href="student.html">${icon('back')}${T('Back to ERLY', 'العودة إلى ERLY')}</a></li></ul>`;
+    sheet.innerHTML = `<ul>${ENVS.find(e => e.id === 'workspace').subs.map(([h, en, ar]) => `<li><a href="#/${h}" data-env="workspace" data-sub="${h}">${icon(h === 'profile' ? 'user' : h === 'progress' || h === 'journey' ? 'progress' : h === 'paths' ? 'paths' : 'notebook')}${T(en, ar)}</a></li>`).join('')}<li><a href="#/noor" data-env="noor">${icon('noor')}${T('Noor tutor', 'المعلّمة نور')}</a></li><li><a href="student.html">${icon('back')}${T('Back to ERLY', 'العودة إلى ERLY')}</a></li></ul>`;
+  }
+  // the second row: the sub-places of the current place (hidden on Home)
+  function subnav(area, parts) {
+    const bar = document.getElementById('atSub'); if (!bar) return;
+    const env = envOf(area), ps = parts || [], path = (ps[0] === area ? ps : [area].concat(ps)).join('/');
+    if (!env.subs || !env.subs.length) { bar.hidden = true; bar.innerHTML = ''; document.documentElement.classList.remove('at-has-sub'); return; }
+    const cur = env.subs.slice().reverse().find(([, , , r]) => r.some(x => x.includes('/') ? path.startsWith(x) : x === area));
+    bar.hidden = false; document.documentElement.classList.add('at-has-sub');
+    bar.setAttribute('aria-label', T(env.en, env.ar));
+    bar.innerHTML = env.subs.map(sb => `<a href="#/${sb[0]}" data-sub="${sb[0]}" ${sb === cur ? 'aria-current="page"' : ''}>${T(sb[1], sb[2])}</a>`).join('');
   }
   function moveInk() {
     const tabs = document.getElementById('atTabs'), ink = tabs && tabs.querySelector('.at-ink'), cur = tabs && tabs.querySelector('[aria-current="page"]');
@@ -72,8 +83,8 @@
     ink.style.opacity = 1; ink.style.transform = `translateX(${cur.offsetLeft + 11}px) scaleX(${cur.offsetWidth - 22})`;
     if (cur.scrollIntoView && (cur.offsetLeft < tabs.scrollLeft || cur.offsetLeft + cur.offsetWidth > tabs.scrollLeft + tabs.clientWidth)) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
   }
-  function mark(area) {
-    const env = envOf(area);
+  function mark(area, parts) {
+    const env = envOf(area); subnav(area, parts);
     document.querySelectorAll('[data-env]').forEach(a => { if (a.dataset.env === env.id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     requestAnimationFrame(moveInk);
     document.title = `${T(env.en, env.ar)} · ${T('Learning Studio', 'استوديو التعلّم')} · ERLY`;
@@ -81,7 +92,7 @@
   function badges() {
     const now = Date.now(), d = st.data(), due = Object.values(d.cards).filter(c => (c.due || 0) <= now).length, mk = Object.values(d.mistakes).filter(m => !m.laterCorrect).length;
     const set = (k, n, label) => document.querySelectorAll(`[data-badge="${k}"]`).forEach(b => { b.textContent = n || ''; b.hidden = !n; if (n) b.setAttribute('aria-label', n + ' ' + label); });
-    set('revise', due, T('cards due', 'بطاقات مستحقة')); set('practice', mk, T('mistakes to revisit', 'أخطاء للمراجعة'));
+    set('practise', due + mk, T('cards due and mistakes to revisit', 'بطاقات مستحقة وأخطاء'));
   }
   function banner() {
     const b = document.getElementById('lsBanner'); if (!b) return;
@@ -198,7 +209,7 @@
       if (e.key === 'Tab' && !pal.hidden) { e.preventDefault(); q.focus(); }
     });
     document.addEventListener('click', e => { if (e.target.closest('[data-demooff]')) { st.demo(false); LS.render(); } if (e.target.closest('[data-open-noor]')) noorOpen(); if (e.target.closest('[data-open-search]')) palOpen(); });
-    LS.on('route', ({ area }) => { mark(area); badges(); banner(); const v = document.getElementById('lsView'); if (v && !document.documentElement.classList.contains('a11y-still')) { v.classList.remove('at-view-in'); void v.offsetWidth; v.classList.add('at-view-in'); } });
+    LS.on('route', ({ area, parts }) => { mark(area, parts); badges(); banner(); const v = document.getElementById('lsView'); if (v && !document.documentElement.classList.contains('a11y-still')) { v.classList.remove('at-view-in'); void v.offsetWidth; v.classList.add('at-view-in'); } });
     LS.on('change', () => badges());
     tabs.addEventListener('scroll', () => requestAnimationFrame(moveInk), { passive: true });
   }

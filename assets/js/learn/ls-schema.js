@@ -15,7 +15,7 @@
 (function (root) {
   'use strict';
   const KINDS = ['erly', 'official', 'teacher', 'student', 'ai', 'demo'];
-  const BLOCKS = ['text', 'figure', 'math', 'example', 'callout', 'lab', 'video', 'audio', 'activity', 'reading'];
+  const BLOCKS = ['text', 'figure', 'math', 'example', 'callout', 'lab', 'video', 'audio', 'activity', 'reading', 'exp'];
   const need = (o, keys, where, errs) => keys.forEach(k => { if (o[k] == null || o[k] === '' || (Array.isArray(o[k]) && !o[k].length)) errs.push(`${where}: missing “${k}”`); });
   const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
 
@@ -50,7 +50,7 @@
 
   function validateBlock(b, where, errs) {
     if (!b || !BLOCKS.includes(b.k)) { errs.push(`${where}: unknown block kind “${b && b.k}”`); return; }
-    const req = { text: ['md'], figure: ['alt'], math: ['tex', 'alt'], example: ['problem', 'steps', 'answer'], callout: ['md'], lab: ['engine', 'objective'], video: ['id'], audio: ['topic'], activity: ['q'], reading: ['doc'] }[b.k];
+    const req = { text: ['md'], figure: ['alt'], math: ['tex', 'alt'], example: ['problem', 'steps', 'answer'], callout: ['md'], lab: ['engine', 'objective'], video: ['id'], audio: ['topic'], activity: ['q'], reading: ['doc'], exp: ['id'] }[b.k];
     need(b, req, `${where} (${b.k})`, errs);
     if (b.k === 'figure' && !b.svg && !b.img) errs.push(`${where} (figure): needs svg or img`);
     if (b.k === 'activity' && b.q) validateQuestion(b.q, `${where} activity ${b.q.id}`, errs);
