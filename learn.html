@@ -27,6 +27,7 @@
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
   <link rel="stylesheet" href="assets/css/checkins.css?v=19">
   <link rel="stylesheet" href="assets/css/videos.css?v=19">
+  <script src="assets/js/learn/ls-boot.js?v=25"></script>
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -49,6 +50,8 @@
   <link rel="stylesheet" href="assets/css/learn-atelier.css?v=23d">
   <link rel="stylesheet" href="assets/css/learn-kit.css?v=24">
   <link rel="stylesheet" href="assets/css/learn-dash.css?v=24b">
+  <link rel="stylesheet" href="assets/css/learn-inspect.css?v=25">
+  <link rel="alternate" type="text/html" href="learn-guide/index.html" title="Learning Studio content directory (plain HTML, no JavaScript)">
 </head>
 <body class="ls-page at">
 <a class="skip ls-skip" href="#lsView">Skip to content</a>
@@ -65,7 +68,31 @@
 </header>
 <nav class="at-sub" id="atSub" hidden></nav>
 <div class="ls-banner" id="lsBanner" role="status" hidden></div>
-<main class="at-main ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Opening the Learning Studio…</p></main>
+<main class="at-main ls-main" id="lsView" tabindex="-1"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>Opening the Learning Studio…</p>
+  <!-- static-directory:start (written by tools/build-learn-guide.js) -->
+  <section class="ls-static" aria-labelledby="lsStaticH">
+    <h1 id="lsStaticH">ERLY Learning Studio</h1>
+    <p>Lessons, interactive experiences, a Visual Lab of computed models, readings, videos, practice and flashcards across 11 subjects. The Studio itself runs with JavaScript after the demo sign-in. The same content is available without either:</p>
+    <ul>
+      <li><a href="learn-guide/index.html">The full content directory as plain HTML</a> (no JavaScript needed)</li>
+      <li><a href="learn.html?inspect=1">The live Studio in read-only inspection mode</a> (no sign-in; nothing is saved)</li>
+    </ul>
+    <h2>Subjects</h2>
+    <ul>
+      <li><a href="learn-guide/maths.html">Mathematics</a> — Functions, calculus, geometry and statistics you can move and test. <a href="learn.html?inspect=1&amp;subject=maths">Open live</a></li>
+      <li><a href="learn-guide/physics.html">Physics</a> — Motion, energy, waves and circuits — change the numbers and watch. <a href="learn.html?inspect=1&amp;subject=physics">Open live</a></li>
+      <li><a href="learn-guide/chemistry.html">Chemistry</a> — Atoms, bonds, shapes and reactions in three dimensions. <a href="learn.html?inspect=1&amp;subject=chemistry">Open live</a></li>
+      <li><a href="learn-guide/biology.html">Biology</a> — Cells, body systems, genetics and the living world. <a href="learn.html?inspect=1&amp;subject=biology">Open live</a></li>
+      <li><a href="learn-guide/cs.html">Computer science</a> — Algorithms and how programs think. <a href="learn.html?inspect=1&amp;subject=cs">Open live</a></li>
+      <li><a href="learn-guide/english.html">English &amp; study</a> — Reading tools, note-making and writing support for every subject. <a href="learn.html?inspect=1&amp;subject=english">Open live</a></li>
+      <li><a href="learn-guide/geography.html">Geography &amp; environment</a> — Energy, climate and the systems we live in. <a href="learn.html?inspect=1&amp;subject=geography">Open live</a></li>
+      <li><a href="learn-guide/history.html">History</a> — How we know what we know: sources, evidence and how ideas changed. <a href="learn.html?inspect=1&amp;subject=history">Open live</a></li>
+      <li><a href="learn-guide/languages.html">Languages</a> — Conversations you can practise, out loud if you like. <a href="learn.html?inspect=1&amp;subject=languages">Open live</a></li>
+      <li><a href="learn-guide/social.html">Social science</a> — Cities, resources and the choices societies make. <a href="learn.html?inspect=1&amp;subject=social">Open live</a></li>
+      <li><a href="learn-guide/more.html">Economics, psychology &amp; more</a> — Markets, memory and the social sciences. <a href="learn.html?inspect=1&amp;subject=more">Open live</a></li>
+    </ul>
+  </section>
+  <!-- static-directory:end --></main>
 <nav class="at-dock" id="atDock" aria-label="Learning Studio (short)"></nav>
 <div class="at-sheet" id="atSheet" hidden></div>
 <div class="at-scrim" id="atScrim" aria-hidden="true"></div>
@@ -145,12 +172,13 @@
 <script src="assets/js/learn/ls-shell.js?v=23"></script>
 <script src="assets/js/learn/ls-home.js?v=24"></script>
 <script src="assets/js/learn/ls-read.js?v=22"></script>
-<script src="assets/js/learn/ls-explore.js?v=24"></script>
+<script src="assets/js/learn/ls-explore.js?v=25"></script>
 <script src="assets/js/learn/ls-journey.js?v=22b"></script>
 <script src="assets/js/learn/ls-adapt.js?v=22b"></script>
 <script src="assets/js/learn/ls-topic.js?v=24"></script>
 <script src="assets/js/learn/ls-motion.js?v=24"></script>
   <script src="assets/js/learn/ls-dash.js?v=24b"></script>
+<script src="assets/js/learn/ls-inspect.js?v=25c"></script>
 <script>
   // main.js switches language and theme; the Studio re-renders so its own text follows the language
   document.getElementById('langToggle').addEventListener('click', function () { setTimeout(function () { LS.render(); }, 0); });

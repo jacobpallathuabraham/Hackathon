@@ -16,7 +16,7 @@
   /* send a snapshot of a model to the Handwriting Studio (same-origin IndexedDB “erly-hws”, store “inbox”). Nothing leaves the device. */
   LS.toNotebook = (canvas, title) => {
     let src; try { const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(canvas, 0, 0); src = c.toDataURL('image/jpeg', 0.9); } catch (e) { LS.toast(T('This picture cannot be copied.', 'لا يمكن نسخ الصورة.')); return Promise.resolve(false); }
-    return new Promise(res => { if (!('indexedDB' in window)) { LS.toast(T('Saving pictures needs browser storage, which is unavailable here.', 'التخزين غير متاح.')); return res(false); }
+    return new Promise(res => { if (!window.indexedDB) { LS.toast(T('Saving pictures needs browser storage, which is unavailable here.', 'التخزين غير متاح.')); return res(false); }
       const r = indexedDB.open('erly-hws', 1); r.onupgradeneeded = () => { const d = r.result; if (!d.objectStoreNames.contains('notebooks')) d.createObjectStore('notebooks', { keyPath: 'id' }); if (!d.objectStoreNames.contains('inbox')) d.createObjectStore('inbox', { keyPath: 'id' }); };
       r.onerror = () => res(false); r.onsuccess = () => { const t = r.result.transaction('inbox', 'readwrite'); t.objectStore('inbox').put({ id: 'x' + Date.now().toString(36), title, src, at: Date.now() }); t.oncomplete = () => { LS.toast(T('Saved on this device. It appears as a new page the next time you open the Handwriting Studio (with saving turned on).', 'حُفظت على هذا الجهاز وستظهر كصفحة جديدة في استوديو الكتابة.')); res(true); }; t.onerror = () => res(false); }; });
   };
@@ -109,7 +109,7 @@
     const off = LS.on('leave', () => { off(); M.destroy && M.destroy(); });
     show('hook');
   }
-  LS.exp = { mount, DEFS, looper, canvas };
+  LS.exp = { mount, DEFS, looper, canvas, ctx: () => ({ reduced: true, looper, canvas, css, slider, fmt, onChange() {} }) }; // ctx: lets the content directory build a model off-screen to list its real controls
 
   /* ================= PHYSICS · motion graphs ================= */
   DEFS['motion-graphs'] = {

@@ -87,7 +87,7 @@
   /* ---------- lazy loading of the heavy parts ---------- */
   const once = {};
   const script = src => once[src] || (once[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
-  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=24').then(() => script('assets/js/learn/ls-kit.js?v=24')).then(() => Promise.all([script('assets/js/learn/ls-x-phys.js?v=24'), script('assets/js/learn/ls-x-math.js?v=24'), script('assets/js/learn/ls-x-chem.js?v=24b'), script('assets/js/learn/ls-x-bio.js?v=24'), script('assets/js/learn/ls-x-earth.js?v=24'), script('assets/js/learn/ls-x-mind.js?v=24'), script('assets/js/learn/ls-exp2.js?v=22b'), script('assets/js/learn/ls-exp-newton.js?v=23b'), script('assets/js/learn/ls-exp-bio.js?v=23d')]));
+  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=25').then(() => script('assets/js/learn/ls-kit.js?v=24')).then(() => Promise.all([script('assets/js/learn/ls-x-phys.js?v=24'), script('assets/js/learn/ls-x-math.js?v=24'), script('assets/js/learn/ls-x-chem.js?v=24b'), script('assets/js/learn/ls-x-bio.js?v=24'), script('assets/js/learn/ls-x-earth.js?v=24'), script('assets/js/learn/ls-x-mind.js?v=24'), script('assets/js/learn/ls-exp2.js?v=22b'), script('assets/js/learn/ls-exp-newton.js?v=23b'), script('assets/js/learn/ls-exp-bio.js?v=23d')]));
   LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=24');
 
   /* ---------- the subject worlds (Explore → Subjects) ---------- */
