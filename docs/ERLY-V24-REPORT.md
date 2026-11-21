@@ -226,11 +226,20 @@ _Filled in from the run below._
   - three.js loads only for the 3D molecule builder.
   - OCR engines load only when Scan is used.
 - **Render loops** run only while something moves. Idle experiences and the paused orrery do not run a frame loop.
-- **Not measured numerically:**
-  - pen input-to-paint latency;
-  - frame rate on low-end devices.
+- **Measured** in headless Chromium on this test container (software rendering, no GPU; a desktop-class CPU, not a phone):
 
-  The latency design (coalesced plus predicted events, desynchronized canvas) is the standard approach, but I have no device numbers for it.
+  | Screen | Median frame | 95th percentile | Worst |
+  |---|---|---|---|
+  | Projectile, black hole, predator–prey, sorting (playing) | 16.7 ms | 16.8 ms | 16.8 ms |
+  | 3D molecule builder | 16.7 ms | 16.8 ms | 33.4 ms |
+  | Dashboard (orrery) | 16.7 ms | 16.7 ms | 16.8 ms |
+
+  In the Handwriting Studio, the time from a pointer move to the next painted frame was 7.3 ms median and 15.2 ms at the 95th percentile, over 200 moves.
+- **Not measured:**
+  - real pen hardware latency (glass to ink);
+  - frame rate on low-end phones and tablets.
+
+  I had no such devices. The numbers above are not a substitute.
 
 ## 16. Accessibility
 
