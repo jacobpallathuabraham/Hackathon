@@ -1,0 +1,43 @@
+/* ERLY Learning Studio — experience kit controls (v24). Scoped to the Studio: every rule starts with a kx- class. */
+.kx-stage { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.kx-cv { display: block; width: 100%; touch-action: none; }
+.kx-cv.is-grab { cursor: grabbing !important; }
+.kx-ctl { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: flex-end; margin-top: 14px; }
+.kx-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; flex-basis: 100%; }
+.kx-range { display: grid; gap: 6px; min-width: 200px; flex: 1 1 220px; }
+.kx-range__t { display: flex; justify-content: space-between; gap: 10px; font-size: .86rem; font-weight: 600; color: var(--ink); }
+.kx-range output { font: 600 .84rem/1.2 var(--f-mono, ui-monospace); color: var(--accent); font-variant-numeric: tabular-nums; }
+.kx-range input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; cursor: pointer; --p: 50%; }
+.kx-range input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 99px; background: linear-gradient(90deg, var(--accent) var(--p), var(--line) var(--p)); }
+.kx-range input[type=range]::-moz-range-track { height: 6px; border-radius: 99px; background: var(--line); }
+.kx-range input[type=range]::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--accent); }
+.kx-range input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 2px 6px rgba(0, 0, 0, .18); transition: transform .12s cubic-bezier(.2, .8, .2, 1), box-shadow .12s; }
+.kx-range input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.kx-range input[type=range]:active::-webkit-slider-thumb { transform: scale(1.18); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent); }
+.kx-range input[type=range]:focus-visible { outline: none; } .kx-range input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); }
+.kx-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kx-chips__t { font-size: .86rem; font-weight: 600; margin-inline-end: 4px; }
+.kx-chips button { border: 1px solid var(--line-2, var(--line)); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: 600 .82rem/1.1 var(--f-body, system-ui); cursor: pointer; transition: background-color .16s, border-color .16s, color .16s, transform .12s; }
+.kx-chips button small { font-weight: 500; opacity: .7; margin-inline-start: 4px; }
+.kx-chips button:hover { border-color: var(--accent); } .kx-chips button:active { transform: scale(.97); }
+.kx-chips button[aria-checked="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.kx-chips button:focus-visible, .kx-tog input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+.kx-tog { display: inline-flex; gap: 8px; align-items: center; font-size: .88rem; font-weight: 600; cursor: pointer; }
+.kx-tog input { width: 18px; height: 18px; accent-color: var(--accent); }
+.kx-read { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: .95rem; line-height: 1.5; min-height: 3.2em; transition: background-color .2s; }
+.kx-inline { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; font-size: .88rem; }
+.kx-inline input, .kx-input { border: 1px solid var(--line-2, var(--line)); border-radius: 10px; padding: 7px 10px; background: var(--surface); color: var(--ink); font: 500 .95rem/1.2 var(--f-mono, ui-monospace); }
+.kx-planets ul { list-style: none; margin: 10px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.kx-planets li { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.kx-planets li span { grid-column: 1 / -1; height: 5px; border-radius: 9px; background: linear-gradient(90deg, var(--accent) var(--w), var(--line) var(--w)); transition: background .3s; }
+.kx-planets em { font-style: normal; font: 700 .86rem var(--f-mono, ui-monospace); }
+.kx-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.kx-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-top: 12px; }
+.kx-card { text-align: start; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.kx-card:hover { border-color: var(--accent); transform: translateY(-1px); } .kx-card[aria-pressed="true"], .kx-card.is-on { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.kx-card.is-ok { border-color: #178a4a; background: color-mix(in srgb, #178a4a 10%, var(--surface)); } .kx-card.is-no { border-color: #d23a2a; background: color-mix(in srgb, #d23a2a 8%, var(--surface)); }
+.kx-mono { font-family: var(--f-mono, ui-monospace); font-variant-numeric: tabular-nums; }
+.kx-tbl { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 10px; } .kx-tbl th, .kx-tbl td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: center; } .kx-tbl th { font-weight: 700; }
+.kx-err { color: #d23a2a; font-weight: 600; font-size: .86rem; min-height: 1.2em; margin: 4px 0 0; }
+@media (max-width: 640px) { .kx-grid2 { grid-template-columns: 1fr; } .kx-range { min-width: 0; flex-basis: 100%; } }
+@media (prefers-reduced-motion: reduce) { .kx-range input[type=range]::-webkit-slider-thumb, .kx-chips button, .kx-card { transition: none; } }
