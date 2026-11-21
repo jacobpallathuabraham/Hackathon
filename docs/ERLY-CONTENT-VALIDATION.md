@@ -1,8 +1,8 @@
 # Learning Studio content validation
 
-Run 2026-11-21 13:11 UTC by `tools/validate-content.js`.
+Run 2026-11-21 13:31 UTC by `tools/validate-content.js`.
 
-Checked 243 questions (practice bank, lesson activities, revision, experience questions, with the sub-steps of step-by-step questions), 10 lessons and 73 experiences.
+Checked 246 questions (practice bank, lesson activities, revision, experience questions, with the sub-steps of step-by-step questions), 10 lessons and 74 experiences.
 
 **0 errors · 0 to review · 2 reviewed by hand**
 

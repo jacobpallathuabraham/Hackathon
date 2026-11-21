@@ -104,10 +104,17 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
     for (const i of [0, 2]) await p.click(`#lsView [data-k="${i}"][data-d="1"]`); await p.click('#lsView [data-rl="run"]'); await p.waitForTimeout(1800); assert.match(await p.innerText('#lsView .rl__fb'), /Balanced\. Synthesis/);
     for (const i of [0, 0, 1, 2, 2]) await p.click(`#lsView [data-k="${i}"][data-d="1"]`); assert.match(await p.innerText('#lsView .rl__fb'), /not in lowest terms/);
   });
+  await t('Photosynthesis lab: inverse-square light, limiting factors, temperature optimum, and counts recorded in the journal', async () => {
+    await p.goto(BASE + 'learn.html#/exp/photo-lab'); await p.waitForSelector('#lsView .ph__stage canvas'); await api('photo-lab');
+    const r = await p.evaluate(() => ({ far: __api._model(40, 1, 25), near: __api._model(10, 1, 25), nearCO2: __api._model(10, 2, 25), half: __api._model(20, 1, 25), opt: __api._model(10, 2, 27), hot: __api._model(10, 2, 45), cool: __api._model(10, 2, 17) }));
+    assert.equal(r.far.lim, 'light'); assert.equal(r.near.lim, 'CO₂'); assert.ok(r.nearCO2.rate > r.near.rate, 'more CO₂ raises a CO₂-limited rate');
+    near(r.half.L / r.far.L, 4, 1e-9, 'halving the distance gives 4× the light'); near(r.opt.f, 1, 1e-9, 'optimum'); assert.equal(r.hot.rate, 0, 'denatured at 45 °C'); near(r.cool.f, 0.5, 1e-9, '×2 per 10 °C below the optimum');
+    await p.click('#lsView [data-kb="count"]'); await p.waitForTimeout(2200); assert.match(await p.innerText('#lsView .ph__log'), /30 cm/);
+  });
   await t('v27 canvases are painted after opening (no blank models)', async () => {
-    for (const [id, sel] of [['function-forge', '.ff__stage canvas'], ['math-missions', '.mm__stage canvas'], ['prob-lab', '.pl__h canvas'], ['water-cycle', '.wc__stage canvas'], ['reaction-lab', '.rl__stage canvas']]) {
-      await p.goto(BASE + 'learn.html#/exp/' + id); await p.waitForSelector(sel); await p.waitForTimeout(900);
-      const painted = await p.evaluate(sel => { const c = document.querySelector(sel), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 64) if (d[i]) n++; return n / (d.length / 64); }, sel);
+    for (const [id, sel] of [['function-forge', '.ff__stage canvas'], ['math-missions', '.mm__stage canvas'], ['prob-lab', '.pl__h canvas'], ['water-cycle', '.wc__stage canvas'], ['reaction-lab', '.rl__stage canvas'], ['photo-lab', '.ph__stage canvas']]) {
+      await p.goto(BASE + 'learn.html#/exp/' + id); await p.waitForSelector('#lsView ' + sel); await p.waitForTimeout(900);
+      const painted = await p.evaluate(sel => { const c = document.querySelector('#lsView ' + sel), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 64) if (d[i]) n++; return n / (d.length / 64); }, sel);
       assert.ok(painted > 0.5, id + ' painted ' + painted.toFixed(2));
     }
   });

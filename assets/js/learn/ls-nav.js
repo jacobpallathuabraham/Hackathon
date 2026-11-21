@@ -83,7 +83,10 @@
   const sig = el => { for (const a of el.attributes) if (a.name.startsWith('data-') && a.name !== 'data-v' && a.name !== 'data-i') return `${el.tagName.toLowerCase()}[${a.name}="${CSS.escape(a.value)}"]${el.dataset.v != null ? `[data-v="${CSS.escape(el.dataset.v)}"]` : ''}`; return null; };
   function capture() {
     const v = document.getElementById('lsView'); if (!v || /^exp\//.test(S.e[cur] && S.e[cur].r || '')) return null; // experiences rebuild their own model; lists and pages keep their choices
-    const pressed = [...v.querySelectorAll('[aria-pressed="true"], [aria-checked="true"]')].map(sig).filter(Boolean);
+    // only view filters (chip groups, tabs) are restored — never an answer, an activity or anything inside an experience:
+    // re-clicking those would act on the student's behalf
+    const safe = el => !el.closest('form, .at-x, .ls-act, .ls-q, .act, [data-qid], [data-q], .lsi-q, .ls-practice__q, .ls-run') && !!el.closest('[role="group"], [role="radiogroup"], [role="tablist"], .dx-filter') && !/answer|option|choice/i.test(el.className + ' ' + (el.closest('[role]') || {}).className);
+    const pressed = [...v.querySelectorAll('[aria-pressed="true"], [aria-checked="true"]')].filter(safe).map(sig).filter(Boolean);
     const fields = [...v.querySelectorAll('input[type="search"], input[type="text"]:not([readonly])')].map(i => { const s = i.id ? '#' + CSS.escape(i.id) : (i.className ? 'input.' + [...i.classList].map(c => CSS.escape(c)).join('.') : null); return s && i.value ? [s, i.value] : null; }).filter(Boolean);
     return pressed.length || fields.length ? { pressed, fields } : null;
   }
