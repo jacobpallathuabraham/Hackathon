@@ -65,9 +65,9 @@
     explore: '- Unfold the **cube**: count its faces in the net. Then double the edge and compare area and volume.\n- Fold the **square pyramid** slowly: which faces meet at the apex?\n- Roll up the **cylinder**: why is the rectangle exactly 2πr wide?\n- Check Euler’s formula **F − E + V = 2** for each polyhedron.',
     explain: 'Surface area is the total area of the faces — exactly the area of the net. Volume measures space inside. Scaling every length by k multiplies **areas by k²** and **volumes by k³**: double a cube’s edge and its surface area becomes 4× larger but its volume 8×. A cylinder’s curved side unrolls into a rectangle whose width is the circle’s circumference, **2πr**; a cone’s unrolls into a sector of radius l (the slant height) whose arc is 2πr. For any polyhedron without holes, **faces − edges + vertices = 2** (Euler).',
     apply: [
-      q('x-sn1', 'A cuboid is 4 cm × 3 cm × 2 cm. Its surface area is…', ['24 cm²', '26 cm²', '52 cm²', '48 cm²'], 2, 'A = 2(4×3 + 4×2 + 3×2) = 2(12 + 8 + 6) = 52 cm².'),
-      q('x-sn2', 'A cylinder has r = 2 cm. The rectangle in its net is how wide?', ['2 cm', '4 cm', 'about 12.6 cm', 'about 25.1 cm'], 2, 'Width = circumference = 2πr = 4π ≈ 12.6 cm.'),
-      q('x-sn3', 'A square pyramid has F = 5 faces and V = 5 vertices. Euler’s formula says it has…', ['6 edges', '8 edges', '10 edges', '12 edges'], 1, 'F − E + V = 2 → 5 − E + 5 = 2 → E = 8.')
+      q('x-sol1', 'A cuboid is 4 cm × 3 cm × 2 cm. Its surface area is…', ['24 cm²', '26 cm²', '52 cm²', '48 cm²'], 2, 'A = 2(4×3 + 4×2 + 3×2) = 2(12 + 8 + 6) = 52 cm².'),
+      q('x-sol2', 'A cylinder has r = 2 cm. The rectangle in its net is how wide?', ['2 cm', '4 cm', 'about 12.6 cm', 'about 25.1 cm'], 2, 'Width = circumference = 2πr = 4π ≈ 12.6 cm.'),
+      q('x-sol3', 'A square pyramid has F = 5 faces and V = 5 vertices. Euler’s formula says it has…', ['6 edges', '8 edges', '10 edges', '12 edges'], 1, 'F − E + V = 2 → 5 − E + 5 = 2 → E = 8.')
     ],
     summary: ['Surface area = area of the net.', 'Scale lengths by k: areas × k², volumes × k³.', 'Cylinder net: rectangle 2πr × h and two circles.', 'Euler: F − E + V = 2 for polyhedra.'],
     connect: [{ label: 'Geometry Construction Studio', href: '#/exp/geo-construct' }, { label: '3D molecule builder', href: '#/exp/molecule-3d' }],

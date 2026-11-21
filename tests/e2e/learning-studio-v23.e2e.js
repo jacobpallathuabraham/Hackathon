@@ -81,37 +81,34 @@ const num = s => parseFloat(String(s).replace('−', '-'));
 
   /* ---------- Newton's laws lab ---------- */
   const setS = async (k, v) => { await p.fill(`[data-s="${k}"]`, String(v)); await p.dispatchEvent(`[data-s="${k}"]`, 'input'); };
+  // v26: the Newton lab was rebuilt (ls-exp-newton.js); these keep the v23 physics checks against the new controls
+  const rd = () => p.textContent('.nl2__read'), setK = (k, v) => p.evaluate(([k, v]) => { const i = document.querySelector(`[data-k="${k}"]`); i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }, [k, v]);
+  const runFor = async ms => { await p.click('[data-kb="run"]'); await p.waitForTimeout(ms); await p.click('[data-kb="run"]'); };
   await t('Newton lab · first law: after a 1 s push on a frictionless floor the speed stays the same', async () => {
-    await go('exp/newton-lab', 1200); await p.click('.at-x__steps [data-step="explore"]'); await p.waitForTimeout(300);
-    await p.click('[data-nl="push1"]'); await p.waitForTimeout(4500);
-    const log = await p.textContent('.nl__log'); const v = [...log.matchAll(/([\d.]+) m\/s/g)].map(m => +m[1]);
-    assert.ok(v.length >= 2 && Math.abs(v[0] - 5) < 0.02 && Math.abs(v[1] - v[0]) < 0.02, log.slice(0, 200));
+    await go('exp/newton-lab', 1200); await p.click('[data-kb="push"]'); await p.waitForTimeout(2500);
+    const v1 = +(await rd()).match(/v = ([\d.]+) m\/s/)[1]; await p.waitForTimeout(1200); const v2 = +(await rd()).match(/v = ([\d.]+) m\/s/)[1];
+    assert.ok(Math.abs(v1 - 5) < 0.02 && Math.abs(v2 - v1) < 0.005, `v ${v1} then ${v2}`); await p.click('[data-kb="run"]');
   });
   await t('Newton lab · second law: measured a equals F ÷ m for three runs', async () => {
-    await p.click('[data-mis="fma"]'); await setS('F', 20); await setS('m', 2); await p.click('[data-nl="run"]'); await p.waitForTimeout(2600);
-    await setS('m', 8); await p.click('[data-nl="run"]'); await p.waitForTimeout(2600);
-    await setS('F', 40); await p.click('[data-nl="run"]'); await p.waitForTimeout(2600);
-    const rows = await p.$$eval('.nl__log tbody tr', r => r.map(x => [...x.cells].map(c => c.textContent.trim())));
-    assert.ok(rows.length >= 3, 'three runs logged: ' + JSON.stringify(rows));
-    rows.slice(-3).forEach(r => { const [F, m, a] = r.map(num); assert.ok(Math.abs(a - F / m) < 0.05, `a=${a} for F=${F}, m=${m}`); });
+    await p.click('[data-kc="mode"][data-v="fma"]'); await p.click('[data-kc="surf"][data-v="frictionless"]');
+    for (const [F, m] of [[20, 2], [20, 8], [40, 8]]) { await setK('F', F); await setK('m', m); await runFor(900); await p.click('[data-kb="save"]'); }
+    const rows = await p.$$eval('.nl2__log tbody tr', r => r.map(x => [...x.cells].map(c => c.textContent.trim())));
+    assert.equal(rows.length, 3, JSON.stringify(rows)); rows.forEach(r => { const F = num(r[1]), m = num(r[2]), a = num(r[5]); assert.ok(Math.abs(a - F / m) < 0.05, `a=${a} for F=${F}, m=${m}`); });
   });
   await t('Newton lab · friction: holds below μs·m·g, slides above it; kinetic friction is μk·m·g', async () => {
-    await p.click('[data-mis="friction"]'); await setS('m', 5); await setS('F', 20); await p.click('[data-nl="run"]'); await p.waitForTimeout(800);
-    assert.match(await p.textContent('.nl__read'), /v = 0\.00 m\/s/);
-    for (const f of [24, 25]) { await setS('F', f); await p.waitForTimeout(600); }
-    const log = (await p.textContent('.nl__log')).replace(/\s+/g, ' ');
-    assert.match(log, /24\.5 N/); assert.match(log, /14\.7 N/);
+    await p.click('[data-kc="mode"][data-v="friction"]'); await setK('m', 5); await setK('F', 20); await runFor(600);
+    assert.match(await rd(), /v = 0\.00 m\/s/); assert.match(await rd(), /μₛN = 24\.5 N/);
+    await setK('F', 25); await runFor(600); const r = (await rd()).replace(/\s+/g, ' '); assert.match(r, /started to slide at 25\.0 N/); assert.match(r, /friction = −14\.7 N/);
   });
   await t('Newton lab · collisions: momentum conserved; with e = 1 kinetic energy too; velocities match the formulas', async () => {
-    await p.click('[data-mis="collide"]'); await p.click('[data-nl="go"]'); await p.waitForTimeout(3600);
-    const log = (await p.textContent('.nl__log')).replace(/\s+/g, ' ');
-    assert.match(log, /momentum.*?2\.00\s*2\.00/i); assert.match(log, /energy.*?11\.00\s*11\.00/i); assert.match(log, /−2\.33/); assert.match(log, /1\.67/);
+    await p.click('[data-kc="mode"][data-v="interact"]'); await setK('mA', 1); await setK('vA', 4); await setK('mB', 2); await setK('vB', -1); await setK('e', 1);
+    await runFor(3500); const r = (await rd()).replace(/\s+/g, ' ');
+    assert.match(r, /before: 2\.00 · now: 2\.00/); assert.match(r, /kinetic energy now: 9\.00 J/);
+    assert.match(r, /vA = −2\.67/); assert.match(r, /vB = 2\.33/); // v1′ = (m1v1 + m2v2 + m2e(v2 − v1)) / (m1 + m2) = −8/3, v2′ = 7/3
   });
   await t('experience frame: the Play/Pause label follows the simulation', async () => {
-    // the collision run is still going (it ends when the carts leave the track, at most 12 s): the label says Pause …
-    assert.equal((await p.textContent('[data-x="pause"]')).trim(), 'Pause');
-    // … and once the simulation stops by itself, the label must say Play without anyone touching it
-    await p.waitForFunction(() => document.querySelector('[data-x="pause"]').textContent.trim() === 'Play', null, { timeout: 14000 });
+    await p.click('[data-x="pause"]'); await p.waitForTimeout(200); assert.equal((await p.textContent('[data-x="pause"]')).trim(), 'Pause', 'frame Play starts the lab');
+    await p.click('[data-kb="run"]'); await p.waitForTimeout(200); assert.equal((await p.textContent('[data-x="pause"]')).trim(), 'Play', 'pausing with the lab’s own button updates the frame');
   });
 
   /* ---------- Into the leaf ---------- */

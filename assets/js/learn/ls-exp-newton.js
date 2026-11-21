@@ -109,7 +109,9 @@
       /* ---------- physics: two carts with a contact force ---------- */
       function step2(dt) {
         const e = Math.max(1e-3, ctl.val.e), ln = Math.log(e), zeta = -ln / Math.sqrt(Math.PI * Math.PI + ln * ln), k = 4e4;
-        for (let i = 0, n = Math.round(dt / DT); i < n; i++) {
+        // fine sub-steps (20 µs) while the bumpers are within 2 cm of touching: the stiff contact spring needs them to keep energy to 0.1 %
+        const inner = () => (B.x - B.w / 2) - (A.x + A.w / 2) < 0.02 || A.spring;
+        for (let i = 0, n = Math.round(dt / DT); i < n; i++) { const fine = inner(), sub = fine ? 50 : 1, DTs = DT / sub; for (let s2 = 0; s2 < sub; s2++) {
           const mu = A.m * B.m / (A.m + B.m), cdamp = 2 * zeta * Math.sqrt(k * mu);
           const gap = (B.x - B.w / 2) - (A.x + A.w / 2);
           let f = 0; // force on B by A (positive pushes B to +x); force on A by B is −f
@@ -117,8 +119,8 @@
             const comp = 0.05 - gap; if (comp > 0) f = 900 * comp; else A.spring = false;
           } else if (gap < 0) { f = -k * gap - cdamp * (B.v - A.v); if (f < 0) f = 0; }
           if (ctl.val.e < 0.02 && gap < 0.002 && Math.abs(B.v - A.v) < 0.02) { const vc = (A.m * A.v + B.m * B.v) / (A.m + B.m); A.v = B.v = vc; f = 0; } // perfectly inelastic: they move together
-          B.v += f / B.m * DT; A.v += -f / A.m * DT; A.x += A.v * DT; B.x += B.v * DT; t += DT; contactF = f; peakF = Math.max(peakF, f);
-        }
+          B.v += f / B.m * DTs; A.v += -f / A.m * DTs; A.x += A.v * DTs; B.x += B.v * DTs; t += DTs; contactF = f; peakF = Math.max(peakF, f);
+        } }
         hist.push([t, A.v, B.v, contactF, -contactF]); if (hist.length > 1200) hist.shift();
       }
 
@@ -189,7 +191,7 @@
         [['A', pA, '#3c6fd8'], ['B', pB, '#d0503b'], ['total', pA + pB, Pl.ink]].forEach(([n, p, col], i) => { const yy = by + 14 + i * 24; G.fillStyle = Pl.line; G.fillRect(bx + 150, yy - 8, 1, 16); G.fillStyle = col; G.fillRect(bx + 150, yy - 6, Math.max(-140, Math.min(140, p * s2)), 12); K.text(G, `${n}: ${f2(p)}`, bx, yy + 4, { s: 12, w: 600 }); });
         K.text(G, `t = ${f2(t, 2)} s`, 870, 26, { w: 700, s: 13, c: Pl.muted });
         const KE = 0.5 * A.m * A.v * A.v + 0.5 * B.m * B.v * B.v;
-        read.innerHTML = IL(`**Total momentum** before: ${f2(p0)} · now: **${f2(pA + pB)}** kg·m/s · kinetic energy now: ${f2(KE)} J · largest contact force so far: ${f2(peakF, 0)} N — on each cart, in opposite directions.`);
+        read.innerHTML = IL(`**vA** = ${f2(A.v)} m/s · **vB** = ${f2(B.v)} m/s · **Total momentum** before: ${f2(p0)} · now: **${f2(pA + pB)}** kg·m/s · kinetic energy now: ${f2(KE)} J · largest contact force so far: ${f2(peakF, 0)} N — on each cart, in opposite directions.`);
       }
       /* ---------- graphs (synchronised with the motion) ---------- */
       function graph() {
@@ -230,7 +232,7 @@
         logBox.innerHTML = `<table class="nl2__tbl"><caption>${T('Your runs', 'تجاربك')}</caption><thead><tr><th scope="col">#</th><th scope="col">F (N)</th><th scope="col">m (kg)</th><th scope="col">${T('Surface', 'السطح')}</th><th scope="col">F_net (N)</th><th scope="col">${T('measured a', 'ت المقيسة')} (m/s²)</th><th scope="col">F_net / m</th></tr></thead><tbody>${runLog.map((r, i) => `<tr><td>${i + 1}</td><td>${f2(r.F, 0)}</td><td>${f2(r.m, 1)}</td><td>${esc(r.surf)}</td><td>${f2(r.Fn, 1)}</td><td><b>${f2(r.a)}</b></td><td>${f2(r.Fn / r.m)}</td></tr>`).join('')}</tbody></table>`;
       }
       const RUNCOL = ['#7c3aed', '#0d9488', '#b45309', '#be123c'];
-      function syncRun() { const b = host.querySelector('[data-kb="run"]'); if (b) b.textContent = sim ? T('Pause ❚❚', 'إيقاف') : T('Run ▸', 'تشغيل'); }
+      function syncRun() { const b = host.querySelector('[data-kb="run"]'); if (b) b.textContent = sim ? T('Pause ❚❚', 'إيقاف') : T('Run ▸', 'تشغيل'); c.onChange && c.onChange(); } // keeps the frame’s Play/Pause label in step
       function on(id, val) {
         if (id === 'mode') return setMode(val);
         if (id === 'F') { F = val; if (pushT > 0) pushT = 0; if (!sim && mode !== 'interact') { render(); } }

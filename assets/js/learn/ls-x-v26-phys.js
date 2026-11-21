@@ -158,7 +158,7 @@
     explain: 'Current only flows round a **closed loop**. In **series** the same current passes through each part and the battery voltage is **shared**, so two bulbs are dimmer than one. In **parallel** each branch gets the **full voltage**, so each bulb is as bright as one alone — but the battery supplies **more current** in total. Ohm’s law, **V = IR**, holds for each resistor and bulb; the power a bulb receives is **P = VI = I²R**. A wire straight across a battery is a **short circuit**: almost no resistance, so a dangerously large current.',
     apply: [
       q('x-cb1', 'A 6 V battery drives two 12 Ω bulbs in series. The current is…', ['0.25 A', '0.5 A', '1 A', '2 A'], 0, 'Total resistance 24 Ω: I = V/R = 6/24 = 0.25 A.'),
-      q('x-cb2', 'The same two bulbs in parallel on the 6 V battery: the battery current is…', ['0.25 A', '0.5 A', '1 A', '2 A'], 2, 'Each branch: 6/12 = 0.5 A; together 1 A.'),
+      q('x-cb2', 'The same two bulbs in parallel on the 6 V battery: the battery current is…', ['0.25 A', '0.5 A', '1 A', '2 A'], 2, 'Each branch carries 6/12 = 0.5 A, so the battery supplies 0.5 + 0.5 = 1 A.'),
       q('x-cb3', 'Opening a switch in one branch of a parallel circuit…', ['turns off every bulb', 'turns off only that branch', 'makes the other bulbs dimmer', 'shorts the battery'], 1, 'The other branches still form closed loops with the battery.')
     ],
     summary: ['Current needs a closed loop.', 'Series: one current, voltage shared.', 'Parallel: full voltage on each branch, currents add.', 'V = IR; bulb power P = I²R.'],
