@@ -70,14 +70,25 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
     await p.evaluate(() => { HWS.layer(HWS.page()).locked = false; }); await drawWorld(wave(300, 700)); assert.equal(await items(), n0 + 1, 'ink again once unlocked');
     assert.ok(id);
   });
+  await t('a real stylus records its pressure; after a pen is used, a resting palm (touch) does not draw', async () => {
+    await p.click('[data-tool="pen"]');
+    const fire = (type, x, y, pt, pressure) => p.evaluate(([type, x, y, pt, pressure]) => { const v = document.querySelector('.hws-vp'); v.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: pt === 'pen' ? 7 : 9, pointerType: pt, pressure, isPrimary: true, bubbles: true, cancelable: true, button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1 })); }, [type, x, y, pt, pressure]);
+    const [x0, y0] = await W2S(200, 900), n0 = await items();
+    await fire('pointerdown', x0, y0, 'pen', 0.2); for (let i = 1; i <= 12; i++) await fire('pointermove', x0 + i * 12, y0, 'pen', 0.2 + i * 0.06); await fire('pointerup', x0 + 150, y0, 'pen', 0);
+    assert.equal(await items(), n0 + 1, 'stylus stroke recorded');
+    const s = await p.evaluate(() => { const it = HWS.layer(HWS.page()).items.slice(-1)[0]; return { pr: it.pr, hi: it.pts.some(q => q[2] > 0.6), lo: it.pts.some(q => q[2] < 0.4) }; });
+    assert.deepEqual(s, { pr: true, hi: true, lo: true }, 'pressure captured from the device');
+    await fire('pointerdown', x0 + 300, y0 + 40, 'touch', 0.5); await fire('pointermove', x0 + 340, y0 + 80, 'touch', 0.5); await fire('pointerup', x0 + 340, y0 + 80, 'touch', 0);
+    assert.equal(await items(), n0 + 1, 'palm/touch after a pen does not draw');
+  });
   await t('autosave: the notebook is in IndexedDB and comes back after a reload', async () => {
     await p.evaluate(() => HWS.flush(HWS.nb)); await p.waitForTimeout(300); const before = await p.evaluate(() => ({ id: HWS.nb.id, pages: HWS.nb.pages.length, n: HWS.nb.pages[0].layers.reduce((a, L) => a + L.items.length, 0) }));
     assert.match(await p.textContent('.hws-save'), /Saved on this device/);
     await p.reload(); await p.waitForSelector('.hws-vp'); await p.waitForTimeout(800);
     const after = await p.evaluate(() => ({ id: HWS.nb.id, pages: HWS.nb.pages.length, n: HWS.nb.pages[0].layers.reduce((a, L) => a + L.items.length, 0) })); assert.deepEqual(after, before);
   });
-  await t('export: PNG and SVG and notebook file download; the notebook file opens again', async () => {
-    for (const k of ['png', 'svg', 'json']) { await p.click('[data-a="exportMenu"]'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click(`[data-x="${k}"]`)]); const path = await dl.path(); const size = require('fs').statSync(path).size; assert.ok(size > 500, k + ' size ' + size); if (k === 'svg') assert.match(require('fs').readFileSync(path, 'utf8'), /<svg[\s\S]*<polyline/); if (k === 'json') p._nbfile = path; }
+  await t('export: PNG, SVG, PDF and notebook file download; the notebook file opens again', async () => {
+    for (const k of ['png', 'svg', 'pdf', 'json']) { await p.click('[data-a="exportMenu"]'); const [dl] = await Promise.all([p.waitForEvent('download'), p.click(`[data-x="${k}"]`)]); const path = await dl.path(); const size = require('fs').statSync(path).size; assert.ok(size > 500, k + ' size ' + size); if (k === 'svg') assert.match(require('fs').readFileSync(path, 'utf8'), /<svg[\s\S]*<polyline/); if (k === 'pdf') assert.match(require('fs').readFileSync(path).slice(0, 5).toString(), /^%PDF-/); if (k === 'json') p._nbfile = path; }
     const [fc] = await Promise.all([p.waitForEvent('filechooser'), p.evaluate(() => document.querySelector('[data-file="json"]').click())]); await fc.setFiles(p._nbfile); await p.waitForTimeout(400); assert.ok(await p.evaluate(() => HWS.nb.pages.length >= 2));
   });
   await t('Practise: a letter sheet with guides; tracing a guide is measured honestly (coverage high when traced, 0 when not)', async () => {
