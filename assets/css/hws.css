@@ -81,4 +81,19 @@ body.hws-page { padding: 0 !important; } body.hws-page #hws { position: fixed !i
 .hws-top { grid-row: 1; } .hws-consent { grid-row: 2; } .hws-main { grid-row: 3; } .hws-pages { grid-row: 4; }
 @media (max-width: 820px) { .hws-pages { grid-row: 4; } }
 #hws > .hws { max-width: none; margin: 0; padding: 0; height: 100%; box-sizing: border-box; }
-body.hws-page .a11y-fab { bottom: calc(var(--hws-foot, 112px) + 14px) !important; left: 70px !important; right: auto !important; }
+html:has(body.hws-page) .a11y-fab { bottom: 126px !important; inset-inline-start: 70px !important; }
+@media (max-width: 820px) { html:has(body.hws-page) .a11y-fab { bottom: 100px !important; inset-inline-start: 3px !important; } }
+/* arrival from the student portal's ink transition: a paper cover until ink-transition.js lifts it (was in hand.css) */
+html.ink-arrive body::before { content: ""; position: fixed; inset: 0; z-index: 9400; background: #fbfaf7; }
+html.ink-arrive[data-theme="dark"] body::before { background: #050b20; }
+/* phones and narrow tablets: the canvas gets the room; tool settings open as a sheet on demand, the page strip is one scrolling row */
+.hws-propsbtn { display: none; }
+@media (max-width: 820px) {
+  .hws-propsbtn { display: inline-block; padding: 6px 10px; }
+  .hws-main { position: relative; grid-template-columns: 52px minmax(0, 1fr); }
+  .hws-props { display: none; position: absolute; inset: auto 0 0 52px; z-index: 30; max-height: 55%; border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,.18); }
+  .hws.props-open .hws-props { display: block; }
+  .hws-pages { flex-wrap: nowrap; gap: 8px; padding: 6px 8px; overflow-x: auto; } .hws-pagelist { flex: none; max-width: 46%; } .hws-pagectl { flex-wrap: nowrap; flex: none; }
+  .hws-pg__b canvas, .hws-pg__b img { max-height: 44px; width: auto; }
+  .hws-consent { padding: 6px 10px; gap: 6px; } .hws-consent p { font-size: .8rem; }
+}

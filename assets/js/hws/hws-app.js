@@ -38,7 +38,7 @@
       <div class="hws-actions"><button type="button" class="hws-ib" data-a="undo" aria-label="${T('Undo (Ctrl+Z)', 'تراجع')}">${ico('undo')}</button><button type="button" class="hws-ib" data-a="redo" aria-label="${T('Redo (Ctrl+Shift+Z)', 'إعادة')}">${ico('redo')}</button>
         <div class="hws-menu"><button type="button" class="hws-btn" data-a="exportMenu" aria-haspopup="menu" aria-expanded="false">${T('Export', 'تصدير')} ▾</button><div class="hws-pop" role="menu" hidden>
           <button role="menuitem" data-x="png">${T('This page as PNG', 'هذه الصفحة PNG')}</button><button role="menuitem" data-x="pngT">${T('This page, transparent PNG (ink only)', 'PNG شفاف')}</button><button role="menuitem" data-x="svg">${T('This page as SVG (vector)', 'SVG متجه')}</button><button role="menuitem" data-x="pdf">${T('Whole notebook as PDF', 'الدفتر PDF')}</button><button role="menuitem" data-x="print">${T('Print', 'طباعة')}</button><button role="menuitem" data-x="json">${T('Notebook file (.erlynote)', 'ملف الدفتر')}</button><hr><button role="menuitem" data-x="importImg">${T('Import an image…', 'استيراد صورة…')}</button><button role="menuitem" data-x="importPdf">${T('Import PDF pages to annotate…', 'استيراد صفحات PDF…')}</button><button role="menuitem" data-x="importJson">${T('Open a notebook file…', 'فتح ملف دفتر…')}</button></div></div>
-        <button type="button" class="hws-ib" data-a="help" aria-label="${T('Shortcuts and help', 'الاختصارات')}">?</button></div>
+        <button type="button" class="hws-btn hws-propsbtn" data-a="props" aria-expanded="false" aria-controls="hws-props">${T('Tool settings', 'إعدادات الأداة')}</button><button type="button" class="hws-ib" data-a="help" aria-label="${T('Shortcuts and help', 'الاختصارات')}">?</button></div>
     </header>
     <div class="hws-consent" hidden></div>
     <div class="hws-main">
@@ -46,7 +46,7 @@
       <div class="hws-stage"><div class="hws-canvas"></div>
         <div class="hws-zoom" role="group" aria-label="${T('Zoom', 'التكبير')}"><button type="button" class="hws-ib" data-z="out" aria-label="${T('Zoom out', 'تصغير')}">${ico('minus', 16)}</button><button type="button" class="hws-zv" data-z="100" aria-label="${T('Actual size', 'الحجم الفعلي')}">100%</button><button type="button" class="hws-ib" data-z="in" aria-label="${T('Zoom in', 'تكبير')}">${ico('plus', 16)}</button><button type="button" class="hws-ib" data-z="fit" aria-label="${T('Fit page (0)', 'ملاءمة')}">${ico('fit', 16)}</button><button type="button" class="hws-ib" data-z="full" aria-label="${T('Full screen', 'ملء الشاشة')}">${ico('full', 16)}</button></div>
         <div class="hws-panel" hidden></div></div>
-      <aside class="hws-props" aria-label="${T('Tool settings', 'إعدادات الأداة')}"></aside>
+      <aside class="hws-props" id="hws-props" aria-label="${T('Tool settings', 'إعدادات الأداة')}"></aside>
     </div>
     <footer class="hws-pages" aria-label="${T('Pages', 'الصفحات')}"><div class="hws-pagelist" role="list"></div><div class="hws-pagectl"><button type="button" class="hws-btn" data-pg="add">+ ${T('Page', 'صفحة')}</button><button type="button" class="hws-btn" data-pg="dup">${T('Duplicate', 'تكرار')}</button><button type="button" class="hws-btn" data-pg="del">${T('Delete', 'حذف')}</button>
       <label class="hws-sel">${T('Paper', 'الورق')} <select data-pg="paper">${Object.entries(H.PAPERS).map(([k, v]) => `<option value="${k}">${T(...v)}</option>`).join('')}</select></label>
@@ -208,7 +208,7 @@
   const doUndo = () => { if (H.undo(page())) { cv.setSel([]); changed(); renderProps(); } }, doRedo = () => { if (H.redo(page())) { cv.setSel([]); changed(); renderProps(); } };
   addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && /^[zy]$/i.test(e.key) && !/input|textarea/i.test(e.target.tagName) && e.target !== (cv && cv.el)) { e.preventDefault(); shortcut(e); } });
   $('.hws-actions').addEventListener('click', e => { const b = e.target.closest('[data-a],[data-x]'); if (!b) return;
-    if (b.dataset.a === 'undo') doUndo(); if (b.dataset.a === 'redo') doRedo(); if (b.dataset.a === 'help') help();
+    if (b.dataset.a === 'undo') doUndo(); if (b.dataset.a === 'redo') doRedo(); if (b.dataset.a === 'help') help(); if (b.dataset.a === 'props') { const r = $('.hws'), on = !r.classList.contains('props-open'); r.classList.toggle('props-open', on); b.setAttribute('aria-expanded', String(on)); if (on) { const f = $('.hws-props').querySelector('button, input, select'); if (f) f.focus(); } }
     if (b.dataset.a === 'exportMenu') { const pop = b.nextElementSibling, open = pop.hidden; pop.hidden = !open; b.setAttribute('aria-expanded', String(open)); if (open) pop.querySelector('button').focus(); return; }
     if (b.dataset.x) { $('.hws-pop').hidden = true; $('[data-a="exportMenu"]').setAttribute('aria-expanded', 'false'); doExport(b.dataset.x); } });
   document.addEventListener('click', e => { if (!e.target.closest('.hws-menu')) { const p = $('.hws-pop'); if (p) p.hidden = true; } });

@@ -1,11 +1,5 @@
-# Retired end-to-end tests
+# Retired suites
 
-These suites tested the v12–v19 Handwriting Check interface (`#hwPad`, `.hw2-*`), which v22 replaced with the
-Handwriting Studio (`handwriting.html`: Practice · Scan & Analyze · Assess · History). They are kept for reference and
-are not run by the regression script.
+These suites tested screens that no longer exist. They are kept for history and are not run.
 
-What they covered is now covered by:
-- `tests/e2e/handwriting-v22.e2e.js` — the new studio, ink engine, analysis, scan, six assessment types, history, privacy;
-- `tests/e2e/ink-studio.e2e.js` — the page transition, the writing surface (pen pressure, palm rejection, undo, eraser,
-  resize) and recognition of on-screen writing (updated to the v22 surface);
-- `tests/bench/hand-bench.js` — recognition accuracy on 150 real handwritten IAM lines (unchanged; re-run in v22).
+- `handwriting-v22.e2e.js` tested the v22 Handwriting Studio (`.hxs__*` markup, `ERLY.handStudio`). The studio was rebuilt in v24. Its replacement is `tests/e2e/handwriting-studio-v24.e2e.js`. The ink-transition checks for the student portal → Handwriting route are still in `tests/e2e/ink-studio.e2e.js`.
