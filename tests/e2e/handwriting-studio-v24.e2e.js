@@ -63,6 +63,13 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
     await p.click('[data-a="layers"]'); await p.click('[data-l="add"]'); await p.click('[data-tool="pen"]').catch(() => {}); await p.click('[data-mode="write"]'); await drawWorld(wave(300, 600)); const pg = await p.evaluate(() => ({ n: HWS.page().layers.length, act: HWS.layer(HWS.page()).items.length })); assert.equal(pg.n, 2); assert.equal(pg.act, 1);
     await p.click('[data-a="layers"]').catch(() => {});
   });
+  await t('layers: a locked layer refuses new ink until it is unlocked', async () => {
+    const id = await p.evaluate(() => HWS.layer(HWS.page()).id), n0 = await items();
+    await p.evaluate(() => { const L = HWS.layer(HWS.page()); L.locked = true; });
+    await drawWorld(wave(300, 700)); assert.equal(await items(), n0, 'no ink on a locked layer');
+    await p.evaluate(() => { HWS.layer(HWS.page()).locked = false; }); await drawWorld(wave(300, 700)); assert.equal(await items(), n0 + 1, 'ink again once unlocked');
+    assert.ok(id);
+  });
   await t('autosave: the notebook is in IndexedDB and comes back after a reload', async () => {
     await p.evaluate(() => HWS.flush(HWS.nb)); await p.waitForTimeout(300); const before = await p.evaluate(() => ({ id: HWS.nb.id, pages: HWS.nb.pages.length, n: HWS.nb.pages[0].layers.reduce((a, L) => a + L.items.length, 0) }));
     assert.match(await p.textContent('.hws-save'), /Saved on this device/);

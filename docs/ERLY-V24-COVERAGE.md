@@ -25,7 +25,7 @@ The Studio ships 11 subjects with 34 listed topics and 10 authored lessons. In v
 | ★ Sound explorer | exploration | frequency, amplitude, optional tone | waveform + particle compressions | longitudinal waves, pitch, loudness | observe | wavelength = v/f |
 | ★ Energy track | simulation | release height, friction | KE / PE / thermal bars, ball motion | conservation of energy | observe | total constant when friction 0 |
 | ★ Magnet field lab | exploration | drag/flip two magnets | traced field lines, compass needles | magnetic fields | observe | opens, lines traced |
-| ★ Black hole explorer | visualization | mass, distance | event horizon size, escape speed, light bending (weak-field) | gravity, escape velocity | observe | r_s = 2.95 km × M/M☉ |
+| ★ Black hole explorer | visualization | mass, distance | event horizon size, escape speed, light paths integrated exactly in the Schwarzschild metric (photon sphere, capture) | gravity, escape velocity | observe | r_s = 2.95 km × M/M☉ |
 
 ## Mathematics (topics: Functions & graphs · Calculus · Geometry & trigonometry · Probability & statistics)
 

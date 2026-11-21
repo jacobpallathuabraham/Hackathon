@@ -76,6 +76,7 @@
       if (e.pointerType === 'touch') { touches.set(e.pointerId, [e.clientX, e.clientY]); if (touches.size === 2) { cancelCur(); const [a, b] = [...touches.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: zoom, px, py, cx: (a[0] + b[0]) / 2, cy: (a[1] + b[1]) / 2 }; return; } if (penSeen) { drag = { mode: 'pan', sx: e.clientX, sy: e.clientY, px, py }; cap(e.pointerId); return; } }
       const t = tool(); if (e.button === 1 || spaceDown || t.id === 'hand') { drag = { mode: 'pan', sx: e.clientX, sy: e.clientY, px, py }; cap(e.pointerId); vp.classList.add('is-panning'); return; }
       if (e.button > 0) return;
+      if (H.layer(page()).locked && t.id !== 'pick') { api.toast && api.toast(T('This layer is locked. Unlock it in Layers, or choose another layer.', 'هذه الطبقة مقفلة. افتحها من الطبقات أو اختر طبقة أخرى.')); return; }
       cap(e.pointerId); e.preventDefault();
       const [x, y] = evPt(e), p = page();
       if (t.id === 'pen' || t.id === 'erasePix') { cur = t.id === 'pen' ? { t: 'stroke', id: H.uid('s'), brush: t.brush, color: t.color, size: t.size, opacity: t.opacity, opt: t.opt, pr: false, pts: [] } : { t: 'erase', id: H.uid('e'), size: t.size * 6, pts: [] }; addPts(e); api.onInk && api.onInk(); return; }
