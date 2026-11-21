@@ -132,6 +132,10 @@ Simulations are unchanged and run in both normal and inspection mode. The direct
 | `learning-studio-v23` | 18/18 |
 | `learning-studio-v22` | 22/22 |
 | `learning-studio-v21` | 21/21 |
+| `learning-studio` | 34/34 |
+| `studio-noor` | passed |
+| `nav` | passed |
+| `a11y` | passed |
 
 **Failures found during the work:**
 - **A real bug:** a physics path linked a maths lesson to a missing anchor. Fixed.
@@ -163,3 +167,10 @@ Simulations are unchanged and run in both normal and inspection mode. The direct
 - `learn.html`
 - `assets/js/learn/ls-exp.js`
 - `assets/js/learn/ls-explore.js`
+
+## Deployment
+
+Deployed to GitHub Pages at commit c70420e, and the Pages build succeeded.
+
+- https://jacobpallathuabraham.github.io/Hackathon/learn-guide/index.html
+- https://jacobpallathuabraham.github.io/Hackathon/learn.html?inspect=1
