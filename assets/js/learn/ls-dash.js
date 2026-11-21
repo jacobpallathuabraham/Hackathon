@@ -43,7 +43,7 @@
         <section class="dx-sec dx-plan"><h2 class="dx-h2">${T('Your plan & progress', 'خطتك وتقدمك')}</h2><div class="dx-plan__in"></div></section>
       </div></div>`;
     // the earlier Home (consent, today's plan, momentum…) lives on, below
-    if (LS.homeView) { const box = view.querySelector('.dx-plan__in'); const shim = document.createElement('div'); LS.homeView(shim); shim.querySelectorAll('.at-open').forEach(n => n.remove()); box.appendChild(shim); }
+    if (LS.homeView) { const box = view.querySelector('.dx-plan__in'); const shim = document.createElement('div'); LS.homeView(shim); shim.querySelectorAll('h1').forEach(h => { const h2 = document.createElement('h2'); [...h.attributes].forEach(a => h2.setAttribute(a.name, a.value)); h2.innerHTML = h.innerHTML; h.replaceWith(h2); }); box.appendChild(shim); }
     // discovery grid with filters
     let fk = '', fs = '', all = false; const grid = view.querySelector('.dx-grid');
     const mix = L => { const by = {}; L.forEach(x => (by[x.subject] = by[x.subject] || []).push(x)); const out = [], keys = Object.keys(by); for (let i = 0; out.length < L.length; i++) keys.forEach(k => { if (by[k][i]) out.push(by[k][i]); }); return out; };
