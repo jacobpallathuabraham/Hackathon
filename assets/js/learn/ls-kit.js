@@ -119,10 +119,10 @@
   K.drag = (S, handles, move, end) => {
     let cur = null; const cv = S.cv; cv.style.touchAction = 'none';
     const hit = (x, y) => { let best = null, bd = 1e9; handles().forEach(h => { const d = Math.hypot(h.x - x, h.y - y); if (d < (h.r || 18) + 8 && d < bd) { bd = d; best = h; } }); return best; };
-    cv.addEventListener('pointerdown', e => { const [x, y] = S.pt(e), h = hit(x, y); if (!h) return; cur = h.id; cv.setPointerCapture(e.pointerId); cv.classList.add('is-grab'); e.preventDefault(); move(cur, x, y); });
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); if (cv.tabIndex >= 0) cv.focus({ preventScroll: true }); const [x, y] = S.pt(e), h = hit(x, y); if (!h) return; cur = h.id; cv.setPointerCapture(e.pointerId); cv.classList.add('is-grab'); e.preventDefault(); move(cur, x, y); });
     cv.addEventListener('pointermove', e => { const [x, y] = S.pt(e); if (cur != null) { const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : []; const last = evs.length ? S.pt(evs[evs.length - 1]) : [x, y]; move(cur, last[0], last[1]); } else cv.style.cursor = hit(x, y) ? 'grab' : ''; });
     const up = () => { if (cur != null) { const c0 = cur; cur = null; cv.classList.remove('is-grab'); if (end) end(c0); } };
-    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('lostpointercapture', up);
     return { dragging: () => cur };
   };
 

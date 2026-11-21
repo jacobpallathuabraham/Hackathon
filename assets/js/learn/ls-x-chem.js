@@ -8,26 +8,32 @@
   const readout = host => { const r = document.createElement('p'); r.className = 'kx-read'; r.setAttribute('aria-live', 'polite'); host.appendChild(r); return r; };
 
   /* ============ 1 · 3D molecule builder ============ */
-  const EL = { H: { v: 1, lp: 0, col: 0xf4f4f4, r: 0.32, name: 'hydrogen' }, C: { v: 4, lp: 0, col: 0x303030, r: 0.5, name: 'carbon' }, N: { v: 3, lp: 1, col: 0x3050f8, r: 0.48, name: 'nitrogen' }, O: { v: 2, lp: 2, col: 0xff2010, r: 0.46, name: 'oxygen' }, F: { v: 1, lp: 3, col: 0x90e050, r: 0.42, name: 'fluorine' }, Cl: { v: 1, lp: 3, col: 0x1ff01f, r: 0.56, name: 'chlorine' }, S: { v: 2, lp: 2, col: 0xffd030, r: 0.58, name: 'sulfur' } };
-  const KNOWN = { H3N: 'ammonia', ClH: 'hydrogen chloride', FH: 'hydrogen fluoride', CHN: 'hydrogen cyanide', H4N2: 'hydrazine', C2H6O: 'ethanol (or its isomer methoxymethane)', H2O: 'water', CH4: 'methane', NH3: 'ammonia', CO2: 'carbon dioxide', H2: 'hydrogen', O2: 'oxygen', N2: 'nitrogen', Cl2: 'chlorine', F2: 'fluorine', HCl: 'hydrogen chloride', HF: 'hydrogen fluoride', H2S: 'hydrogen sulfide', C2H6: 'ethane', C2H4: 'ethene', C2H2: 'ethyne', C3H8: 'propane', CH4O: 'methanol', CH2O: 'methanal (formaldehyde)', HCN: 'hydrogen cyanide', H2O2: 'hydrogen peroxide', CCl4: 'tetrachloromethane', CHCl3: 'trichloromethane (chloroform)', CH3Cl: 'chloromethane', CH3F: 'fluoromethane', CO: 'carbon monoxide', C4H10: 'butane (or methylpropane)', N2H4: 'hydrazine', CH5N: 'methylamine', C2H4O2: 'ethanoic acid (or an isomer)', HOCl: 'hypochlorous acid', ClHO: 'hypochlorous acid' };
+  const EL = { H: { v: 1, lp: 0, col: 0xf4f4f4, r: 0.32, name: 'hydrogen' }, C: { v: 4, lp: 0, col: 0x303030, r: 0.5, name: 'carbon' }, N: { v: 3, lp: 1, col: 0x3050f8, r: 0.48, name: 'nitrogen' }, O: { v: 2, lp: 2, col: 0xff2010, r: 0.46, name: 'oxygen' }, F: { v: 1, lp: 3, col: 0x90e050, r: 0.42, name: 'fluorine' }, Cl: { v: 1, lp: 3, col: 0x1ff01f, r: 0.56, name: 'chlorine' }, S: { v: 2, lp: 2, col: 0xffd030, r: 0.58, name: 'sulfur', ok: [2, 4, 6] }, B: { v: 3, lp: 0, col: 0xffb5b5, r: 0.46, name: 'boron' }, Si: { v: 4, lp: 0, col: 0xf0c8a0, r: 0.6, name: 'silicon' }, P: { v: 3, lp: 1, col: 0xff8000, r: 0.58, name: 'phosphorus', ok: [3, 5] }, Br: { v: 1, lp: 3, col: 0xa62929, r: 0.62, name: 'bromine' }, I: { v: 1, lp: 3, col: 0x940094, r: 0.7, name: 'iodine' } };
+  const VE = { H: 1, B: 3, C: 4, Si: 4, N: 5, P: 5, O: 6, S: 6, F: 7, Cl: 7, Br: 7, I: 7 }; // valence electrons
+  const okOf = e => EL[e].ok || [EL[e].v];
+  const KNOWN = { H3N: 'ammonia', ClH: 'hydrogen chloride', FH: 'hydrogen fluoride', CHN: 'hydrogen cyanide', H4N2: 'hydrazine', C2H6O: 'ethanol (or its isomer methoxymethane)', H2O: 'water', CH4: 'methane', NH3: 'ammonia', CO2: 'carbon dioxide', H2: 'hydrogen', O2: 'oxygen', N2: 'nitrogen', Cl2: 'chlorine', F2: 'fluorine', HCl: 'hydrogen chloride', HF: 'hydrogen fluoride', H2S: 'hydrogen sulfide', C2H6: 'ethane', C2H4: 'ethene', C2H2: 'ethyne', C3H8: 'propane', CH4O: 'methanol', CH2O: 'methanal (formaldehyde)', HCN: 'hydrogen cyanide', H2O2: 'hydrogen peroxide', CCl4: 'tetrachloromethane', CHCl3: 'trichloromethane (chloroform)', CH3Cl: 'chloromethane', CH3F: 'fluoromethane', CO: 'carbon monoxide', C4H10: 'butane (or methylpropane)', N2H4: 'hydrazine', CH5N: 'methylamine', C2H4O2: 'ethanoic acid (or an isomer)', HOCl: 'hypochlorous acid', ClHO: 'hypochlorous acid', BF3: 'boron trifluoride', BH3: 'borane', H4Si: 'silane', H3P: 'phosphine', Cl3P: 'phosphorus trichloride', Cl5P: 'phosphorus pentachloride', F6S: 'sulfur hexafluoride', O2S: 'sulfur dioxide', O3S: 'sulfur trioxide', H2O4S: 'sulfuric acid', BrH: 'hydrogen bromide', HI: 'hydrogen iodide', Br2: 'bromine', I2: 'iodine', CH3Br: 'bromomethane', CH3I: 'iodomethane', CS2: 'carbon disulfide', Cl4Si: 'silicon tetrachloride', F5P: 'phosphorus pentafluoride', F3P: 'phosphorus trifluoride' };
   const hill = atoms => { const n = {}; atoms.forEach(a => { n[a.e] = (n[a.e] || 0) + 1; }); const keys = Object.keys(n); const order = n.C ? ['C', 'H'].filter(k => n[k]).concat(keys.filter(k => k !== 'C' && k !== 'H').sort()) : keys.sort(); return order.map(k => k + (n[k] > 1 ? n[k] : '')).join(''); };
-  const SHAPES = { '2,0': ['linear', 180], '3,0': ['trigonal planar', 120], '4,0': ['tetrahedral', 109.5], '3,1': ['trigonal pyramidal', '≈107'], '2,1': ['bent', '≈117'], '2,2': ['bent', '≈104.5'], '1,3': ['linear (one bond)', '—'], '1,2': ['— (one bond)', '—'], '1,1': ['linear', 180], '1,0': ['— (one bond)', '—'] };
+  const SHAPES = { '2,0': ['linear', 180], '3,0': ['trigonal planar', 120], '4,0': ['tetrahedral', 109.5], '3,1': ['trigonal pyramidal', '≈107'], '2,1': ['bent', '≈117'], '2,2': ['bent', '≈104.5'], '1,3': ['linear (one bond)', '—'], '1,2': ['— (one bond)', '—'], '1,1': ['linear', 180], '1,0': ['— (one bond)', '—'], '5,0': ['trigonal bipyramidal', '90 and 120'], '6,0': ['octahedral', '90'], '4,1': ['seesaw', '≈90 and ≈117'], '3,2': ['T-shaped', '≈90'], '2,3': ['linear', 180], '5,1': ['square pyramidal', '≈90'], '4,2': ['square planar', '90'] };
   let curM = null; const nameOf = f => { if (f === 'C2H6O' && curM) { const O = curM.atoms.find(a => a.e === 'O'); return O && curM.nb(O).some(n => n.e === 'H') ? 'ethanol' : 'methoxymethane'; } return KNOWN[f]; };
   function molecule() {
     const M = { atoms: [], bonds: [] };
     M.add = (e, p) => { const a = { id: Math.random().toString(36).slice(2, 8), e, p: p || [(Math.random() - .5) * .2, (Math.random() - .5) * .2, (Math.random() - .5) * .2] }; M.atoms.push(a); return a; };
     M.used = a => M.bonds.filter(b => b.a === a || b.b === a).reduce((s, b) => s + b.o, 0);
-    M.free = a => EL[a.e].v - M.used(a);
+    // bonds still needed to reach the next allowed valence (P may have 3 or 5 bonds, S 2, 4 or 6); negative = more bonds than the element can make
+    M.free = a => { const u = M.used(a), ok = okOf(a.e), nx = ok.find(v => v >= u); return nx == null ? Math.max(...ok) - u : nx - u; };
+    M.room = a => Math.max(...okOf(a.e)) - M.used(a);
     M.bond = (a, b) => M.bonds.find(x => (x.a === a && x.b === b) || (x.a === b && x.b === a));
     M.nb = a => M.bonds.filter(b => b.a === a || b.b === a).map(b => (b.a === a ? b.b : b.a));
     M.del = a => { M.bonds = M.bonds.filter(b => b.a !== a && b.b !== a); M.atoms = M.atoms.filter(x => x !== a); };
-    M.lp = a => { const freeE = EL[a.e].lp; return Math.max(0, freeE); };
+    M.lp = a => (a.e === 'H' ? 0 : Math.max(0, Math.floor((VE[a.e] - M.used(a)) / 2))); // lone pairs from the electrons not used in bonds
     // relax: springs on bonds, repulsion between all atoms and lone-pair "ghosts", so shapes follow VSEPR
     M.relax = (it = 60) => { const A = M.atoms; if (!A.length) return; for (let k = 0; k < it; k++) {
       const F = A.map(() => [0, 0, 0]);
       M.bonds.forEach(b => { const i = A.indexOf(b.a), j = A.indexOf(b.b), L0 = (EL[b.a.e].r + EL[b.b.e].r) * 1.9 - (b.o - 1) * 0.12, d = [0, 1, 2].map(t => b.b.p[t] - b.a.p[t]), r = Math.hypot(...d) || 1e-3, f = (r - L0) * 0.6; d.forEach((v, t) => { F[i][t] += f * v / r; F[j][t] -= f * v / r; }); });
       // VSEPR: every pair of atoms bonded to the same centre is held at the distance that gives the ideal angle for that centre's electron domains
-      A.forEach(a => { const nbs = M.nb(a); if (nbs.length < 2) return; const th = M.ideal(a) * Math.PI / 180;
+      A.forEach(a => { const nbs = M.nb(a); if (nbs.length < 2) return; if (M.ideal(a) == null) { // 5 or 6 electron domains: the bonded atoms repel each other round the centre, which settles into the trigonal-bipyramid / octahedron
+          for (let x = 0; x < nbs.length; x++) for (let y = x + 1; y < nbs.length; y++) { const i = A.indexOf(nbs[x]), j = A.indexOf(nbs[y]), d = [0, 1, 2].map(t => nbs[y].p[t] - nbs[x].p[t]), r = Math.hypot(...d) || 1e-3, f = 0.25 / (r * r); d.forEach((v, t) => { F[i][t] -= f * v / r; F[j][t] += f * v / r; }); } return; }
+        const th = M.ideal(a) * Math.PI / 180;
         for (let x = 0; x < nbs.length; x++) for (let y = x + 1; y < nbs.length; y++) { const p = nbs[x], q2 = nbs[y], i = A.indexOf(p), j = A.indexOf(q2);
           const la = Math.hypot(...[0, 1, 2].map(t => p.p[t] - a.p[t])), lb = Math.hypot(...[0, 1, 2].map(t => q2.p[t] - a.p[t])), want = Math.sqrt(la * la + lb * lb - 2 * la * lb * Math.cos(th));
           const d = [0, 1, 2].map(t => q2.p[t] - p.p[t]), r = Math.hypot(...d) || 1e-3, f = (r - want) * 0.35; d.forEach((v, t) => { F[i][t] += f * v / r; F[j][t] -= f * v / r; }); } });
@@ -35,7 +41,7 @@
       A.forEach((a, i) => { F[i].forEach((v, t) => { a.p[t] += clamp(v, -0.2, 0.2); }); });
     }
     const cm = [0, 1, 2].map(t => A.reduce((s, a) => s + a.p[t], 0) / A.length); A.forEach(a => { a.p = a.p.map((v, t) => v - cm[t]); }); };
-    M.ideal = a => { const nb = M.nb(a).length, lp = M.lp(a), Dm = nb + lp; return Dm <= 2 ? 180 : Dm === 3 ? (lp ? 117 : 120) : lp === 1 ? 107 : lp >= 2 ? 104.5 : 109.5; };
+    M.ideal = a => { const nb = M.nb(a).length, lp = M.lp(a), Dm = nb + lp; return Dm >= 5 ? null : Dm <= 2 ? 180 : Dm === 3 ? (lp ? 117 : 120) : lp === 1 ? 107 : lp >= 2 ? 104.5 : 109.5; };
     M.angle = a => { const n = M.nb(a); if (n.length < 2) return null; const u = [0, 1, 2].map(t => n[0].p[t] - a.p[t]), w = [0, 1, 2].map(t => n[1].p[t] - a.p[t]); return Math.acos(clamp((u[0] * w[0] + u[1] * w[1] + u[2] * w[2]) / (Math.hypot(...u) * Math.hypot(...w)), -1, 1)) * 180 / Math.PI; };
     return M;
   }
@@ -48,15 +54,17 @@
     apply: [q('x-mb1', 'Ammonia (NH₃) is pyramidal rather than flat because…', ['N has 3 bonds only', 'the lone pair on N repels the bonds', 'H atoms repel each other', 'it is ionic'], 1, 'The lone pair is a fourth electron domain.'), q('x-mb2', 'How many bonds does carbon usually form?', ['1', '2', '3', '4'], 3, 'Carbon’s valence is 4.')],
     summary: ['Valence: H 1, O 2, N 3, C 4, halogens 1.', 'Shape follows electron-pair repulsion, including lone pairs.', 'CH₄ tetrahedral, NH₃ pyramidal, H₂O bent, CO₂ linear.'],
     build(host, c) {
-      const M = molecule(); curM = M; let sel = 'H', mode = 'add', pick = null, view = null, three = null;
+      const M = molecule(); curM = M; let sel = 'H', mode = 'add', pick = null, view = null, three = null, rep = 'ball';
+      const atomS = a => (rep === 'space' ? EL[a.e].r * 2.05 : rep === 'stick' ? 0.17 : EL[a.e].r); // space-filling ≈ van der Waals size (about twice the covalent radius)
       host.innerHTML = `<div class="mb"><div class="mb__stage kx-stage"><div class="mb__gl" tabindex="0" role="img" aria-roledescription="3D viewer" aria-label="${T('3D molecule. Drag to rotate, scroll to zoom.', 'جزيء ثلاثي الأبعاد')}"></div><p class="mb__load">${T('Loading 3D…', 'جارٍ تحميل ثلاثي الأبعاد…')}</p></div></div>`;
       const gl = host.querySelector('.mb__gl'), loadEl = host.querySelector('.mb__load');
-      const ctl = K.controls(host, [{ k: 'chips', id: 'el', label: T('Element', 'العنصر'), opts: Object.keys(EL).map(e => [e, e]), val: 'H' }, { k: 'chips', id: 'mode', label: T('Click does', 'النقر يقوم بـ'), opts: [['add', T('Add atom', 'أضف ذرة')], ['bond', T('Bond / bond order', 'رابطة')], ['del', T('Delete', 'احذف')], ['info', T('Inspect', 'افحص')]], val: 'add' }, { k: 'row' }, { k: 'btn', id: 'fill', label: T('Fill with hydrogen', 'أكمل بالهيدروجين'), accent: true }, { k: 'btn', id: 'new', label: T('Start new (C)', 'ابدأ جديداً') },
+      const ctl = K.controls(host, [{ k: 'chips', id: 'el', label: T('Element', 'العنصر'), opts: Object.keys(EL).map(e => [e, e]), val: 'H' }, { k: 'chips', id: 'rep', label: T('View', 'العرض'), opts: [['ball', T('Ball and stick', 'كرة وعصا')], ['space', T('Space-filling', 'ملء الفراغ')], ['stick', T('Sticks', 'عصي')]], val: 'ball' }, { k: 'chips', id: 'mode', label: T('Click does', 'النقر يقوم بـ'), opts: [['add', T('Add atom', 'أضف ذرة')], ['bond', T('Bond / bond order', 'رابطة')], ['del', T('Delete', 'احذف')], ['info', T('Inspect', 'افحص')]], val: 'add' }, { k: 'row' }, { k: 'btn', id: 'fill', label: T('Fill with hydrogen', 'أكمل بالهيدروجين'), accent: true }, { k: 'btn', id: 'new', label: T('Start new (C)', 'ابدأ جديداً') },
         { k: 'chips', id: 'pre', label: T('Examples', 'أمثلة'), opts: [['water', 'H₂O'], ['methane', 'CH₄'], ['ammonia', 'NH₃'], ['co2', 'CO₂'], ['ethanol', 'C₂H₅OH'], ['ethene', 'C₂H₄']], val: '' }, { k: 'end' }], (id, v) => {
-          if (id === 'el') sel = v; if (id === 'mode') { mode = v; pick = null; } if (id === 'fill') fill(); if (id === 'new') start('C'); if (id === 'pre') preset(v); update(); c.onChange(); });
+          if (id === 'el') sel = v; if (id === 'rep') rep = v; if (id === 'mode') { mode = v; pick = null; } if (id === 'fill') fill(); if (id === 'new') start('C'); if (id === 'pre') preset(v); update(); c.onChange(); });
       const info = document.createElement('div'); info.className = 'kx-cards'; host.appendChild(info); const read = readout(host);
       function start(e) { M.atoms = []; M.bonds = []; M.add(e, [0, 0, 0]); pick = null; M.relax(80); }
-      function addTo(a, e) { if (M.free(a) < 1) { flash(T(`${a.e} has no free bonds left (valence ${EL[a.e].v}).`, 'لا روابط حرة.')); return null; } const dir = [Math.random() - .5, Math.random() - .5, Math.random() - .5], r = Math.hypot(...dir); const b = M.add(e, a.p.map((v, t) => v + dir[t] / r * 1.2)); M.bonds.push({ a, b, o: 1 }); M.relax(120); return b; }
+      function addTo(a, e) { if (M.room(a) < 1) { flash(T(`${a.e} cannot make another bond: ${EL[a.e].name} forms at most ${Math.max(...okOf(a.e))} bond${Math.max(...okOf(a.e)) > 1 ? 's' : ''}${okOf(a.e).length > 1 ? '' : ` (its valence is ${EL[a.e].v})`}.`, 'لا روابط حرة.')); return null; }
+        if (M.used(a) + 1 > EL[a.e].v) flash(T(`${a.e} now has ${M.used(a) + 1} bonds: an “expanded octet”. Period-3 elements such as P and S can do this (PCl₅, SF₆) because they have more room around them; C, N and O cannot.`, 'ثماني موسّع')); const dir = [Math.random() - .5, Math.random() - .5, Math.random() - .5], r = Math.hypot(...dir); const b = M.add(e, a.p.map((v, t) => v + dir[t] / r * 1.2)); M.bonds.push({ a, b, o: 1 }); M.relax(120); return b; }
       function fill() { M.atoms.slice().forEach(a => { if (a.e === 'H') return; let n = M.free(a); while (n-- > 0) { const dir = [Math.random() - .5, Math.random() - .5, Math.random() - .5], r = Math.hypot(...dir); const h = M.add('H', a.p.map((v, t) => v + dir[t] / r)); M.bonds.push({ a, b: h, o: 1 }); } }); M.relax(200); }
       function preset(k) { M.atoms = []; M.bonds = [];
         const B = (x, y, o = 1) => M.bonds.push({ a: x, b: y, o });
@@ -105,14 +113,14 @@
         let meshes = [], disp = new Map();
         function sync() {
           grp.clear(); meshes = [];
-          M.atoms.forEach(a => { if (!disp.has(a)) disp.set(a, a.p.slice()); const m = new T3.Mesh(sph, a === pick ? selMat : mat(EL[a.e].col)); m.scale.setScalar(EL[a.e].r); m.userData.atom = a; grp.add(m); meshes.push(m); a._m = m;
-            if (M.free(a) > 0) { const ring = new T3.Mesh(new T3.TorusGeometry(EL[a.e].r * 1.25, 0.025, 8, 32), new T3.MeshBasicMaterial({ color: 0xffb020 })); m.add(ring); ring.scale.setScalar(1 / EL[a.e].r); a._ring = ring; } });
-          M.bonds.forEach(b => { for (let k = 0; k < b.o; k++) { const m = new T3.Mesh(cyl, bondMat); m.userData.bond = b; m.userData.k = k; grp.add(m); meshes.push(m); } });
+          M.atoms.forEach(a => { if (!disp.has(a)) disp.set(a, a.p.slice()); const m = new T3.Mesh(sph, a === pick ? selMat : mat(EL[a.e].col)); m.scale.setScalar(atomS(a)); m.userData.atom = a; grp.add(m); meshes.push(m); a._m = m;
+            if (M.free(a) > 0 && rep !== 'space') { const ring = new T3.Mesh(new T3.TorusGeometry(Math.max(atomS(a), 0.2) * 1.25, 0.025, 8, 32), new T3.MeshBasicMaterial({ color: 0xffb020 })); m.add(ring); ring.scale.setScalar(1 / atomS(a)); a._ring = ring; } });
+          if (rep !== 'space') M.bonds.forEach(b => { for (let k = 0; k < b.o; k++) { const m = new T3.Mesh(cyl, bondMat); m.userData.bond = b; m.userData.k = k; m.userData.w = rep === 'stick' ? 1.7 : 1; grp.add(m); meshes.push(m); } });
           place();
         }
         function place() { const tmp = new T3.Vector3(), up = new T3.Vector3(0, 1, 0);
           grp.children.forEach(m => { if (m.userData.atom) { const p = disp.get(m.userData.atom); m.position.set(...p); }
-            else if (m.userData.bond) { const b = m.userData.bond, pa = new T3.Vector3(...disp.get(b.a)), pb = new T3.Vector3(...disp.get(b.b)), d = tmp.subVectors(pb, pa), L = d.length(); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(up, d.clone().normalize());
+            else if (m.userData.bond) { const b = m.userData.bond, pa = new T3.Vector3(...disp.get(b.a)), pb = new T3.Vector3(...disp.get(b.b)), d = tmp.subVectors(pb, pa), L = d.length(); m.scale.set(m.userData.w || 1, L, m.userData.w || 1); m.quaternion.setFromUnitVectors(up, d.clone().normalize());
               const off = (m.userData.k - (b.o - 1) / 2) * 0.22, side = new T3.Vector3().crossVectors(d, new T3.Vector3(0.3, 1, 0.1)).normalize().multiplyScalar(off); m.position.copy(pa).add(pb).multiplyScalar(0.5).add(side); } }); }
         const ray = new T3.Raycaster(), ndc = new T3.Vector2(); let down = null;
         renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
@@ -134,7 +142,7 @@
         const proj = p => { const cy = Math.cos(ry), sy = Math.sin(ry), cx = Math.cos(rx), sx = Math.sin(rx); const x1 = p[0] * cy + p[2] * sy, z1 = -p[0] * sy + p[2] * cy, y1 = p[1] * cx - z1 * sx, z2 = p[1] * sx + z1 * cx; return [350 + x1 * zoom, 210 - y1 * zoom, z2]; };
         const draw = () => { const Pl = K.pal(), G = S.g; S.clear(Pl.bg2); M.bonds.forEach(b => { const A = proj(b.a.p), B = proj(b.b.p); for (let k = 0; k < b.o; k++) { const off = (k - (b.o - 1) / 2) * 6, nx = -(B[1] - A[1]), ny = B[0] - A[0], nl = Math.hypot(nx, ny) || 1; G.strokeStyle = Pl.grey; G.lineWidth = 5; G.beginPath(); G.moveTo(A[0] + nx / nl * off, A[1] + ny / nl * off); G.lineTo(B[0] + nx / nl * off, B[1] + ny / nl * off); G.stroke(); } });
           M.atoms.map(a => [a, proj(a.p)]).sort((x, y) => x[1][2] - y[1][2]).forEach(([a, P]) => { G.fillStyle = '#' + EL[a.e].col.toString(16).padStart(6, '0'); G.beginPath(); G.arc(P[0], P[1], EL[a.e].r * zoom * 0.6, 0, 7); G.fill(); G.strokeStyle = a === pick ? '#ffb020' : Pl.ink; G.lineWidth = a === pick ? 4 : 1.5; G.stroke(); K.text(G, a.e, P[0], P[1] + 5, { a: 'center', w: 800, c: a.e === 'C' || a.e === 'N' ? '#fff' : '#111' }); }); };
-        S.cv.addEventListener('pointerdown', e => { drag = { p: S.pt(e), rx, ry, moved: false }; S.cv.setPointerCapture(e.pointerId); });
+        S.cv.style.touchAction = 'none'; S.cv.addEventListener('pointerdown', e => { e.preventDefault(); drag = { p: S.pt(e), rx, ry, moved: false }; S.cv.setPointerCapture(e.pointerId); });
         S.cv.addEventListener('pointermove', e => { if (!drag) return; const [x, y] = S.pt(e); if (Math.hypot(x - drag.p[0], y - drag.p[1]) > 5) drag.moved = true; ry = drag.ry + (x - drag.p[0]) / 150; rx = drag.rx + (y - drag.p[1]) / 150; draw(); });
         S.cv.addEventListener('pointerup', e => { if (drag && !drag.moved) { const [x, y] = S.pt(e); const hit = M.atoms.map(a => [a, proj(a.p)]).filter(([a, P]) => Math.hypot(P[0] - x, P[1] - y) < EL[a.e].r * zoom * 0.7).sort((p, q2) => q2[1][2] - p[1][2])[0]; if (hit) click(hit[0], null); } drag = null; });
         S.cv.addEventListener('wheel', e => { e.preventDefault(); zoom = clamp(zoom * (e.deltaY < 0 ? 1.1 : 0.9), 30, 160); draw(); }, { passive: false });

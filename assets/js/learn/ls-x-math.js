@@ -30,7 +30,7 @@
       box.addEventListener('input', e => { const i = e.target.dataset.fx; if (i == null) return; fx[+i] = e.target.value; compile(); M.kick(); c.onChange(); });
       compile();
       let pan = null; S.cv.style.cursor = 'grab';
-      S.cv.addEventListener('pointerdown', e => { const [x, y] = S.pt(e); pan = { x, y, cx: vx.t, cy: vy.t }; S.cv.setPointerCapture(e.pointerId); S.cv.classList.add('is-grab'); });
+      S.cv.style.touchAction = 'none'; S.cv.addEventListener('pointerdown', e => { e.preventDefault(); const [x, y] = S.pt(e); pan = { x, y, cx: vx.t, cy: vy.t }; S.cv.setPointerCapture(e.pointerId); S.cv.classList.add('is-grab'); });
       S.cv.addEventListener('pointermove', e => { const [x, y] = S.pt(e); if (pan) { vx.set(pan.cx - (x - pan.x) / vs.v, true); vy.set(pan.cy + (y - pan.y) / vs.v, true); } trace = x; M.kick(); });
       S.cv.addEventListener('pointerup', () => { pan = null; S.cv.classList.remove('is-grab'); }); S.cv.addEventListener('pointerleave', () => { trace = null; M.kick(); });
       S.cv.addEventListener('wheel', e => { e.preventDefault(); vs.set(clamp(vs.t * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 4, 400)); M.kick(); }, { passive: false });
@@ -229,7 +229,7 @@
     predict: { q: 'Which is bigger: 3/4 or 5/7?', options: ['3/4', '5/7', 'they are equal', 'impossible to tell'] },
     explore: 'Set 3/4 and 5/7. Watch both bars re-cut into 28ths. Then find two different-looking fractions that are equal.',
     explain: 'To compare or add fractions with different denominators, cut both wholes into the **same number of equal pieces**: the **lowest common multiple** of the denominators. 3/4 = 21/28 and 5/7 = 20/28, so **3/4 is bigger** by 1/28. Adding: 21/28 + 20/28 = 41/28 = 1 13/28. Equivalent fractions are the same amount cut differently (2/4 = 3/6).',
-    apply: [q('x-fr1', '2/3 + 1/4 =', ['3/7', '11/12', '3/12', '9/12'], 1, '8/12 + 3/12.'), q('x-fr2', 'Which is equal to 3/5?', ['5/3', '6/10', '3/10', '9/25'], 1, 'Multiply top and bottom by 2.')],
+    apply: [q('x-frac1', '2/3 + 1/4 =', ['3/7', '11/12', '3/12', '9/12'], 1, '8/12 + 3/12.'), q('x-frac2', 'Which is equal to 3/5?', ['5/3', '6/10', '3/10', '9/25'], 1, 'Multiply top and bottom by 2.')],
     summary: ['Compare or add by using a common denominator (LCM).', 'Equivalent fractions: same amount, different cuts.', 'Simplify by dividing top and bottom by their HCF.'],
     build(host, c) {
       const S = K.stage(host, 800, 300); let a = 3, b = 4, cc = 5, dd = 7; const cut = K.spring(0, 6);

@@ -1,210 +1,286 @@
-/* ERLY Learning Studio — the Newton's laws lab (v23). Loaded with the other experiences.
+/* ERLY Learning Studio — Newton's laws lab (v26 rebuild).
 
-   A crate on a track, with real forces:
-     weight W = m·g (g = 9.8 m/s²), normal force N = W, applied force F (you choose, or push with the arrow keys),
-     friction: static up to μs·N while the crate is still (it exactly balances F), kinetic μk·N against the motion once it
-     slides. Net force F_net = F + f;  a = F_net / m;  integrated each frame (semi-implicit Euler, 1 ms sub-steps).
-   Collisions: two carts on a frictionless track; momentum is conserved; the coefficient of restitution e decides how
-   bouncy the collision is (e = 1 elastic, e = 0 the carts stick). Final velocities:
-     v1' = (m1·v1 + m2·v2 + m2·e·(v2 − v1)) / (m1 + m2),   v2' = (m1·v1 + m2·v2 + m1·e·(v1 − v2)) / (m1 + m2).
-   Simplified: one dimension, a rigid crate, constant friction coefficients (typical values; real surfaces vary), no air
-   resistance, no rolling. Every number on screen comes from this model. */
+   One mechanics engine, four investigations:
+     1 · Inertia (first law)   2 · F = ma (second law)   3 · Friction   4 · Interaction (third law, momentum)
+
+   The physics (every number on screen comes from here):
+     Crate on a level track. Weight W = m·g (g = 9.81 m/s²), normal force N = W (level track, no vertical acceleration).
+     Applied force F (you set it with the slider, by dragging the orange arrow, or with ← →).
+     Friction: while the crate is at rest, static friction matches F exactly up to μs·N; beyond that the crate slips and
+     kinetic friction μk·N acts against the motion. Net force F_net = F + f, a = F_net / m.
+     Integration: semi-implicit Euler in fixed 1 ms sub-steps; a velocity that would cross zero while |F| ≤ μs·N stops.
+     Two carts (third law): a stiff spring-and-damper contact between the bumpers. The contact force on B is exactly
+     minus the force on A at every sub-step, so total momentum is conserved to rounding. The damper is chosen from the
+     coefficient of restitution e (e = 1 elastic … e = 0 the carts stay together):  ζ = −ln e / √(π² + ln²e).
+   Simplified: one dimension, rigid bodies, constant friction coefficients (typical textbook values; real surfaces vary),
+   no air resistance, no rolling resistance for the carts. */
 (function () {
   'use strict';
-  const LS = window.LS, T = LS.T, D = LS.exp.DEFS;
-  const G = 9.8;
-  const SURF = { frictionless: { en: 'Frictionless', ar: 'بلا احتكاك', s: 0, k: 0, col: ['#1b2a4a', '#24385f'] }, ice: { en: 'Ice', ar: 'جليد', s: 0.1, k: 0.03, col: ['#2a4e6e', '#6aa6c9'] }, wood: { en: 'Wood', ar: 'خشب', s: 0.5, k: 0.3, col: ['#4a3220', '#7a5434'] }, rubber: { en: 'Rubber mat', ar: 'مطاط', s: 1.0, k: 0.8, col: ['#1d1d22', '#34343c'] } };
-  const MISSIONS = [
-    ['inertia', 'Push & glide', 'ادفع وانزلق', 'First law: give the crate a 1-second push on frictionless ice, then let go. What does it do with no force on it?'],
-    ['fma', 'F = ma', 'ق = ك × ت', 'Second law: run the crate with different forces and masses. Each run is logged — look for the pattern.'],
-    ['friction', 'Friction', 'الاحتكاك', 'On wood, raise the force slowly. Find the smallest push that gets the crate moving.'],
-    ['collide', 'Collisions', 'التصادم', 'Third law and momentum: two carts meet. Change the masses, speeds and bounciness.']
-  ];
-  const fmt = (v, d) => (Math.abs(v) < 0.005 ? 0 : v).toFixed(d == null ? 2 : d).replace('-', '−');
+  const LS = window.LS, T = LS.T, D = LS.exp.DEFS, K = LS.kit, IL = LS.inline, esc = LS.esc;
+  const g0 = 9.81, DT = 0.001;
+  const SURF = {
+    frictionless: { n: 'Frictionless', s: 0, k: 0, top: '#2a3f66', bot: '#1a2742', line: 'rgba(160,200,255,.35)' },
+    ice: { n: 'Ice', s: 0.1, k: 0.03, top: '#bfe3f5', bot: '#7fb6d6', line: 'rgba(255,255,255,.7)' },
+    wood: { n: 'Wood', s: 0.5, k: 0.3, top: '#b98552', bot: '#7a5230', line: 'rgba(60,35,15,.35)' },
+    rubber: { n: 'Rubber mat', s: 1.0, k: 0.8, top: '#3a3a40', bot: '#1f1f24', line: 'rgba(255,255,255,.08)' }
+  };
+  const MODES = [['inertia', '1 · Inertia'], ['fma', '2 · F = ma'], ['friction', '3 · Friction'], ['interact', '4 · Interaction']];
+  const TASK = {
+    inertia: 'First law. On frictionless ice, press **Push for 1 s** and watch the strobe dots after the push ends. With **no net force**, is the spacing changing?',
+    fma: 'Second law. Choose a force and a mass, press **Run**, then **Save run**. Repeat with double the force, then double the mass. Compare **measured a** with **F_net / m** in the log.',
+    friction: 'On **wood**, raise the force slowly from 0. Static friction matches your push exactly — until it can’t. Find the force where the crate starts to slide, then watch friction drop.',
+    interact: 'Third law. Two carts collide. During contact the arrows show the **force on A by B** and the **force on B by A**. Change the masses and the bounciness — are the two forces ever different sizes?'
+  };
+  const q = (id, prompt, options, answer, explain) => ({ id, type: 'mcq', difficulty: 1, prompt, options, answer, explain });
+  const f2 = (v, d = 2) => K.fmt(v, d);
 
-  D['newton-lab'] = {
-    wide: true,
-    intro: 'Newton’s three laws describe how forces change motion. In this lab the forces are real numbers in a real model: you push, the friction pushes back, and the crate does exactly what the sum of the forces says.\n\n**Missions:** push & glide (first law), F = ma (second law), friction, and collisions (third law and momentum).',
-    predict: { q: 'A crate slides on **frictionless** ice after a short push. Now **no force** acts on it. What happens?', options: ['It slows down and stops', 'It keeps moving at the same speed in the same direction', 'It speeds up', 'It stops immediately'] },
+  D['newton-lab'] = { wide: true,
+    intro: 'A laboratory for Newton’s three laws. Push a crate along a track, change its **mass** and the **surface** beneath it, then crash two carts together. The model shows the motion, a **free-body diagram**, live numbers and graphs of velocity and acceleration — all computed from the same equations.\n\nYou can set the force with the slider, by **dragging the orange arrow**, or with the **← →** keys when the track is focused.',
+    predict: { q: 'On frictionless ice you push a 4 kg crate for one second, then let go. **After you let go**, the crate…', options: ['slows down and stops', 'keeps moving at the same speed', 'keeps speeding up', 'stops immediately'] },
     preset: true,
-    explore: 'Choose a mission above the track. **Push & glide**: press *Push for 1 s* and watch the speed afterwards. **F = ma**: try 20 N on 2 kg, then on 8 kg. **Friction**: on wood, raise the force until it moves. **Collisions**: make the carts stick (e = 0), then bounce (e = 1), and compare the total momentum.',
-    explain: '**First law:** with no resultant force, velocity does not change — the crate glides on at constant speed (the evenly spaced dots). Things only *seem* to stop by themselves because of friction.\n\n**Second law:** the resultant force decides the acceleration, **a = F_net ÷ m**: double the force, double the acceleration; double the mass, half the acceleration.\n\n**Friction:** static friction matches your push up to a limit (μs·m·g); beyond it the crate slides and the smaller kinetic friction acts.\n\n**Third law and momentum:** in a collision each cart pushes the other with an equal and opposite force for the same time, so the total momentum before and after is the same.',
-    apply: ['n-num', 'n-tf', 'n-mcq'],
-    summary: ['First law: no resultant force → constant velocity (or staying still).', 'Second law: a = F_net ÷ m.', 'Friction opposes sliding; static friction can hold up to μs·m·g.', 'Third law: forces come in equal and opposite pairs; total momentum is conserved in a collision.'],
-    connect: [{ label: 'Motion graphs lab', href: '#/exp/motion-graphs' }],
+    explore: '- **1 · Inertia:** Push for 1 s on ice. Look at the strobe dots after the push.\n- **2 · F = ma:** Save runs with F = 20 N and 40 N (m = 4 kg), then 40 N with m = 8 kg. What happens to a?\n- **3 · Friction:** On wood, raise F slowly. When does the crate start to move?\n- **4 · Interaction:** Collide a heavy cart into a light one. Compare the two contact-force arrows and the total momentum.',
+    explain: '**First law:** with **zero net force** an object keeps its velocity — the strobe dots stay evenly spaced after the push. Nothing is needed to *keep* it moving, only to *change* its motion.\n\n**Second law:** **a = F_net / m**. Double the net force and the acceleration doubles; double the mass and it halves. On a rough surface the net force is the push **minus friction**.\n\n**Friction:** static friction rises to match your push, up to **μₛN**. Past that the crate slips and **kinetic friction μₖN** (smaller) takes over — which is why it is harder to start something sliding than to keep it sliding.\n\n**Third law:** during the collision the force on A by B and the force on B by A are **equal in size and opposite in direction** at every instant, whatever the masses. They act on **different** objects, so they do not cancel each other out. Because the forces are equal and act for the same time, the momentum one cart gains the other loses: **total momentum is conserved**.',
+    apply: [
+      q('x-nl1', 'A 5 kg crate on a frictionless floor is pushed with a net force of 20 N. Its acceleration is…', ['0.25 m/s²', '4 m/s²', '25 m/s²', '100 m/s²'], 1, 'a = F/m = 20/5 = 4 m/s².'),
+      q('x-nl2', 'A 10 kg crate rests on wood (μₛ = 0.5, g = 9.81 m/s²). The smallest horizontal push that starts it sliding is about…', ['5 N', '25 N', '49 N', '98 N'], 2, 'μₛN = 0.5 × 10 × 9.81 ≈ 49 N.'),
+      q('x-nl3', 'A truck hits a small car. During the collision, the force of the car on the truck is…', ['smaller than the force of the truck on the car', 'the same size as the force of the truck on the car', 'larger', 'zero'], 1, 'Newton’s third law: the pair of forces is equal and opposite, whatever the masses. The car accelerates more because its mass is smaller.'),
+      q('x-nl4', 'A crate slides across ice at a steady 3 m/s with no push. The net force on it is…', ['3 N forwards', 'zero (or very nearly)', 'equal to its weight', 'it depends on its mass'], 1, 'Constant velocity means zero acceleration, so the net force is zero (first law).')
+    ],
+    summary: ['First law: zero net force → constant velocity (including staying at rest).', 'Second law: a = F_net / m.', 'Static friction matches the push up to μₛN; sliding friction is μₖN against the motion.', 'Third law: forces come in equal and opposite pairs on two different objects; total momentum is conserved.'],
+    connect: [{ label: 'Inclined plane lab', href: '#/exp/incline' }, { label: 'Motion graphs lab', href: '#/exp/motion-graphs' }, { label: 'Lesson: Newton’s second law', href: '#/lesson/phys-newton' }],
     build(host, c) {
-      let mission = 'inertia';
-      const S = { x: 2, v: 0, t: 0, F: 0, m: 4, surf: 'frictionless', hold: 0, holdT: 0, dots: [], hist: [], slow: false, runs: [], startedMove: null, pushDone: false, glideV: null };
-      const K = { m1: 2, m2: 4, v1: 3, v2: -1, e: 1, x1: 3, x2: 13, u1: 3, u2: -1, hit: false, flash: 0, before: null, after: null, t: 0 };
-      host.innerHTML = `<div class="nl">
-        <div class="nl__missions" role="tablist" aria-label="${T('Missions', 'المهام')}">${MISSIONS.map(([k, en, ar]) => `<button type="button" role="tab" data-mis="${k}" aria-selected="${k === mission}">${T(en, ar)}</button>`).join('')}</div>
-        <p class="nl__brief" aria-live="polite"></p>
-        <div class="nl__stage"><canvas class="nl__cv" tabindex="0" aria-label="${T('Newton lab track. Arrow keys push the crate; space runs or pauses; R resets.', 'مضمار المختبر')}"></canvas></div>
-        <p class="nl__read" aria-live="off"></p>
-        <div class="nl__ctl"></div>
-        <div class="nl__log" aria-live="polite"></div></div>`;
-      const cv = c.canvas(host.querySelector('.nl__stage'), 900, 400), g = cv.getContext('2d');
-      const ctl = host.querySelector('.nl__ctl');
-      function controls() {
-        if (mission === 'collide') {
-          ctl.innerHTML = `<div class="nl__grid">${c.slider('m1', T('Cart A mass', 'كتلة أ'), 1, 10, 0.5, K.m1, ' kg')}${c.slider('v1', T('Cart A velocity', 'سرعة أ'), -4, 6, 0.5, K.v1, ' m/s')}${c.slider('m2', T('Cart B mass', 'كتلة ب'), 1, 10, 0.5, K.m2, ' kg')}${c.slider('v2', T('Cart B velocity', 'سرعة ب'), -6, 4, 0.5, K.v2, ' m/s')}${c.slider('e', T('Bounciness e (0 = stick, 1 = elastic)', 'المرونة'), 0, 1, 0.05, K.e, '')}</div>
-            <p class="ls-row"><button type="button" class="ls-btn ls-btn--accent ls-btn--sm" data-nl="go">${T('Run the collision', 'شغّل التصادم')}</button><label class="ls-chk"><input type="checkbox" data-nl="slow" ${S.slow ? 'checked' : ''}> ${T('Slow motion', 'حركة بطيئة')}</label></p>`;
-          return;
-        }
-        ctl.innerHTML = `<div class="nl__grid">${c.slider('F', T('Applied force F', 'القوة المؤثرة'), -50, 50, 1, S.F, ' N')}${c.slider('m', T('Mass m', 'الكتلة'), 1, 20, 0.5, S.m, ' kg')}</div>
-          <div class="nl__surf" role="radiogroup" aria-label="${T('Surface', 'السطح')}">${Object.entries(SURF).map(([k, s]) => `<button type="button" role="radio" class="ls-chip" data-surf="${k}" aria-checked="${S.surf === k}">${T(s.en, s.ar)} <small>μs ${s.s} · μk ${s.k}</small></button>`).join('')}</div>
-          <p class="ls-row"><button type="button" class="ls-btn ls-btn--accent ls-btn--sm" data-nl="push1">${T('Push for 1 s', 'ادفع لثانية')}</button><button type="button" class="ls-btn ls-btn--sm" data-nl="run">${T('Apply F continuously', 'طبّق القوة باستمرار')}</button><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-nl="stopF">${T('Let go (F = 0)', 'اترك (ق = 0)')}</button><label class="ls-chk"><input type="checkbox" data-nl="slow" ${S.slow ? 'checked' : ''}> ${T('Slow motion', 'حركة بطيئة')}</label></p>
-          <p class="nl__muted">${T('Typical friction coefficients; real surfaces vary. Keyboard: ← → push while held, space runs/pauses, R resets.', 'معاملات احتكاك نموذجية.')}</p>`;
-      }
-      function setMission(k) {
-        mission = k; host.querySelectorAll('[data-mis]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mis === k)));
-        host.querySelector('.nl__brief').textContent = T(...[MISSIONS.find(m => m[0] === k)[3], '']);
-        if (k === 'inertia') Object.assign(S, { surf: 'frictionless', F: 0, m: 4 });
-        if (k === 'fma') Object.assign(S, { surf: 'frictionless', F: 20, m: 2 });
-        if (k === 'friction') Object.assign(S, { surf: 'wood', F: 0, m: 5 });
-        reset(); controls(); log(); c.onChange();
-      }
-      function reset() { Object.assign(S, { x: 2, v: 0, t: 0, hold: 0, holdT: 0, dots: [], hist: [], startedMove: null, pushDone: false, glideV: null, cont: false }); Object.assign(K, { x1: 3, x2: 13, u1: K.v1, u2: K.v2, hit: false, flash: 0, before: null, after: null, t: 0 }); L.stop(); draw(); }
-      // ----- physics -----
-      const forces = () => {
-        const s = SURF[S.surf], N = S.m * G, Fapp = S.hold ? S.hold : S.cont ? S.F : 0;
-        let f;
-        if (Math.abs(S.v) < 1e-4) f = Math.abs(Fapp) <= s.s * N ? -Fapp : -Math.sign(Fapp) * s.k * N;
-        else f = -Math.sign(S.v) * s.k * N;
-        return { W: N, N, F: Fapp, f, net: Fapp + f, a: (Fapp + f) / S.m, static: Math.abs(S.v) < 1e-4 && Math.abs(Fapp) <= s.s * N && Fapp !== 0 };
+      host.classList.add('nl2');
+      const S = K.stage(host, 960, 420, 'nl2__stage'), Gs = K.stage(host, 960, 220, 'nl2__graph');
+      S.cv.tabIndex = 0; S.cv.setAttribute('role', 'img');
+      S.cv.setAttribute('aria-label', T('Newton lab track. Drag the orange arrow or use the left and right arrow keys to set the force; space runs or pauses; R resets.', 'مضمار المختبر'));
+      const ctl = K.controls(host, [
+        { k: 'chips', id: 'mode', label: T('Investigation', 'التجربة'), opts: MODES.map(([v, l]) => [v, l]), val: 'inertia' },
+        { k: 'row' }, { k: 'range', id: 'F', label: T('Applied force F', 'القوة'), min: -60, max: 60, step: 1, val: 0, unit: ' N' },
+        { k: 'range', id: 'm', label: T('Mass m', 'الكتلة'), min: 1, max: 20, step: 0.5, val: 4, d: 1, unit: ' kg' },
+        { k: 'range', id: 'v0', label: T('Starting velocity', 'السرعة الابتدائية'), min: -6, max: 6, step: 0.5, val: 0, d: 1, unit: ' m/s' }, { k: 'end' },
+        { k: 'chips', id: 'surf', label: T('Surface', 'السطح'), opts: Object.entries(SURF).map(([k, s]) => [k, `${s.n} <small>μₛ ${s.s} · μₖ ${s.k}</small>`]), val: 'ice' },
+        { k: 'row' }, { k: 'btn', id: 'run', label: T('Run ▸', 'تشغيل'), accent: true }, { k: 'btn', id: 'step', label: T('Step 0.05 s', 'خطوة') }, { k: 'btn', id: 'push', label: T('Push for 1 s', 'ادفع ثانية') }, { k: 'btn', id: 'letgo', label: T('Let go (F = 0)', 'اترك') }, { k: 'btn', id: 'save', label: T('Save run to compare', 'احفظ التجربة') }, { k: 'btn', id: 'clear', label: T('Clear saved runs', 'امسح') }, { k: 'end' },
+        { k: 'html', html: '<div class="nl2__two" hidden>' },
+        { k: 'row' }, { k: 'range', id: 'mA', label: T('Mass of cart A', 'كتلة أ'), min: 0.5, max: 10, step: 0.5, val: 4, d: 1, unit: ' kg' }, { k: 'range', id: 'vA', label: T('Velocity of A', 'سرعة أ'), min: -4, max: 6, step: 0.5, val: 3, d: 1, unit: ' m/s' }, { k: 'end' },
+        { k: 'row' }, { k: 'range', id: 'mB', label: T('Mass of cart B', 'كتلة ب'), min: 0.5, max: 10, step: 0.5, val: 1, d: 1, unit: ' kg' }, { k: 'range', id: 'vB', label: T('Velocity of B', 'سرعة ب'), min: -6, max: 4, step: 0.5, val: 0, d: 1, unit: ' m/s' }, { k: 'end' },
+        { k: 'row' }, { k: 'range', id: 'e', label: T('Bounciness e', 'معامل الارتداد'), min: 0, max: 1, step: 0.05, val: 1, d: 2 }, { k: 'chips', id: 'scene', label: T('Scene', 'المشهد'), opts: [['collide', T('Collide', 'تصادم')], ['apart', T('Push apart', 'تنافر')]], val: 'collide' }, { k: 'end' },
+        { k: 'html', html: '</div>' }
+      ], on);
+      const task = document.createElement('p'); task.className = 'nl2__task'; host.insertBefore(task, S.wrap);
+      const read = document.createElement('div'); read.className = 'kx-read nl2__read'; read.setAttribute('aria-live', 'polite'); host.appendChild(read);
+      const logBox = document.createElement('div'); logBox.className = 'nl2__log'; host.appendChild(logBox);
+      const two = host.querySelector('.nl2__two');
+
+      /* ---------- state ---------- */
+      let mode = 'inertia', surf = 'ice', t = 0, x = 0, v = 0, a = 0, fr = 0, F = 0, m = 4, pushT = 0, sim = false, moving = false, slipF = null;
+      let hist = [], strobe = [], saved = [], runLog = [], nextDot = 0;
+      let A = null, B = null, contactF = 0, peakF = 0, p0 = 0, cam = 0; // two-cart scene
+      const reset1 = () => { nextDot = 0; t = 0; x = 0; v = ctl.val.v0; a = 0; fr = 0; pushT = 0; hist = []; strobe = []; slipF = null; moving = Math.abs(v) > 1e-9; cam = 0; };
+      const reset2 = () => {
+        t = 0; hist = []; contactF = 0; peakF = 0; cam = 0;
+        const apart = ctl.val.scene === 'apart';
+        A = { m: ctl.val.mA, x: apart ? -0.21 : -3, v: apart ? 0 : ctl.val.vA, w: 0.4 };
+        B = { m: ctl.val.mB, x: apart ? 0.21 : 2, v: apart ? 0 : ctl.val.vB, w: 0.4 };
+        A.spring = apart; p0 = A.m * A.v + B.m * B.v;
       };
-      function stepCrate(dt) {
-        for (let k = 0; k < Math.ceil(dt / 0.001); k++) {
-          const h = Math.min(0.001, dt - k * 0.001); if (h <= 0) break;
-          const fr = forces(); let v2 = S.v + fr.a * h;
-          if (S.v !== 0 && Math.sign(v2) !== Math.sign(S.v) && Math.abs(fr.F) <= SURF[S.surf].s * S.m * G) v2 = 0; // friction stops it, never reverses it
-          if (Math.abs(v2) < 1e-4 && Math.abs(fr.F) <= SURF[S.surf].s * S.m * G) v2 = 0;
-          S.v = v2; S.x += S.v * h; S.t += h;
-          if (S.holdT > 0) { S.holdT -= h; if (S.holdT <= 0) { S.hold = 0; S.pushDone = true; S.glideV = S.v; S.glideAt = S.t; } }
-          if (S.startedMove == null && Math.abs(S.v) > 1e-3) S.startedMove = fr.F;
-        }
-        if (!S.dots.length || S.t - S.dots[S.dots.length - 1].t >= 0.5) S.dots.push({ t: S.t, x: S.x });
-        S.hist.push([S.t, S.v]); if (S.hist.length > 600) S.hist.shift();
-        if (S.x > 400) S.x = 400;
-      }
-      function stepCarts(dt) {
-        for (let k = 0; k < Math.ceil(dt / 0.001); k++) {
-          const h = Math.min(0.001, dt - k * 0.001); if (h <= 0) break;
-          K.x1 += K.u1 * h; K.x2 += K.u2 * h; K.t += h;
-          const gap = (K.x2 - 0.5 * w2()) - (K.x1 + 0.5 * w1());
-          if (!K.hit && gap <= 0 && K.u1 - K.u2 > 0) {
-            const p = K.m1 * K.u1 + K.m2 * K.u2;
-            K.before = { p, ke: 0.5 * K.m1 * K.u1 ** 2 + 0.5 * K.m2 * K.u2 ** 2, u1: K.u1, u2: K.u2 };
-            const a = (p + K.m2 * K.e * (K.u2 - K.u1)) / (K.m1 + K.m2), b = (p + K.m1 * K.e * (K.u1 - K.u2)) / (K.m1 + K.m2);
-            K.u1 = a; K.u2 = b; K.hit = true; K.flash = 0.35;
-            K.after = { p: K.m1 * a + K.m2 * b, ke: 0.5 * K.m1 * a * a + 0.5 * K.m2 * b * b, u1: a, u2: b, J: K.m2 * (b - K.before.u2) };
-            c.onChange(); log();
+      const S0 = () => SURF[surf];
+
+      /* ---------- physics: one crate ---------- */
+      function step1(dt) {
+        const s = S0(), N = m * g0;
+        for (let k = 0, n = Math.round(dt / DT); k < n; k++) {
+          const Fa = pushT > 0 ? Math.max(F, 0) || 20 : F;
+          if (pushT > 0) { pushT -= DT; if (pushT <= 0) { pushT = 0; F = 0; ctl.set('F', 0); } }
+          if (!moving) {
+            if (Math.abs(Fa) <= s.s * N + 1e-9) { fr = -Fa; a = 0; v = 0; }
+            else { moving = true; if (slipF == null) slipF = Math.abs(Fa); fr = -Math.sign(Fa) * s.k * N; a = (Fa + fr) / m; v += a * DT; }
+          } else {
+            fr = Math.abs(v) > 1e-9 ? -Math.sign(v) * s.k * N : 0; a = (Fa + fr) / m;
+            const nv = v + a * DT;
+            if (v !== 0 && Math.sign(nv) !== Math.sign(v) && Math.abs(Fa) <= s.s * N) { v = 0; a = 0; moving = false; fr = -Fa; }
+            else v = nv;
+            if (s.k === 0 && Math.abs(v) < 1e-12 && Math.abs(Fa) < 1e-12) moving = false;
           }
+          x += v * DT; t += DT;
+          if (t >= nextDot - 1e-9) { strobe.push([x, t]); nextDot += 0.5; } // ticker tape: a dot every 0.5 s
         }
-        K.flash = Math.max(0, K.flash - dt);
+        hist.push([t, v, a, fr, pushT > 0 ? (Math.max(F, 0) || 20) : F]); if (hist.length > 1200) hist.shift();
       }
-      const w1 = () => 0.6 + K.m1 * 0.08, w2 = () => 0.6 + K.m2 * 0.08;
-      // ----- drawing -----
-      const css = v => c.css(v) || '#999';
-      const fs = n => Math.max(n, 11 / Math.max(0.2, (cv.clientWidth || 900) / 900)) * cv._s;
-      function arrow(x, y, dx, dy, col, label) {
-        if (Math.abs(dx) + Math.abs(dy) < 2) return; const k = cv._s;
-        g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 3 * k; g.beginPath(); g.moveTo(x * k, y * k); g.lineTo((x + dx) * k, (y + dy) * k); g.stroke();
-        const a = Math.atan2(dy, dx), hl = 9; g.beginPath(); g.moveTo((x + dx) * k, (y + dy) * k); g.lineTo((x + dx - hl * Math.cos(a - 0.45)) * k, (y + dy - hl * Math.sin(a - 0.45)) * k); g.lineTo((x + dx - hl * Math.cos(a + 0.45)) * k, (y + dy - hl * Math.sin(a + 0.45)) * k); g.fill();
-        if (label) { g.font = `${fs(11)}px system-ui, sans-serif`; g.fillText(label, (x + dx + (dx >= 0 ? 6 : -6 - g.measureText(label).width / k)) * k, (y + dy + (dy > 0 ? 14 : dy < 0 ? -6 : 4)) * k); }
-      }
-      function backdrop(W, H, k) {
-        const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#0b1024'); bg.addColorStop(1, '#141b38'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
-        g.fillStyle = 'rgba(220,228,255,.5)'; for (let i = 0; i < 40; i++) { const sx = (i * 137.5) % 900, sy = (i * 71.3) % 220; g.fillRect(sx * k, sy * k, 1.2 * k, 1.2 * k); }
-      }
-      function draw() {
-        const W = cv.width, H = cv.height, k = cv._s; g.clearRect(0, 0, W, H); backdrop(W, H, k);
-        if (mission === 'collide') return drawCarts(k);
-        const PX = 42, groundY = 300, camX = Math.max(0, S.x * PX - 300), sx = x => x * PX - camX;
-        const s = SURF[S.surf];
-        // the surface and its distance marks (the marks scroll, so steady motion is visible)
-        const gr = g.createLinearGradient(0, groundY * k, 0, H); gr.addColorStop(0, s.col[1]); gr.addColorStop(1, s.col[0]); g.fillStyle = gr; g.fillRect(0, groundY * k, W, H - groundY * k);
-        g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 1; g.fillStyle = 'rgba(235,240,255,.7)'; g.font = `${fs(10)}px ui-monospace, monospace`;
-        for (let m = Math.floor(camX / PX); m <= (camX + 900) / PX; m++) { const X = sx(m); g.beginPath(); g.moveTo(X * k, groundY * k); g.lineTo(X * k, (groundY + (m % 5 ? 6 : 14)) * k); g.stroke(); if (m % 5 === 0) g.fillText(m + ' m', (X + 3) * k, (groundY + 26) * k); }
-        // ticker tape: one dot every 0.5 s — spacing shows the motion
-        g.fillStyle = '#ffd36b'; S.dots.forEach(d => { const X = sx(d.x); if (X > -10 && X < 910) { g.beginPath(); g.arc(X * k, (groundY + 40) * k, 3 * k, 0, 7); g.fill(); } });
-        // the crate
-        const side = 46 + S.m * 3, cx = sx(S.x), top = groundY - side;
-        const cg = g.createLinearGradient(0, top * k, 0, groundY * k); cg.addColorStop(0, '#c99a5e'); cg.addColorStop(1, '#8a5f33'); g.fillStyle = cg; g.fillRect((cx - side / 2) * k, top * k, side * k, side * k);
-        g.strokeStyle = 'rgba(40,24,10,.6)'; g.lineWidth = 2 * k; g.strokeRect((cx - side / 2) * k, top * k, side * k, side * k); g.beginPath(); g.moveTo((cx - side / 2) * k, top * k); g.lineTo((cx + side / 2) * k, groundY * k); g.moveTo((cx + side / 2) * k, top * k); g.lineTo((cx - side / 2) * k, groundY * k); g.stroke();
-        g.fillStyle = '#fff'; g.font = `bold ${fs(12)}px system-ui, sans-serif`; g.textAlign = 'center'; g.fillText(fmt(S.m, 1) + ' kg', cx * k, (top - 8) * k); g.textAlign = 'start';
-        // forces (scale 2.2 px per newton, capped)
-        const fr = forces(), sc = n => Math.max(-170, Math.min(170, n * 2.2)), my = top + side / 2;
-        arrow(cx, my, sc(fr.F), 0, '#6ea8ff', fr.F ? `F ${fmt(fr.F, 0)} N` : '');
-        arrow(cx, groundY - 6, sc(fr.f), 0, '#ff7a59', fr.f ? `f ${fmt(fr.f, 1)} N${fr.static ? ' (static)' : ''}` : '');
-        arrow(cx, groundY, 0, Math.min(90, fr.W * 0.5), 'rgba(220,220,235,.75)', `W ${fmt(fr.W, 0)} N`);
-        arrow(cx, top, 0, -Math.min(90, fr.N * 0.5), 'rgba(220,220,235,.75)', `N ${fmt(fr.N, 0)} N`);
-        if (fr.net) arrow(cx, top - 26, sc(fr.net), 0, '#7ef0b0', `F net ${fmt(fr.net, 1)} N`);
-        // velocity–time graph, top right
-        const gx = 640, gy = 22, gw = 240, gh = 110; g.fillStyle = 'rgba(5,8,20,.55)'; g.fillRect(gx * k, gy * k, gw * k, gh * k); g.strokeStyle = 'rgba(200,210,255,.35)'; g.strokeRect(gx * k, gy * k, gw * k, gh * k);
-        g.fillStyle = 'rgba(220,228,255,.8)'; g.font = `${fs(10)}px system-ui, sans-serif`; g.fillText('v (m/s) against t (s)', (gx + 6) * k, (gy + 13) * k);
-        if (S.hist.length > 1) { const t0 = Math.max(0, S.t - 10), vmax = Math.max(1, ...S.hist.map(h => Math.abs(h[1]))); g.strokeStyle = '#7ef0b0'; g.lineWidth = 2 * k; g.beginPath(); S.hist.filter(h => h[0] >= t0).forEach((h, i) => { const X = gx + 6 + (h[0] - t0) / 10 * (gw - 12), Y = gy + gh / 2 - h[1] / vmax * (gh / 2 - 12); i ? g.lineTo(X * k, Y * k) : g.moveTo(X * k, Y * k); }); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.15)'; g.beginPath(); g.moveTo((gx + 6) * k, (gy + gh / 2) * k); g.lineTo((gx + gw - 6) * k, (gy + gh / 2) * k); g.stroke(); }
-        host.querySelector('.nl__read').textContent = `t = ${fmt(S.t, 1)} s · x = ${fmt(S.x - 2, 2)} m · v = ${fmt(S.v)} m/s · a = ${fmt(fr.a)} m/s² · F = ${fmt(fr.F, 0)} N · friction = ${fmt(fr.f, 1)} N · F net = ${fmt(fr.net, 1)} N`;
-      }
-      function drawCarts(k) {
-        const PX = 52, groundY = 300, ox = 30, sx = x => ox + x * PX;
-        g.fillStyle = '#1b2a4a'; g.fillRect(0, groundY * k, cv.width, cv.height); g.strokeStyle = 'rgba(160,190,255,.4)'; g.beginPath(); g.moveTo(0, groundY * k); g.lineTo(cv.width, groundY * k); g.stroke();
-        const cart = (x, m, w, col, label) => { const X = sx(x), wpx = w * PX, hpx = 34 + m * 3; g.fillStyle = col; g.fillRect((X - wpx / 2) * k, (groundY - hpx - 10) * k, wpx * k, hpx * k); g.fillStyle = '#0c1020'; [X - wpx / 3, X + wpx / 3].forEach(wx => { g.beginPath(); g.arc(wx * k, (groundY - 6) * k, 7 * k, 0, 7); g.fill(); }); g.fillStyle = '#fff'; g.font = `bold ${fs(12)}px system-ui, sans-serif`; g.textAlign = 'center'; g.fillText(`${label} · ${fmt(m, 1)} kg`, X * k, (groundY - hpx - 18) * k); g.textAlign = 'start'; return { X, top: groundY - hpx - 10, hpx }; };
-        const A = cart(K.x1, K.m1, w1(), '#5b8cff', 'A'), B = cart(K.x2, K.m2, w2(), '#ff8a5b', 'B');
-        arrow(A.X, A.top - 30, K.u1 * 14, 0, '#bcd2ff', `${fmt(K.u1, 2)} m/s`); arrow(B.X, B.top - 30, K.u2 * 14, 0, '#ffd2bc', `${fmt(K.u2, 2)} m/s`);
-        if (K.flash > 0 && K.after) { const mid = (A.X + B.X) / 2, y = groundY - 30, len = 30 + Math.min(60, Math.abs(K.after.J) * 4); arrow(mid - 4, y, -len, 0, '#ffe36b', 'force on A'); arrow(mid + 4, y, len, 0, '#ffe36b', 'force on B'); }
-        const p = K.m1 * K.u1 + K.m2 * K.u2, ke = 0.5 * K.m1 * K.u1 ** 2 + 0.5 * K.m2 * K.u2 ** 2;
-        host.querySelector('.nl__read').textContent = `${T('Total momentum', 'الزخم الكلي')} = ${fmt(p)} kg·m/s · ${T('kinetic energy', 'الطاقة الحركية')} = ${fmt(ke)} J · A: ${fmt(K.u1)} m/s · B: ${fmt(K.u2)} m/s`;
-      }
-      // ----- the log (mission evidence) -----
-      function log() {
-        const el = host.querySelector('.nl__log');
-        if (mission === 'fma') el.innerHTML = S.runs.length ? `<table class="nl__tab"><caption>${T('Your runs (frictionless)', 'تجاربك')}</caption><thead><tr><th>F (N)</th><th>m (kg)</th><th>${T('measured a', 'ت المقاسة')} (m/s²)</th><th>F ÷ m</th></tr></thead><tbody>${S.runs.map(r => `<tr><td>${fmt(r.F, 0)}</td><td>${fmt(r.m, 1)}</td><td>${fmt(r.a)}</td><td>${fmt(r.F / r.m)}</td></tr>`).join('')}</tbody></table>${S.runs.length >= 3 ? `<p class="nl__ok">${T('In every run the measured acceleration equals F ÷ m.', 'في كل تجربة التسارع = ق ÷ ك.')}</p>` : `<p class="nl__muted">${3 - S.runs.length} ${T('more run(s) with a different force or mass.', 'تجارب أخرى بقوة أو كتلة مختلفة.')}</p>`}` : `<p class="nl__muted">${T('Press “Apply F continuously”. After 2 s the acceleration is measured and logged.', 'اضغط “طبّق القوة باستمرار”.')}</p>`;
-        else if (mission === 'friction') { const lim = SURF[S.surf].s * S.m * G; el.innerHTML = S.startedMove != null ? `<p class="nl__ok">${T('It started to slide at', 'بدأ الانزلاق عند')} <b>${fmt(Math.abs(S.startedMove), 0)} N</b>. ${T('The model’s limit for static friction is μs·m·g', 'حد الاحتكاك السكوني')} = ${SURF[S.surf].s} × ${fmt(S.m, 1)} × 9.8 = <b>${fmt(lim, 1)} N</b>. ${T('Once sliding, kinetic friction is smaller', 'بعد الانزلاق يصبح الاحتكاك أصغر')}: ${fmt(SURF[S.surf].k * S.m * G, 1)} N.</p>` : `<p class="nl__muted">${T('Press “Apply F continuously”, then raise F a little at a time. Watch the friction arrow match your push.', 'ارفع القوة تدريجياً.')}</p>`; }
-        else if (mission === 'collide') el.innerHTML = K.after ? `<table class="nl__tab"><thead><tr><th></th><th>${T('before', 'قبل')}</th><th>${T('after', 'بعد')}</th></tr></thead><tbody><tr><td>${T('Total momentum', 'الزخم الكلي')} (kg·m/s)</td><td>${fmt(K.before.p)}</td><td>${fmt(K.after.p)}</td></tr><tr><td>${T('Kinetic energy', 'الطاقة الحركية')} (J)</td><td>${fmt(K.before.ke)}</td><td>${fmt(K.after.ke)}</td></tr><tr><td>A (m/s)</td><td>${fmt(K.before.u1)}</td><td>${fmt(K.after.u1)}</td></tr><tr><td>B (m/s)</td><td>${fmt(K.before.u2)}</td><td>${fmt(K.after.u2)}</td></tr></tbody></table><p class="nl__ok">${T('Momentum is the same before and after.', 'الزخم نفسه قبل وبعد.')} ${K.e < 1 ? T('Some kinetic energy became heat and sound (e < 1).', 'تحولت بعض الطاقة إلى حرارة وصوت.') : T('With e = 1 kinetic energy is kept too.', 'مع e = 1 تُحفظ الطاقة الحركية أيضاً.')}</p>` : `<p class="nl__muted">${T('Run the collision to see momentum before and after.', 'شغّل التصادم.')}</p>`;
-        else el.innerHTML = S.pushDone ? `<p class="${Math.abs(S.v - S.glideV) < 0.01 * Math.max(0.1, Math.abs(S.glideV)) ? 'nl__ok' : 'nl__muted'}">${T('After the push ended (at', 'بعد انتهاء الدفع (عند')} ${fmt(S.glideAt, 1)} s) ${T('the speed was', 'كانت السرعة')} ${fmt(S.glideV)} m/s; ${T('now it is', 'الآن')} ${fmt(S.v)} m/s.${SURF[S.surf].k === 0 ? ' ' + T('No resultant force, no change in velocity.', 'لا قوة محصلة، لا تغير في السرعة.') : ' ' + T('Friction is the resultant force here, so it slows down.', 'الاحتكاك هو القوة المحصلة هنا.')}</p>` : `<p class="nl__muted">${T('Press “Push for 1 s”.', 'اضغط “ادفع لثانية”.')}</p>`;
-      }
-      // ----- the loop -----
-      let measureAt = null;
-      const L = c.looper(host, dt => {
-        const h = dt * (S.slow ? 0.25 : 1);
-        if (mission === 'collide') { stepCarts(h); if (K.x1 < -1 || K.x2 > 18 || K.t > 12) L.stop(); }
-        else { stepCrate(h); if (measureAt != null && S.t >= measureAt) { const fr = forces(); S.runs.push({ F: fr.F, m: S.m, a: fr.a }); measureAt = null; LS.engine.event('experience-success', { id: 'newton-lab', objs: ['phys-newton:1'], label: 'Measured F = ma' }); log(); c.onChange(); }
-          if (S.pushDone && mission === 'inertia' && S.t - S.glideAt > 3 && !S.inertiaLogged) { S.inertiaLogged = true; log(); c.onChange(); LS.engine.event('experience-success', { id: 'newton-lab', objs: ['phys-newton:2'], label: 'First law observed' }); }
-          if (mission === 'friction' && S.startedMove != null && !S.frLogged) { S.frLogged = true; log(); c.onChange(); LS.engine.event('experience-success', { id: 'newton-lab', objs: ['phys-newton:0'], label: 'Static friction limit found' }); }
-          if (Math.abs(S.v) < 1e-6 && !S.hold && !S.cont && S.t > 0.5) { /* at rest with nothing acting: keep drawing but the clock can rest */ }
+      /* ---------- physics: two carts with a contact force ---------- */
+      function step2(dt) {
+        const e = Math.max(1e-3, ctl.val.e), ln = Math.log(e), zeta = -ln / Math.sqrt(Math.PI * Math.PI + ln * ln), k = 4e4;
+        for (let i = 0, n = Math.round(dt / DT); i < n; i++) {
+          const mu = A.m * B.m / (A.m + B.m), cdamp = 2 * zeta * Math.sqrt(k * mu);
+          const gap = (B.x - B.w / 2) - (A.x + A.w / 2);
+          let f = 0; // force on B by A (positive pushes B to +x); force on A by B is −f
+          if (A.spring) { // push-apart: a compressed spring between the carts, released at t = 0
+            const comp = 0.05 - gap; if (comp > 0) f = 900 * comp; else A.spring = false;
+          } else if (gap < 0) { f = -k * gap - cdamp * (B.v - A.v); if (f < 0) f = 0; }
+          if (ctl.val.e < 0.02 && gap < 0.002 && Math.abs(B.v - A.v) < 0.02) { const vc = (A.m * A.v + B.m * B.v) / (A.m + B.m); A.v = B.v = vc; f = 0; } // perfectly inelastic: they move together
+          B.v += f / B.m * DT; A.v += -f / A.m * DT; A.x += A.v * DT; B.x += B.v * DT; t += DT; contactF = f; peakF = Math.max(peakF, f);
         }
-        draw(); if (S.pushDone && mission === 'inertia' && (S.t - S.glideAt) % 1 < h) log();
+        hist.push([t, A.v, B.v, contactF, -contactF]); if (hist.length > 1200) hist.shift();
+      }
+
+      /* ---------- drawing ---------- */
+      const P = () => K.pal();
+      const SC = 60; // pixels per metre on the track
+      function drawTrack(G, ox) {
+        const s = S0(), y0 = 300, Pl = P();
+        const sky = G.createLinearGradient(0, 0, 0, y0); sky.addColorStop(0, Pl.bg2); sky.addColorStop(1, Pl.bg); G.fillStyle = sky; G.fillRect(0, 0, 960, y0);
+        const fl = G.createLinearGradient(0, y0, 0, 420); fl.addColorStop(0, s.top); fl.addColorStop(1, s.bot); G.fillStyle = fl; G.fillRect(0, y0, 960, 120);
+        G.strokeStyle = s.line; G.lineWidth = 1; // surface texture moves with the world so motion reads correctly
+        const step = surf === 'wood' ? 90 : surf === 'ice' ? 140 : 45;
+        for (let X = ((-ox) % step + step) % step - step; X < 960; X += step) { G.beginPath(); if (surf === 'wood') { G.moveTo(X, y0); G.lineTo(X, 420); } else if (surf === 'ice') { G.moveTo(X, y0 + 18); G.lineTo(X + 60, y0 + 6); } else { G.moveTo(X, y0 + 30); G.lineTo(X + 20, y0 + 30); } G.stroke(); }
+        // metre ruler
+        G.fillStyle = Pl.muted; G.font = '600 11px ui-monospace, monospace'; G.textAlign = 'center';
+        const m0 = Math.floor(ox / SC) - 1;
+        for (let k = m0; k < m0 + 960 / SC + 3; k++) { const X = k * SC - ox; G.fillRect(X, y0 + 2, 1, k % 5 === 0 ? 12 : 6); if (k % 5 === 0) G.fillText(k + ' m', X, y0 + 26); }
+      }
+      function crate(G, X, y, w, h, label, col) {
+        G.save(); G.fillStyle = 'rgba(0,0,0,.18)'; G.beginPath(); G.ellipse(X, y + 2, w * 0.55, 5, 0, 0, Math.PI * 2); G.fill();
+        const gr = G.createLinearGradient(0, y - h, 0, y); gr.addColorStop(0, col[0]); gr.addColorStop(1, col[1]); G.fillStyle = gr; K.rr(G, X - w / 2, y - h, w, h, 6); G.fill();
+        G.strokeStyle = 'rgba(0,0,0,.25)'; G.lineWidth = 2; G.stroke(); G.strokeStyle = 'rgba(255,255,255,.18)'; G.beginPath(); G.moveTo(X - w / 2 + 8, y - h + 8); G.lineTo(X + w / 2 - 8, y - 8); G.moveTo(X + w / 2 - 8, y - h + 8); G.lineTo(X - w / 2 + 8, y - 8); G.stroke();
+        K.text(G, label, X, y - h / 2 + 5, { a: 'center', c: '#fff', w: 700, s: 14 }); G.restore();
+      }
+      let fHandle = null;
+      function frame1() {
+        const G = S.g, Pl = P(); S.clear();
+        const target = x * SC - 360; cam += (target - cam) * (sim ? 0.12 : 1); if (!isFinite(cam)) cam = 0;
+        drawTrack(G, cam);
+        const X = x * SC - cam, y = 300, w = 46 + m * 3.2, h = 40 + m * 2;
+        G.fillStyle = Pl.accent || '#c8341f'; strobe.forEach(([sx]) => { const sxp = sx * SC - cam; if (sxp > -10 && sxp < 970) { G.globalAlpha = 0.85; G.beginPath(); G.arc(sxp, y + 44, 4, 0, Math.PI * 2); G.fill(); } }); G.globalAlpha = 1;
+        if (strobe.length) K.text(G, T('strobe: one dot every 0.5 s', 'نقطة كل نصف ثانية'), 12, y + 66, { c: Pl.muted, s: 11 });
+        crate(G, X, y, w, h, `${f2(m, 1)} kg`, ['#c98a4b', '#8a5526']);
+        const Fa = pushT > 0 ? (Math.max(F, 0) || 20) : F, cy = y - h / 2, sc = 2.4;
+        if (Math.abs(Fa) > 0.01) K.arrow(G, X + Math.sign(Fa) * w / 2, cy, X + Math.sign(Fa) * w / 2 + Fa * sc, cy, '#ef7d22', 5, 13, `F = ${f2(Fa, 0)} N`);
+        fHandle = { id: 'F', x: X + (Math.abs(Fa) > 0.01 ? Math.sign(Fa) * w / 2 + Fa * sc : w / 2 + 18), y: cy, r: 20 };
+        G.save(); G.globalAlpha = 0.85; G.strokeStyle = '#ef7d22'; G.setLineDash([3, 3]); G.beginPath(); G.arc(fHandle.x, fHandle.y, 10, 0, Math.PI * 2); G.stroke(); G.restore();
+        if (Math.abs(fr) > 0.01) K.arrow(G, X + Math.sign(fr) * w / 2, y - 6, X + Math.sign(fr) * w / 2 + fr * sc, y - 6, Pl.red, 4, 11, `f = ${f2(fr, 1)} N`);
+        if (Math.abs(v) > 0.02) K.arrow(G, X, y - h - 18, X + v * 22, y - h - 18, Pl.blue, 3, 10, `v = ${f2(v, 2)} m/s`);
+        // free-body diagram inset
+        const bx = 830, by = 120, Pn = Pl; G.fillStyle = Pl.bg; G.globalAlpha = 0.92; K.rr(G, 730, 18, 212, 200, 12); G.fill(); G.globalAlpha = 1; G.strokeStyle = Pl.line; G.stroke();
+        K.text(G, T('Free-body diagram', 'مخطط القوى'), 740, 38, { w: 700, s: 12, c: Pl.muted });
+        G.fillStyle = Pl.ink; G.fillRect(bx - 12, by - 12, 24, 24);
+        const W = m * g0, s2 = 60 / Math.max(W, Math.abs(Fa), 30);
+        K.arrow(G, bx, by + 12, bx, by + 12 + W * s2, Pn.violet, 3, 9, 'W'); K.arrow(G, bx, by - 12, bx, by - 12 - W * s2, Pn.green, 3, 9, 'N');
+        if (Math.abs(Fa) > 0.01) K.arrow(G, bx + Math.sign(Fa) * 12, by, bx + Math.sign(Fa) * 12 + Fa * s2, by, '#ef7d22', 3, 9, 'F');
+        if (Math.abs(fr) > 0.01) K.arrow(G, bx + Math.sign(fr) * 12, by, bx + Math.sign(fr) * 12 + fr * s2, by, Pn.red, 3, 9, 'f');
+        K.text(G, `F_net = ${f2(Fa + fr, 1)} N`, 932, 38, { w: 700, s: 12, a: 'right' });
+        K.text(G, `t = ${f2(t, 2)} s`, 14, 26, { w: 700, s: 13, c: Pl.muted });
+        read.innerHTML = IL(`**x** = ${f2(x)} m · **v** = ${f2(v)} m/s · **a** = ${f2(a)} m/s² · **F** = ${f2(Fa, 1)} N · **friction** = ${f2(fr, 1)} N · **F_net** = ${f2(Fa + fr, 1)} N → **F_net / m** = ${f2((Fa + fr) / m)} m/s²` +
+          (mode === 'friction' ? ` · limit of static friction **μₛN** = ${f2(S0().s * m * g0, 1)} N${slipF != null ? ` · it started to slide at **${f2(slipF, 1)} N**` : ''}` : '') +
+          (mode === 'inertia' && moving && Math.abs(Fa) < 1e-9 && S0().k === 0 ? ' · **No net force: the velocity stays constant.**' : ''));
+      }
+      function cart(G, X, y, label, mass, col) { const w = 78 + mass * 6, h = 26 + mass * 2; G.fillStyle = col; K.rr(G, X - w / 2, y - h - 10, w, h, 6); G.fill(); G.fillStyle = '#222'; [-w / 3, w / 3].forEach(o => { G.beginPath(); G.arc(X + o, y - 8, 8, 0, Math.PI * 2); G.fill(); }); K.text(G, `${label} · ${f2(mass, 1)} kg`, X, y - h / 2 - 6, { a: 'center', c: '#fff', w: 700, s: 12 }); return { w, h }; }
+      function frame2() {
+        const G = S.g, Pl = P(); S.clear();
+        const mid = (A.x + B.x) / 2 * SC - 480; cam += (mid - cam) * (sim ? 0.08 : 1);
+        drawTrack(G, cam); const y = 300;
+        const XA = A.x * SC - cam, XB = B.x * SC - cam;
+        const a1 = cart(G, XA, y, 'A', A.m, '#3c6fd8'), b1 = cart(G, XB, y, 'B', B.m, '#d0503b');
+        if (Math.abs(A.v) > 0.02) K.arrow(G, XA, y - a1.h - 30, XA + A.v * 20, y - a1.h - 30, Pl.blue, 3, 9, `vA = ${f2(A.v)} m/s`);
+        if (Math.abs(B.v) > 0.02) K.arrow(G, XB, y - b1.h - 30, XB + B.v * 20, y - b1.h - 30, Pl.blue, 3, 9, `vB = ${f2(B.v)} m/s`);
+        if (contactF > 0.5) { const L = Math.min(160, 12 + contactF * 0.05); K.arrow(G, XB, y - b1.h / 2 - 12, XB + L, y - b1.h / 2 - 12, '#ef7d22', 4, 11, `on B by A: ${f2(contactF, 0)} N`); K.arrow(G, XA, y - a1.h / 2 - 12, XA - L, y - a1.h / 2 - 12, '#8b5cf6', 4, 11, `on A by B: ${f2(contactF, 0)} N`); }
+        const pA = A.m * A.v, pB = B.m * B.v;
+        // momentum bars
+        const bx = 40, by = 40, s2 = 8; G.fillStyle = Pl.bg; G.globalAlpha = 0.9; K.rr(G, 20, 14, 360, 104, 12); G.fill(); G.globalAlpha = 1;
+        K.text(G, T('Momentum p = m·v (kg·m/s)', 'كمية الحركة'), 30, 34, { w: 700, s: 12, c: Pl.muted });
+        [['A', pA, '#3c6fd8'], ['B', pB, '#d0503b'], ['total', pA + pB, Pl.ink]].forEach(([n, p, col], i) => { const yy = by + 14 + i * 24; G.fillStyle = Pl.line; G.fillRect(bx + 150, yy - 8, 1, 16); G.fillStyle = col; G.fillRect(bx + 150, yy - 6, Math.max(-140, Math.min(140, p * s2)), 12); K.text(G, `${n}: ${f2(p)}`, bx, yy + 4, { s: 12, w: 600 }); });
+        K.text(G, `t = ${f2(t, 2)} s`, 870, 26, { w: 700, s: 13, c: Pl.muted });
+        const KE = 0.5 * A.m * A.v * A.v + 0.5 * B.m * B.v * B.v;
+        read.innerHTML = IL(`**Total momentum** before: ${f2(p0)} · now: **${f2(pA + pB)}** kg·m/s · kinetic energy now: ${f2(KE)} J · largest contact force so far: ${f2(peakF, 0)} N — on each cart, in opposite directions.`);
+      }
+      /* ---------- graphs (synchronised with the motion) ---------- */
+      function graph() {
+        const G = Gs.g, Pl = P(); Gs.clear(Pl.bg);
+        const two2 = mode === 'interact', span = 10, tmax = Math.max(span, t), t0 = tmax - span;
+        const box = [60, 16, 860, 170];
+        const series = two2 ? [[1, '#3c6fd8', 'vA'], [2, '#d0503b', 'vB']] : [[1, Pl.blue, 'v (m/s)'], [2, Pl.green, 'a (m/s²)']];
+        let lo = -1, hi = 1; hist.forEach(r => series.forEach(([i]) => { lo = Math.min(lo, r[i]); hi = Math.max(hi, r[i]); })); saved.forEach(s => s.hist.forEach(r => { lo = Math.min(lo, r[1]); hi = Math.max(hi, r[1]); }));
+        const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+        const X = tt => box[0] + (tt - t0) / span * box[2], Y = v => box[1] + (hi - v) / (hi - lo) * box[3];
+        G.strokeStyle = Pl.line; G.lineWidth = 1; G.strokeRect(...box); G.beginPath(); G.moveTo(box[0], Y(0)); G.lineTo(box[0] + box[2], Y(0)); G.stroke();
+        G.font = '600 11px ui-monospace, monospace'; G.fillStyle = Pl.muted; G.textAlign = 'right'; [hi - pad, 0, lo + pad].forEach(v => G.fillText(f2(v, 1), box[0] - 6, Y(v) + 4)); G.textAlign = 'center'; for (let k = Math.ceil(t0); k <= tmax; k++) G.fillText(k + ' s', X(k), box[1] + box[3] + 16);
+        G.save(); G.beginPath(); G.rect(...box); G.clip();
+        saved.forEach((s, i) => { G.strokeStyle = s.col; G.lineWidth = 1.6; G.setLineDash([5, 4]); G.beginPath(); s.hist.forEach((r, j) => { const xx = box[0] + r[0] / span * box[2]; if (j) G.lineTo(xx, Y(r[1])); else G.moveTo(xx, Y(r[1])); }); G.stroke(); G.setLineDash([]); });
+        series.forEach(([i, col]) => { G.strokeStyle = col; G.lineWidth = 2.5; G.beginPath(); hist.forEach((r, j) => { if (j) G.lineTo(X(r[0]), Y(r[i])); else G.moveTo(X(r[0]), Y(r[i])); }); G.stroke(); });
+        G.restore();
+        G.textAlign = 'left'; series.forEach(([, col, n], i) => { G.fillStyle = col; G.fillRect(box[0] + 10 + i * 120, 6, 14, 3); G.fillStyle = Pl.ink; G.fillText(n, box[0] + 30 + i * 120, 12); });
+        if (saved.length && !two2) saved.forEach((s, i) => { G.fillStyle = s.col; G.fillText(`- - ${s.name}`, box[0] + 260 + i * 200, 12); });
+      }
+      function render() { if (mode === 'interact') { if (!A) reset2(); frame2(); } else frame1(); graph(); }
+
+      /* ---------- loop ---------- */
+      const M = K.motor(c, host, (dt, running) => {
+        if (running) { const h = Math.min(dt, 0.05); if (mode === 'interact') step2(h); else step1(h); }
+        render();
       });
-      const sync = () => { const b = document.querySelector('[data-x="pause"]'); if (b) b.textContent = L.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); };
-      const run = () => { if (c.reduced) { const steps = mission === 'collide' ? 600 : 300; for (let i = 0; i < steps; i++) { if (mission === 'collide') stepCarts(0.02); else stepCrate(0.02); } if (measureAt != null && S.t >= measureAt) { const fr = forces(); S.runs.push({ F: fr.F, m: S.m, a: fr.a }); measureAt = null; } draw(); log(); c.onChange(); return; } L.start(); sync(); };
-      host.addEventListener('click', e => {
-        const mb = e.target.closest('[data-mis]'); if (mb) { setMission(mb.dataset.mis); return; }
-        const sf = e.target.closest('[data-surf]'); if (sf) { S.surf = sf.dataset.surf; host.querySelectorAll('[data-surf]').forEach(b => b.setAttribute('aria-checked', String(b === sf))); draw(); log(); return; }
-        const b = e.target.closest('[data-nl]'); if (!b) return; const a = b.dataset.nl;
-        if (a === 'push1') { reset(); S.hold = S.F || 20; if (!S.F) S.F = 20; S.holdT = 1; run(); }
-        if (a === 'run') { reset(); S.cont = true; S.hold = 0; if (mission === 'fma') measureAt = 2; run(); }
-        if (a === 'stopF') { S.cont = false; S.hold = 0; S.holdT = 0; }
-        if (a === 'go') { reset(); run(); }
+      function setMode(md) {
+        mode = md; two.hidden = md !== 'interact';
+        host.querySelectorAll('[data-k="F"],[data-k="m"],[data-k="v0"]').forEach(el => { el.closest('label').hidden = md === 'interact'; });
+        host.querySelectorAll('[data-kc="surf"], [data-kb="push"], [data-kb="letgo"]').forEach(el => { el.hidden = md === 'interact'; }); const sc = host.querySelector('[data-kc="surf"]'); if (sc) sc.closest('.kx-chips').hidden = md === 'interact';
+        task.innerHTML = IL(TASK[md]);
+        if (md === 'inertia') { surf = 'frictionless'; ctl.set('surf', 'frictionless'); }
+        if (md === 'friction') { surf = 'wood'; ctl.set('surf', 'wood'); F = 0; ctl.set('F', 0); }
+        saved = []; runLog = []; renderLog(); sim = false; if (md === 'interact') reset2(); else reset1(); M.pause(); render(); syncRun();
+      }
+      function renderLog() {
+        if (mode !== 'fma' || !runLog.length) { logBox.innerHTML = mode === 'fma' ? `<p class="at-muted">${T('Saved runs appear here, with measured acceleration next to F_net / m.', 'تظهر التجارب المحفوظة هنا.')}</p>` : ''; return; }
+        logBox.innerHTML = `<table class="nl2__tbl"><caption>${T('Your runs', 'تجاربك')}</caption><thead><tr><th scope="col">#</th><th scope="col">F (N)</th><th scope="col">m (kg)</th><th scope="col">${T('Surface', 'السطح')}</th><th scope="col">F_net (N)</th><th scope="col">${T('measured a', 'ت المقيسة')} (m/s²)</th><th scope="col">F_net / m</th></tr></thead><tbody>${runLog.map((r, i) => `<tr><td>${i + 1}</td><td>${f2(r.F, 0)}</td><td>${f2(r.m, 1)}</td><td>${esc(r.surf)}</td><td>${f2(r.Fn, 1)}</td><td><b>${f2(r.a)}</b></td><td>${f2(r.Fn / r.m)}</td></tr>`).join('')}</tbody></table>`;
+      }
+      const RUNCOL = ['#7c3aed', '#0d9488', '#b45309', '#be123c'];
+      function syncRun() { const b = host.querySelector('[data-kb="run"]'); if (b) b.textContent = sim ? T('Pause ❚❚', 'إيقاف') : T('Run ▸', 'تشغيل'); }
+      function on(id, val) {
+        if (id === 'mode') return setMode(val);
+        if (id === 'F') { F = val; if (pushT > 0) pushT = 0; if (!sim && mode !== 'interact') { render(); } }
+        if (id === 'm') { m = val; render(); }
+        if (id === 'v0') { if (!sim && t === 0) { v = val; moving = Math.abs(v) > 1e-9; render(); } }
+        if (id === 'surf') { surf = val; render(); }
+        if (['mA', 'vA', 'mB', 'vB', 'scene'].includes(id)) { sim = false; M.pause(); reset2(); render(); syncRun(); }
+        if (id === 'run') { sim = !sim; if (sim) M.play(); else M.pause(); syncRun(); }
+        if (id === 'step') { sim = false; M.pause(); if (mode === 'interact') step2(0.05); else step1(0.05); render(); syncRun(); }
+        if (id === 'push') { if (mode === 'interact') return; pushT = 1; F = Math.max(F, 0) || 20; ctl.set('F', F); sim = true; M.play(); syncRun(); }
+        if (id === 'letgo') { F = 0; pushT = 0; ctl.set('F', 0); render(); }
+        if (id === 'save') {
+          if (mode === 'interact' || !hist.length) return;
+          const moved = hist.filter(r => Math.abs(r[2]) > 1e-6 || Math.abs(r[1]) > 1e-6);
+          const h0 = hist[0], h1 = hist[hist.length - 1], aMeas = h1[0] - h0[0] > 1e-6 ? (h1[1] - h0[1]) / (h1[0] - h0[0]) : 0; // measured from the velocity record: Δv / Δt
+          const last = hist[hist.length - 1];
+          runLog.push({ F: last[4], m, surf: S0().n, Fn: last[4] + last[3], a: moved.length ? aMeas : 0 });
+          saved.push({ name: `${f2(last[4], 0)} N, ${f2(m, 1)} kg`, col: RUNCOL[saved.length % 4], hist: hist.map(r => [r[0] - hist[0][0], r[1]]) }); if (saved.length > 4) saved.shift();
+          renderLog(); sim = false; M.pause(); reset1(); render(); syncRun();
+        }
+        if (id === 'clear') { saved = []; runLog = []; renderLog(); render(); }
+        M.draw();
+      }
+      // direct manipulation: drag the orange arrow tip to set the force
+      K.drag(S, () => (mode === 'interact' || !fHandle ? [] : [fHandle]), (id, px) => {
+        const X = x * SC - cam, w = 46 + m * 3.2; const side = px >= X ? 1 : -1; const val = K.clamp(Math.round((px - X - side * w / 2) / 2.4), -60, 60);
+        F = val; pushT = 0; ctl.set('F', val); render();
       });
-      host.addEventListener('input', e => {
-        const sl = e.target.closest('[data-s]'); if (sl) { const k = sl.dataset.s, v = +sl.value; if (mission === 'collide') K[k] = v; else S[k] = v; host.querySelector(`[data-o="${k}"]`).textContent = sl.value + ({ F: ' N', m: ' kg', m1: ' kg', m2: ' kg', v1: ' m/s', v2: ' m/s', e: '' })[k]; if (mission === 'collide') reset(); draw(); return; }
-        if (e.target.matches('[data-nl="slow"]')) S.slow = e.target.checked;
+      S.cv.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); F = K.clamp(F + (e.key === 'ArrowRight' ? 5 : -5), -60, 60); ctl.set('F', F); render(); }
+        else if (e.key === ' ') { e.preventDefault(); on('run', true); }
+        else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); api.reset(); }
       });
-      cv.addEventListener('keydown', e => { if (mission === 'collide') return; if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); S.hold = (e.key === 'ArrowRight' ? 1 : -1) * Math.max(10, Math.abs(S.F) || 20); S.holdT = 0; if (!L.running()) run(); } if (e.key === ' ') { e.preventDefault(); L.running() ? L.stop() : run(); sync(); } if (e.key === 'r' || e.key === 'R') reset(); });
-      cv.addEventListener('keyup', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { S.hold = 0; } });
-      setMission('inertia');
-      return {
-        play() { run(); }, pause() { L.stop(); }, running: () => L.running(),
-        reset() { reset(); log(); }, preset() { setMission('inertia'); },
+      setMode('inertia');
+      const api = {
+        play() { sim = true; M.play(); syncRun(); }, pause() { sim = false; M.pause(); syncRun(); }, running: () => sim,
+        preset() { setMode('inertia'); ctl.set('mode', 'inertia'); m = 4; ctl.set('m', 4); },
+        reset() { sim = false; M.pause(); F = 0; pushT = 0; ctl.set('F', 0); if (mode === 'interact') reset2(); else reset1(); render(); syncRun(); },
+        destroy() { sim = false; M.pause(); S.destroy(); Gs.destroy(); },
         observe() {
-          if (mission === 'collide') return { text: K.after ? `Cart A (**${fmt(K.m1, 1)} kg**) and cart B (**${fmt(K.m2, 1)} kg**) collided with e = **${fmt(K.e, 2)}**. Total momentum before **${fmt(K.before.p)}** and after **${fmt(K.after.p)} kg·m/s** — the same. Kinetic energy ${fmt(K.before.ke)} J → ${fmt(K.after.ke)} J.` : 'Run the collision first.', predOk: null };
-          if (mission === 'fma') return { text: S.runs.length ? `Runs logged: ${S.runs.map(r => `F = ${fmt(r.F, 0)} N, m = ${fmt(r.m, 1)} kg → a = **${fmt(r.a)} m/s²**`).join('; ')}. Each time a = F ÷ m.` : 'Apply a force continuously to log a run.', predOk: null };
-          if (mission === 'friction') return { text: S.startedMove != null ? `On ${SURF[S.surf].en.toLowerCase()} the ${fmt(S.m, 1)} kg crate began to slide at **${fmt(Math.abs(S.startedMove), 0)} N**; the model’s static limit is μs·m·g = **${fmt(SURF[S.surf].s * S.m * G, 1)} N**.` : 'Raise the force until the crate starts to move.', predOk: null };
-          return { text: S.pushDone ? `After a 1-second push on ${SURF[S.surf].en.toLowerCase()}, the crate was moving at **${fmt(S.glideV)} m/s**. ${fmt(S.t - S.glideAt, 1)} s later it is moving at **${fmt(S.v)} m/s**${SURF[S.surf].k === 0 ? ' — unchanged, because no resultant force acts (the yellow dots are evenly spaced).' : ' — friction is slowing it.'}` : 'Press “Push for 1 s” and watch what happens after the push.', predOk: S.pushDone && SURF[S.surf].k === 0 && S.t - S.glideAt > 1 ? p => p === 1 : null };
-        },
-        destroy() { L.destroy(); cv._destroy(); }
+          if (mode === 'interact') { const pA = A.m * A.v, pB = B.m * B.v; return { text: `Two carts: total momentum before **${f2(p0)}**, now **${f2(pA + pB)}** kg·m/s. The largest contact force was **${f2(peakF, 0)} N** — the same size on A and on B, in opposite directions.` }; }
+          const after = strobe.filter(([, tt]) => tt > 1.05); let gaps = []; for (let i = 1; i < after.length; i++) gaps.push(after[i][0] - after[i - 1][0]);
+          const steady = gaps.length >= 2 && Math.max(...gaps) - Math.min(...gaps) < 0.01;
+          const txt = mode === 'inertia' ? (gaps.length >= 2 ? `After the push the strobe dots are ${steady ? '**evenly spaced**' : '**not evenly spaced**'} (${gaps.slice(0, 4).map(g => f2(g)).join(' m, ')} m apart every 0.5 s): the velocity stayed at **${f2(v)} m/s**${S0().k ? ' — friction is slowing it on this surface' : ' with zero net force'}.` : 'Press **Push for 1 s** and let the crate glide for a few seconds.')
+            : mode === 'fma' ? (runLog.length ? `Your runs: ${runLog.map(r => `F_net ${f2(r.Fn, 1)} N on ${f2(r.m, 1)} kg → measured a **${f2(r.a)}** (F_net/m = ${f2(r.Fn / r.m)})`).join('; ')}.` : 'Save a few runs to compare measured acceleration with F_net / m.')
+              : slipF != null ? `On ${S0().n.toLowerCase()} the crate stayed still until the push reached **${f2(slipF, 1)} N** (μₛN = ${f2(S0().s * m * g0, 1)} N), then sliding friction dropped to μₖN = **${f2(S0().k * m * g0, 1)} N**.` : `The crate has not slipped yet: static friction is matching the ${f2(Math.abs(F), 1)} N push. The limit is μₛN = ${f2(S0().s * m * g0, 1)} N.`;
+          return { text: txt, predOk: i => (mode === 'inertia' && gaps.length >= 2 ? i === 1 : null) };
+        }
       };
+      return api;
     }
   };
 })();

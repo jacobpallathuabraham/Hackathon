@@ -98,27 +98,45 @@
   }
 
   /* ---------- rendering helpers ---------- */
-  const OPTS = q => q.options || q.statements || q.items || null;
-  function answerText(q) {
-    const o = q.options || q.statements || [];
-    if (q.type === 'tf') return q.answer === true || q.answer === 0 ? 'True' : q.answer === false || q.answer === 1 ? 'False' : String(q.answer);
-    if (typeof q.answer === 'number' && o[q.answer] != null && q.type !== 'numeric' && q.type !== 'slider') return String(o[q.answer]);
-    if (Array.isArray(q.answer)) return q.answer.map(a => (typeof a === 'number' && o[a] != null ? o[a] : a)).join('; ');
-    if (q.answer != null && typeof q.answer !== 'object') return String(q.answer) + (q.unit ? ' ' + q.unit : '');
-    if (q.correctText) return q.correctText;
-    if (q.items && q.type === 'order') return q.items.join(' → ');
-    if (q.pairs) return q.pairs.map(p => (Array.isArray(p) ? p.join(' — ') : (p.a || p.left) + ' — ' + (p.b || p.right))).join('; ');
-    if (q.target != null) return String(q.target) + (q.resultUnit ? ' ' + q.resultUnit : '');
-    return '';
+  const OPTS = q => q.options || null;
+  /* The correct response for every activity type, built from the same rules the grader uses (ls-grade.js), and the
+     text shown for it. tests/e2e/learn-inspect.e2e.js feeds every one of these back into LS.grade.check and requires
+     "correct" — so the directory can never show an answer the Studio itself would mark wrong. */
+  function correct(q) {
+    const o = q.options || [], plain = x => String(x == null ? '' : x);
+    switch (q.graphAsk || q.type) {
+      case 'mcq': return { resp: q.answer, text: plain(o[q.answer]) };
+      case 'graph': return q.ask === 'numeric' ? { resp: String(q.answer), text: q.answer + (q.unit ? ' ' + q.unit : '') } : { resp: q.answer, text: plain(o[q.answer]) };
+      case 'tf': return { resp: q.answer, text: q.answer ? 'True' : 'False' };
+      case 'multi': return { resp: q.answer.slice(), text: q.answer.map(i => plain(o[i])).join('; ') };
+      case 'numeric': return { resp: String(q.answer), text: (Math.abs(q.answer) > 0 && Math.abs(q.answer) < 1e-3 ? q.answer.toExponential() : String(q.answer)) + (q.unit ? ' ' + q.unit.replace('^3', '³') : '') };
+      case 'expr': return { resp: q.answer, text: q.answer };
+      case 'fill': { const r = q.blanks.map(b => (b.num != null ? String(b.num) : (b.accept || [])[0])); return { resp: r, text: r.map((x, i) => `blank ${i + 1}: ${x}`).join('; ') }; }
+      case 'match': { const r = {}; q.pairs.forEach((_, i) => { r[i] = i; }); return { resp: r, text: q.pairs.map(p => `${p[0]} → ${p[1]}`).join('; ') }; }
+      case 'order': return { resp: q.items.map((_, i) => i), text: q.items.join(' → ') };
+      case 'label': { const r = {}; q.targets.forEach((t, i) => { r[i] = t.label; }); return { resp: r, text: q.targets.map(t => t.label).join(', ') }; }
+      case 'sort': { const r = {}; q.items.forEach((it, i) => { r[i] = it.cat; }); return { resp: r, text: q.categories.map(c => `${c}: ${q.items.filter(it => it.cat === c).map(it => it.text).join(', ')}`).join(' · ') }; }
+      case 'compare': { const r = {}; q.statements.forEach((st, i) => { r[i] = st.ans; }); return { resp: r, text: q.statements.map(st => `${st.text} — ${st.ans}`).join('; ') }; }
+      case 'slider': { const P = q.param; let hit = null; for (let v = P.min; v <= P.max + 1e-9; v = Math.round((v + P.step) * 1e9) / 1e9) { try { if (LS.grade.check(q, v).correct) { hit = v; break; } } catch (e) { break; } } return hit == null ? { resp: null, text: '' } : { resp: hit, text: `${P.label} = ${hit}` }; }
+      case 'steps': { const parts = q.steps.map(s => correct(s)); return { resp: parts.map(p => p.resp), text: parts.map((p, i) => `step ${i + 1}: ${p.text}`).join('; ') }; }
+      case 'short': return { resp: null, text: q.model || '' };
+      default: return { resp: null, text: '' };
+    }
   }
-  function question(q, n) {
-    const o = OPTS(q), why = typeof q.why === 'string' ? q.why : (q.explain || ''), ans = answerText(q);
+  function question(q) {
+    const o = q.options, why = typeof q.why === 'string' ? q.why : (q.explain || ''), ans = correct(q).text;
     const kids = [];
-    if (o && o.length) kids.push(`<ol type="A">${o.map(x => `<li>${il(typeof x === 'string' ? x : (x.text || x.label || JSON.stringify(x)))}</li>`).join('')}</ol>`);
-    if (q.pairs && !o) kids.push(`<ul>${q.pairs.map(p => `<li>${il(Array.isArray(p) ? p[0] : (p.a || p.left || ''))}</li>`).join('')}</ul>`);
-    if (q.steps && Array.isArray(q.steps)) kids.push(`<ol>${q.steps.map(s => `<li>${il(typeof s === 'string' ? s : (s.prompt || s.text || ''))}</li>`).join('')}</ol>`);
-    if (q.categories) kids.push(`<p>Categories: ${q.categories.map(c => il(typeof c === 'string' ? c : c.name || '')).join(', ')}</p>`);
-    const reveal = ans || why ? `<details><summary>Answer${why ? ' and explanation' : ''}</summary>${ans ? `<p><strong>Answer:</strong> ${il(ans)}</p>` : ''}${why ? md(why) : ''}</details>` : '';
+    if (o && o.length) kids.push(`<ol type="A">${o.map(x => `<li>${il(x)}</li>`).join('')}</ol>`);
+    if (q.type === 'match') kids.push(`<p>Match: ${q.pairs.map(p => il(p[0])).join(' · ')} — with: ${q.pairs.map(p => il(p[1])).join(' · ')}</p>`);
+    if (q.type === 'order') kids.push(`<p>Items to order: ${q.items.slice().sort().map(il).join(' · ')}</p>`);
+    if (q.type === 'sort') kids.push(`<p>Sort into ${q.categories.map(il).join(', ')}: ${q.items.map(it => il(it.text)).join(' · ')}</p>`);
+    if (q.type === 'compare') kids.push(`<p>For each statement choose ${q.concepts.map(il).join(', ')}${q.statements.some(s => s.ans === 'Both') ? ' or Both' : ''}:</p><ul>${q.statements.map(s => `<li>${il(s.text)}</li>`).join('')}</ul>`);
+    if (q.type === 'label') kids.push(`<p>Labels to place on the diagram: ${q.targets.map(t => il(t.label)).concat((q.distractors || []).map(il)).join(' · ')}</p>`);
+    if (q.type === 'fill') kids.push(`<p>${q.blanks.length} blank${q.blanks.length > 1 ? 's' : ''} to fill.</p>`);
+    if (q.type === 'slider') kids.push(`<p>Slider ${il(q.param.label)} from ${q.param.min} to ${q.param.max} (steps of ${q.param.step}); ${il(q.resultLabel || 'the result')} is computed live.</p>`);
+    if (q.type === 'graph' && q.plot) kids.push(`<p><em>Graph:</em> ${esc(q.plot.alt || 'y = ' + q.plot.fn)}</p>`);
+    if (q.type === 'steps') kids.push(`<ol>${q.steps.map(s => `<li>${il(s.prompt || '')}${s.options ? ` (${s.options.map(il).join(' / ')})` : ''}</li>`).join('')}</ol>`);
+    const reveal = ans || why ? `<details><summary>Answer${why ? ' and explanation' : ''}</summary>${ans ? `<p><strong>${q.type === 'short' ? 'A model answer' : 'Answer'}:</strong> ${il(ans)}</p>` : ''}${why ? md(why) : ''}</details>` : '';
     return `<li class="lsi-q"><p><span class="lsi-tag">${esc(q.type || 'question')}</span> ${il(q.prompt || q.ask || '')}</p>${kids.join('')}${reveal}</li>`;
   }
   const qList = qs => (qs && qs.length ? `<ol class="lsi-qs">${qs.map(question).join('')}</ol>` : '');
@@ -271,7 +289,8 @@
   LS.inspect = {
     load,
     staticPages: async () => { MODE = 'static'; try { await load(); const out = { index: overviewHTML() }; for (const s of subjects()) out[s.id] = await subjectWithTranscripts(s.id); return out; } finally { MODE = 'live'; } },
-    subjects: () => subjects().map(s => ({ id: s.id, name: s.name, blurb: s.blurb || '' }))
+    subjects: () => subjects().map(s => ({ id: s.id, name: s.name, blurb: s.blurb || '' })),
+    correct
   };
 
   /* a quiet bar that says inspection mode is on, with the way to the directory */

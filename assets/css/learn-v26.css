@@ -1,0 +1,48 @@
+/* ERLY Learning Studio v26 — interaction boundaries, the rebuilt Newton lab and the v26 experiences. */
+
+/* ---------- interaction boundaries ----------
+   A press that starts on a model, a control or a canvas is a manipulation, never the start of a text selection.
+   Only model regions are covered: lesson text, readings, explanations (.at-x__panel), notes and readouts stay
+   selectable. Text fields inside a model stay editable and selectable. */
+.at-x__stage, .lab__stage, .lab__canvas, .kx-stage, .kx-ctl, .at-x__tools, .at-x__steps, .v26-ws {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.at-x__stage :is(input[type="text"], input[type="number"], input:not([type]), textarea, [contenteditable="true"], .kx-read, .v26-sel),
+.lab__stage :is(input[type="text"], input[type="number"], textarea, .lab__hud),
+.v26-ws :is(input[type="text"], input[type="number"], textarea, .v26-sel) { -webkit-user-select: text; user-select: text; }
+.at-x__stage :is(img, svg image), .lab__stage img { -webkit-user-drag: none; }
+.kx-cv.is-grab, .v26-ws .is-grab { cursor: grabbing; }
+.at-x__stage canvas[tabindex]:focus-visible, .v26-ws canvas:focus-visible, .v26-ws svg:focus-visible { outline: 3px solid var(--accent, #c8341f); outline-offset: 3px; border-radius: 10px; }
+
+/* ---------- Newton's laws lab ---------- */
+.nl2 .nl2__task { margin: 4px 0 10px; font-size: .98rem; line-height: 1.5; }
+.nl2 .kx-stage + .kx-stage { margin-top: 8px; }
+.nl2__stage .kx-cv { border-radius: 14px; box-shadow: 0 10px 30px -18px rgba(0, 0, 0, .5); }
+.nl2__graph .kx-cv { border-radius: 12px; border: 1px solid var(--line, rgba(0,0,0,.12)); }
+.nl2__read { font-variant-numeric: tabular-nums; }
+.nl2__tbl { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; margin-top: 8px; display: block; overflow-x: auto; }
+.nl2__tbl caption { text-align: start; font-weight: 700; padding-bottom: 4px; }
+.nl2__tbl th, .nl2__tbl td { padding: 5px 8px; border-bottom: 1px solid var(--line, rgba(0,0,0,.12)); text-align: end; }
+.nl2__tbl th:first-child, .nl2__tbl td:first-child { text-align: start; }
+.kx-chips small { opacity: .7; font-weight: 500; margin-inline-start: 4px; }
+
+/* ---------- shared v26 workspace (construction tools) ---------- */
+.v26-ws { display: grid; gap: 10px; }
+.v26-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.v26-bar [aria-pressed="true"], .v26-bar [aria-checked="true"] { background: var(--ink, #1c1b19); color: var(--surface, #fff); border-color: var(--ink, #1c1b19); }
+.v26-tool { border: 1px solid var(--line-2, var(--line, #d8d0c2)); background: var(--surface, #fff); color: var(--ink, #1c1b19); border-radius: 10px; padding: 6px 10px; font: 600 .84rem var(--f-body, system-ui); cursor: pointer; transition: background-color .15s, border-color .15s, transform .08s; min-height: 34px; }
+.v26-tool:hover { border-color: var(--accent, #c8341f); } .v26-tool:active { transform: scale(.97); } .v26-tool:disabled { opacity: .4; cursor: default; }
+.v26-tool:focus-visible { outline: 3px solid var(--accent, #c8341f); outline-offset: 2px; }
+.v26-hint { font-size: .9rem; color: var(--muted, #5b574f); margin: 0; }
+.v26-out { font-variant-numeric: tabular-nums; line-height: 1.55; }
+.v26-out table { border-collapse: collapse; font-size: .88rem; } .v26-out td, .v26-out th { padding: 3px 10px 3px 0; text-align: start; }
+.v26-svg { width: 100%; height: auto; display: block; background: var(--surface, #fff); border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: 14px; touch-action: none; }
+.v26-svg text { font: 600 13px ui-sans-serif, system-ui, sans-serif; fill: var(--ink, #1c1b19); }
+.v26-svg .h { cursor: grab; } .v26-svg .h:focus { outline: none; } .v26-svg .h:focus-visible circle, .v26-svg .h.is-sel circle { stroke: var(--accent, #c8341f); stroke-width: 3; }
+.v26-flash { animation: v26flash .6s ease; } @keyframes v26flash { from { background: color-mix(in srgb, var(--accent, #c8341f) 22%, transparent); } }
+.v26-grid2 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 820px) { .v26-grid2 { grid-template-columns: 1fr; } }
+.v26-card { border: 1px solid var(--line, rgba(0,0,0,.12)); border-radius: 14px; padding: 12px 14px; background: var(--surface, #fff); }
+.v26-card h3 { margin: 0 0 6px; font: 700 .8rem var(--f-mono, ui-monospace); letter-spacing: .05em; text-transform: uppercase; color: var(--muted, #5b574f); }
+.v26-eq { font: 600 1.25rem/1.4 var(--f-mono, ui-monospace, monospace); text-align: center; padding: 10px; overflow-x: auto; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .v26-flash { animation: none; } .v26-tool { transition: none; } }

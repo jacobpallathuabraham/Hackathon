@@ -117,7 +117,7 @@
         const p = []; let k = goal; if (k in prev) while (k) { p.unshift(k); k = prev[k]; } return { order, path: p }; }
       function run(kind) { const r = search(kind); res[kind] = { n: r.order.length, len: r.path.length ? r.path.length - 1 : null }; steps = { kind, order: r.order, path: r.path, i: 0 }; vis = []; path = []; if (K.reduced()) { vis = r.order; path = r.path; steps = null; M.draw(); } else M.play(); }
       const cell = (x, y) => [Math.floor(x / cs), Math.floor(y / cs)];
-      S.cv.addEventListener('pointerdown', e => { const [x, y] = cell(...S.pt(e)), k = `${x},${y}`; if (k === st.join() || k === go.join()) return; drawing = walls.has(k) ? 'erase' : 'draw'; S.cv.setPointerCapture(e.pointerId); toggle(x, y); });
+      S.cv.style.touchAction = 'none'; S.cv.addEventListener('pointerdown', e => { e.preventDefault(); const [x, y] = cell(...S.pt(e)), k = `${x},${y}`; if (k === st.join() || k === go.join()) return; drawing = walls.has(k) ? 'erase' : 'draw'; S.cv.setPointerCapture(e.pointerId); toggle(x, y); });
       S.cv.addEventListener('pointermove', e => { if (!drawing) return; toggle(...cell(...S.pt(e))); });
       S.cv.addEventListener('pointerup', () => { drawing = null; c.onChange(); });
       function toggle(x, y) { const k = `${x},${y}`; if (x < 0 || y < 0 || x >= W || y >= H || k === st.join() || k === go.join()) return; if (drawing === 'draw') walls.add(k); else walls.delete(k); vis = []; path = []; M.draw(); }
@@ -148,7 +148,7 @@
     predict: { q: '“Let’s eat Grandma!” without a comma means…', options: ['inviting Grandma to dinner', 'proposing to eat Grandma', 'the same as with a comma', 'nothing'] },
     explore: 'Toggle each sentence and read both meanings. Which mark makes the biggest difference?',
     explain: 'Punctuation is not decoration: it **changes grammar**, and so meaning. A **vocative comma** marks the person you are addressing. **Commas in lists** separate items or actions. Commas around a **relative clause** mark extra, non-essential information. **End marks** set the type of sentence. The position of an **apostrophe** shows whether there is one owner or several.',
-    apply: [q('x-pu1', '“The students who passed celebrated” means…', ['all students celebrated', 'only those who passed celebrated', 'no one passed', 'the same as with commas'], 1, 'Identifying (restrictive) clause.'), q('x-pu2', '“The girls’ coats” refers to…', ['one girl', 'several girls', 'a girl called Girls', 'one coat'], 1, 'Apostrophe after s: plural owners.')],
+    apply: [q('x-pn1', '“The students who passed celebrated” means…', ['all students celebrated', 'only those who passed celebrated', 'no one passed', 'the same as with commas'], 1, 'Identifying (restrictive) clause.'), q('x-pn2', '“The girls’ coats” refers to…', ['one girl', 'several girls', 'a girl called Girls', 'one coat'], 1, 'Apostrophe after s: plural owners.')],
     summary: ['Vocative comma: addressing someone.', 'Commas around relative clauses: extra information.', 'Apostrophe position: one owner or many.'],
     build(host, c) {
       const st = PUN.map(() => 0), seen = PUN.map(() => new Set([0]));
