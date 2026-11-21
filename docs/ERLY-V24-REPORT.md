@@ -2,7 +2,7 @@
 
 **Scope.** This release changes two areas: the Learning Studio (`learn.html`) and the Handwriting Studio (`handwriting.html`, formerly Handwriting Check). Section 12 lists every changed file, checked with `git diff --stat` against the last deployment (6db47fa).
 
-**Deployment.** v24 is committed and pushed to `claude/erly-hackathon-website-8txbtd`. It is **not deployed** to GitHub Pages. That waits for an explicit "Deploy".
+**Deployment.** v24 is committed and pushed to `claude/erly-hackathon-website-8txbtd`, and deployed to GitHub Pages on request.
 
 ---
 
@@ -205,11 +205,19 @@ Implemented in `hws-ink.js` and `hws-canvas.js`:
 | `handwriting-studio-v24`: 20 checks — consent gating; mouse ink under the pointer; every brush draws differently (pixel comparison); undo/redo; both erasers; shapes, select-and-move, text, fill; pages and papers; layers and layer lock; real stylus pressure recorded and mouse never claims pressure; palm rejection after a pen; IndexedDB autosave survives reload; export PNG / SVG / PDF / notebook file and re-import; practice coverage check; graph plot and table; science incline template; scan/OCR returns editable text with engine confidence; My work; keyboard and accessible names; phone; the entrance never blocks. (The Learning Studio → notebook inbox is checked in `learning-studio-v24`.) | **20/20** |
 | `ink-studio`: transition, Back/Forward, theme, reduced motion, phone layout and tool sheet | **passed** |
 | axe-core (WCAG 2.1 A/AA): dashboard, Explore, 4 experiences, and 4 Handwriting modes, in light and dark (20 runs) | **0 violations** after two fixes (card label contrast; role for the 3D viewer) |
-| Full regression (all 36 suites) | see section 14 |
+| Full regression (all 36 suites) | 32 passed on the first run; `human3d` and `lab` passed on re-run; flashcards check in `learning-studio` fails before v24 too; `audio-lessons` timed out on outside downloads (section 14) |
 
 ## 14. Actual results of the full regression
 
-_Filled in from the run below._
+All 36 suites in `tests/e2e/` were run one after another on the v24 head. Every suite that failed was then re-run on its own. The two that still failed were also run against the pre-v24 commit (6db47fa) on a separate server.
+
+- **32 suites passed** on the first run. These include all four Learning Studio suites from v21 to v24, Handwriting Studio v24 (20/20), the ink transition, both accessibility suites, Growth Plan, nav, chat, all Noor suites, the visuals suites and realtrack.
+- **`human3d`** missed one check by 2 ms on the first run: lip-sync latency was 202 ms against a 200 ms limit, while other heavy suites shared the CPU. **Passed** when re-run on its own. v24 doesn't touch that page.
+- **`lab`** failed check M1 once: the first chat reply was read before it arrived. **34/34** in two re-runs on v24, and 34/34 on 6db47fa. It is timing-dependent, not a v24 change.
+- **`learning-studio`: 33/34.** The flashcards check fails ("Expected values to be strictly equal"). It **fails the same way on 6db47fa, before v24**, so v24 did not cause it, and it is still open. In earlier runs the one failing check in this suite was "Explain my mistake", which passes now.
+- **`audio-lessons`** timed out at 10 minutes. It downloads a voice model and articles from outside services, and in this run it never got past that download. It is not a v24 page.
+
+**Net result:** no failure traced to the v24 changes. One older failure (flashcards) is still open, and one suite could not run because its outside downloads never arrived.
 
 ## 15. Performance
 
@@ -278,6 +286,6 @@ _Filled in from the run below._
 - No camera or microphone is used without a click.
 - Nothing infers ability, disability or emotion from writing.
 
-## 20. Not deployed
+## 20. Deployment
 
-The live site still serves 6db47fa. Say "Deploy" to publish v24.
+Deployed to GitHub Pages on request. The Pages build succeeded: https://jacobpallathuabraham.github.io/Hackathon/
