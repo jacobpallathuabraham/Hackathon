@@ -88,7 +88,7 @@
   const once = {};
   const script = src => once[src] || (once[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
   LS.needExp = () => script('assets/js/learn/ls-exp.js?v=23c').then(() => script('assets/js/learn/ls-kit.js?v=24')).then(() => Promise.all([script('assets/js/learn/ls-x-phys.js?v=24'), script('assets/js/learn/ls-x-math.js?v=24'), script('assets/js/learn/ls-x-chem.js?v=24'), script('assets/js/learn/ls-x-bio.js?v=24'), script('assets/js/learn/ls-x-earth.js?v=24'), script('assets/js/learn/ls-x-mind.js?v=24'), script('assets/js/learn/ls-exp2.js?v=22b'), script('assets/js/learn/ls-exp-newton.js?v=23b'), script('assets/js/learn/ls-exp-bio.js?v=23d')]));
-  LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=23');
+  LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=24');
 
   /* ---------- the subject worlds (Explore → Subjects) ---------- */
   const subj = () => LS.subjectsList || [];
@@ -98,9 +98,8 @@
   }
   function explore(view, parts) {
     if (parts[0] === 'topics') return topics(view);
-    view.innerHTML = `<div class="at-explore"><header class="ls-pagehead"><p class="ls-kicker">${T('Explore', 'استكشف')}</p><h1>${T('Nine worlds to wander', 'تسعة عوالم للتجوال')}</h1><p class="ls-lead">${T('Each subject has its own atmosphere and its own kinds of experience — experiments in physics, evidence in history, conversation in languages. Pick one.', 'لكل مادة أجواؤها وتجاربها.')}</p></header>
-      <ul class="at-worlds">${subj().filter(S => S.id !== 'cs' && S.id !== 'more').map(worldCard).join('')}</ul>
-      <p class="at-muted" style="margin-top:20px"><a class="at-more" href="#/subject/cs">${T('Computer science', 'علوم الحاسوب')}</a> · <a class="at-more" href="#/subject/more">${T('Economics, psychology & more', 'الاقتصاد وعلم النفس والمزيد')}</a></p></div>`;
+    view.innerHTML = `<div class="at-explore"><header class="ls-pagehead"><p class="ls-kicker">${T('Explore', 'استكشف')}</p><h1>${T('Eleven worlds to wander', 'أحد عشر عالماً للتجوال')}</h1><p class="ls-lead">${T('Each subject has its own atmosphere and its own kinds of experience — experiments in physics, evidence in history, conversation in languages. Pick one.', 'لكل مادة أجواؤها وتجاربها.')}</p></header>
+      <ul class="at-worlds">${subj().map(worldCard).join('')}</ul></div>`;
     paintWorlds(view);
   }
   function paintWorlds(view) {

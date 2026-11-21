@@ -177,6 +177,7 @@
     if (LS.paintWorlds) LS.paintWorlds(view);
   }
 
+  LS.homeView = home;
   LS.route('home', home);
   LS.route('subject', subject);
 })();

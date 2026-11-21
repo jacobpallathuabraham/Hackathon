@@ -62,18 +62,25 @@
     const el = document.createElement('div'); el.className = 'at-enter'; el.setAttribute('aria-hidden', 'true');
     el.innerHTML = `<canvas class="at-enter__sky"></canvas><div class="at-enter__mark"><span class="at-enter__k">ERLY</span><span class="at-enter__t">${T('Learning Studio', 'استوديو التعلّم')}</span><span class="at-enter__line"></span></div>`;
     document.body.appendChild(el);
-    // a quick sky: dots that drift towards the viewer, drawn for the length of the entrance only
-    const c = el.querySelector('canvas'), g = c.getContext('2d'), dpr = Math.min(1.5, devicePixelRatio || 1);
-    c.width = innerWidth * dpr; c.height = innerHeight * dpr; g.scale(dpr, dpr);
-    const pts = Array.from({ length: 140 }, () => ({ x: (Math.random() - 0.5) * innerWidth, y: (Math.random() - 0.5) * innerHeight, z: Math.random() * 1 + 0.2 }));
+    // act 1 (0–600 ms): stars rush inward as warp streaks · act 2 (450–950): they gather into a ring of light around the mark
+    // act 3 (900–1300): the ring opens like an iris and reveals the Studio, whose planets are already spiralling into orbit
+    const c = el.querySelector('canvas'), g = c.getContext('2d'), dpr = Math.min(1.5, devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+    c.width = W * dpr; c.height = H * dpr; g.scale(dpr, dpr);
+    const cx = W / 2, cy = H / 2, R0 = Math.min(W, H) * 0.2, D = 1300;
+    const pts = Array.from({ length: 260 }, () => { const a = Math.random() * Math.PI * 2, r = Math.hypot(W, H) * (0.55 + Math.random() * 0.6); return { a, r, s: 0.6 + Math.random() * 0.8, h: 200 + Math.random() * 80, ring: R0 * (0.92 + Math.random() * 0.16) }; });
     let t0 = 0, raf = 0;
-    const draw = t => { if (!t0) t0 = t; const k = Math.min(1, (t - t0) / 900); g.clearRect(0, 0, innerWidth, innerHeight); const cx = innerWidth / 2, cy = innerHeight / 2;
-      pts.forEach(p => { const z = Math.max(0.05, p.z - k * 0.18); const x = cx + p.x / z * 0.35, y = cy + p.y / z * 0.35, r = Math.min(2.2, 0.5 / z); g.fillStyle = `rgba(214,222,255,${0.25 + 0.6 * (1 - z / 1.2)})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); });
-      if (k < 1) raf = requestAnimationFrame(draw); };
+    const ease = k => 1 - Math.pow(1 - k, 3);
+    const draw = t => { if (!t0) t0 = t; const ms = t - t0, k1 = Math.min(1, ms / 650), k2 = Math.min(1, Math.max(0, (ms - 450) / 500)), k3 = Math.min(1, Math.max(0, (ms - 900) / 400));
+      g.clearRect(0, 0, W, H);
+      pts.forEach(p => { const rr = p.r + (p.ring - p.r) * ease(k1), a = p.a + k2 * 0.6 * p.s, x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr, trail = (1 - k1) * 60 * p.s;
+        g.strokeStyle = `hsla(${p.h}, 90%, ${70 + 20 * k2}%, ${0.35 + 0.6 * k1})`; g.lineWidth = 1.2 + k2 * 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * trail, y + Math.sin(a) * trail); g.stroke(); });
+      if (k2 > 0) { const gl = g.createRadialGradient(cx, cy, R0 * 0.6, cx, cy, R0 * 1.4); gl.addColorStop(0, 'rgba(255,220,170,0)'); gl.addColorStop(0.5, `rgba(255,200,140,${0.35 * k2})`); gl.addColorStop(1, 'rgba(255,200,140,0)'); g.fillStyle = gl; g.beginPath(); g.arc(cx, cy, R0 * 1.4, 0, 7); g.fill(); }
+      el.style.setProperty('--iris', (ease(k3) * Math.hypot(W, H) * 0.75) + 'px');
+      if (ms < D) raf = requestAnimationFrame(draw); else end(); };
     raf = requestAnimationFrame(draw);
-    const end = () => { if (!el.isConnected) return; cancelAnimationFrame(raf); el.classList.add('is-out'); root.classList.add('at-entered'); setTimeout(() => el.remove(), 520); };
+    const end = () => { if (!el.isConnected) return; cancelAnimationFrame(raf); el.classList.add('is-out'); root.classList.add('at-entered'); setTimeout(() => el.remove(), 420); };
     el.addEventListener('pointerdown', end); addEventListener('keydown', end, { once: true });
-    setTimeout(end, 950);
+    setTimeout(end, D + 200);
     root.classList.add('at-entering');
     setTimeout(() => root.classList.remove('at-entering'), 1500);
   }

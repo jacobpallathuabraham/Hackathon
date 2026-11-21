@@ -162,7 +162,26 @@
       }
     }
   };
-  SCENES.cs = SCENES.maths; SCENES.more = SCENES.social;
+  /* computer science: a living network — packets of light travel along graph edges; faint binary drifts behind */
+  SCENES.cs = {
+    bg(g, w, h, R) { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#120a26'); gr.addColorStop(1, '#0a1a2c'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.font = '11px ui-monospace, monospace'; for (let i = 0; i < 160; i++) { g.fillStyle = `rgba(160,120,255,${R() * 0.12})`; g.fillText(R() > 0.5 ? '1' : '0', R() * w, R() * h); } },
+    init(R, w, h) { const n = Math.max(14, Math.round(w * h / 22000)), N = Array.from({ length: n }, () => ({ x: R(), y: R(), p: R() * 6 })), E = [];
+      N.forEach((a, i) => { const near = N.map((b, j) => [j, Math.hypot(a.x - b.x, (a.y - b.y) * h / w)]).filter(([j]) => j !== i).sort((x, y) => x[1] - y[1]).slice(0, 2); near.forEach(([j]) => { if (!E.some(e => (e[0] === j && e[1] === i))) E.push([i, j]); }); });
+      return { N, E, P: E.map((e, k) => ({ e: k, t: R(), v: 0.08 + R() * 0.12 })) }; },
+    fg(g, w, h, t, s, px, py) { const X = n => n.x * w + px * 12, Y = n => n.y * h + py * 8;
+      g.lineWidth = 1; s.E.forEach(([a, b]) => { g.strokeStyle = 'rgba(150,130,255,.18)'; g.beginPath(); g.moveTo(X(s.N[a]), Y(s.N[a])); g.lineTo(X(s.N[b]), Y(s.N[b])); g.stroke(); });
+      s.N.forEach(n => { const r = 2.5 + Math.sin(t * 1.2 + n.p) * 0.8; g.fillStyle = 'rgba(190,170,255,.8)'; g.beginPath(); g.arc(X(n), Y(n), r, 0, 7); g.fill(); });
+      s.P.forEach(p => { const [a, b] = s.E[p.e], k = (t * p.v + p.t) % 1, A = s.N[a], B = s.N[b], x = X(A) + (X(B) - X(A)) * k, y = Y(A) + (Y(B) - Y(A)) * k; const gl = g.createRadialGradient(x, y, 0, x, y, 7); gl.addColorStop(0, 'rgba(120,255,220,.95)'); gl.addColorStop(1, 'rgba(120,255,220,0)'); g.fillStyle = gl; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); }); }
+  };
+  /* economics, psychology & more: flowing market lines over a warm dusk, with a slow pulse like a heartbeat of trade */
+  SCENES.more = {
+    bg(g, w, h) { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#1d0f16'); gr.addColorStop(1, '#3a1d12'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(255,200,150,.06)'; for (let x = 0; x < w; x += 40) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y < h; y += 40) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } },
+    init(R) { return { L: Array.from({ length: 5 }, (_, i) => ({ y: 0.25 + i * 0.13, a: 0.03 + R() * 0.05, f: 1 + R() * 3, ph: R() * 6, hue: 18 + i * 9 })) }; },
+    fg(g, w, h, t, s, px, py) { s.L.forEach((L, i) => { g.strokeStyle = `hsla(${L.hue},85%,65%,${0.25 + i * 0.08})`; g.lineWidth = 2; g.beginPath(); for (let x = 0; x <= w; x += 6) { const k = x / w, y = h * (L.y + L.a * Math.sin(k * L.f * 6.283 + t * 0.4 + L.ph) + 0.04 * Math.sin(k * 23 + t * (0.7 + i * 0.1))) + py * 6; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); });
+      const k = (t * 0.12) % 1, x = k * w; g.fillStyle = 'rgba(255,210,160,.9)'; g.beginPath(); g.arc(x, h * (s.L[2].y + s.L[2].a * Math.sin(k * s.L[2].f * 6.283 + t * 0.4 + s.L[2].ph) + 0.04 * Math.sin(k * 23 + t * 0.9)), 4, 0, 7); g.fill(); }
+  };
 
   const live = new Set(); let raf = 0, last = 0; const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
   addEventListener('pointermove', e => { ptr.tx = (e.clientX / innerWidth - 0.5) * 2; ptr.ty = (e.clientY / innerHeight - 0.5) * 2; }, { passive: true });
