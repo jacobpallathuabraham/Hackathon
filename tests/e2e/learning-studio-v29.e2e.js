@@ -100,10 +100,10 @@ const fact = n => (n <= 1 ? 1 : n * fact(n - 1));
   });
 
   /* ---------------- universe, worlds, chapters, curriculum ---------------- */
-  await t('Universe home: no category-pill rows; five primary actions; eleven worlds; recommendations and discoveries link to real pages', async () => {
-    await go('home', '.uv-hero', 2500);
+  await t('Universe home: no category-pill rows; the journey has eleven worlds and an index; recommendations and discoveries link to real pages', async () => {
+    await go('home', '.cz', 2500);
     assert.equal(await p.$$eval('#lsView .dx-filter, #lsView [data-fk]', x => x.length), 0, 'no category pills');
-    assert.equal(await p.$$eval('#lsView .uv-primary > *', x => x.length), 5); assert.equal(await p.$$eval('#lsView .uv-worlds .uv-world', x => x.length), 11);
+    assert.equal(await p.$$eval('#lsView [data-cz-enter]', x => x.length), 11); assert.equal(await p.$$eval('#lsView .cz-index__list a', x => x.length), 11); /* v30: the cinematic universe replaced the hero and its five actions */
     const hrefs = await p.$$eval('#lsView .uv-list a', a => a.map(x => x.getAttribute('href'))); assert.ok(hrefs.length >= 6);
     const ok = await p.evaluate(hs => hs.every(h => { const [r, id] = h.slice(2).split('/'); if (r === 'exp') return !!LS.experiences.find(x => x.id === id); if (r === 'chapter') return !!LS.curriculum.chapter(id); if (r === 'lab') return true; return true; }), hrefs); assert.equal(ok, true, 'every link resolves');
     assert.deepEqual(await p.$$eval('#atTabs a', a => a.map(x => x.textContent.trim())), ['Discover', 'Subjects', 'Learn', 'Practice', 'My Learning']);
@@ -114,7 +114,7 @@ const fact = n => (n <= 1 ? 1 : n * fact(n - 1));
     assert.deepEqual(r.errs, []); assert.ok(r.n >= 40, r.n + ' chapters'); assert.deepEqual(r.levels, ['g11', 'g12', 'pg', 'ug1', 'ug2']); console.log(`     (${r.n} chapters · ${r.cards} cards · ${r.qs} assessment questions)`);
   });
   await t('Assessment numeric answers are recomputed independently', async () => {
-    await go('home', '.uv-hero');
+    await go('home', '.cz');
     const A = await p.evaluate(() => LS.ASSESSDATA);
     const want = { 'p-rigid': [2 * 9 / 12 + 2 * 1.5 ** 2, +Math.sqrt(2 * 9.8 * 1.4 / (1 + 0.4)).toFixed(2)], 'p-relativity': [+(2 * 6.674e-11 * 1.989e30 / 2.998e8 ** 2 / 1000).toFixed(2), +Math.sqrt(1 - 1 / 4).toFixed(3)], 'm-discrete': [40 - (25 + 18 - 7), (7 * 6 * 5) / (3 * 2 * 1)], 'm-stochastic': [Math.sqrt(0.25 / 400), 4], 'cs-graphs': [Math.min(4 + 1, 1 + 5, 1 + 2 + 1)], 'b-popgen': [+(2 * (1 - Math.sqrt(1 / 2500)) * Math.sqrt(1 / 2500)).toFixed(3)], 'p-rotation': [2.4, 4.0], 'm-pc': [336, 56, 48, 120], 'm-probability': [+(5 / 36).toFixed(3), +(30 / 90).toFixed(3), +(19 / 117).toFixed(3), 3 * 3.5 - 5], 'm-diff': [12, (3.1 ** 2 - 9) / 0.1, 19], 'm-int': [9, 0 + 1 + 4, 75], 'm-bayes': [+(4 / 13).toFixed(3)], 'm-stats': [4], 'p-projectile': [+(400 / 9.81).toFixed(1)], 'cs-data': [53], 'x-markets': [1000 * 1.05 ** 2, 5], 'p-circuits': [3, 36], 'm-quadratics': [3], 'c-acids': [3] };
     Object.entries(want).forEach(([ch, vals]) => { const nums = A[ch].filter(q => q[0] === 'numeric').map(q => q[2].num); vals.forEach((v, i) => near(nums[i], v, 1e-6, ch + ' #' + i)); });

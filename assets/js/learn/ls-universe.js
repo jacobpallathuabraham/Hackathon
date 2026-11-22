@@ -102,7 +102,9 @@
         <section class="uv-card" aria-labelledby="uvC"><h2 id="uvC" class="uv-h3">${T('Discover something', 'اكتشف شيئاً')}</h2><ul class="uv-list">${cur.map(([s, qq, it]) => `<li><a href="${C0.itemHref(it)}"><b>${esc(qq)}</b><span>${C0.SUBJ[s][0]} · ${esc(C0.itemTitle(it))}</span></a></li>`).join('')}</ul><a class="ls-linkbtn" href="#/curiosity">${T('All questions', 'كل الأسئلة')} →</a></section>
         <section class="uv-card" aria-labelledby="uvK"><h2 id="uvK" class="uv-h3">${T('Your knowledge', 'معرفتك')}</h2>${recent.length ? `<ul class="uv-list">${recent.map(r => `<li><a href="#/${r.type}/${r.id}"><b>${esc(r.title)}</b><span>${T('recently opened', 'فتحت مؤخراً')}</span></a></li>`).join('')}</ul>` : `<p>${T('Everything you explore appears here and lights up its star in the Knowledge Constellation.', 'كل ما تستكشفه يظهر هنا.')}</p>`}<p><a class="ls-linkbtn" href="#/constellation">${T('Open the Knowledge Constellation', 'افتح كوكبة المعرفة')} →</a></p></section>
       </div></section>`;
-    const amb = LS.ambient(view.querySelector('.uv-bg'), 'universe'); cleanups.push(() => amb.destroy());
+    /* embedded (inside the cinematic universe, ls-cosmos.js): the universe is the hero and the worlds, so only the learning sections stay */
+    const emb = view.dataset.embed === '1'; if (emb) { view.querySelector('.uv-hero')?.remove(); view.querySelector('[aria-labelledby="uvW"]')?.remove(); }
+    if (!emb) { const amb = LS.ambient(view.querySelector('.uv-bg'), 'universe'); cleanups.push(() => amb.destroy()); }
     /* the earlier Home (storage choice, today's plan, momentum, resume) lives on at the end of the universe home; while the student
        has not yet chosen whether to save on this device, that choice is moved to the top so nothing is ever stored before they decide */
     if (LS.homeView) { const sec = document.createElement('section'); sec.className = 'uv-sec uv-plan'; sec.setAttribute('aria-labelledby', 'uvPlan'); sec.innerHTML = `<h2 id="uvPlan" class="uv-h2">${T('Your plan & progress', 'خطتك وتقدمك')}</h2>`; const shim = document.createElement('div'); LS.homeView(shim);
@@ -110,8 +112,9 @@
       const root = view.querySelector('.v2-page, section') || view; root.appendChild(sec);
       const ch = shim.querySelector('.at-choice'); if (ch) { const hero = view.querySelector('.uv-hero'); (hero ? hero.parentNode : root).insertBefore(ch, hero ? hero.nextSibling : root.firstChild); ch.classList.add('uv-choice'); } }
     view.querySelectorAll('[data-amb]').forEach(cv => { const a = LS.ambient(cv, cv.dataset.amb, { hover: cv.closest('a') }); cleanups.push(() => a.destroy()); });
-    view.querySelector('[data-noor]').addEventListener('click', () => { const b = document.getElementById('atNoorBtn'); b && b.click(); });
+    view.querySelector('[data-noor]')?.addEventListener('click', () => { const b = document.getElementById('atNoorBtn'); b && b.click(); });
     const host = view.querySelector('.uv-space__host');
+    if (!host) return;
     if (LS.has3d && LS.has3d() && LS.solarSystem) { let started = false; const io = new IntersectionObserver(es => { if (es[0].isIntersecting && !started) { started = true; io.disconnect(); LS.solarSystem(host, { compact: true }).then(X => { if (!view.isConnected || LS.current()[0] !== 'home') { X.destroy(); return; } LS.__homeSpace = X; cleanups.push(() => X.destroy()); }); } }); io.observe(host); cleanups.push(() => io.disconnect()); }
     else host.innerHTML = `<div class="uv-space__alt">${LS.planetTable ? LS.planetTable([2, 4, 5]) : ''}</div>`;
   }
@@ -200,7 +203,7 @@
   /* the earlier experience dashboard (type, subject and time filters, concept search, cursor-depth cards) stays available as the
      Experience finder: its filter rows are useful for finding something, but they no longer sit on the home page */
   const finder = LS.routeFn ? LS.routeFn('home') : null; if (finder) LS.route('finder', finder);
-  LS.route('home', home); LS.route('world', world); LS.route('chapter', chapter); LS.route('path', path); LS.route('constellation', constellation); LS.route('curiosity', curiosity);
+LS.__uvHome = home; LS.route('home', home); LS.route('world', world); LS.route('chapter', chapter); LS.route('path', path); LS.route('constellation', constellation); LS.route('curiosity', curiosity);
   // the Subjects tab lists the worlds
   LS.route('explore', (view, parts) => { if (parts[0]) return LS.__exploreOld ? LS.__exploreOld(view, parts) : null; clean(); const C0 = CU(); view.innerHTML = `<section class="v2-page"><header class="v2-head"><p class="ls-kicker">${T('Subjects', 'المواد')}</p><h1>${T('Choose a world', 'اختر عالماً')}</h1><p class="ls-lead">${T('Each world holds structured chapters, hands-on experiences, flashcards and checks.', 'كل عالم فيه فصول وتجارب وبطاقات وفحوص.')}</p><p><a class="ls-linkbtn" href="#/path">${T('See the whole learning path', 'المسار الكامل')}</a> · <a class="ls-linkbtn" href="#/constellation">${T('Knowledge Constellation', 'كوكبة المعرفة')}</a> · <a class="ls-linkbtn" href="#/curiosity">${T('Curiosity', 'الفضول')}</a> · <a class="ls-linkbtn" href="#/discover">${T('Search all experiences', 'ابحث في كل التجارب')}</a> · <a class="ls-linkbtn" href="#/finder">${T('Experience finder: filter by type, time or concept', 'باحث التجارب')}</a> · <a class="ls-linkbtn" href="#/space">${T('Solar System Explorer', 'مستكشف النظام الشمسي')}</a></p></header><div class="uv-worlds uv-worlds--big">${Object.entries(C0.SUBJ).map(([s, [name, col]]) => `<a class="uv-world" href="#/world/${s}" style="--sc:${col}"><canvas class="uv-world__cv" data-amb="${s}" aria-hidden="true"></canvas><span class="uv-world__t"><b>${name}</b><small>${esc(WORLD[s][0])}</small><em>${esc(WORLD[s][1])}</em></span></a>`).join('')}</div></section>`; view.querySelectorAll('[data-amb]').forEach(cv => { const a = LS.ambient(cv, cv.dataset.amb, { hover: cv.closest('a') }); cleanups.push(() => a.destroy()); }); });
 })();

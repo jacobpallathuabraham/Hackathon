@@ -44,7 +44,7 @@
   function stagger() {
     const v = document.getElementById('lsView'); if (!v || reduced()) return;
     const host = v.firstElementChild; if (!host) return;
-    const kids = [...host.children].filter(k => k.getBoundingClientRect().top < innerHeight + 40).slice(0, 8);
+    const kids = [...host.children].filter(k => !k.hasAttribute('data-no-rise') && k.getBoundingClientRect().top < innerHeight + 40).slice(0, 8); /* data-no-rise: blocks with their own entrance (the universe) */
     kids.forEach((k, i) => { k.classList.remove('m-rise'); void k.offsetWidth; k.style.setProperty('--i', i); k.classList.add('m-rise'); });
   }
   LS.stagger = stagger;

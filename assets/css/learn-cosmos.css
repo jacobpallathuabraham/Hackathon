@@ -1,0 +1,163 @@
+/* ERLY Learning Studio — the cinematic universe (#/home). Space is always dark, whatever the site theme; the learning
+   sections after the journey follow the theme. Type: Fraunces (display), Instrument Sans (text), JetBrains Mono (labels). */
+:root { --cz-ink: #e9edfb; --cz-dim: rgba(222, 229, 250, .72); --cz-faint: rgba(210, 220, 250, .5); --cz-line: rgba(200, 212, 255, .18); --cz-bg: #03050d; --cz-glass: rgba(10, 14, 30, .55); }
+
+.cz-on #lsView { padding-top: 0 !important; }
+.cz { position: relative; margin-inline: calc(50% - 50vw); margin-top: calc(-1 * var(--cz-top, 0px)); background: var(--cz-bg); color: var(--cz-ink); isolation: isolate; }
+.cz-track { position: relative; }
+.cz-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.cz-cv, .cz-paint, .cz-paint canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cz-paint canvas { object-fit: cover; }
+.cz-cv { z-index: 1; opacity: 0; transition: opacity 1.4s ease; }
+.cz.is-live .cz-cv { opacity: 1; }
+.cz.is-live .cz-paint { opacity: 0; transition: opacity 1.6s ease 0.2s; }
+
+/* scenes: one composed text block per scene; opacity and drift follow the journey */
+.cz-scenes { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.cz-scene { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 clamp(20px, 7vw, 120px); will-change: opacity, transform; }
+.cz-scene[hidden] { display: flex !important; visibility: hidden; }
+.cz-scene--right { justify-content: flex-end; }
+.cz-scene--hero { align-items: center; }
+.cz-scene--all { align-items: flex-start; justify-content: center; text-align: center; padding-top: clamp(84px, 13vh, 140px); }
+.cz-copy { max-width: min(34rem, 88vw); pointer-events: auto; text-shadow: 0 2px 24px rgba(0, 0, 0, .55); }
+.cz-scene--all .cz-copy { max-width: 40rem; }
+.cz-kick { font: 500 .72rem/1.4 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .24em; text-transform: uppercase; color: var(--cz-faint); margin: 0 0 1.1rem; }
+.cz-h1 { font-family: Fraunces, Georgia, serif; font-weight: 300; font-variation-settings: "SOFT" 60, "opsz" 144; font-size: clamp(2.6rem, 6.2vw, 5.6rem); line-height: .98; letter-spacing: -.025em; margin: 0 0 1.3rem; color: #f3f5ff; }
+.cz-h2 { font-family: Fraunces, Georgia, serif; font-weight: 300; font-variation-settings: "SOFT" 50, "opsz" 120; font-size: clamp(2rem, 4.4vw, 3.8rem); line-height: 1.02; letter-spacing: -.02em; margin: 0 0 1rem; color: #f3f5ff; }
+.cz-p { font: 400 clamp(1rem, 1.25vw, 1.16rem)/1.6 "Instrument Sans", system-ui, sans-serif; color: var(--cz-dim); margin: 0 0 1rem; max-width: 32ch; }
+.cz-scene--all .cz-p { margin-inline: auto; max-width: 44ch; }
+.cz-meta { font: 400 .86rem/1.6 "Instrument Sans", system-ui, sans-serif; color: var(--cz-faint); margin: 0 0 1.4rem; }
+.cz-meta a, .cz-links a { color: var(--cz-ink); text-decoration: none; border-bottom: 1px solid var(--cz-line); }
+.cz-meta a:hover, .cz-links a:hover { border-color: currentColor; }
+.cz-links { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem 1.6rem; font: 500 .9rem "Instrument Sans", system-ui, sans-serif; margin-top: 1.2rem; }
+.cz-enter { appearance: none; background: none; border: 0; border-bottom: 1px solid rgba(233, 237, 251, .45); color: var(--cz-ink); font: 500 1rem "Instrument Sans", system-ui, sans-serif; padding: .45rem 0; cursor: pointer; letter-spacing: .01em; transition: border-color .25s, gap .25s; display: inline-flex; gap: .5rem; align-items: center; }
+.cz-enter span { transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+.cz-enter:hover, .cz-enter:focus-visible { border-color: #fff; outline: none; }
+.cz-enter:hover span, .cz-enter:focus-visible span { transform: translateX(6px); }
+.cz-enter:focus-visible { box-shadow: 0 2px 0 0 #fff; }
+.cz-cue { display: inline-flex; align-items: center; gap: .8rem; margin-top: 2.2rem; font: 500 .7rem "JetBrains Mono", monospace; letter-spacing: .22em; text-transform: uppercase; color: var(--cz-faint); }
+.cz-cue span { width: 1px; height: 42px; background: linear-gradient(rgba(233, 237, 251, 0), rgba(233, 237, 251, .8)); position: relative; overflow: hidden; }
+.cz-cue span::after { content: ""; position: absolute; left: -1px; top: -12px; width: 3px; height: 12px; background: #fff; border-radius: 2px; animation: czCue 2.4s cubic-bezier(.6, 0, .4, 1) infinite; }
+@keyframes czCue { 0% { transform: translateY(0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(54px); opacity: 0; } }
+
+/* the hover/focus label that follows a world */
+.cz-label { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; display: grid; gap: 2px; text-align: center; padding: .55rem .9rem .6rem; border-radius: 14px; background: var(--cz-glass); border: 1px solid var(--cz-line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); max-width: 260px; transition: opacity .2s; }
+.cz-label b { font: 400 1.15rem/1.2 Fraunces, Georgia, serif; }
+.cz-label span { font: 400 .78rem/1.35 "Instrument Sans", sans-serif; color: var(--cz-dim); }
+.cz-label em { font: 500 .62rem "JetBrains Mono", monospace; letter-spacing: .18em; text-transform: uppercase; font-style: normal; color: var(--cz-faint); margin-top: 3px; }
+
+/* journey rail, tools, skip link, storage card, credit */
+.cz-rail { position: absolute; right: clamp(10px, 1.6vw, 24px); top: 50%; transform: translateY(-50%); z-index: 5; display: grid; gap: 2px; }
+.cz-rail button { appearance: none; background: none; border: 0; padding: 5px 4px; cursor: pointer; display: flex; justify-content: flex-end; }
+.cz-rail i { display: block; width: 10px; height: 1.5px; background: rgba(233, 237, 251, .35); transition: width .35s cubic-bezier(.2, .8, .2, 1), background .3s; }
+.cz-rail button:hover i, .cz-rail button:focus-visible i { width: 18px; background: rgba(233, 237, 251, .8); }
+.cz-rail button[aria-current] i { width: 26px; background: #fff; }
+.cz-rail button:focus-visible { outline: 1px solid rgba(255, 255, 255, .6); outline-offset: 1px; border-radius: 3px; }
+.cz-tools { position: absolute; z-index: 5; right: clamp(14px, 2.4vw, 36px); top: calc(var(--cz-top, 64px) + 14px); display: flex; gap: 8px; }
+.cz-tool { appearance: none; background: var(--cz-glass); color: var(--cz-ink); border: 1px solid var(--cz-line); border-radius: 999px; padding: .45rem .95rem; font: 500 .8rem "Instrument Sans", sans-serif; letter-spacing: .02em; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .2s, background .2s; }
+.cz-tool:hover, .cz-tool:focus-visible { border-color: rgba(233, 237, 251, .6); background: rgba(20, 26, 52, .7); outline: none; }
+.cz-skip { position: absolute; z-index: 20; left: 16px; top: calc(var(--cz-top, 64px) + 10px); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; background: #fff; color: #050815; padding: .5rem .9rem; border-radius: 10px; font: 600 .85rem "Instrument Sans", sans-serif; text-decoration: none; }
+.cz-skip:focus { clip-path: none; width: auto; height: auto; overflow: visible; outline: 2px solid #9fb4ff; }
+.cz-dock { position: absolute; z-index: 6; left: clamp(14px, 2.4vw, 36px); bottom: clamp(14px, 3vh, 30px); width: min(440px, calc(100vw - 28px)); }
+.cz-dock .at-choice, .cz-dock .at-choice > * { display: block !important; width: auto !important; max-width: none !important; grid-template-columns: none !important; }
+.cz-dock .at-choice__b { display: flex !important; flex-wrap: wrap; gap: 6px; margin: .5rem 0 .3rem; }
+.cz-dock .at-choice__b .ls-btn { padding: .4rem .8rem !important; font-size: .82rem !important; }
+.cz-dock .at-choice { margin: 0 !important; background: rgba(9, 12, 26, .78) !important; color: var(--cz-ink) !important; border: 1px solid var(--cz-line) !important; border-radius: 16px !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: .9rem 1rem !important; box-shadow: 0 20px 60px -30px #000; font-size: .86rem; }
+.cz-dock .at-choice * { color: inherit; }
+.cz-dock .at-choice h2, .cz-dock .at-choice h3, .cz-dock .at-choice b { font-family: "Instrument Sans", sans-serif; font-size: .95rem; }
+.cz-dock .at-choice p { color: var(--cz-dim) !important; margin: .2rem 0 .6rem; }
+.cz-dock .at-choice .ls-btn { background: rgba(255, 255, 255, .08) !important; border-color: var(--cz-line) !important; color: var(--cz-ink) !important; }
+.cz-dock .at-choice .ls-btn--accent { background: #e9edfb !important; color: #060914 !important; border-color: #e9edfb !important; }
+.cz-dock .at-choice details, .cz-dock .at-choice summary { color: var(--cz-dim); }
+.cz-credit { position: absolute; z-index: 5; right: clamp(14px, 2.4vw, 36px); bottom: 10px; margin: 0; font: 400 .62rem "JetBrains Mono", monospace; letter-spacing: .06em; color: rgba(210, 220, 250, .35); opacity: 0; transition: opacity .6s; }
+.cz.has-astro .cz-credit { opacity: 1; }
+
+/* the destinations map */
+.cz-map { position: fixed; inset: 0; z-index: 60; background: rgba(2, 3, 10, .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; justify-content: flex-end; opacity: 0; transition: opacity .25s; }
+.cz-map.is-open { opacity: 1; }
+.cz-map__in { width: min(440px, 100vw); height: 100%; overflow: auto; background: #070a18; border-left: 1px solid var(--cz-line); padding: 1.3rem 1.3rem 2rem; transform: translateX(24px); transition: transform .35s cubic-bezier(.2, .8, .2, 1); color: var(--cz-ink); }
+.cz-map.is-open .cz-map__in { transform: none; }
+.cz-map__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.cz-map__head h2 { font: 300 1.7rem Fraunces, Georgia, serif; margin: 0; color: #f3f5ff; }
+.cz-map__find input { width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, .05); border: 1px solid var(--cz-line); border-radius: 12px; color: var(--cz-ink); padding: .65rem .85rem; font: 400 .95rem "Instrument Sans", sans-serif; }
+.cz-map__find input:focus { outline: 2px solid #9fb4ff; outline-offset: 1px; }
+.cz-map__list { list-style: none; margin: 1rem 0; padding: 0; display: grid; gap: 2px; }
+.cz-map__list button { width: 100%; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: .8rem; align-items: center; text-align: left; appearance: none; background: none; border: 0; border-radius: 12px; padding: .6rem .5rem; color: var(--cz-ink); cursor: pointer; transition: background .2s; }
+.cz-map__list button .cz-orb { grid-row: 1 / 3; width: 26px; height: 26px; }
+.cz-map__list button b { font: 400 1.05rem Fraunces, Georgia, serif; } .cz-map__list button small { font: 400 .74rem "Instrument Sans", sans-serif; color: var(--cz-faint); }
+.cz-map__list button:hover, .cz-map__list button:focus-visible { background: rgba(255, 255, 255, .06); outline: none; }
+.cz-map__list button:focus-visible { box-shadow: inset 0 0 0 1px rgba(233, 237, 251, .6); }
+.cz-map__more { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; font: 500 .85rem "Instrument Sans", sans-serif; }
+.cz-map__more a { color: var(--cz-dim); text-decoration: none; border-bottom: 1px solid var(--cz-line); }
+
+/* painted planets (no WebGL) and the small orbs used in lists */
+.cz-orb { display: inline-block; width: 14px; height: 14px; border-radius: 50%; flex: none; background: radial-gradient(circle at 34% 30%, var(--b) 0%, var(--a) 32%, var(--c) 72%, #04050b 100%); box-shadow: inset -3px -4px 8px rgba(0, 0, 0, .55), 0 0 14px -4px var(--a); }
+.cz-orb--big { position: absolute; width: min(44vmin, 420px); height: min(44vmin, 420px); top: 50%; transform: translateY(-50%); box-shadow: inset -40px -50px 90px rgba(0, 0, 0, .75), 0 0 80px -30px var(--a); }
+.cz-scene--left .cz-orb--big { right: 10vw; } .cz-scene--right .cz-orb--big { left: 10vw; }
+
+/* the journey's end: every world as an index (also the accessible route in) */
+.cz-index { position: relative; margin-inline: calc(50% - 50vw); background: linear-gradient(var(--cz-bg), #060816 70%, transparent); color: var(--cz-ink); padding: clamp(48px, 9vh, 110px) clamp(20px, 7vw, 120px) clamp(40px, 7vh, 80px); }
+.cz-index__h { font: 300 clamp(1.8rem, 3.4vw, 2.8rem) Fraunces, Georgia, serif; margin: 0 0 1.6rem; letter-spacing: -.015em; }
+.cz-index__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); column-gap: clamp(20px, 3vw, 48px); }
+.cz-index__list a { display: grid; grid-template-columns: 28px 1fr auto; gap: .9rem; align-items: center; padding: 1rem .2rem; border-top: 1px solid var(--cz-line); color: inherit; text-decoration: none; transition: padding .3s cubic-bezier(.2, .8, .2, 1), background .3s; }
+.cz-index__list a .cz-orb { width: 24px; height: 24px; }
+.cz-index__list a b { display: block; font: 400 1.15rem Fraunces, Georgia, serif; } .cz-index__list a small { display: block; font: 400 .82rem/1.45 "Instrument Sans", sans-serif; color: var(--cz-faint); margin-top: 2px; }
+.cz-index__list a em { font: 500 .66rem "JetBrains Mono", monospace; letter-spacing: .14em; text-transform: uppercase; font-style: normal; color: var(--cz-faint); }
+.cz-index__list a:hover, .cz-index__list a:focus-visible { padding-left: .7rem; background: rgba(255, 255, 255, .03); outline: none; }
+.cz-index__list a:focus-visible { box-shadow: inset 2px 0 0 #e9edfb; }
+.cz-after { outline: none; }
+
+/* travel veil: the destination's colour fills the view as we arrive, and clears on the other side */
+.cz-veil { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--vc, #222) 55%, #fff 8%), color-mix(in srgb, var(--vc, #222) 70%, #02030a) 55%, #02030a 100%); transition: opacity .5s ease; }
+.cz-veil.is-on { opacity: 1; transition: opacity .25s ease; }
+
+/* the shell over space: a transparent header until the journey has scrolled away */
+.cz-on:not(.cz-past) .at-spine { background: linear-gradient(rgba(3, 5, 13, .7), rgba(3, 5, 13, 0)) !important; border-color: transparent !important; box-shadow: none !important; color: var(--cz-ink); }
+.cz-on:not(.cz-past) .at-spine a, .cz-on:not(.cz-past) .at-spine button { color: var(--cz-ink) !important; }
+.cz-on:not(.cz-past) .at-spine a[aria-current="page"] { color: #fff !important; }
+
+/* loading: the painted sky is the first frame; nothing flashes */
+.cz.is-loading .cz-scene[data-i="0"] { opacity: 1 !important; }
+
+@media (max-width: 760px) {
+  .cz-rail { display: none; }
+  .cz-scene { padding: 0 20px; align-items: flex-end; padding-bottom: 22vh; }
+  .cz-scene--right { justify-content: flex-start; }
+  .cz-scene--all { align-items: flex-start; padding-top: calc(var(--cz-top, 64px) + 64px); padding-bottom: 0; }
+  .cz-scene--hero { align-items: flex-end; padding-bottom: 26vh; }
+  .cz-h1 { font-size: clamp(2.3rem, 11vw, 3.2rem); } .cz-h2 { font-size: clamp(1.9rem, 9vw, 2.6rem); } .cz-p { font-size: 1rem; }
+  .cz-tools { top: calc(var(--cz-top, 56px) + 10px); right: 12px; }
+  .cz-tool { padding: .38rem .75rem; font-size: .76rem; }
+  .cz-dock { bottom: 82px; left: 12px; right: 12px; width: auto; }
+  .cz-dock .at-choice p { display: none; }
+  .cz-dock .at-choice { padding: .75rem .85rem !important; }
+  .cz[data-scene="void"] .cz-scene--hero { padding-bottom: 0; align-items: flex-start; padding-top: calc(var(--cz-top, 56px) + 76px); }
+  .cz-orb--big { width: 62vmin; height: 62vmin; top: 30%; }
+  .cz-scene--left .cz-orb--big, .cz-scene--right .cz-orb--big { left: 50%; right: auto; transform: translate(-50%, -50%); }
+  .cz-credit { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cz-cv, .cz-paint, .cz-veil, .cz-map, .cz-map__in, .cz-enter span, .cz-index__list a { transition: none !important; }
+  .cz-cue span::after { animation: none; }
+}
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* the storage card steps aside during the journey (nothing is stored until it is answered) and returns at the start and the end */
+.cz-dock { transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1); }
+.cz[data-scene]:not([data-scene="void"]):not([data-scene="all"]) .cz-dock { opacity: 0; transform: translateY(12px); pointer-events: none; visibility: hidden; }
+.cz-dock .at-choice p { font-size: .84rem; line-height: 1.45; }
+
+/* a soft scrim behind each text block: worlds may pass behind the words, the words stay readable */
+.cz-copy { position: relative; }
+.cz-copy::before { content: ""; position: absolute; inset: -18% -22% -18% -26%; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(3, 5, 13, .62), rgba(3, 5, 13, .32) 60%, rgba(3, 5, 13, 0)); }
+.cz-scene--all .cz-copy::before { inset: -30% -18%; }
+
+/* the world's planet in its page header (the same world the student travelled to) */
+.uv-wh.has-planet { min-height: 300px; }
+.cz-wp { position: absolute; z-index: 0; top: 0; bottom: 0; right: 0; width: min(52%, 560px); pointer-events: none; }
+.cz-wp canvas { width: 100% !important; height: 100% !important; display: block; }
+.uv-wh.has-planet > :not(.cz-wp):not(canvas) { position: relative; z-index: 1; }
+@media (max-width: 760px) { .uv-wh.has-planet { min-height: 380px; } .cz-wp { width: 100%; top: auto; height: 190px; opacity: .9; } .uv-wh.has-planet .uv-wh__t { padding-bottom: 170px; } }
+
+/* text blocks never block the worlds behind them: only their links and buttons take the pointer */
+.cz-copy, .cz-copy::before { pointer-events: none; } .cz-copy a, .cz-copy button { pointer-events: auto; }
