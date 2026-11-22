@@ -79,3 +79,19 @@ html.ls-nav-back::view-transition-new(ls-page) { animation: 300ms cubic-bezier(.
 #lsView.ls-in-fwd { animation: lsInR 280ms cubic-bezier(.2,.8,.2,1) both; } #lsView.ls-in-back { animation: lsInL 280ms cubic-bezier(.2,.8,.2,1) both; }
 @media (prefers-reduced-motion: reduce) { #lsView.ls-in-fwd, #lsView.ls-in-back { animation: none; } html::view-transition-old(ls-page), html::view-transition-new(ls-page) { animation: none !important; } }
 html.a11y-still #lsView.ls-in-fwd, html.a11y-still #lsView.ls-in-back { animation: none; }
+
+/* v28 — calculus explorers */
+.v28-fx { min-width: 220px; }
+.v28-fx__in { font: 500 15px/1.3 'JetBrains Mono', ui-monospace, monospace; padding: .45rem .6rem; border-radius: 10px; border: 1px solid var(--line, #cfd6e4); background: var(--bg, #fff); color: inherit; width: 100%; }
+.v28-fx__in:focus-visible { outline: 2px solid var(--accent, #3b6fe0); outline-offset: 2px; }
+.v28-fx__err { display: block; min-height: 1em; font-size: 12px; color: #c0392b; }
+.v28-ok { color: #1f8a4c; font-weight: 800; }
+.v28-todo { color: var(--muted, #888); }
+.dl__f .kx-cv, .il__f .kx-cv, .wc__stage .kx-cv { cursor: grab; }
+.dl__f.is-grab .kx-cv, .il__f.is-grab .kx-cv { cursor: grabbing; }
+
+/* v28 — cursor depth (ls-depth.js adds html.ls-depth only for a fine hover pointer without reduced motion) */
+html.ls-depth .at-world--hero, html.ls-depth .at-world--band, html.ls-depth .dx-orrery { transform: translate3d(calc(var(--cx, 0) * -12px), calc(var(--cy, 0) * -7px), 0) scale(1.04); transition: transform .9s cubic-bezier(.2, .7, .2, 1); will-change: transform; }
+html.ls-depth .ls-tilt { transform: perspective(900px) translateY(-2px) rotateX(calc(var(--ty, 0) * -2.5deg)) rotateY(calc(var(--tx, 0) * 3.5deg)); transition: transform .22s ease-out, box-shadow .22s ease-out; box-shadow: 0 14px 30px -18px rgba(20, 30, 60, .45); }
+html.ls-depth .dx-card, html.ls-depth .at-tile, html.ls-depth .ls-card, html.ls-depth .at-portal { transition: transform .35s cubic-bezier(.2, .7, .2, 1), box-shadow .35s; }
+html.ls-depth .ls-tilt:active { transform: perspective(900px) scale(.97); }

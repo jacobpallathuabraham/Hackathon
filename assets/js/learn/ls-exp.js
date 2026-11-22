@@ -56,6 +56,7 @@
     const stage = view.querySelector('.at-x__stage'), panel = view.querySelector('.at-x__panel');
     let syncPause = () => {};
     const M = def.build(stage, { reduced: reduced(), looper, canvas, css, slider, fmt, onChange: () => { syncPause(); if (ses.step === 'observe') show('observe'); } });
+    LS.exp.live = M; // the mounted model's API (read-only use by tests and the inspection directory)
     if (LS.paintWorlds) LS.paintWorlds(view);
     const pauseBtn = view.querySelector('[data-x="pause"]');
     syncPause = () => { const t = M.running && M.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); if (pauseBtn.textContent !== t) pauseBtn.textContent = t; pauseBtn.disabled = !M.running; };
