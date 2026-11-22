@@ -241,7 +241,7 @@ const check = async (name, fn) => { try { await fn(); results.push([name, 'PASS'
     await go('noor', 500); assert.match(await p.textContent('.ls-where'), /brain|device|Noor/i); assert.match(await p.textContent('.ls-pre'), /simplify|simpler/);
   });
   await check('“Explain my mistake” asks Noor for the misconception, not the answer', async () => {
-    await go('mistakes', 600); await p.click('[data-mnoor] >> nth=0'); await p.waitForTimeout(800);
+    await go('mistakes', 600); /* earlier practice is random and may already have put both mistakes right, which the default “Not yet put right” filter hides */ await p.selectOption('[data-mf]', 'all'); await p.waitForTimeout(300); await p.click('[data-mnoor] >> nth=0'); await p.waitForTimeout(800);
     const s = await p.evaluate(() => LS.noor.lastSent); assert.equal(s.kind, 'mistake'); assert.match(s.prompt, /don't just give me the answer/); assert.match(s.prompt, /My answer/);
     await p.evaluate(() => ERLY.companion.close());
   });

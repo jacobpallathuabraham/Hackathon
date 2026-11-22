@@ -35,9 +35,8 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
 
   await t('home: welcome, continue, plan, momentum, insights, portal, worlds', async () => {
     assert.match(await p.textContent('#atHomeH'), /Let’s make something click/);
-    for (const s of ['.at-shelf', '.at-plan', '.at-mom', '.at-insw', '.at-portal', '#atAtlas']) assert.ok(await p.isVisible(s), s);
+    for (const s of ['.at-shelf', '.at-plan', '.at-mom', '.at-insw', '.at-portal']) assert.ok(await p.isVisible(s), s); /* v29: the universe home's eleven subject worlds replace the earlier atlas there */ assert.equal(await p.locator('.uv-worlds .uv-world').count(), 11);
     assert.equal(await p.locator('.at-mom__list li').count(), 4);
-    assert.equal(await p.locator('#atAtlas > li').count(), 9);
   });
 
   await t('engine: 8 states with reasons; the two new lessons register 8 objectives', async () => {

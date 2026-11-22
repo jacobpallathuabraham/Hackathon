@@ -37,7 +37,8 @@
       clearInterval(poll); LS.guide.current = null;
       if (mem.mode === 'independent') { card.hidden = true; highlight(null); return; }
       card.hidden = false;
-      card.hidden = false;
+      /* Discover's insight sits below the simulation so it never shifts the stage while the student is dragging; guided steps sit above it */
+      { const want = mem.mode === 'discover'; if (want && card.previousElementSibling !== stage) stage.after(card); else if (!want && card.nextElementSibling !== stage) model.insertBefore(card, stage); }
       /* Discover keeps the stage in view: no card until the student has changed something, then a one-line insight */
       if (mem.mode === 'discover') { highlight(null); const ins = String(def.explain || '').split(/(?<=\.)\s+/)[0]; card.hidden = !mem.insight; card.classList.add('gd-card--slim'); card.innerHTML = mem.insight ? `<p><b class="gd-k">${T('Insight', 'فكرة')}</b> ${IL(ins)}</p>` : ''; return; }
       card.classList.remove('gd-card--slim');

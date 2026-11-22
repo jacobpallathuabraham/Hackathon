@@ -41,7 +41,7 @@
   const ENVS = [
     { id: 'home', en: 'Discover', ar: 'اكتشف', icon: 'home', routes: ['home', 'space', 'curiosity'], subs: [] },
     { id: 'explore', en: 'Subjects', ar: 'المواد', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover', 'topic', 'chapter', 'path', 'constellation', 'finder'],
-      subs: [['explore', 'Worlds', 'العوالم', ['explore', 'subject', 'world', 'topic', 'chapter']], ['path', 'Learning path', 'مسار التعلّم', ['path']], ['constellation', 'Knowledge map', 'خريطة المعرفة', ['constellation']], ['discover', 'All experiences', 'كل التجارب', ['discover', 'exp']], ['finder', 'Experience finder', 'باحث التجارب', ['finder']]] },
+      subs: [['explore', 'Worlds', 'العوالم', ['explore', 'subject', 'world', 'topic', 'chapter']], ['explore/topics', 'Topics', 'المواضيع', ['explore/topics']], ['path', 'Learning path', 'مسار التعلّم', ['path']], ['constellation', 'Knowledge map', 'خريطة المعرفة', ['constellation']], ['discover', 'All experiences', 'كل التجارب', ['discover', 'exp']], ['finder', 'Experience finder', 'باحث التجارب', ['finder']]] },
     { id: 'learn', en: 'Learn', ar: 'تعلّم', icon: 'learn', routes: ['lessons', 'lesson', 'read', 'library', 'video', 'lab', 'learn'],
       subs: [['lessons', 'Lessons', 'الدروس', ['lessons', 'lesson', 'learn']], ['read', 'Reading', 'القراءة', ['read', 'library']], ['video', 'Video', 'الفيديو', ['video']], ['lab', 'Visual Lab', 'المختبر المرئي', ['lab']]] },
     { id: 'practise', en: 'Practice', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes', 'revise', 'cards', 'assess'],

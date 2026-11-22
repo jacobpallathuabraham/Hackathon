@@ -99,8 +99,10 @@ Fixes made in this phase:
   malformed cards.
 - **Question IDs.** The Rotation and Probability labs reused `x-rl*` and `x-pb*` question IDs from the Reaction lab
   and the older probability experience, which would have mixed up stored answers. They are now `x-rot*` and `x-plb*`.
-- **Layout.** The guided mode bar and Discover card pushed simulations about 140 px down. Discover now has no card
-  until there is an insight, and the bar is compact.
+- **Layout.** The guided mode bar and Discover card pushed simulations about 140 px down. Discover's one-line insight
+  now appears below the simulation, so the stage never moves while you are dragging, and the bar is compact. This
+  also fixed the circuit-builder and differentiation drag tests, which had started to fail.
+- **Navigation.** The "Topics" item lost from the Subjects menu is restored.
 - **CSS.** Three invalid `font: … inherit` shorthands were dropped by browsers; they are now written out as separate
   properties.
 - **Contrast.** Accent fills, step numbers, card-type labels, `kbd` keys in buttons and the solar-system panel hint
@@ -220,19 +222,19 @@ All tests below were run in this session against the final code.
 | `learning-studio-v29` (new: engines, labs, curriculum, decks, checks, guided layer, navigation, space) | 18/18 |
 | `learning-studio` (base: consent, storage, notebook, keyboard) | 34/34 |
 | `learning-studio-v21` | 21/21 |
-| `learning-studio-v22` | see final run below |
+| `learning-studio-v22` | 22/22 |
 | `learning-studio-v23` | 18/18 |
 | `learning-studio-v24` | 42/42 |
-| `learning-studio-v26` | see final run below |
+| `learning-studio-v26` (174 lab models opened) | 14/14 |
 | `learning-studio-v27` | 14/14 |
-| `learning-studio-v28` | see final run below |
+| `learning-studio-v28` | 21/21 |
 | `learn-inspect` (317 routes) | 14/14 |
 | `lab` (Visual Lab) | 34/34, no page errors |
 | `problems` | 14/14 |
 | `visual-chat` | 18/18 |
 | `nav`, `a11y` (control centre), `studio-noor` | all checks passed |
 | Content validator | 282 questions, 0 errors, 2 reviewed by hand |
-| axe (WCAG 2.1 A/AA), light and dark | 16 new pages × 2 themes: 0 violations after the fixes in §4 |
+| axe (WCAG 2.1 A/AA), light and dark | 16 new pages, plus home, finder, a new chapter, deck, check and an older experience after the final changes, × 2 themes: 0 violations |
 
 **Older tests changed** because the design changed on purpose. No test was skipped or loosened beyond that change:
 
@@ -241,6 +243,11 @@ All tests below were run in this session against the final code.
 - v27's deep-link Back now expects `#/world/geography` (breadcrumbs now go to the world, not the old subject page).
 - v22's navigation test now expects "My cards", the new name for the student's own spaced-repetition page.
 - v24's phone-overflow test now also covers the ten new pages.
+- v22's home test checks the universe's 11 world cards. The earlier atlas of 9 worlds is hidden inside the embedded
+  plan because it duplicated them.
+- The base suite's "Explain my mistake" test now selects the "All" filter first. Earlier random practice sometimes
+  put both mistakes right already, and the page's default "Not yet put right" filter then hid them; it failed
+  intermittently for that reason, not because of a product bug.
 
 ## 10. Remaining work and honest limits
 

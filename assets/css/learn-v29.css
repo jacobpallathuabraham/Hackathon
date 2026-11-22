@@ -211,3 +211,6 @@ html { scrollbar-gutter: stable; }
 
 .gd-card--slim { padding: .45rem .8rem; } .gd-card--slim .gd-k { margin-right: .35em; }
 .gd-card[hidden] { display: none; }
+/* the earlier home inside the universe home: a quiet heading, and no second worlds grid (the universe already shows all 11) */
+.uv-plan .at-open__h { font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.2; margin: .2rem 0 .4rem; }
+.uv-plan section[aria-labelledby="atAtlasH"] { display: none; }
