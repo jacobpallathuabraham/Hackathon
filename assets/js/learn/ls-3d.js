@@ -37,7 +37,7 @@
       const rim = new THREE.DirectionalLight(0x9fc4ff, 0.6); rim.position.set(-8, 5, -6); scene.add(rim);
     }
     const S = { THREE, scene, camera, renderer, controls, cv, wrap, tick: null, alive: true, visible: true, frames: [], last: performance.now(), dirty: true };
-    const fit = () => { const w = wrap.clientWidth || 800, h = o.height ? (typeof o.height === 'function' ? o.height(w) : o.height) : Math.round(w * (o.aspect || 0.56)); renderer.setSize(w, h, false); cv.style.width = w + 'px'; cv.style.height = h + 'px'; camera.aspect = w / h; camera.updateProjectionMatrix(); S.dirty = true; };
+    let lastW = -1; const fit = (force) => { const w = wrap.clientWidth || 800; if (!force && Math.abs(w - lastW) < 1) return; lastW = w; const h = o.height ? (typeof o.height === 'function' ? o.height(w) : o.height) : Math.round(w * (o.aspect || 0.56)); renderer.setSize(w, h, false); cv.style.width = '100%'; cv.style.height = h + "px"; /* width tracks the container; ignoring sub-pixel changes breaks scrollbar feedback loops */ camera.aspect = w / h; camera.updateProjectionMatrix(); S.dirty = true; };
     fit(); const ro = new ResizeObserver(fit); ro.observe(wrap);
     const io = new IntersectionObserver(es => { S.visible = es[0].isIntersecting; if (S.visible) start(); }, { threshold: 0.01 }); io.observe(cv);
     const vis = () => { if (!document.hidden) start(); }; document.addEventListener('visibilitychange', vis);
@@ -52,11 +52,11 @@
       const t0 = performance.now(); renderer.render(scene, camera); const ft = performance.now() - t0;
       S.frames.push([now, ft]); if (S.frames.length > 120) S.frames.shift();
       adapt(); S.dirty = false;
-      if (keep || flight || S.dirty || moved || (S.always && !reduced())) raf = requestAnimationFrame(frame); // idle scenes stop drawing
+      if (!raf && (keep || flight || S.dirty || moved || S._bench || (S.always && !reduced()))) raf = requestAnimationFrame(frame); /* one loop only: a redraw requested during this frame (controls 'change', S.render in tick) already scheduled the next one; idle scenes stop drawing */
     }
     let adaptN = 0;
     function adapt() { if (++adaptN % 60 || S.frames.length < 60) return; const f = S.frames, span = (f[f.length - 1][0] - f[0][0]) / (f.length - 1);
-      if (span > 22 && dpr > 1) { dpr = Math.max(1, dpr - 0.25); renderer.setPixelRatio(dpr); fit(); } else if (span < 17.5 && dpr < Math.min(1.75, devicePixelRatio || 1)) { dpr = Math.min(Math.min(1.75, devicePixelRatio || 1), dpr + 0.25); renderer.setPixelRatio(dpr); fit(); } }
+      if (span > 22 && dpr > 1) { dpr = Math.max(1, dpr - 0.25); renderer.setPixelRatio(dpr); fit(true); } else if (span < 17.5 && dpr < Math.min(1.75, devicePixelRatio || 1)) { dpr = Math.min(Math.min(1.75, devicePixelRatio || 1), dpr + 0.25); renderer.setPixelRatio(dpr); fit(true); } }
     function start() { if (!raf && S.alive) { S.last = performance.now(); raf = requestAnimationFrame(frame); } }
     S.start = start; S.render = () => { S.dirty = true; start(); };
     S.fly = (pos, target, ms = 1100, done) => { const p1 = new THREE.Vector3(...pos), q1 = new THREE.Vector3(...target); if (reduced() || ms <= 0) { camera.position.copy(p1); controls.target.copy(q1); controls.update(); S.render(); done && done(); return; } flight = { t0: performance.now(), ms, p0: camera.position.clone(), p1, q0: controls.target.clone(), q1, done }; start(); };
@@ -71,7 +71,11 @@
       cv.addEventListener('pointerdown', down); cv.addEventListener('pointermove', move); cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
       return () => { cv.removeEventListener('pointerdown', down); cv.removeEventListener('pointermove', move); cv.removeEventListener('pointerup', up); }; };
     S.fps = () => { const f = S.frames; if (f.length < 2) return { fps: 0, ms: 0 }; const span = (f[f.length - 1][0] - f[0][0]) / (f.length - 1); return { fps: 1000 / span, ms: f.reduce((s, x) => s + x[1], 0) / f.length, dpr }; };
-    S.destroy = () => { S.alive = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', vis); controls.dispose();
+    /* bench(ms): render continuously for ms and report only those frames: mean / median / 95th-percentile CPU time per frame */
+    S.bench = (ms = 3000) => new Promise(res => { S.frames = []; S._bench = true; start(); setTimeout(() => { S._bench = false; const f = S.frames.slice(), t = f.map(x => x[1]).sort((a, b) => a - b), q = k => t.length ? t[Math.min(t.length - 1, Math.floor(k * t.length))] : 0;
+      res({ frames: f.length, fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1][0] - f[0][0]) : 0, meanMs: t.reduce((a, b) => a + b, 0) / (t.length || 1), medianMs: q(0.5), p95Ms: q(0.95), dpr }); }, ms); });
+    (LS.__scenes = LS.__scenes || new Set()).add(S);
+    S.destroy = () => { LS.__scenes.delete(S); S.alive = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', vis); controls.dispose();
       scene.traverse(ob => { if (ob.geometry) ob.geometry.dispose(); const m = ob.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { Object.values(mm).forEach(v => { if (v && v.isTexture) v.dispose(); }); mm.dispose(); }); });
       renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss(); wrap.remove(); };
     start(); return S;
