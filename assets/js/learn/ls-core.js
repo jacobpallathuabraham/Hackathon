@@ -129,7 +129,7 @@
 
   /* ---------- router ----------  #/area/id/sub  */
   const routes = {};
-  LS.route = (name, fn) => { routes[name] = fn; };
+  LS.route = (name, fn) => { routes[name] = fn; }; LS.routeFn = name => routes[name];
   LS.go = (path, o) => { const h = '#/' + path.replace(/^#?\/?/, ''); if (location.hash === h) render(); else if (o && o.replace) { history.replaceState(null, '', h); render(); } else location.hash = h; };
   LS.current = () => (location.hash.replace(/^#\/?/, '') || 'home').split('/').map(decodeURIComponent);
   let lastArea = null;

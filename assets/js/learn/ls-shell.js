@@ -39,14 +39,14 @@
 
   // the five places of the Studio (progressive disclosure: each has a few sub-places), and their routes
   const ENVS = [
-    { id: 'home', en: 'Home', ar: 'الرئيسية', icon: 'home', routes: ['home'], subs: [] },
-    { id: 'explore', en: 'Explore', ar: 'استكشف', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover', 'topic'],
-      subs: [['explore', 'Subjects', 'المواد', ['explore', 'subject', 'world', 'topic']], ['explore/topics', 'Topics', 'المواضيع', ['explore/topics']], ['discover', 'Discover', 'اكتشف', ['discover', 'exp']]] },
+    { id: 'home', en: 'Discover', ar: 'اكتشف', icon: 'home', routes: ['home', 'space', 'curiosity'], subs: [] },
+    { id: 'explore', en: 'Subjects', ar: 'المواد', icon: 'lab', routes: ['explore', 'subject', 'world', 'exp', 'discover', 'topic', 'chapter', 'path', 'constellation'],
+      subs: [['explore', 'Worlds', 'العوالم', ['explore', 'subject', 'world', 'topic', 'chapter']], ['path', 'Learning path', 'مسار التعلّم', ['path']], ['constellation', 'Knowledge map', 'خريطة المعرفة', ['constellation']], ['discover', 'All experiences', 'كل التجارب', ['discover', 'exp']]] },
     { id: 'learn', en: 'Learn', ar: 'تعلّم', icon: 'learn', routes: ['lessons', 'lesson', 'read', 'library', 'video', 'lab', 'learn'],
       subs: [['lessons', 'Lessons', 'الدروس', ['lessons', 'lesson', 'learn']], ['read', 'Reading', 'القراءة', ['read', 'library']], ['video', 'Video', 'الفيديو', ['video']], ['lab', 'Visual Lab', 'المختبر المرئي', ['lab']]] },
-    { id: 'practise', en: 'Practise', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes', 'revise'],
-      subs: [['practice', 'Practice', 'التدريب', ['practice']], ['revise', 'Flashcards', 'البطاقات', ['revise']], ['mistakes', 'Mistakes', 'الأخطاء', ['mistakes']]] },
-    { id: 'workspace', en: 'My Workspace', ar: 'مساحتي', icon: 'notebook', routes: ['notebook', 'mylibrary', 'paths', 'progress', 'journey', 'archive', 'profile'],
+    { id: 'practise', en: 'Practice', ar: 'تدرّب', icon: 'practise', routes: ['practice', 'mistakes', 'revise', 'cards', 'assess'],
+      subs: [['cards', 'Flashcards', 'البطاقات', ['cards']], ['practice', 'Practice', 'التدريب', ['practice', 'assess']], ['revise', 'My cards', 'بطاقاتي', ['revise']], ['mistakes', 'Mistakes', 'الأخطاء', ['mistakes']]] },
+    { id: 'workspace', en: 'My Learning', ar: 'تعلّمي', icon: 'notebook', routes: ['notebook', 'mylibrary', 'paths', 'progress', 'journey', 'archive', 'profile'],
       subs: [['notebook', 'Notebook', 'الدفتر', ['notebook']], ['mylibrary', 'My Library', 'مكتبتي', ['mylibrary', 'archive']], ['paths', 'Paths', 'المسارات', ['paths']], ['progress', 'Progress', 'التقدّم', ['progress']], ['journey', 'Journey', 'رحلتي', ['journey']], ['profile', 'Privacy & data', 'الخصوصية', ['profile']]] }
   ];
   const EXTRA = [{ id: 'noor', en: 'Noor tutor', ar: 'المعلّمة نور', icon: 'noor', routes: ['noor'], subs: [] }];

@@ -57,6 +57,7 @@
     let syncPause = () => {};
     const M = def.build(stage, { reduced: reduced(), looper, canvas, css, slider, fmt, onChange: () => { syncPause(); if (ses.step === 'observe') show('observe'); } });
     LS.exp.live = M; // the mounted model's API (read-only use by tests and the inspection directory)
+    if (LS.exp.onMount) try { LS.exp.onMount(view, x, def, M); } catch (e) { console.warn('guide layer', e); }
     if (LS.paintWorlds) LS.paintWorlds(view);
     const pauseBtn = view.querySelector('[data-x="pause"]');
     syncPause = () => { const t = M.running && M.running() ? T('Pause', 'إيقاف') : T('Play', 'تشغيل'); if (pauseBtn.textContent !== t) pauseBtn.textContent = t; pauseBtn.disabled = !M.running; };
@@ -103,7 +104,7 @@
       if (a === 'reset') { M.reset(); syncPause(); if (ses.step === 'observe') show('observe'); }
       if (a === 'refresh') show('observe');
       if (a === 'tonb') { const cvs = [...view.querySelectorAll('.at-x__stage canvas')].filter(c => c.width > 100); if (!cvs.length) { LS.toast(T('This model has no picture to save — use “Sketch it” instead.', 'لا صورة لحفظها.')); return; } LS.toNotebook(cvs[0], x.title); return; }
-      if (a === 'noor') LS.noor.ask('model', { text: `${x.title}. ${x.hook} Current model state: ${M.observe().text.replace(/\*\*/g, '')}`, title: x.title });
+      if (a === 'noor') LS.noor.ask('model', { text: `${x.title}. ${x.hook} Current model state: ${M.observe().text.replace(/\*\*/g, '')}${LS.noorContextFor ? LS.noorContextFor(x.id) : ''}`, title: x.title });
       if (a === 'archive') { const o = ses.obs || M.observe(); const rec = { id: LS.uid('ar'), exp: x.id, title: x.title, kind: LS.expKinds[x.kind], at: Date.now(), prediction: ses.pred != null ? LS.plain(def.predict.options[ses.pred]) : '', predOk: ses.pred != null && o.predOk ? o.predOk(ses.pred) : null, observation: LS.plain(o.text), explanation: (ses.my || '').slice(0, 800) }; st.update(d => { d.archive = d.archive || []; d.archive.push(rec); }); LS.toast(T('Saved to your Discovery Archive.', 'حُفظ في أرشيف الاكتشافات.')); }
       if (a === 'cards') { const n = LS.cards.addMany(def.summary.map(sm => { const [f, bk] = sm.split(/:\s(.+)/); return { front: LS.plain(bk ? f : x.hook), back: LS.plain(bk || sm), kind: 'definition', topic: x.title, src: { type: 'experience', id: x.id, title: x.title } }; })); LS.toast(n + ' ' + T('cards added.', 'بطاقات أُضيفت.')); }
     });
