@@ -60,8 +60,9 @@ listed in "Limits".
 - **Composition:** each world scene puts the planet on one third, the words on the other, and the astronaut between,
   facing the world. The opening uses foreground (the great planet), midground (the astronaut) and background (the line
   of distant worlds receding along the route). On phones the text sits low and the astronaut floats in the upper half.
-- **Finish:** ACES tone mapping, a CSS vignette and film grain, and a soft scrim behind text so passing worlds never hurt
-  legibility.
+- **Finish:** ACES tone mapping, a CSS vignette and film grain, and a soft scrim behind text. A distant world that
+  drifts behind the text column recedes smoothly while it is there, found in the final visual pass. The scene's own
+  world and the overview are never affected.
 
 ## 4. The astronaut
 

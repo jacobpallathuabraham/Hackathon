@@ -165,7 +165,13 @@
         const kf = i + 3, near = smooth(clamp(1 - (Math.abs(p - kf) - 0.35) / 1.25, 0, 1)), rv = Math.max(near, smooth(clamp((p - (N - 1.6)) / 0.6, 0, 1)) * 0.92, p < 2.6 ? 0 : 0.06);
         const want = (st.hover === id || st.sel === id) ? 1 : 0; G.userData.f += (want - G.userData.f) * (1 - Math.exp(-dt * 7)); G.userData.rv = rv;
         const inView = frustum.intersectsSphere(new THREE.Sphere(G.position, G.userData.radius * 3.2));
-        const far = camera.position.distanceTo(G.position) > 48 + 20 * G.userData.f; G.userData.setFar(far);
+        /* the words always read clearly: a distant world drifting behind the text column recedes (shrinks smoothly) while it is there */
+        const own = K[Math.round(clamp(p, 0, N - 1))].scene, dist = camera.position.distanceTo(G.position);
+        if (own !== id && own !== 'all' && dist > 14 && !st.flight) { tmpV.copy(G.position).project(camera); const side = own === 'all' ? 0 : PATH[own] ? (PATH[own][0] > 0 ? -1 : 1) : -1;
+          const m = side ? smooth(clamp((side * tmpV.x + 0.02) / 0.25, 0, 1)) * smooth(clamp((0.75 - Math.abs(tmpV.y)) / 0.3, 0, 1)) : smooth(clamp((tmpV.y - 0.25) / 0.2, 0, 1)) * smooth(clamp((0.6 - Math.abs(tmpV.x)) / 0.2, 0, 1));
+          G.userData.hide = (G.userData.hide || 0) + (m - (G.userData.hide || 0)) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
+        else if (G.userData.hide) { G.userData.hide += (0 - G.userData.hide) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
+        const far = dist > 48 + 20 * G.userData.f; G.userData.setFar(far);
         if ((inView && !far) || reduced()) G.userData.update(t, reduced() ? 0 : dt, rv, G.userData.f); else if (inView) G.userData.core.rotation.y += dt * 0.04; G.visible = inView; });
     }
     const frustum = new THREE.Frustum();
