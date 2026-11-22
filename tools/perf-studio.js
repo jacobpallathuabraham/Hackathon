@@ -10,11 +10,18 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--enable-precise-memory-info'] });
   const ctx = await b.newContext({ viewport: { width: 1360, height: 900 } });
-  await ctx.addInitScript(() => { try { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); } catch (e) { /* */ } });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); localStorage.setItem('erly-cosmos', 'gl'); /* measure the 3D universe even on this software renderer */ } catch (e) { /* */ } });
   const rows = [];
-  for (const [name, route, get] of [['Home (universe + solar system)', 'home', 'LS.__homeSpace && LS.__homeSpace.fps()'], ['Solar System Explorer', 'space', 'LS.__space && LS.__space.fps()'], ['Rotation Lab', 'exp/rotation-lab', 'LS.exp.live._fps()'], ['Counting Studio', 'exp/counting-studio', 'LS.exp.live._fps()'], ['Probability Lab', 'exp/probability-lab', 'LS.exp.live._fps()']]) {
+  // the cinematic universe (#/home): measured at three points of the journey, with every world built
+  { const p = await ctx.newPage(); await p.goto(BASE + 'learn.html#/home'); await p.waitForFunction(() => window.LS && LS.__cosmos && LS.__cosmos.stats().astronaut, null, { timeout: 90000 }); await p.evaluate(() => LS.__cosmos.buildAll());
+    for (const [label, k] of [['opening (scene 0)', 0], ['Geography world (scene 7)', 7], ['overview, all worlds (scene 14)', 14]]) {
+      await p.evaluate(k => { const t = document.querySelector('.cz-track'), r = t.getBoundingClientRect(); scrollTo({ top: scrollY + r.top + k / 14 * (r.height - innerHeight) + 1, behavior: 'instant' }); LS.__cosmos.jump(k); }, k); await p.waitForTimeout(2500);
+      await p.evaluate(() => LS.__cosmos.resetStats()); await p.waitForTimeout(5000);
+      const s = await p.evaluate(() => Object.assign(LS.__cosmos.stats(), { heapMB: performance.memory ? +(performance.memory.usedJSHeapSize / 1048576).toFixed(1) : null }));
+      rows.push({ name: 'Cinematic universe — ' + label, route: 'home', fps: +s.fps.toFixed(1), cpuMedianMs: +s.cpuMedian.toFixed(2), cpuP95Ms: +s.cpuP95.toFixed(2), dpr: s.dpr, tier: s.tier, drawCalls: s.draws, triangles: s.tris, heapMB: s.heapMB }); console.log(JSON.stringify(rows[rows.length - 1])); }
+    await p.close(); }
+  for (const [name, route, get] of [['Solar System Explorer', 'space', 'LS.__space && LS.__space.fps()'], ['Rotation Lab', 'exp/rotation-lab', 'LS.exp.live._fps()'], ['Counting Studio', 'exp/counting-studio', 'LS.exp.live._fps()'], ['Probability Lab', 'exp/probability-lab', 'LS.exp.live._fps()']]) {
     const p = await ctx.newPage(); await p.goto(BASE + 'learn.html#/' + route); await p.waitForTimeout(7000);
-    if (route === 'home') { await p.evaluate(() => { const h = document.querySelector('.uv-space__host'); h && h.scrollIntoView({ block: 'center' }); }); await p.waitForTimeout(6000); }
     if (route === 'exp/rotation-lab') await p.evaluate(() => LS.exp.live._set({ spin: true }));
     await p.waitForTimeout(4000);
     const r = await p.evaluate(async () => { const S = [...(LS.__scenes || [])].filter(x => x.alive && x.visible)[0]; const b = S ? await S.bench(4000) : null;

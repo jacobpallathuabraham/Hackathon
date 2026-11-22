@@ -150,7 +150,7 @@
     const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), g = smooth(clamp((f - 0.1) / 0.8, 0, 1)); return { i, f: g, u: (i + g) / (N - 1) }; };
 
     /* state */
-    const st = { target: 0, p: 0, ptr: { x: 0, y: 0, tx: 0, ty: 0 }, hover: null, sel: null, flight: null, ret: null, t: 0, last: performance.now(), frames: [], cpu: [], visible: true, dirty: true, moved: false, astroPos: new THREE.Vector3(), lastCam: new THREE.Vector3() };
+    const st = { lastInput: 0, target: 0, p: 0, ptr: { x: 0, y: 0, tx: 0, ty: 0 }, hover: null, sel: null, flight: null, ret: null, t: 0, last: performance.now(), frames: [], cpu: [], visible: true, dirty: true, moved: false, astroPos: new THREE.Vector3(), lastCam: new THREE.Vector3() };
     const rc = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4(), look = new THREE.Vector3(), camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
     const worldPos = (id, p) => { const G = worlds[id]; if (!G) return V3(PATH[id]); return G.position; };
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
@@ -165,7 +165,8 @@
         const kf = i + 3, near = smooth(clamp(1 - (Math.abs(p - kf) - 0.35) / 1.25, 0, 1)), rv = Math.max(near, smooth(clamp((p - (N - 1.6)) / 0.6, 0, 1)) * 0.92, p < 2.6 ? 0 : 0.06);
         const want = (st.hover === id || st.sel === id) ? 1 : 0; G.userData.f += (want - G.userData.f) * (1 - Math.exp(-dt * 7)); G.userData.rv = rv;
         const inView = frustum.intersectsSphere(new THREE.Sphere(G.position, G.userData.radius * 3.2));
-        if (inView || reduced()) G.userData.update(t, reduced() ? 0 : dt, rv, G.userData.f); G.visible = inView; });
+        const far = camera.position.distanceTo(G.position) > 48 + 20 * G.userData.f; G.userData.setFar(far);
+        if ((inView && !far) || reduced()) G.userData.update(t, reduced() ? 0 : dt, rv, G.userData.f); else if (inView) G.userData.core.rotation.y += dt * 0.04; G.visible = inView; });
     }
     const frustum = new THREE.Frustum();
 
@@ -225,18 +226,22 @@
       const t0 = performance.now(); renderer.render(scene, camera); st.cpu.push(performance.now() - t0); if (st.cpu.length > 90) st.cpu.shift();
       adapt(); st.dirty = false; st.lastCam.copy(camera.position);
       const settling = (still ? Math.round(st.target) !== st.p : Math.abs(st.target - st.p) > 1e-4) || Math.abs(st.ptr.tx - st.ptr.x) > 1e-3 || st.flight || st.ret || st.dirty;
-      if (!still || settling || !astroReady) raf = requestAnimationFrame(frame); // reduced motion: render only on change
+      const active = settling || !astroReady || st.hover || now - st.lastInput < 1500;
+      if (active) raf = requestAnimationFrame(frame);
+      else if (!still) { /* idle: the ambient motion is slow, so it renders at 24 fps (6 fps if frames are very slow), leaving the main thread free */
+        const f = st.frames, slow = f.length > 10 && (f[f.length - 1] - f[f.length - 11]) / 10 > 120; idleT = setTimeout(() => { idleT = 0; if (!raf) raf = requestAnimationFrame(frame); }, slow ? 160 : 42); }
+      // reduced motion: render only on change
     }
-    let raf = 0, lastAdapt = 0;
+    let raf = 0, idleT = 0, lastAdapt = 0;
     function adapt() { const f = st.frames; if (f.length < 60 || performance.now() - lastAdapt < 2000) return; const span = (f[f.length - 1] - f[0]) / (f.length - 1);
       const floor = q === 0 ? 0.75 : 1; if (span > 24 && dpr > floor) { dpr = Math.max(floor, +(dpr - 0.2).toFixed(2)); renderer.setPixelRatio(dpr); size(); lastAdapt = performance.now(); } else if (span < 17 && dpr < maxDpr) { dpr = Math.min(maxDpr, +(dpr + 0.1).toFixed(2)); renderer.setPixelRatio(dpr); size(); lastAdapt = performance.now(); } }
-    const start = () => { if (!raf && alive && st.visible && !document.hidden) { st.last = performance.now(); raf = requestAnimationFrame(frame); } };
+    const start = () => { if (idleT) { clearTimeout(idleT); idleT = 0; } if (!raf && alive && st.visible && !document.hidden) { st.last = performance.now(); raf = requestAnimationFrame(frame); } };
     function project(G) { if (!G) return null; tmpV.copy(G.position); const r = G.userData.radius * G.scale.x; const top = tmpV.clone().add(new THREE.Vector3(0, -r * 1.25, 0)); tmpV.project(camera); top.project(camera); const w = stage.clientWidth, h = stage.clientHeight;
       return { x: (tmpV.x * 0.5 + 0.5) * w, y: (-top.y * 0.5 + 0.5) * h, behind: tmpV.z > 1 }; }
 
     /* input */
     let pend = null;
-    const onMove = e => { st.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; st.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; pend = e; start(); };
+    const onMove = e => { st.lastInput = performance.now(); st.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; st.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; pend = e; start(); };
     const pick = e => { const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); rc.setFromCamera(ndc, camera);
       const cores = Object.values(worlds).filter(G => G.visible).map(G => G.userData.core); const h = rc.intersectObjects(cores, false)[0]; return h ? h.object.userData.world : null; };
     const hoverTick = () => { if (pend && !st.flight) { const id = pick(pend); if (id !== st.hover) { st.hover = id; cv.style.cursor = id ? 'pointer' : ''; o.onHover && o.onHover(id); } pend = null; } };
@@ -250,7 +255,7 @@
 
     const api = {
       THREE, stats: () => { const f = st.frames, c = st.cpu.slice().sort((a, b) => a - b); return { fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1] - f[0]) : 0, cpuMedian: c[c.length >> 1] || 0, cpuP95: c[Math.floor(c.length * 0.95)] || 0, dpr, tier: q, worlds: Object.keys(worlds).length, astronaut: astroReady, draws: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures }; },
-      setTarget(p) { st.target = clamp(p, 0, N - 1); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.dirty = true; start(); }, progress: () => st.p, N,
+      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.dirty = true; start(); }, progress: () => st.p, N,
       hover(id) { st.hover = id; st.dirty = true; start(); },
       enter(id, ms) { if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
         if (reduced() || ms === 0) { o.onArrive && o.onArrive(id); return; }
@@ -260,24 +265,37 @@
       returnFrom(id) { const G = worlds[id] || (buildNext(), worlds[id]); if (!G) return; placeWorlds(st.p, st.t, 0); const P = G.position.clone(), r = G.userData.radius * G.scale.x; st.ret = { t0: performance.now() + 60, ms: 1100, p0: P.clone().add(new THREE.Vector3(0, r * 0.2, r * 1.7)), q0: P }; start(); },
       debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p }; },
       debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2) }; },
-      debugRaf: () => !!raf,
+      debugRaf: () => !!raf || !!idleT, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
       buildAll() { while (queue.length) buildNext(); },
       kick: start,
-      destroy() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);
+      destroy() { alive = false; cancelAnimationFrame(raf); clearTimeout(idleT); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);
         Object.values(worlds).forEach(G => G.userData.dispose()); scene.traverse(x => { if (x.geometry) x.geometry.dispose(); const m = x.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); });
         rt.dispose(); renderer.dispose(); renderer.forceContextLoss(); cv.remove(); }
     };
     start(); return api;
   }
 
+  /* ---------- device-aware rendering ----------
+     A software WebGL renderer (no GPU acceleration: SwiftShader, llvmpipe, Microsoft Basic Render) would draw the universe at a
+     few frames a second and keep the page busy; those devices get the painted universe, which tells the same story.
+     ?cosmos=gl (or localStorage erly-cosmos = gl) forces the 3D universe, e.g. for inspection; ?cosmos=flat forces paint. */
+  let softCache = null;
+  const softwareGL = () => { if (softCache !== null) return softCache; softCache = false; try { const c = document.createElement('canvas'), g = c.getContext('webgl'); if (g) { const d = g.getExtension('WEBGL_debug_renderer_info'), r = d ? String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)) : ''; softCache = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(r); const l = g.getExtension('WEBGL_lose_context'); l && l.loseContext(); } } catch (e) { /* no WebGL */ } return softCache; };
+  const cosmosMode = () => { const q = (location.search.match(/[?&]cosmos=(gl|flat)/) || [])[1]; let ls = null; try { ls = localStorage.getItem('erly-cosmos'); } catch (e) { /* */ } return q || ls || 'auto'; };
+  const useGL = () => { const m = cosmosMode(); if (m === 'flat') return false; if (!(LS.has3d && LS.has3d())) return false; return m === 'gl' || !softwareGL(); };
+  LS.cosmosUsesGL = useGL;
+
   /* ---------- painted fallback planets (no WebGL / reduced data) ---------- */
   const orb = (id, big) => { const c = LS.cosmosWorlds.META[id].c; return `<span class="cz-orb${big ? ' cz-orb--big' : ''}" aria-hidden="true" style="--a:${c[0]};--b:${c[1]};--c:${c[2]}"></span>`; };
+
+  /* the painted universe's overview: the eleven worlds on an ellipse, each one a button (shown only without the 3D universe) */
+  const ring = () => { const W = LS.cosmosWorlds; return `<div class="cz-ring">${W.ORDER.map((id, i) => { const a = -Math.PI / 2 + (i / 11) * Math.PI * 2, x = 50 + Math.cos(a) * 38, y = 52 + Math.sin(a) * 30; return `<button type="button" class="cz-ring__w" data-cz-dest="${id}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%">${orb(id)}<span>${esc(W.META[id].name)}</span></button>`; }).join('')}</div>`; };
 
   /* ---------- the route ---------- */
   let current = null;
   function cosmosHome(view) {
     if (current) { current.destroy(); current = null; }
-    const W = LS.cosmosWorlds, M = W.META, C0 = LS.curriculum, K = keyframes(), N = K.length, gl = LS.has3d && LS.has3d();
+    const W = LS.cosmosWorlds, M = W.META, C0 = LS.curriculum, K = keyframes(), N = K.length, gl = useGL();
     const seg = () => (innerWidth < 700 ? 0.8 : 1.05) * innerHeight;
     document.documentElement.classList.add('cz-on');
     view.innerHTML = `<section class="cz${gl ? '' : ' cz--flat'}" aria-label="${T('The ERLY learning universe', 'كون التعلّم في ERLY')}">
@@ -285,7 +303,8 @@
       <div class="cz-track" data-no-rise style="height:${N}00vh">
         <div class="cz-stage">
           <div class="cz-paint" aria-hidden="true"></div>
-          <div class="cz-scenes">${K.map((k, i) => `<div class="cz-scene cz-scene--${k.scene === 'void' ? 'hero' : PATH[k.scene] ? (PATH[k.scene][0] > 0 ? 'left' : 'right') : k.scene === 'all' ? 'all' : 'left'}" data-i="${i}" ${i ? 'hidden' : ''}>${!gl && PATH[k.scene] ? orb(k.scene, true) : ''}<div class="cz-copy">${sceneCopy(k, C0)}</div></div>`).join('')}</div>
+          <div class="cz-flat-origin" aria-hidden="true"></div>
+          <div class="cz-scenes">${K.map((k, i) => `<div class="cz-scene cz-scene--${k.scene === 'void' ? 'hero' : PATH[k.scene] ? (PATH[k.scene][0] > 0 ? 'left' : 'right') : k.scene === 'all' ? 'all' : 'left'}" data-i="${i}" ${i ? 'hidden' : ''}>${!gl && PATH[k.scene] ? orb(k.scene, true) : ''}<div class="cz-copy">${sceneCopy(k, C0)}</div>${k.scene === 'all' ? ring() : ''}</div>`).join('')}</div>
           <div class="cz-label" hidden aria-hidden="true"><b></b><span></span><em>${T('Select to enter', 'اختر للدخول')}</em></div>
           <nav class="cz-rail" aria-label="${T('Journey', 'الرحلة')}">${K.map((k, i) => `<button type="button" data-cz-go="${i}" aria-label="${T('Go to', 'اذهب إلى')}: ${esc(M[k.scene] ? M[k.scene].name : { void: T('The beginning', 'البداية'), light: T('First light', 'الضوء الأول'), universe: T('The universe of knowledge', 'كون المعرفة'), all: T('The whole universe', 'الكون كله') }[k.scene])}"><i></i></button>`).join('')}</nav>
           <div class="cz-tools"><button type="button" class="cz-tool" data-cz-map aria-haspopup="dialog">${T('Destinations', 'الوجهات')}</button><button type="button" class="cz-tool" data-cz-end>${T('All worlds', 'كل العوالم')} ↓</button></div>
@@ -402,7 +421,7 @@
   }
   LS.on('route', ({ area, parts }) => {
     if (worldPlanet) { worldPlanet.then(x => x && x.destroy()); worldPlanet = null; }
-    if (area !== 'world' || !LS.cosmosWorlds.META[parts[1]] || !(LS.has3d && LS.has3d())) return;
+    if (area !== 'world' || !LS.cosmosWorlds.META[parts[1]] || !useGL()) return;
     const head = document.querySelector('#lsView .uv-wh'); if (!head) return; head.classList.add('has-planet'); worldPlanet = mountWorldPlanet(head, parts[1]).catch(() => null);
   });
 

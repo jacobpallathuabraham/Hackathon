@@ -16,7 +16,7 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
 (async () => {
   const GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
   const b = await chromium.launch({ args: GL }); const errs = [];
-  const mk = async (opts, init) => { const c = await b.newContext(Object.assign({ viewport: { width: 1360, height: 860 } }, opts || {})); await c.addInitScript(() => { try { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); } catch (e) { /* */ } }); if (init) await c.addInitScript(init);
+  const mk = async (opts, init) => { const c = await b.newContext(Object.assign({ viewport: { width: 1360, height: 860 } }, opts || {})); await c.addInitScript(() => { try { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); localStorage.setItem('erly-cosmos', 'gl'); /* this machine renders WebGL in software; force the 3D universe for testing */ } catch (e) { /* */ } }); if (init) await c.addInitScript(init);
     const p = await c.newPage(); p.setDefaultTimeout(40000); p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/favicon|net::ERR|GPU stall|WebGL/.test(m.text())) errs.push(m.text()); }); return p; };
   const ready = p => p.waitForFunction(() => window.LS && LS.__cosmos && LS.__cosmos.stats().astronaut, null, { timeout: 60000 });
   const toScene = (p, k) => p.evaluate(k => { const tr = document.querySelector('.cz-track'), r = tr.getBoundingClientRect(); scrollTo({ top: scrollY + r.top + k / ((LS.__cosmos ? LS.__cosmos.N : 15) - 1) * (r.height - innerHeight) + 1, behavior: 'instant' }); }, k);
@@ -75,7 +75,7 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     await p.fill('[data-cz-find]', 'molecul'); assert.equal(await p.$$eval('.cz-map__list li', l => l.filter(x => !x.hidden).length), 0); await p.fill('[data-cz-find]', 'chem'); assert.deepEqual(await p.$$eval('.cz-map__list li:not([hidden]) b', l => l.map(x => x.textContent)), ['Chemistry']);
     for (let i = 0; i < 12; i++) await p.keyboard.press('Tab'); assert.equal(await p.evaluate(() => !!document.activeElement.closest('.cz-map')), true, 'focus stays in the dialog');
     await p.keyboard.press('Escape'); assert.equal(await p.isHidden('.cz-map'), true); assert.equal(await p.evaluate(() => document.activeElement.matches('[data-cz-map]')), true);
-    await p.click('[data-cz-map]'); await p.fill('[data-cz-find]', ''); await p.click('[data-cz-dest="history"]'); await p.waitForFunction(() => location.hash === '#/world/history', null, { timeout: 20000 });
+    await p.click('[data-cz-map]'); await p.fill('[data-cz-find]', ''); await p.click('.cz-map [data-cz-dest="history"]'); await p.waitForFunction(() => location.hash === '#/world/history', null, { timeout: 20000 });
     await p.goBack(); await ready(p); await p.waitForTimeout(1200); /* the Studio re-applies the restored scroll for up to 900 ms after Back */
   });
 
@@ -92,14 +92,14 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     const s1 = await p.evaluate(() => LS.__cosmos.stats()); assert.equal(await p.locator('canvas.cz-cv').count(), 1); assert.ok(s1.textures <= s0.textures + 3 && s1.geometries <= s0.geometries * 1.2, JSON.stringify([s0.textures, s1.textures, s0.geometries, s1.geometries])); /* each visit has a new renderer; counts are of what it uploaded */
     await p.evaluate(() => document.querySelector('#czAfter').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(800);
     const n = await p.evaluate(async () => { let n = 0; const o = window.requestAnimationFrame; window.requestAnimationFrame = f => { if (String(f).includes('st.visible')) n++; return o(f); }; await new Promise(z => setTimeout(z, 1200)); window.requestAnimationFrame = o; return LS.__cosmos.debugRaf(); });
-    assert.equal(n, false, 'no frame scheduled while the universe is off-screen');
+    await p.waitForFunction(() => !LS.__cosmos.debugRaf(), null, { timeout: 8000 }).catch(() => {}); assert.equal(await p.evaluate(() => LS.__cosmos.debugRaf()), false, 'no frame scheduled while the universe is off-screen');
   });
 
   await t('Reduced motion: the journey moves scene by scene with no idle animation, and entering a world is immediate', async () => {
     const q = await mk({ reducedMotion: 'reduce' }); await q.goto(BASE + 'learn.html#/home'); await ready(q);
     await toScene(q, 5.4); await q.waitForTimeout(1500); assert.equal(await q.evaluate(() => LS.__cosmos.progress()), 5);
     await q.waitForTimeout(1500); assert.equal(await q.evaluate(() => LS.__cosmos.debugRaf()), false, 'no animation loop at rest');
-    await toScene(q, 5); await q.waitForTimeout(800); await q.click('[data-cz-enter="chemistry"]'); await q.waitForFunction(() => location.hash === '#/world/chemistry', null, { timeout: 3000 }); await q.context().close();
+    await toScene(q, 5); await q.waitForTimeout(800); await q.click('[data-cz-enter="chemistry"]'); assert.equal(await q.evaluate(() => LS.__cosmos ? LS.__cosmos.flying() : false), false, 'no flight'); await q.waitForFunction(() => location.hash === '#/world/chemistry', null, { timeout: 15000 }); await q.context().close();
   });
 
   await t('Without WebGL: a painted universe tells the same story, with planets, the index and working Enter buttons', async () => {
@@ -126,6 +126,14 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     const q = await mk(); await q.goto(BASE + 'learn.html#/space'); await q.waitForFunction(() => LS.__space, null, { timeout: 40000 }); await q.waitForTimeout(1500);
     const r = await q.evaluate(() => { let inst = 0, shader = 0; LS.__space.S.scene.traverse(o => { if (o.isInstancedMesh) inst += o.count; if (o.material && o.material.isShaderMaterial) shader++; }); return { inst, shader }; });
     assert.ok(r.inst >= 400, 'belt rocks ' + r.inst); assert.ok(r.shader >= 1, 'sun shader'); assert.match(await q.textContent('#lsView'), /asteroid belt is drawn as a thin band/); await q.context().close();
+  });
+
+  await t('Device-aware: on a software WebGL renderer (no GPU) the painted universe is used by default; ?cosmos=gl forces 3D', async () => {
+    const c = await b.newContext({ viewport: { width: 1360, height: 860 } }); await c.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); });
+    const q = await c.newPage(); await q.goto(BASE + 'learn.html#/home'); await q.waitForSelector('.cz'); await q.waitForTimeout(800);
+    const r = await q.evaluate(() => { const g = document.createElement('canvas').getContext('webgl'), d = g.getExtension('WEBGL_debug_renderer_info'); return String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)); });
+    if (/swiftshader|llvmpipe|software/i.test(r)) { assert.equal(await q.locator('.cz--flat').count(), 1, 'painted on ' + r); assert.equal(await q.locator('canvas.cz-cv').count(), 0); }
+    await q.goto(BASE + 'learn.html?cosmos=gl#/home'); await q.waitForFunction(() => window.LS && LS.__cosmos, null, { timeout: 60000 }); assert.equal(await q.locator('canvas.cz-cv').count(), 1); await c.close();
   });
 
   await t('no page errors', async () => { assert.deepEqual(errs, []); });

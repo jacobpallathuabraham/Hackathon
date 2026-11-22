@@ -117,7 +117,7 @@
     const S = solids.map((g, i) => { const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: i % 2 ? 0xe8edff : 0x9fb4ff, roughness: 0.3, metalness: 0.4, flatShading: true })); const w = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 })); m.add(w); G.add(m); return m; });
     const N = 22, sg = new THREE.PlaneGeometry(1.5, 1.5, N, N); const sp = sg.attributes.position; for (let i = 0; i < sp.count; i++) { const x = sp.getX(i), y = sp.getY(i); sp.setZ(i, (x * x - y * y) * 0.5); }
     const saddle = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: 0xbfd0ff, wireframe: true, transparent: true, opacity: 0.28 })); saddle.rotation.x = -Math.PI / 2.4; saddle.position.set(0, r * 1.9, 0); G.add(saddle);
-    return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.05; edges.rotation.copy(core.rotation); rings.rotation.y = t * 0.04; rings.scale.setScalar(0.6 + 0.4 * smooth(rv)); rings.children.forEach(c => { if (c.material) c.material.opacity = 0.42 * rv; });
+    return { core, r, body: [edges], update(t, dt, rv, fc) { core.rotation.y += dt * 0.05; edges.rotation.copy(core.rotation); rings.rotation.y = t * 0.04; rings.scale.setScalar(0.6 + 0.4 * smooth(rv)); rings.children.forEach(c => { if (c.material) c.material.opacity = 0.42 * rv; });
       S.forEach((m, i) => { const a = t * (0.16 + i * 0.015) + i * Math.PI / 3, R = r * (1.05 + 1.05 * smooth(rv)) + 0.08 * Math.sin(t + i); m.position.set(Math.cos(a) * R, Math.sin(a * 1.3 + i) * 0.45 * rv, Math.sin(a) * R); m.rotation.set(t * 0.4 + i, t * 0.3, 0); m.scale.setScalar(0.4 + 0.6 * smooth(rv) + fc * 0.15); });
       saddle.material.opacity = 0.28 * rv; saddle.rotation.z = t * 0.1; saddle.scale.setScalar(0.5 + 0.5 * smooth(rv)); } };
   };
@@ -176,7 +176,7 @@
       if (i < n) { tmp.position.copy(c); tmp.scale.set(1, off.length() * 2, 1); tmp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), off.clone().normalize()); tmp.updateMatrix(); rung.setMatrixAt(i, tmp.matrix); rung.setColorAt(i, new THREE.Color(['#7bd88f', '#ffd36b', '#ff8fa3', '#8fc7ff'][i % 4])); } }
     const strand = pts => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, 0.028, 6, false), new THREE.MeshStandardMaterial({ color: 0xbff5c8, roughness: 0.4, emissive: 0x0d2a14 }));
     dna.add(strand(s1), strand(s2), rung); G.add(dna);
-    return { core, r, update(t, dt, rv, fc) { memU.uT.value = t; memU.uFocus.value = fc; nucleus.rotation.y += dt * 0.1; nucleus.material.uniforms.uT.value = t; const pulse = 1 + 0.015 * Math.sin(t * 1.3); nucleus.scale.setScalar(pulse);
+    return { core, r, body: [membrane, nucleus], update(t, dt, rv, fc) { memU.uT.value = t; memU.uFocus.value = fc; nucleus.rotation.y += dt * 0.1; nucleus.material.uniforms.uT.value = t; const pulse = 1 + 0.015 * Math.sin(t * 1.3); nucleus.scale.setScalar(pulse);
       mito.forEach((m, i) => { m.rotation.y += dt * (0.3 + i * 0.05); m.position.y += Math.sin(t * 0.8 + i) * 0.0008; }); er.rotation.z = t * 0.08;
       dna.rotation.y = t * 0.06; dna.scale.setScalar(0.55 + 0.45 * smooth(rv)); dna.visible = rv > 0.02; } };
   };
@@ -187,7 +187,7 @@
     const clouds = new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: cu, transparent: true, depthWrite: false,
       vertexShader: SURF_V, fragmentShader: `#define OCT ${q >= 2 ? 5 : 4}\n uniform vec3 uSun; uniform float uT; varying vec3 vP; varying vec3 vN; varying vec3 vW; ${NOISE} void main(){ vec3 p=normalize(vP); float c=fbm(p*3.0+vec3(uT*0.006,0.0,0.0)); c=smoothstep(0.05,0.5,c); float l=smoothstep(-0.15,0.5,dot(normalize(vN),uSun)); gl_FragColor=vec4(vec3(1.0)*(0.05+0.95*l),c*0.85); }` }));
     G.add(clouds, atmosphere(THREE, r * 1.1, '#7cc4ff', 1.35));
-    return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.035; clouds.rotation.y += dt * 0.045; cu.uT.value = t; } };
+    return { core, r, body: [clouds], update(t, dt, rv, fc) { core.rotation.y += dt * 0.035; clouds.rotation.y += dt * 0.045; cu.uT.value = t; } };
   };
 
   B.cs = (THREE, q, G) => { // a matte world wrapped in a geodesic network; packets of data travel along its edges; a ring of bits
@@ -277,7 +277,10 @@
   function build(THREE, id, q) {
     if (!SUN.v) SUN.v = new THREE.Vector3(0.62, 0.42, 0.66).normalize();
     const G = new THREE.Group(); G.name = 'world:' + id; const w = B[id](THREE, q, G);
+    /* level of detail: far away, a world is only its body (planet, atmosphere); its structures appear as the camera approaches */
+    const body = new Set([w.core, ...(w.body || [])]); G.children.forEach(c => { const atm = c.material && c.material.blending === THREE.AdditiveBlending && c.material.side === THREE.BackSide; if (!body.has(c) && !atm) c.userData.detail = true; });
     w.core.userData.world = id; G.userData = { id, core: w.core, radius: w.r, reveal: 0, focus: 0,
+      setFar(far) { if (G.userData.far === far) return; G.userData.far = far; G.children.forEach(c => { if (c.userData.detail) c.visible = !far; }); },
       update(t, dt, rv, fc) { G.userData.reveal = rv; G.userData.focus = fc; G.traverse(o => { const u = o.material && o.material.uniforms; if (u && u.uFocus) u.uFocus.value = fc; }); w.update(t, dt, clamp(rv, 0, 1), clamp(fc, 0, 1)); },
       dispose() { G.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };
     return G;

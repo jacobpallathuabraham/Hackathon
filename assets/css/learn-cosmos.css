@@ -142,9 +142,9 @@
 }
 .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-/* the storage card steps aside during the journey (nothing is stored until it is answered) and returns at the start and the end */
+/* the storage card belongs to the opening; it steps aside once the journey starts (nothing is stored until it is answered, and the same choice is in the profile settings) */
 .cz-dock { transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1); }
-.cz[data-scene]:not([data-scene="void"]):not([data-scene="all"]) .cz-dock { opacity: 0; transform: translateY(12px); pointer-events: none; visibility: hidden; }
+.cz[data-scene]:not([data-scene="void"]) .cz-dock { opacity: 0; transform: translateY(12px); pointer-events: none; visibility: hidden; }
 .cz-dock .at-choice p { font-size: .84rem; line-height: 1.45; }
 
 /* a soft scrim behind each text block: worlds may pass behind the words, the words stay readable */
@@ -161,3 +161,29 @@
 
 /* text blocks never block the worlds behind them: only their links and buttons take the pointer */
 .cz-copy, .cz-copy::before { pointer-events: none; } .cz-copy a, .cz-copy button { pointer-events: auto; }
+
+/* lens finish: a soft vignette and a whisper of film grain, composited by CSS (no second render pass on the GPU) */
+.cz-stage::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(1, 2, 8, .55) 100%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.35'/></svg>");
+  background-size: auto, 160px 160px; mix-blend-mode: normal; opacity: .55; }
+@media (prefers-contrast: more) { .cz-stage::after { display: none; } .cz-copy::before { background: rgba(3, 5, 13, .85); } }
+
+/* programmatic jumps on a 15-screen journey are instant (wheel and touch scrolling are unaffected) */
+html.cz-on { scroll-behavior: auto !important; }
+
+/* header wordmark over space (light theme sets it dark) */
+.cz-on:not(.cz-past) .at-brand__word { color: var(--cz-ink) !important; }
+
+/* the painted universe (no GPU acceleration, or no WebGL) */
+.cz-flat-origin, .cz-ring { display: none; }
+.cz--flat .cz-flat-origin { display: block; position: absolute; z-index: 1; width: 110vmax; height: 110vmax; left: -62vmax; bottom: -84vmax; border-radius: 50%;
+  background: radial-gradient(circle at 64% 22%, #6f86e6 0%, #3e57c9 14%, #1a2470 34%, #0b1030 52%, #04050f 70%);
+  box-shadow: 0 0 0 1px rgba(150, 175, 255, .25), 0 0 60px 6px rgba(120, 150, 255, .25), inset 30px 30px 80px rgba(160, 185, 255, .15); opacity: .95; transition: opacity .6s; }
+.cz--flat[data-scene]:not([data-scene="void"]):not([data-scene="light"]) .cz-flat-origin { opacity: 0; }
+.cz--flat .cz-ring { display: block; position: absolute; left: 6vw; right: 6vw; top: 30vh; bottom: 4vh; pointer-events: none; }
+.cz-ring__w { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 8px; appearance: none; background: none; border: 0; color: var(--cz-ink); cursor: pointer; pointer-events: auto; font: 500 .82rem "Instrument Sans", sans-serif; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.cz-ring__w .cz-orb { width: clamp(42px, 6vw, 78px); height: clamp(42px, 6vw, 78px); }
+.cz-ring__w:hover, .cz-ring__w:focus-visible { transform: translate(-50%, -50%) scale(1.08); outline: none; }
+.cz-ring__w:focus-visible span { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 760px) { .cz--flat .cz-ring { top: 36vh; } .cz-ring__w span { font-size: .7rem; max-width: 80px; text-align: center; } }
