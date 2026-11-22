@@ -115,7 +115,7 @@
           else if (e.kind === 'point') { const sc = scope(); const X = e.fx.code.evaluate(sc), Y = e.fy.code.evaluate(sc); P.dot(X, Y, col, `(${N.fmt(X, 3)}, ${N.fmt(Y, 3)})`, { r: 6 }); }
         } catch (er) { e.error = er.message; }
       }
-      if (st.keypts) for (const k of keyPoints()) P.dot(k.x, k.y, c.muted, k.label, { r: 4.5, ring: true, lc: c.muted });
+      if (st.keypts) for (const k of uniqKeys(keyPoints())) P.dot(k.x, k.y, c.muted, k.label, { r: 4.5, ring: true, lc: c.muted });
       if (opts.extraDraw) opts.extraDraw(g, P, api);
       if (hover) { P.dot(hover.x, hover.y, hover.col, `(${N.fmt(hover.x, 3)}, ${N.fmt(hover.y, 3)})`, { r: 6, ring: true, bold: true }); }
     }
@@ -152,6 +152,10 @@
       }
     }
     // roots, turning points and intersections of the visible explicit functions (numerical, labelled as such)
+    // several features can fall on one point (a root that is also a minimum and the y-intercept, or where f and f′ cross):
+    // draw and list them once, labelled by the most informative feature (the typed data in state() keeps every entry)
+    const RANK = { max: 0, min: 0, intersection: 1, root: 2, yint: 3 };
+    function uniqKeys(ks) { const by = new Map(); ks.forEach(k => { const id = Math.round(k.x * 1e4) + ',' + Math.round(k.y * 1e4), cur = by.get(id); if (!cur || (RANK[k.type] ?? 4) < (RANK[cur.type] ?? 4)) by.set(id, Object.assign({}, k, { also: cur ? (cur.also || 0) + 1 : 0 })); else cur.also = (cur.also || 0) + 1; }); return [...by.values()]; }
     function keyPoints() {
       if (!plot || !plot.W) return [];
       const v = plot.view, out = [], fx = st.exprs.filter(e => e.visible && e.kind === 'fx');
@@ -232,7 +236,7 @@
     function prune() { Object.keys(st.params).forEach(k => { if (!k.startsWith('__') && !used(k)) delete st.params[k]; }); }
     function renderTable() { const box = side && side.querySelector('.lab-tbl'); if (!box) return; const rows = table(); box.innerHTML = rows.length ? `<table><thead><tr><th>${esc(rows[0][0])}</th><th>${esc(rows[0][1])}</th></tr></thead><tbody>${rows.slice(1).map(r => `<tr><td>${N.fmt(r[0], 6)}</td><td>${isFinite(r[1]) ? N.fmt(r[1], 6) : T('undefined', 'غير معرّف')}</td></tr>`).join('')}</tbody></table>` : ''; }
     function syncWindow() { if (!side || !plot || !plot.W) return; side.querySelectorAll('[data-v]').forEach(i => { if (document.activeElement !== i) i.value = +plot.view[i.dataset.v].toPrecision(4); }); }
-    function listKeys() { const ul = side && side.querySelector('.lab-kp'); if (!ul) return; const ks = st.keypts ? keyPoints() : []; ul.innerHTML = ks.slice(0, 14).map(k => `<li><i class="lab-kp__${k.type}"></i>${esc(k.label.replace(/^max/, T('maximum', 'قيمة عظمى')).replace(/^min/, T('minimum', 'قيمة صغرى')))}</li>`).join('') || `<li class="lab-sub">${T('None in this window.', 'لا شيء في هذه النافذة.')}</li>`; }
+    function listKeys() { const ul = side && side.querySelector('.lab-kp'); if (!ul) return; const ks = st.keypts ? uniqKeys(keyPoints()) : []; ul.innerHTML = ks.slice(0, 14).map(k => `<li><i class="lab-kp__${k.type}"></i>${esc(k.label.replace(/^max/, T('maximum', 'قيمة عظمى')).replace(/^min/, T('minimum', 'قيمة صغرى')))}</li>`).join('') || `<li class="lab-sub">${T('None in this window.', 'لا شيء في هذه النافذة.')}</li>`; }
     function redraw() { if (!plot) return; plot.render(); syncWindow(); listKeys(); renderTable(); L.explainNow(); }
     function stopAnim() { if (anim) { cancelAnimationFrame(anim.raf); anim.btn.textContent = '▶'; anim = null; } }
 

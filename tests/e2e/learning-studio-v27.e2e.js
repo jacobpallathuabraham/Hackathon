@@ -37,7 +37,7 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
     const card = p.locator('.dx-grid a[href^="#/exp/"], a.dx-card, .dx-card a').first(); await card.scrollIntoViewIfNeeded(); const y0 = await p.evaluate(() => Math.round(scrollY)); const href = await card.getAttribute('href');
     await card.click(); await p.waitForTimeout(1200); await p.click('[data-ls-back]'); await p.waitForTimeout(1400);
     const s = await state(); near(s.y, y0, 4, 'scroll'); assert.equal(s.focus, href, 'focus returns to the card used');
-    assert.equal(await p.evaluate(() => [...document.querySelectorAll('.dx-filter [aria-pressed="true"]')].map(b => b.dataset.fk ?? b.dataset.fs).join(',')), 'construction,maths');
+    assert.equal(await p.evaluate(() => [...document.querySelectorAll('.dx-filter [aria-pressed="true"][data-fk], .dx-filter [aria-pressed="true"][data-fs]')].map(b => b.dataset.fk ?? b.dataset.fs).join(',')), 'construction,maths');
   });
 
   await t('lab models, lessons and topic pages have Back with a breadcrumb; nested navigation unwinds step by step', async () => {

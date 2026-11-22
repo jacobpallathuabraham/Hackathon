@@ -362,7 +362,8 @@
       params: [{ key: 'rpm', label: T('input speed', 'سرعة الإدخال'), unit: 'rpm', min: 1, max: 3000, step: 1 }, { key: 'torque', label: T('input torque', 'عزم الإدخال'), unit: 'N·m', min: 0.1, max: 500, step: 0.1 }, { key: 'eta', label: T('efficiency per mesh', 'الكفاءة لكل تعشيق'), unit: '', min: 0.8, max: 1, step: 0.005 }],
       toggles: [{ key: 'compound', label: T('Compound (pairs share a shaft)', 'مركّب'), live: false }],
       view: S => { const tot = S.teeth.reduce((a, b) => a + b, 0) / 2 + 10; return { x0: -S.teeth[0] / 2 - 5, x1: tot + 5, y0: -tot / 2.4, y1: tot / 2.4 }; },
-      init(S, st) { st.r = P.gearTrain(S.teeth, S.compound, S.rpm, S.torque, S.eta); st.ang = S.teeth.map(() => 0);
+      init(S, st, api) { if (S.compound && S.teeth.length < 3) { S.teeth = S.teeth.concat([15, 45]); if (api && api.fit) setTimeout(() => api.fit(), 0); } // with only two gears “compound” would change nothing: add a second pair (the classic 20-40 | 15-45 train)
+        st.r = P.gearTrain(S.teeth, S.compound, S.rpm, S.torque, S.eta); st.ang = S.teeth.map(() => 0);
         // compound: the gear on a shared shaft sits on top of its partner (drawn offset vertically)
         st.pos = []; let cx = 0; S.teeth.forEach((n, i) => { if (i === 0) st.pos.push([0, 0]); else if (S.compound && i % 2 === 0) st.pos.push([st.pos[i - 1][0], 0]); else { cx = st.pos[i - 1][0] + (S.teeth[i - 1] + n) / 2; st.pos.push([cx, 0]); } });
         st.phase = S.teeth.map((n, i) => (i && !(S.compound && i % 2 === 0) ? Math.PI / n : 0)); },

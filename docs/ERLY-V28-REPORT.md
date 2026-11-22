@@ -1,6 +1,6 @@
 # ERLY Learning Studio — v28 report: Total Experience Reengineering (Phase 3)
 
-**Status: committed and pushed to `claude/erly-hackathon-website-8txbtd`. Not deployed.** The live site is still the v27 build (fdf3605). Nothing goes to gh-pages until you say "Deploy".
+**Status: committed and pushed to `claude/erly-hackathon-website-8txbtd`. Not deployed** — the live site updates when you say “Deploy”. The live site is still the v27 build (fdf3605). Nothing goes to gh-pages until you say "Deploy".
 
 This report covers what Phase 3 actually delivered. It does not cover what the brief asked for. The brief (Parts 1–29) is far larger than one working session. I worked in the priority order the brief set out:
 
@@ -183,40 +183,85 @@ The conserved model is unchanged: the same nine stocks and fluxes, with a total 
 
 ---
 
-## 9–28. The rest of the brief: honest status
+## 9–28. The rest of the brief — status after the second round (v28b)
 
-| # | Area in the brief | Status in v28 |
+After your follow-up ("do the rest properly as well"), a second round added the items below. Each one is tested in `tests/e2e/learning-studio-v28.e2e.js` against independent calculations, or against known-correct forms where there is nothing to calculate.
+
+| # | Area | Status |
 |---|---|---|
-| 9 | Animation language and transitions rebuilt studio-wide | **Partial.** Experience-level motion is new (rectangles growing in, h → 0, camera flights, flowing river, card tilt). The page transitions are still v27's (View Transitions with lsInR/lsInL). |
-| 10 | Quadratic Universe (vertex drag, three forms, challenges) | **Not done.** The existing Quadratic lab (`#/exp/quad-lab`) already has vertex drag and three forms. Challenges were not added. |
-| 11 | Function Forge polish | **Not done** in v28 (v27 version unchanged). |
-| 12 | Other maths experiences improved | **Not done.** |
-| 13 | Physics upgrades: Newton, Projectile, Incline, Gravity, Atmosphere, Light, Sound, Energy, Magnet, Motion graphs, Two waves | **Not done** in v28. |
-| 14 | Black Hole visual upgrade | **Not done.** |
-| 15 | Chemistry: molecule/atom builders, periodic table search and links, shapes, balancer, titration, collisions, states | **Not done** in v28 (v26 molecule work unchanged). |
-| 16 | Biology: DNA, Punnett, predator–prey, enzyme, osmosis, nerve, leaf zoom, RBC, cell | **Not done.** |
-| 17 | Geography: plates, greenhouse, core journey, seasons | **Not done.** The Water Cycle is done (item 6). |
-| 18 | CS: sorting, bits, logic gates with signals, pathfinding frontier | **Not done.** |
-| 19 | English: word builder, sentence workshop, story architect | **Not done.** |
-| 20 | Languages beyond two experiences | **Not done.** |
-| 21 | History: timelines, maps, evidence | **Not done.** No sources were invented. |
-| 22 | Social science, city budget | **Not done.** |
-| 23 | Economics and psychology: market, money, memory | **Not done.** |
-| 24 | Dashboard rebuild: hierarchy, discovery by concept/type/time/objective, Knowledge Map, Journey | **Partial.** Only the depth/tilt layer was added. The dashboard structure is still v27's. |
-| 25 | Noor context | **Not done** in v28. |
-| 26 | Visual Lab: systematic review of 174 models | **Not done. I have not verified 174 models** and make no such claim. The auditable record was not produced in this phase. |
-| 27 | Responsive design check of the new work | **Partial.** The new experiences use the kit stage, which scales to its container. The cursor layer turns off on touch (tested at a 390 px phone context). There is no dedicated phone screenshot pass of the new pages. |
-| 28 | Visual polish pass across the Studio | **Partial.** Polish was applied to the three rebuilt or new experiences only. |
+| 9 | Animation language | **Done for the rebuilt and new experiences:** rectangles grow in; h → 0; camera flights; a flowing river; signal pulses travelling through logic gates with propagation delay; frontier expansion in path finding; card tilt and depth. Page transitions are still v27's View Transitions. |
+| 10 | Quadratic Universe | **Done as an upgrade** of `quad-lab`, which already had vertex drag and three forms. Four live-checked **challenges** were added: roots −1 and 3; touch at −2; maximum 5; vertex (2, 1) through (0, 5). |
+| 11 | Function Forge polish | Unchanged since v27, which built it. |
+| 12 | Other maths | The Differentiation and Integration explorers (above) are new. |
+| 13 | Physics upgrades | **Partial.** Black hole: see item 14. Newton, Projectile, Incline, Gravity, Atmosphere, Light, Sound, Energy, Magnet, Motion graphs and Two waves are not changed in v28. |
+| 14 | Black Hole visual upgrade | **Done.** A new **observer's camera**: exact shadow radius 3√3⁄2 r_s; photon ring; accretion disk from the ISCO (3 r_s) at an adjustable inclination; **Doppler beaming** δ⁴ with Keplerian speeds and gravitational redshift; the lensed over-the-top image (labelled approximate). There is also **gravitational time dilation** for the probe. Tested: no beaming face-on, the exact δ⁴ ratio edge-on, and √(1 − r_s/r). |
+| 15 | Chemistry | **Partial.** The periodic table gains **search** (name, symbol or number; Enter selects) and **links to the atom and molecule builders** and the reaction lab. Titration, collision theory and particle states are unchanged. |
+| 16 | Biology | **Partial.** New: **Dihybrid cross**, with a 4 × 4 gamete grid, 9:3:3:1 and the 1:1:1:1 test cross, random crops from a cryptographic RNG, and a **χ² test** (Mendel's 1866 counts give χ² = 0.47). DNA, predator–prey, enzyme, osmosis, nerve, leaf, RBC and cell are unchanged. |
+| 17 | Geography | The Water Cycle is rebuilt (item 6). Plates, greenhouse, core and seasons are unchanged. |
+| 18 | Computer science | **Path finder rebuilt:** BFS, **Dijkstra**, A* and **Greedy** on terrain with **step costs** (mud = 5); the **frontier** is shown separately from explored cells; **g-cost labels**; **step mode**. Tested against an independent Dijkstra. **Logic gates:** animated **signal propagation** with gate delays. Sorting and bits are unchanged. |
+| 19 | English | New: **Story architect**. It offers three story shapes, a draggable tension curve and five structure checks, and never marks writing or stores it. |
+| 20 | Languages | **Two new experiences, so four in total:** **Number words**, Spanish and French up to 9 999 999, rule-coloured, with a self-test; and **Telling the time**, with a draggable clock in Spanish and French. 29 spellings and 16 times are tested. |
+| 21 | History | Unchanged. No sources were invented. |
+| 22 | Social science | New: **Voting systems**, which counts one ballot profile by plurality, two-round runoff, instant runoff, Borda and Condorcet, with a head-to-head table. The example claims ("four different winners", "a cycle") were verified by computation. The city budget is unchanged. |
+| 23 | Economics / psychology | Unchanged. |
+| 24 | Dashboard discovery | **Added:** discovery **by time** (quick ≤ 6 min, 7–10, deep dive 11+), with Back restoring it; and **full-text concept search** across every experience's introduction and explanation (for example "evaporation" finds the Water Cycle). The depth layer is from round one. The Knowledge Map and Journey pages are unchanged. |
+| 25 | Noor context | **Bug fixed.** Asking Noor from *any* experience sent a prompt about a model called "undefined" and dropped the live state. It now sends the experience's title and its live readings. Tested. |
+| 26 | Visual Lab: 174 models | **An automated audit was run over every model** (`tools/audit-visual-lab.js`, results in `docs/ERLY-VISUAL-LAB-AUDIT.md`). See the section below for what it proves and what it does not. |
+| 27 | Responsive | New pages use the kit stage, which scales to its container, and responsive grids. The story beats stack below 640 px. Cursor depth is off on touch (tested). No full phone screenshot pass was done. |
+| 28 | Polish | Applied across everything built or rebuilt in v28. |
 
-## Tests run (actual results)
-All suites were run against `python3 -m http.server 8765` with headless Chromium:
+## Visual Lab audit (174 models): what was done
+
+- **The tool:** `tools/audit-visual-lab.js` opens **every** Visual Lab model through the Studio (`#/lab/<id>`) in headless Chromium and records, per model:
+  - whether it **built** (no error message, no page error);
+  - whether it **painted** (canvas pixels, SVG or JSXGraph drawn);
+  - whether it **explains itself with numbers**;
+  - whether each **visible** control (up to six) changes what the student sees.
+
+  Change is judged from a screenshot of the model area (so canvas, SVG, WebGL and HTML all count) plus the readouts. A model that animates by itself is **paused first**, so a control's effect can be seen. **Speed** controls are tested for what they do: simulated time per real second is measured at 1× and 4×. The output is `docs/ERLY-VISUAL-LAB-AUDIT.md` (a table per model) and `docs/bench/visual-lab-audit.json`.
+- **Real defects found and fixed:**
+  - Overlapping key-point labels where several features coincide (for example a root that is also a minimum and the y-intercept). These rendered as "(0(0(0(0)0)". They are now drawn once, labelled by the most informative feature, in `lab-math.js`, which the student portal also loads. The typed data the tests read is unchanged.
+  - (In experiences) Noor received "undefined" instead of an experience's title and state, and the dihybrid chart was blank after a resize.
+- **Harness false positives, corrected rather than hidden:**
+  - Hidden controls: the Speed selector inside the Run group is hidden on static models, so students never see it.
+  - WebGL canvases.
+  - Self-animating models.
+  - A slow first JSXGraph load: geometry now gets one fresh-page retry.
+- **What it does not prove:** the audit is mechanical. It shows each model works and responds; it does **not** prove that its physics or maths is right. Numeric correctness is proven only where an independent test exists (the "Independent test" column, **42 of 174** models). The others have not had their numbers independently re-derived in this phase, and the report says so per model.
+- **Remaining flags:** these are listed in the audit file for a human look. Examples are a toggle with nothing to show in the default state (the graphing calculator opens with no functions, so "show roots" marks nothing), and a playback control on a simulation that finishes quickly.
+
+## Tests run (actual results, final run)
+All suites ran against `python3 -m http.server 8765` in headless Chromium.
 
 | Suite | Result |
 |---|---|
-| `learning-studio-v28` | **13/13** |
-| `learning-studio-v27`, `-v26`, `-v24`, `-v23`, `-v22`, `-v21`, `learning-studio`, `learn-inspect` | see the regression section below (filled in from the actual run) |
-| Content validator | 0 errors |
-| axe (4 pages × 2 themes) | clean |
+| `learning-studio-v28` (new) | **21/21** |
+| `learning-studio-v27` | 14/14 (81 experiences walked by Back navigation)¹ |
+| `learning-studio-v26` | 14/14 (174 lab models opened, 172 drag-tested) |
+| `learning-studio-v24` | 42/42, including the existing pathfinding and logic tests against the rebuilt versions |
+| `learning-studio-v23` | 18/18 |
+| `learning-studio-v22` | 22/22 |
+| `learning-studio-v21` | 21/21 |
+| `learning-studio` | 34/34 |
+| `learn-inspect` | 14/14 (314 live routes; the guide matches) |
+| `lab` | 34/34, no page errors |
+| `problems` | 14/14 |
+| `visual-chat` | 18/18 |
+| `nav`, `a11y`, `studio-noor` | all checks passed |
+| Content validator | 0 errors, 2 reviewed by hand |
+| axe (WCAG 2.1 A/AA), every new or changed page × light/dark | clean, after fixing the periodic table's pre-existing grid roles and 47 contrast failures |
+| Visual Lab audit | **164 / 174** models pass every automated check; 31 Speed controls verified to speed up the simulation; remaining flags reviewed (below) |
+
+¹ The v27 filter assertion was narrowed to the kind and subject buttons, because the new time filter adds a third pressed button by design. Back still restores all three.
+
+**The 10 remaining Visual Lab flags, each looked at:**
+- **graph** "show roots": the model opens with no functions, so there is nothing to mark.
+- **calculus** "normal line": works; confirmed by screenshot.
+- **algebra**: a text model with no controls.
+- **rigid** and **atwood** "Speed": the simulation finishes inside the measurement window.
+- **unitcircle** "Rotate" and **chromatography** "Run the solvent": these act only while playing.
+- **superpose** and **induction** "Graph": the graph changes when the model is used normally.
+- **gears** "Compound": a **real issue**. With the default two gears it could change nothing. Now fixed: it switches to the classic 20-40 | 15-45 compound train (6:1, 20 rpm, 57.62 N·m, all checked).
 
 ## Files
 - **New:**

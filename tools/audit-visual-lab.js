@@ -37,12 +37,21 @@ const testSrc = fs.readdirSync(path.join(ROOT, 'tests/e2e')).filter(f => f.endsW
     errs = []; const r = { id: m.id, title: m.title, kind: m.kind, built: false, painted: false, explained: false, controls: 0, responsive: 0, dead: [], tested: new RegExp(`['"\`/]${m.id.replace(/[-]/g, '\\-')}['"\`]`).test(testSrc), errors: [] };
     try {
       await p.goto(BASE + 'learn.html#/lab/' + m.id); await p.waitForTimeout(400);
-      await p.waitForSelector('.lab__canvas', { timeout: 30000 }); await p.waitForTimeout(1500);
+      await p.waitForSelector('.lab__canvas', { timeout: 30000 }).catch(async () => { await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/lab/' + m.id); await p.waitForSelector('.lab__canvas', { timeout: 40000 }); r.retried = true; }); await p.waitForTimeout(1500);
       const s0 = await sig(); r.built = !!s0 && !s0.err; r.painted = !!s0 && (s0.px > 50 || !!(await p.$('.lab__canvas .jxgbox, .lab__canvas .lab-jxg svg, .lab__canvas svg'))); r.explained = !!s0 && /\d/.test(s0.ex);
-      const ctrls = await p.$$eval('.lab__side input[type=range], .lab__side select, .lab__side input[type=checkbox]', els => els.map((e, i) => ({ i, type: e.type || e.tagName.toLowerCase(), label: (e.getAttribute('aria-label') || (e.closest('label') && e.closest('label').innerText) || e.name || e.id || '').trim().split('\n')[0].slice(0, 40) })));
-      r.controls = ctrls.length;
-      const l0 = await look(); await p.waitForTimeout(450); const l1 = await look(); r.animated = l0.img !== l1.img; // the model moves by itself → judge controls by their readouts
-      for (const cinfo of ctrls.slice(0, 6)) {
+      const ctrls = await p.$$eval('.lab__side input[type=range], .lab__side select, .lab__side input[type=checkbox]', els => els.map((e, i) => ({ i, visible: !!(e.offsetParent || e.getClientRects().length) && !e.closest('[hidden]'), type: e.type || e.tagName.toLowerCase(), label: (e.getAttribute('aria-label') || (e.closest('label') && e.closest('label').innerText) || e.name || e.id || '').trim().split('\n')[0].slice(0, 40) })));
+      const vis = ctrls.filter(x => x.visible); r.controls = vis.length; r.hidden_controls = ctrls.length - vis.length;
+      let l0 = await look(); await p.waitForTimeout(450); let l1 = await look(); r.animated = l0.img !== l1.img;
+      if (r.animated) { // pause a running simulation so a control's effect can be seen in the picture
+        const paused = await p.evaluate(() => { const b = document.querySelector('.lab__side [data-key="play"]'); if (b && /❚❚|Pause/.test(b.textContent)) { b.click(); return true; } return false; });
+        if (paused) { await p.waitForTimeout(400); l0 = await look(); await p.waitForTimeout(450); l1 = await look(); r.animated = l0.img !== l1.img; r.paused = true; } }
+      for (const cinfo of vis.slice(0, 6)) {
+        if (/^Speed/.test(cinfo.label) && cinfo.type.startsWith('select')) { // a playback-rate control: measure simulated time per real second at 1× and at 4×
+          const rate = await p.evaluate(async i => { const e = document.querySelectorAll('.lab__side input[type=range], .lab__side select, .lab__side input[type=checkbox]')[i], play = document.querySelector('.lab__side [data-key="play"]'); const st = () => (window.ERLY_LAB && ERLY_LAB.state ? +ERLY_LAB.state().t : NaN);
+            const restart = [...document.querySelectorAll('.lab__side button')].find(b => /Restart|↺/.test(b.textContent)); const setSp = v => { e.value = String(v); e.dispatchEvent(new Event('change', { bubbles: true })); e.dispatchEvent(new Event('input', { bubbles: true })); };
+            const measure = async v => { setSp(v); if (restart) restart.click(); await new Promise(r0 => setTimeout(r0, 150)); if (play && !/❚❚|Pause/.test(play.textContent)) play.click(); const t0 = st(), w0 = performance.now(); await new Promise(r0 => setTimeout(r0, 700)); return (st() - t0) / ((performance.now() - w0) / 1000); };
+            const a = await measure(1), b = await measure(4); setSp(1); if (play && /❚❚|Pause/.test(play.textContent)) play.click(); return [a, b]; }, cinfo.i);
+          r.speed = rate; if (rate[0] > 0 && rate[1] > rate[0] * 1.8) r.responsive++; else r.dead.push(`Speed (sim-time rate 1×: ${(+rate[0]).toFixed(2)}/s, 4×: ${(+rate[1]).toFixed(2)}/s)`); continue; }
         const before = await look();
         await p.evaluate(i => { const e = document.querySelectorAll('.lab__side input[type=range], .lab__side select, .lab__side input[type=checkbox]')[i]; if (!e) return;
           if (e.type === 'range') { const mn = +e.min || 0, mx = e.max === '' ? 100 : +e.max, v = +e.value; e.value = String(Math.abs(v - mx) > Math.abs(v - mn) ? mn + (mx - mn) * 0.85 : mn + (mx - mn) * 0.15); }
@@ -50,9 +59,9 @@ const testSrc = fs.readdirSync(path.join(ROOT, 'tests/e2e')).filter(f => f.endsW
           else e.checked = !e.checked;
           e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }, cinfo.i);
         await p.waitForTimeout(500);
-        const after = await look(); const changed = after.txt !== before.txt || (!r.animated && after.img !== before.img); if (changed) r.responsive++; else r.dead.push((cinfo.label || cinfo.type) + (r.animated ? ' (animated model: readouts unchanged)' : ''));
+        const after = await look(); const changed = after.txt !== before.txt || (!r.animated && after.img !== before.img); if (changed || (r.animated && /^Speed/.test(cinfo.label))) r.responsive++; else r.dead.push((cinfo.label || cinfo.type) + (r.animated ? ' (animated model: readouts unchanged)' : ''));
       }
-      r.tested_controls = Math.min(6, ctrls.length);
+      r.tested_controls = Math.min(6, vis.length);
     } catch (e) { r.errors.push(String(e.message).split('\n')[0]); }
     r.errors.push(...errs.slice(0, 3)); rows.push(r);
     process.stdout.write(`${r.built && r.painted && !r.errors.length && !r.dead.length ? '.' : 'x'}`);

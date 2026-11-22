@@ -120,3 +120,12 @@ html.ls-depth .ls-tilt:active { transform: perspective(900px) scale(.97); }
 .pt .pt__el.is-match { outline: 3px solid var(--accent, #3b6fe0); outline-offset: 1px; z-index: 1; }
 .pt__links a { font-weight: 700; }
 .ql__ch { margin-top: .8rem; }
+.dh__grid { overflow-x: auto; margin: .6rem 0; }
+.dh__t { border-collapse: separate; border-spacing: 4px; margin: 0 auto; }
+.dh__t caption { font-weight: 700; margin-bottom: 6px; }
+.dh__t th { font: 700 .95rem var(--f-mono, ui-monospace); padding: 4px 8px; }
+.dh__t td { min-width: 92px; padding: 6px 8px; border-radius: 10px; text-align: center; background: color-mix(in srgb, var(--c) 26%, transparent); border: 2px solid color-mix(in srgb, var(--c) 70%, transparent); }
+.dh__t td b { display: block; font: 700 .95rem var(--f-mono, ui-monospace); } .dh__t td small { font-size: .72rem; }
+/* periodic table: dark text on a light tint of each category colour (WCAG AA in both themes) */
+.pt__el { background: color-mix(in srgb, var(--c) 52%, #fff); color: #10131a; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 85%, #000 0%); }
+.pt__el small { opacity: 1; }

@@ -198,7 +198,7 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
     await p.fill('#lsView [data-who="name"]', 'Mira'); await p.fill('#lsView [data-who="want"]', 'to find her lost brother');
     for (let i = 0; i < 5; i++) await p.fill(`#lsView [data-beat="${i}"]`, 'Something happens in this part of the story.');
     await p.evaluate(() => { const r = document.querySelector('#lsView [data-bt="1"]'); r.value = 95; r.dispatchEvent(new Event('input', { bubbles: true })); });
-    const s1 = await p.evaluate(() => LS.exp.live._check()); assert.deepEqual(s1, [true, true, false, true, false], 'a beat above the climax is caught');
+    const s1 = await p.evaluate(() => LS.exp.live._check()); assert.deepEqual(s1, [true, true, false, true, true], 'a beat above the climax is caught (tension still falls after the climax)');
     assert.match(await p.innerText('#lsView .sa__check'), /Right now it is at “Rising action”/);
   });
 
@@ -223,6 +223,13 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
     await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/exp/periodic'); await p.waitForSelector('#lsView .pt__el'); await p.waitForTimeout(500);
     const f = await p.evaluate(() => [LS.exp.live._find('fe'), LS.exp.live._find('26'), LS.exp.live._find('chl'), LS.exp.live._find('xx')]); assert.deepEqual(f, [[26], [26], [17], []]);
     await p.fill('#lsView [data-pts]', 'neon'); await p.press('#lsView [data-pts]', 'Enter'); await p.waitForTimeout(200); assert.match(await p.innerText('#lsView .kx-read'), /Neon \(Ne\)/); assert.match(await p.innerText('#lsView .pt__links'), /build its atom/);
+  });
+
+  await t('Dihybrid cross: 9:3:3:1 and 1:1:1:1 from the grid; Mendel’s counts give χ² = 0.47; samples are counted correctly', async () => {
+    await open('dihybrid', '.dh__t'); const r = await p.evaluate(() => { const A = LS.exp.live; return { f2: A._cross('RrYy', 'RrYy'), tc: A._cross('RrYy', 'rryy'), pure: A._cross('RRYY', 'rryy'), chi: A._chi({ 'round yellow': 315, 'round green': 108, 'wrinkled yellow': 101, 'wrinkled green': 32 }, 556, 'RrYy', 'RrYy'), s: A._grow(1000) }; });
+    assert.deepEqual(Object.values(r.f2), [9, 3, 3, 1]); assert.deepEqual(Object.values(r.tc), [4, 4, 4, 4]); assert.deepEqual(Object.values(r.pure), [16, 0, 0, 0]);
+    const e = [9, 3, 3, 1].map(k => 556 * k / 16), o = [315, 108, 101, 32], x2 = o.reduce((s0, v, i) => s0 + (v - e[i]) ** 2 / e[i], 0); near(r.chi.x2, x2, 1e-9, 'χ²'); near(x2, 0.470, 0.001, 'Mendel χ²'); assert.equal(r.chi.df, 3); assert.equal(r.chi.ok, true);
+    assert.equal(Object.values(r.s.counts).reduce((a, b) => a + b, 0), 1000, 'sample size'); assert.ok(Math.abs(r.s.counts['round yellow'] / 1000 - 9 / 16) < 0.07, 'round yellow ≈ 9/16');
   });
 
   await t('v28 canvases are painted after opening (no blank models)', async () => {
