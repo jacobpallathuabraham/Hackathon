@@ -116,13 +116,13 @@ const fact = n => (n <= 1 ? 1 : n * fact(n - 1));
   await t('Assessment numeric answers are recomputed independently', async () => {
     await go('home', '.uv-hero');
     const A = await p.evaluate(() => LS.ASSESSDATA);
-    const want = { 'p-rotation': [2.4, 4.0], 'm-pc': [336, 56, 48, 120], 'm-probability': [+(5 / 36).toFixed(3), +(30 / 90).toFixed(3), +(19 / 117).toFixed(3), 3 * 3.5 - 5], 'm-diff': [12, (3.1 ** 2 - 9) / 0.1, 19], 'm-int': [9, 0 + 1 + 4, 75], 'm-bayes': [+(4 / 13).toFixed(3)], 'm-stats': [4], 'p-projectile': [+(400 / 9.81).toFixed(1)], 'cs-data': [53], 'x-markets': [1000 * 1.05 ** 2, 5], 'p-circuits': [3, 36], 'm-quadratics': [3], 'c-acids': [3] };
+    const want = { 'p-rigid': [2 * 9 / 12 + 2 * 1.5 ** 2, +Math.sqrt(2 * 9.8 * 1.4 / (1 + 0.4)).toFixed(2)], 'p-relativity': [+(2 * 6.674e-11 * 1.989e30 / 2.998e8 ** 2 / 1000).toFixed(2), +Math.sqrt(1 - 1 / 4).toFixed(3)], 'm-discrete': [40 - (25 + 18 - 7), (7 * 6 * 5) / (3 * 2 * 1)], 'm-stochastic': [Math.sqrt(0.25 / 400), 4], 'cs-graphs': [Math.min(4 + 1, 1 + 5, 1 + 2 + 1)], 'b-popgen': [+(2 * (1 - Math.sqrt(1 / 2500)) * Math.sqrt(1 / 2500)).toFixed(3)], 'p-rotation': [2.4, 4.0], 'm-pc': [336, 56, 48, 120], 'm-probability': [+(5 / 36).toFixed(3), +(30 / 90).toFixed(3), +(19 / 117).toFixed(3), 3 * 3.5 - 5], 'm-diff': [12, (3.1 ** 2 - 9) / 0.1, 19], 'm-int': [9, 0 + 1 + 4, 75], 'm-bayes': [+(4 / 13).toFixed(3)], 'm-stats': [4], 'p-projectile': [+(400 / 9.81).toFixed(1)], 'cs-data': [53], 'x-markets': [1000 * 1.05 ** 2, 5], 'p-circuits': [3, 36], 'm-quadratics': [3], 'c-acids': [3] };
     Object.entries(want).forEach(([ch, vals]) => { const nums = A[ch].filter(q => q[0] === 'numeric').map(q => q[2].num); vals.forEach((v, i) => near(nums[i], v, 1e-6, ch + ' #' + i)); });
   });
   await t('World and chapter pages: tabs and level filter; blueprint shows objectives, prerequisites, concept map, 11 steps, mastery and next', async () => {
     await go('world/maths', '.uv-tabs');
     for (const tab of ['chapters', 'experiences', 'practice', 'cards', 'assess', 'overview']) { await p.click(`#lsView [data-wt="${tab}"]`); await p.waitForTimeout(150); assert.equal(await p.getAttribute(`#lsView [data-wt="${tab}"]`, 'aria-selected'), 'true'); }
-    await p.selectOption('#lsView [data-wl]', 'pg'); await p.waitForTimeout(150); assert.deepEqual(await p.$$eval('#lsView .uv-ch b', x => x.map(e => e.textContent)), ['Bayesian reasoning']);
+    await p.selectOption('#lsView [data-wl]', 'pg'); await p.waitForTimeout(150); assert.deepEqual(await p.$$eval('#lsView .uv-ch b', x => x.map(e => e.textContent)), ['Bayesian reasoning', 'Random processes and Monte Carlo']);
     await go('chapter/m-pc', '.uv-steps'); assert.equal(await p.$$eval('#lsView .uv-steps li', x => x.length), 11);
     const txt = await p.innerText('#lsView'); assert.match(txt, /multiplication principle/i); assert.match(txt, /Mastery/); assert.match(txt, /Next chapter: Probability/); assert.match(txt, /Commonly taught in/);
     assert.ok(await p.$('#lsView .uv-cmap'));

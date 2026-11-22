@@ -18,7 +18,7 @@
   const LS = window.LS, T = LS.T, esc = LS.esc, IL = s => (LS.inline ? LS.inline(s) : esc(s));
   const TYPES = { concept: 'Concept', definition: 'Definition', recall: 'Recall', formula: 'Formula', application: 'Application', misconception: 'Misconception', comparison: 'Comparison', visual: 'Visual', reasoning: 'Reasoning' };
   const DAY = 864e5, BOX = [0, 1, 3, 7, 16];
-  const deck = ch => (LS.DECKDATA[ch] || []).map((s, i) => { const [type, front, back] = s.split('|'); return { i, type, front, back, ch }; });
+  const deck = ch => (LS.DECKDATA[ch] || []).map((s, i) => { const k1 = s.indexOf('|'), k2 = s.indexOf('|', k1 + 1), type = s.slice(0, k1), front = s.slice(k1 + 1, k2), back = s.slice(k2 + 1); /* a '|' inside the answer stays in the answer; data uses ∣ (U+2223) for P(A ∣ B) */ return { i, type, front, back, ch }; });
   const quiz = ch => (LS.ASSESSDATA[ch] || []).map(([kind, prompt, opts, answer, explain, mis, obj], i) => ({ i, kind, prompt, opts, answer, explain, mis, obj }));
   LS.decks = { byChapter: deck, all: () => Object.keys(LS.DECKDATA), TYPES };
   LS.assess = { byChapter: ch => (LS.ASSESSDATA[ch] ? quiz(ch) : null), grade: (q, resp) => (q.kind === 'numeric' ? Math.abs(+resp - q.opts.num) <= q.opts.tol + 1e-12 && String(resp).trim() !== '' : +resp === q.answer) };

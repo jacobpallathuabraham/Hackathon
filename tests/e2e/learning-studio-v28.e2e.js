@@ -127,8 +127,8 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
     const w = await p.evaluate(() => { const lo = __api._sim({ T: 15, perm: 1 }, 40); const a = __api._view().river; __api._sim({ perm: 0 }, 40); const b = __api._view().river; return [a, b]; }); assert.ok(w[1] > w[0], 'paved ground → wider river ' + w);
   });
 
-  await t('Cursor depth: a mouse sets --cx/--cy and tilts only the hovered card; touch and reduced motion turn it off', async () => {
-    await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(1500);
+  await t('Cursor depth: a mouse sets --cx/--cy and tilts only the hovered card (Experience finder, the former dashboard); touch and reduced motion turn it off', async () => {
+    await p.goto(BASE + 'learn.html#/finder'); await p.waitForTimeout(1500);
     assert.equal(await p.evaluate(() => document.documentElement.classList.contains('ls-depth')), true);
     const card = p.locator('#lsView .dx-card').first(); await card.evaluate(e => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(300); const cb = await card.boundingBox();
     await p.mouse.move(cb.x + cb.width * 0.8, cb.y + cb.height * 0.3, { steps: 3 }); await p.waitForTimeout(120);
@@ -137,7 +137,7 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
     await p.mouse.move(5, 5); await p.waitForTimeout(150); assert.equal(await p.evaluate(() => document.querySelectorAll('.ls-tilt').length), 0, 'leaving the card resets it');
     for (const opts of [{ hasTouch: true, isMobile: true, viewport: { width: 390, height: 800 } }, { reducedMotion: 'reduce' }]) {
       const c2 = await b.newContext(opts); await c2.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); });
-      const q = await c2.newPage(); await q.goto(BASE + 'learn.html#/home'); await q.waitForTimeout(1200);
+      const q = await c2.newPage(); await q.goto(BASE + 'learn.html#/finder'); await q.waitForTimeout(1200);
       assert.equal(await q.evaluate(() => document.documentElement.classList.contains('ls-depth')), false, JSON.stringify(opts)); await c2.close();
     }
   });
@@ -203,7 +203,7 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
   });
 
   await t('Dashboard discovery: time filter and concept search narrow the experiences; Noor receives an experience’s title and live state', async () => {
-    await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(1500);
+    await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/finder'); await p.waitForTimeout(1500);
     await p.fill('#lsView [data-fq]', 'evaporation'); await p.waitForFunction(() => document.querySelectorAll('#lsView .dx-grid a[href="#/exp/water-cycle"]').length > 0, null, { timeout: 15000 }); let hrefs = await p.$$eval('#lsView .dx-grid a', a => a.map(x => x.getAttribute('href'))); assert.ok(hrefs.includes('#/exp/water-cycle') && hrefs.length < 6, 'concept search: ' + hrefs);
     await p.fill('#lsView [data-fq]', ''); await p.click('#lsView [data-ft="s"]'); await p.click('#lsView [data-more]').catch(() => {}); await p.waitForTimeout(200);
     hrefs = await p.$$eval('#lsView .dx-grid a', a => a.map(x => x.getAttribute('href').split('/').pop())); const mins = await p.evaluate(ids => ids.map(id => (LS.experiences.find(x => x.id === id) || {}).mins), hrefs);

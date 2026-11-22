@@ -28,7 +28,7 @@ const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', n
 
   await t('navigation: five places, sub-places follow the route', async () => {
     assert.deepEqual(await p.$$eval('#atTabs a[data-env]', a => a.map(x => x.dataset.env)), ['home', 'explore', 'learn', 'practise', 'workspace']);
-    await go('revise'); assert.equal(await p.getAttribute('#atTabs a[data-env="practise"]', 'aria-current'), 'page'); assert.equal(await p.textContent('#atSub a[aria-current]'), 'Flashcards');
+    await go('revise'); assert.equal(await p.getAttribute('#atTabs a[data-env="practise"]', 'aria-current'), 'page'); assert.equal(await p.textContent('#atSub a[aria-current]'), 'My cards'); /* v29: the spaced-repetition page is “My cards”; “Flashcards” is the structured chapter decks */
     await go('explore/topics'); assert.equal(await p.textContent('#atSub a[aria-current]'), 'Topics');
     await go('home'); assert.equal(await p.isHidden('#atSub'), true);
   });

@@ -52,6 +52,7 @@
     if (a === 'assess') { const ch = LS.curriculum && LS.curriculum.chapter(p[1]); sec('explore'); if (ch) c.push({ r: 'chapter/' + ch.id, l: ch.title }); c.push({ l: T('Chapter check', 'فحص الفصل') }); return c; }
     if (a === 'space' || a === 'path' || a === 'constellation' || a === 'curiosity') { sec('explore'); c.push({ l: { space: T('Solar System Explorer', 'مستكشف النظام الشمسي'), path: T('Learning path', 'مسار التعلّم'), constellation: T('Knowledge Constellation', 'كوكبة المعرفة'), curiosity: T('Curiosity', 'الفضول') }[a] }); return c; }
     if (a === 'discover') { sec('explore'); c.push({ l: SECTION.discover }); return c; }
+    if (a === 'finder') { sec('explore'); c.push({ l: T('Experience finder', 'باحث التجارب') }); return c; }
     if (a === 'inspect' && p[1]) { const s = subj(p[1]); sec('inspect'); c.push({ l: s ? s.name : p[1] }); return c; }
     if (a === 'practice' && p[1]) { sec('practice'); c.push({ l: T('Practice session', 'جلسة تدريب') }); return c; }
     if (a === 'mylibrary' && p[1]) { sec('mylibrary'); c.push({ l: SECTION[p[1]] || p[1] }); return c; }

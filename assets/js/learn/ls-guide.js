@@ -37,7 +37,10 @@
       clearInterval(poll); LS.guide.current = null;
       if (mem.mode === 'independent') { card.hidden = true; highlight(null); return; }
       card.hidden = false;
-      if (mem.mode === 'discover') { highlight(null); const ins = String(def.explain || '').split(/(?<=\.)\s+/)[0]; card.innerHTML = `<p class="gd-k">${T('Discover', 'اكتشف')}</p><p>${mem.insight ? IL(ins) : T('Explore freely — change anything and watch what happens. An insight appears once you start.', 'استكشف بحرية.')}</p>`; return; }
+      card.hidden = false;
+      /* Discover keeps the stage in view: no card until the student has changed something, then a one-line insight */
+      if (mem.mode === 'discover') { highlight(null); const ins = String(def.explain || '').split(/(?<=\.)\s+/)[0]; card.hidden = !mem.insight; card.classList.add('gd-card--slim'); card.innerHTML = mem.insight ? `<p><b class="gd-k">${T('Insight', 'فكرة')}</b> ${IL(ins)}</p>` : ''; return; }
+      card.classList.remove('gd-card--slim');
       // guided
       const i = Math.min(mem.step, steps.length); if (i >= steps.length) { highlight(null); card.innerHTML = `<p class="gd-k">${T('Guided', 'موجّه')} · ${T('complete', 'مكتمل')}</p><p><b>${T('You have completed every step.', 'أكملت كل الخطوات.')}</b> ${T('Try the What-if comparison, or the chapter check.', 'جرّب المقارنة أو فحص الفصل.')}</p><div class="gd-nav"><button type="button" class="ls-btn ls-btn--sm ls-btn--quiet" data-gd="restart">${T('Restart guide', 'أعد الدليل')}</button>${chapterLink()}</div>`; return; }
       const s = steps[i]; LS.guide.current = { exp: x.id, step: i + 1, of: steps.length, title: s.t, say: LS.plain ? LS.plain(s.say) : s.say };

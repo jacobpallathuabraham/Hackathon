@@ -32,7 +32,7 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
   });
 
   await t('Back restores the scroll position, the filters and the keyboard focus of the page it returns to', async () => {
-    await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(1500);
+    await p.goto(BASE + 'learn.html#/finder'); await p.waitForTimeout(1500);
     await p.click('.dx-filter [data-fk="construction"]'); await p.click('.dx-filter [data-fs="maths"]'); await p.waitForTimeout(200);
     const card = p.locator('.dx-grid a[href^="#/exp/"], a.dx-card, .dx-card a').first(); await card.scrollIntoViewIfNeeded(); const y0 = await p.evaluate(() => Math.round(scrollY)); const href = await card.getAttribute('href');
     await card.click(); await p.waitForTimeout(1200); await p.click('[data-ls-back]'); await p.waitForTimeout(1400);
@@ -58,7 +58,7 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
 
   await t('a deep link opens with Back to the logical parent, which replaces the entry (no Back loop); rapid clicks move one step', async () => {
     const q = await ctx.newPage(); await q.goto(BASE + 'learn.html#/exp/water-cycle'); await q.waitForTimeout(1500);
-    const len0 = await q.evaluate(() => history.length); await q.click('[data-ls-back]'); await q.waitForTimeout(800); assert.equal(await q.evaluate(() => location.hash), '#/subject/geography'); assert.equal(await q.evaluate(() => history.length), len0, 'the parent replaced the entry: no new history, so Back cannot loop');
+    const len0 = await q.evaluate(() => history.length); await q.click('[data-ls-back]'); await q.waitForTimeout(800); assert.equal(await q.evaluate(() => location.hash), '#/world/geography'); assert.equal(await q.evaluate(() => history.length), len0, 'the parent replaced the entry: no new history, so Back cannot loop');
     await q.click('[data-ls-back]'); await q.waitForTimeout(800); assert.equal(await q.evaluate(() => location.hash), '#/explore');
     await q.evaluate(() => { location.hash = '#/exp/prob-lab'; }); await q.waitForTimeout(800); await q.evaluate(() => { const b = document.querySelector('[data-ls-back]'); b.click(); b.click(); b.click(); }); await q.waitForTimeout(900); assert.equal(await q.evaluate(() => location.hash), '#/explore');
     await q.close();

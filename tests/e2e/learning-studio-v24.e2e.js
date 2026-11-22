@@ -10,7 +10,7 @@ const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg}: ${a
 (async () => {
   const b = await chromium.launch(); const errs = [];
   const fresh = async (opts, entered = true) => { const c = await b.newContext(Object.assign({ viewport: { width: 1440, height: 900 } }, opts || {})); await c.addInitScript(e => { sessionStorage.setItem('acubins-role', 'student'); if (e) sessionStorage.setItem('ls-entered', '1'); }, entered); const p = await c.newPage(); p.setDefaultTimeout(10000); p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/favicon|net::ERR/.test(m.text())) errs.push(m.text()); }); return p; };
-  const p = await fresh(); await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(1500);
+  const p = await fresh(); await p.goto(BASE + 'learn.html#/finder'); await p.waitForTimeout(1500);
   const go = async (h, w) => { await p.evaluate(x => { location.hash = '#/' + x; }, h); await p.waitForTimeout(w || 1000); };
   const open = async id => { await go('exp/' + id, 1300); await p.click('.at-x__steps [data-step="explore"]').catch(() => {}); await p.waitForTimeout(400); };
   const obs = async () => { await p.click('.at-x__steps [data-step="observe"]'); await p.waitForTimeout(250); const s = (await p.textContent('.at-x__panel')).replace(/\s+/g, ' '); await p.click('.at-x__steps [data-step="explore"]'); return s; };
@@ -19,14 +19,14 @@ const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg}: ${a
   const read = () => p.evaluate(() => document.querySelector('.at-x__stage .kx-read').textContent);
 
   /* ---------- dashboard ---------- */
-  await t('dashboard: the orrery, a single h1, search, modes, discovery of all experiences, and the earlier plan below', async () => {
+  await t('dashboard (now the Experience finder): the orrery, a single h1, search, modes, discovery of all experiences, and the earlier plan below', async () => {
     assert.ok(await p.isVisible('.dx-orrery')); assert.equal(await p.locator('h1').count(), 1); assert.equal(await p.locator('.dx-worlds a').count(), 11);
     const n = await p.evaluate(() => LS.experiences.length); assert.ok(n >= 64, 'experiences ' + n); assert.match(await p.textContent('.dx-h2 small'), new RegExp(n + ' interactive'));
     assert.ok(await p.locator('.dx-plan .at-home').count() === 1 || await p.locator('.dx-plan__in > *').count() >= 1);
   });
   await t('dashboard search finds experiences and topics, and Enter opens the first result', async () => {
     await p.fill('.dx-search__in', 'titration'); await p.waitForTimeout(150); assert.match(await p.textContent('.dx-search__res'), /Titration curve/);
-    await p.press('.dx-search__in', 'Enter'); await p.waitForTimeout(1000); assert.equal(await p.evaluate(() => location.hash), '#/exp/titration'); await go('home', 1200);
+    await p.press('.dx-search__in', 'Enter'); await p.waitForTimeout(1000); assert.equal(await p.evaluate(() => location.hash), '#/exp/titration'); await go('finder', 1200);
   });
   await t('discovery filters by kind and by subject; “Show all” reveals everything', async () => {
     await p.click('[data-fs="chemistry"]'); await p.waitForTimeout(150); const ch = await p.$$eval('.dx-card b', e => e.length); assert.ok(ch >= 7, 'chemistry ' + ch);
@@ -34,7 +34,7 @@ const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg}: ${a
     await p.click('[data-fk=""]'); await p.click('[data-more]'); assert.equal(await p.locator('.dx-card').count(), await p.evaluate(() => LS.experiences.length));
   });
   await t('choosing a world on the orrery dives into that subject', async () => { await p.evaluate(() => scrollTo(0, 0)); await p.click('[data-world-go="biology"]'); await p.waitForTimeout(1400); assert.equal(await p.evaluate(() => location.hash), '#/subject/biology'); });
-  await t('Explore shows all eleven subject worlds, each with its own animated scene', async () => { await go('explore', 1500); assert.equal(await p.locator('.at-wcard').count(), 11); assert.equal(await p.evaluate(() => [...document.querySelectorAll('.at-wcard canvas')].filter(c => { const g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 400) if (d[i] > 0) return true; return false; }).length), 11, 'every world card is painted'); });
+  await t('Explore shows all eleven subject worlds, each with its own animated scene', async () => { await go('explore', 1500); assert.equal(await p.locator('.uv-world').count(), 11); assert.equal(await p.evaluate(() => [...document.querySelectorAll('.uv-world canvas')].filter(c => { const g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 400) if (d[i] > 0) return true; return false; }).length), 11, 'every world card is painted'); });
 
   /* ---------- every experience opens and computes an observation ---------- */
   await t('all experiences open without errors and their “Observe” step is computed from the model', async () => {
@@ -123,9 +123,9 @@ const close = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, `${msg}: ${a
     const q = await fresh({ reducedMotion: 'reduce' }, false); await q.goto(BASE + 'learn.html#/home'); await q.waitForTimeout(800); assert.equal(await q.locator('.at-enter').count(), 0);
     await q.evaluate(() => { location.hash = '#/exp/projectile'; }); await q.waitForTimeout(1200); await q.click('.at-x__steps [data-step="explore"]'); await q.click('.at-x__stage [data-kb="go"]'); await q.waitForTimeout(400); assert.match(await q.textContent('.at-x__stage .kx-read'), /range 40\.\d m/); await q.context().close();
   });
-  await t('phone: no horizontal overflow on the dashboard and on six experiences', async () => {
+  await t('phone: no horizontal overflow on the home, the Experience finder and on six experiences', async () => {
     const q = await fresh({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); await q.goto(BASE + 'learn.html#/home'); await q.waitForTimeout(1200);
-    for (const h of ['home', 'exp/molecule-3d', 'exp/fn-play', 'exp/periodic', 'exp/dna', 'exp/sorting', 'exp/market']) { await q.evaluate(x => { location.hash = '#/' + x; }, h); await q.waitForTimeout(1100); const w = await q.evaluate(() => document.documentElement.scrollWidth); assert.ok(w <= 392, h + ' width ' + w); }
+    for (const h of ['home', 'finder', 'explore', 'world/maths', 'chapter/p-rotation', 'cards/m-pc', 'space', 'exp/rotation-lab', 'exp/counting-studio', 'exp/probability-lab', 'exp/molecule-3d', 'exp/fn-play', 'exp/periodic', 'exp/dna', 'exp/sorting', 'exp/market']) { await q.evaluate(x => { location.hash = '#/' + x; }, h); await q.waitForTimeout(1100); const w = await q.evaluate(() => document.documentElement.scrollWidth); assert.ok(w <= 392, h + ' width ' + w); }
     await q.context().close();
   });
 

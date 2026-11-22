@@ -60,7 +60,7 @@ html.a11y-still .uv *, html.a11y-still .fc * { transition: none !important; anim
 .uv-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: .6rem 0 0; } .uv-meta span { padding: .25rem .65rem; border-radius: 999px; background: rgba(255,255,255,.13); font-size: .82rem; }
 .uv-wbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; position: sticky; top: var(--ls-sticky, 0); z-index: 3; padding: .4rem; border-radius: 16px; background: color-mix(in srgb, var(--surface, #fff) 92%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line, #e3e7ee); }
 .uv-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
-.uv-tabs button { padding: .45rem .85rem; border-radius: 12px; border: 0; background: transparent; color: inherit; font: 600 .92rem inherit; cursor: pointer; }
+.uv-tabs button { padding: .45rem .85rem; border-radius: 12px; border: 0; background: transparent; color: inherit; font-family: inherit; font-weight: 600; font-size: .92rem; cursor: pointer; }
 .uv-tabs button[aria-selected="true"] { background: var(--sc, var(--accent)); color: #fff; }
 .uv-tabs button:focus-visible { outline: 2px solid var(--sc, var(--accent)); outline-offset: 2px; }
 .uv-level { display: flex; gap: 6px; align-items: center; font-weight: 600; font-size: .9rem; } .uv-level select { font: inherit; padding: .35rem .5rem; border-radius: 10px; border: 1px solid var(--line, #cfd6e4); background: var(--bg, #fff); color: inherit; }
@@ -135,7 +135,7 @@ html.a11y-still .uv *, html.a11y-still .fc * { transition: none !important; anim
 .as__opt { display: flex; gap: 10px; align-items: flex-start; padding: .7rem .9rem; border-radius: 14px; border: 1.5px solid var(--line, #d4dae5); background: var(--surface, #fff); cursor: pointer; transition: border-color .2s; }
 .as__opt:hover { border-color: var(--accent, #3b6fe0); } .as__opt:has(input:checked) { border-color: var(--accent, #3b6fe0); background: color-mix(in srgb, var(--accent, #3b6fe0) 7%, transparent); }
 .as__opt.is-right { border-color: #1f8a4c; background: color-mix(in srgb, #1f8a4c 10%, transparent); } .as__opt.is-wrong { border-color: #c0392b; background: color-mix(in srgb, #c0392b 9%, transparent); }
-.as__num input { font: 600 1.05rem inherit; padding: .5rem .7rem; border-radius: 12px; border: 1.5px solid var(--line, #cfd6e4); width: 10rem; background: var(--bg, #fff); color: inherit; }
+.as__num input { font-family: inherit; font-weight: 600; font-size: 1.05rem; padding: .5rem .7rem; border-radius: 12px; border: 1.5px solid var(--line, #cfd6e4); width: 10rem; background: var(--bg, #fff); color: inherit; }
 .as__num input[aria-invalid="true"] { border-color: #c0392b; }
 .as__fb { padding: .8rem 1rem; border-radius: 14px; margin: .6rem 0; } .as__fb.is-ok { background: color-mix(in srgb, #1f8a4c 10%, transparent); } .as__fb.is-no { background: color-mix(in srgb, #c0392b 9%, transparent); }
 .as__need { color: #c0392b; font-weight: 600; } .as__objs { list-style: none; padding: 0; display: grid; gap: 4px; }
@@ -143,7 +143,7 @@ html.a11y-still .uv *, html.a11y-still .fc * { transition: none !important; anim
 /* ---------- guided layer ---------- */
 .gd-bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; margin: 0 0 .5rem; }
 .gd-modes { display: inline-flex; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--ink, #111) 7%, transparent); }
-.gd-modes button { padding: .35rem .8rem; border: 0; border-radius: 999px; background: transparent; color: inherit; font: 600 .85rem inherit; cursor: pointer; }
+.gd-modes button { padding: .3rem .75rem; border: 0; border-radius: 999px; background: transparent; color: inherit; font-family: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; }
 .gd-modes button[aria-checked="true"] { background: var(--surface, #fff); box-shadow: 0 2px 8px -3px rgba(0,0,0,.3); }
 .gd-tools { display: flex; flex-wrap: wrap; gap: 6px; }
 .gd-card { padding: .8rem 1rem; border-radius: 16px; margin: 0 0 .6rem; border: 1px solid color-mix(in srgb, var(--accent, #3b6fe0) 35%, var(--line, #e3e7ee)); background: color-mix(in srgb, var(--accent, #3b6fe0) 6%, var(--surface, #fff)); animation: gdIn .4s var(--ease-out); }
@@ -208,3 +208,6 @@ html { scrollbar-gutter: stable; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .uv-steps i { color: color-mix(in srgb, var(--sc, #5468ff) 55%, #fff); } }
 .ls-btn kbd, .fc__actions kbd { opacity: 1; background: color-mix(in srgb, currentColor 18%, transparent); }
 .sp-info .v26-hint { color: rgba(226, 231, 246, .82); }
+
+.gd-card--slim { padding: .45rem .8rem; } .gd-card--slim .gd-k { margin-right: .35em; }
+.gd-card[hidden] { display: none; }
