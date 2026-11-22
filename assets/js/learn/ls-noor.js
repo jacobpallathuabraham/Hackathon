@@ -51,8 +51,8 @@
     ask(kind, c) {
       c = c || {};
       if (kind === 'mistake') c = Object.assign({}, c, { q: LS.plain(c.q.prompt) ? c.q : c.q, lesson: c.lesson || LS.lesson(c.q.lesson) });
-      const text = kind === 'mistake' ? PROMPTS.mistake({ q: clip(LS.plain(c.q.prompt), 600), answer: clip(c.answer, 300) }) : kind === 'compare' ? PROMPTS.compare(c) : kind === 'model' ? PROMPTS.model({ text: modelTitle(c.engine) }) : PROMPTS[kind]({ text: clip(c.text, 1200) });
-      const ctx = contextFor(kind, Object.assign({}, c, kind === 'model' ? { text: modelTitle(c.engine) } : {}));
+      const text = kind === 'mistake' ? PROMPTS.mistake({ q: clip(LS.plain(c.q.prompt), 600), answer: clip(c.answer, 300) }) : kind === 'compare' ? PROMPTS.compare(c) : kind === 'model' ? PROMPTS.model({ text: (c.engine ? modelTitle(c.engine) : clip(c.text, 1200)) }) : PROMPTS[kind]({ text: clip(c.text, 1200) });
+      const ctx = contextFor(kind, Object.assign({}, c, kind === 'model' ? { text: (c.engine ? modelTitle(c.engine) : clip(c.text, 1200)) } : {}));
       LS.noor.lastSent = { at: Date.now(), kind, label: LABELS[kind], prompt: text, context: ctx };
       if (!C() || !C().ask) { LS.dialog(`<h2 id="lsDlgT">${T('Noor is not available here', 'نور غير متاحة هنا')}</h2><p>${T('Noor could not load on this page. Your request was not sent anywhere.', 'لم يُرسل طلبك.')}</p><button class="ls-btn" data-close type="button">OK</button>`); return; }
       const w = where(); LS.toast((w.online ? T('Asking Noor online — ', 'أسأل نور عبر الإنترنت — ') : T('Asking Noor on this device — ', 'أسأل نور على هذا الجهاز — ')) + w.label);

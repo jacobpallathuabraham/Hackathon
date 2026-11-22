@@ -75,21 +75,26 @@
     summary: ['AND, OR, XOR, NAND, NOR.', 'Truth tables list every input combination (2ⁿ rows).', 'Gates combine into any logical function.'],
     build(host, c) {
       let A = 1, B = 0, C = 1, g1 = 'AND', g2 = 'OR'; const goals = { and3: false, odd: false };
+      // v28: signals travel — gate 1 settles after a short delay, gate 2 after a longer one (propagation delay)
+      const pr = K.spring(1, 2.2); let tA = 0, d1 = null, d2 = null; const kickProp = () => { pr.set(0, true); pr.set(1); M.add(pr); M.kick(); };
       const S = K.stage(host, 800, 260);
-      const ctl = K.controls(host, [{ k: 'chips', id: 'g1', label: T('Gate 1', 'البوابة 1'), opts: Object.keys(GATES).map(g => [g, g]), val: 'AND' }, { k: 'chips', id: 'g2', label: T('Gate 2', 'البوابة 2'), opts: Object.keys(GATES).map(g => [g, g]), val: 'OR' }, { k: 'row' }, { k: 'btn', id: 'A', label: T('Toggle A', 'بدّل A') }, { k: 'btn', id: 'B', label: T('Toggle B', 'بدّل B') }, { k: 'btn', id: 'C', label: T('Toggle C', 'بدّل C') }, { k: 'end' }], (id, v) => { if (id === 'g1') g1 = v; if (id === 'g2') g2 = v; if (id === 'A') A ^= 1; if (id === 'B') B ^= 1; if (id === 'C') C ^= 1; M.draw(); table(); c.onChange(); });
+      const ctl = K.controls(host, [{ k: 'chips', id: 'g1', label: T('Gate 1', 'البوابة 1'), opts: Object.keys(GATES).map(g => [g, g]), val: 'AND' }, { k: 'chips', id: 'g2', label: T('Gate 2', 'البوابة 2'), opts: Object.keys(GATES).map(g => [g, g]), val: 'OR' }, { k: 'row' }, { k: 'btn', id: 'A', label: T('Toggle A', 'بدّل A') }, { k: 'btn', id: 'B', label: T('Toggle B', 'بدّل B') }, { k: 'btn', id: 'C', label: T('Toggle C', 'بدّل C') }, { k: 'end' }], (id, v) => { if (id === 'g1') g1 = v; if (id === 'g2') g2 = v; if (id === 'A') A ^= 1; if (id === 'B') B ^= 1; if (id === 'C') C ^= 1; kickProp(); table(); c.onChange(); });
       const tb = document.createElement('div'); host.appendChild(tb); const read = readout(host);
       const out = (a, b, cc) => GATES[g2](GATES[g1](a, b), cc);
-      K.drag(S, () => [{ id: 'A', x: 60, y: 60, r: 22 }, { id: 'B', x: 60, y: 140, r: 22 }, { id: 'C', x: 60, y: 210, r: 22 }], id => { if (id === 'A') A ^= 1; if (id === 'B') B ^= 1; if (id === 'C') C ^= 1; M.draw(); table(); c.onChange(); });
+      K.drag(S, () => [{ id: 'A', x: 60, y: 60, r: 22 }, { id: 'B', x: 60, y: 140, r: 22 }, { id: 'C', x: 60, y: 210, r: 22 }], id => { if (id === 'A') A ^= 1; if (id === 'B') B ^= 1; if (id === 'C') C ^= 1; kickProp(); table(); c.onChange(); });
       function table() { const rows = []; for (let i = 0; i < 8; i++) { const a = (i >> 2) & 1, b = (i >> 1) & 1, cc = i & 1; rows.push([a, b, cc, GATES[g1](a, b), out(a, b, cc)]); }
         const sig = rows.map(r => r[4]).join(''); if (sig === '00000001') goals.and3 = true; if (sig === '01101001') goals.odd = true;
         tb.innerHTML = `<table class="kx-tbl"><tr><th>A</th><th>B</th><th>C</th><th>${g1}(A,B)</th><th>${T('Output', 'المخرج')}</th></tr>${rows.map(r => `<tr class="${r[0] === A && r[1] === B && r[2] === C ? 'is-cur' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><b>${r[4]}</b></td></tr>`).join('')}</table>`;
         read.innerHTML = IL(`Output is 1 for **${rows.filter(r => r[4]).length} of 8** input combinations. ${goals.and3 ? '✓ You built “all three are 1”. ' : ''}${goals.odd ? '✓ You built the odd-parity circuit. ' : ''}`); }
-      const M = K.motor(c, host, () => {
-        const Pl = K.pal(), G = S.g; S.clear(Pl.bg2); const on = Pl.green, off = Pl.grey, o1 = GATES[g1](A, B), o2 = GATES[g2](o1, C);
-        const wire = (pts, v) => { G.strokeStyle = v ? on : off; G.lineWidth = v ? 5 : 3; G.beginPath(); pts.forEach(([x, y], i) => i ? G.lineTo(x, y) : G.moveTo(x, y)); G.stroke(); };
+      const M = K.motor(c, host, dt => {
+        const Pl = K.pal(), G = S.g; S.clear(Pl.bg2); const on = Pl.green, off = Pl.grey, n1 = GATES[g1](A, B), n2 = GATES[g2](n1, C); tA += dt || 0;
+        if (d1 === null || pr.v > 0.35 || K.reduced()) d1 = n1; if (d2 === null || pr.v > 0.8 || K.reduced()) d2 = n2; const o1 = d1, o2 = d2, busy = pr.v < 0.999 && !K.reduced();
+        const wire = (pts, v) => { G.strokeStyle = v ? on : off; G.lineWidth = v ? 5 : 3; G.beginPath(); pts.forEach(([x, y], i) => i ? G.lineTo(x, y) : G.moveTo(x, y)); G.stroke();
+          if (v && busy) { let L0 = 0; const seg = pts.slice(1).map((q, i) => { const l = Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]); L0 += l; return [pts[i], q, l]; }); G.fillStyle = '#fff'; for (let d = (tA * 140) % 28; d < L0; d += 28) { let r = d; for (const [a0, b0, l] of seg) { if (r <= l) { G.beginPath(); G.arc(a0[0] + (b0[0] - a0[0]) * r / l, a0[1] + (b0[1] - a0[1]) * r / l, 3, 0, 7); G.fill(); break; } r -= l; } } }
+          const [lx, ly] = pts[pts.length - 2]; K.text(G, String(v), lx + 8, ly - 8, { w: 800, s: 12, c: v ? on : Pl.muted }); };
         wire([[80, 60], [260, 60], [260, 85], [300, 85]], A); wire([[80, 140], [260, 140], [260, 115], [300, 115]], B); wire([[380, 100], [520, 100], [520, 125], [560, 125]], o1); wire([[80, 210], [520, 210], [520, 155], [560, 155]], C); wire([[640, 140], [700, 140]], o2);
         const gate = (x, y, name) => { G.fillStyle = Pl.bg; G.strokeStyle = Pl.ink; G.lineWidth = 2.5; K.rr(G, x, y, 80, 60, 14); G.fill(); G.stroke(); K.text(G, name, x + 40, y + 36, { a: 'center', w: 800, s: 15 }); };
-        gate(300, 70, g1); gate(560, 110, g2);
+        gate(300, 70, g1); gate(560, 110, g2); if (busy) K.text(G, pr.v < 0.35 ? T('signal travelling to gate 1…', 'الإشارة تنتقل إلى البوابة 1…') : pr.v < 0.8 ? T('gate 1 settled — signal travelling to gate 2…', 'البوابة 1 استقرت…') : T('output settled', 'المخرج استقر'), 400, 245, { a: 'center', s: 12, c: Pl.muted });
         [['A', 60, A], ['B', 140, B], ['C', 210, C]].forEach(([n, y, v]) => { G.fillStyle = v ? on : Pl.bg; G.strokeStyle = Pl.ink; G.lineWidth = 2; G.beginPath(); G.arc(60, y, 20, 0, 7); G.fill(); G.stroke(); K.text(G, `${n}=${v}`, 60, y + 5, { a: 'center', w: 800, c: v ? '#fff' : Pl.ink }); });
         G.fillStyle = o2 ? '#ffd84a' : Pl.bg; G.beginPath(); G.arc(730, 140, 26, 0, 7); G.fill(); G.strokeStyle = Pl.ink; G.stroke(); K.text(G, String(o2), 730, 147, { a: 'center', w: 800, s: 20 });
       });

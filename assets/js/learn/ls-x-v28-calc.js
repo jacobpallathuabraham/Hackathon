@@ -254,4 +254,20 @@
       };
     }
   };
+  /* ======================= QUADRATIC LAB: challenges (v28) ======================= */
+  const QCH = [
+    ['roots', 'Make a parabola with roots at x = −1 and x = 3.', 'جذران عند −1 و 3.', (a, h, k) => Math.abs(a) > 0.04 && Math.abs(h - 1) < 0.051 && Math.abs(k + 4 * a) < 0.06, 'Roots −1 and 3 → axis of symmetry x = 1, and y = a(x + 1)(x − 3) has its vertex at k = −4a.'],
+    ['touch', 'Make it just touch the x-axis at x = −2.', 'يلامس المحور عند −2.', (a, h, k) => Math.abs(a) > 0.04 && Math.abs(h + 2) < 0.051 && Math.abs(k) < 0.051, 'One repeated root: the vertex sits on the axis at (−2, 0), so the discriminant is 0.'],
+    ['max', 'Make it open downwards with a maximum value of 5.', 'مفتوح لأسفل وقيمته العظمى 5.', (a, h, k) => a < -0.04 && Math.abs(k - 5) < 0.051, 'a < 0 opens downwards; the maximum value is the vertex height k.'],
+    ['point', 'Vertex (2, 1) and passing through (0, 5).', 'الرأس (2، 1) ويمر بـ (0، 5).', (a, h, k) => Math.abs(h - 2) < 0.051 && Math.abs(k - 1) < 0.051 && Math.abs(a * 4 + k - 5) < 0.06, 'y = a(x − 2)² + 1 through (0, 5): 4a + 1 = 5, so a = 1.']
+  ];
+  const qdef = D['quad-lab'];
+  if (qdef) { const oldQ = qdef.build; qdef.explore = (qdef.explore || '') + '\n- Try the **challenges**: each is checked from the live parabola.'; qdef.build = function (host, c) {
+    const base = oldQ(host, c); const box = document.createElement('div'); box.className = 'v26-card ql__ch'; box.innerHTML = `<h3>${T('Challenges', 'تحديات')}</h3><div class="v26-out" aria-live="polite"></div>`; host.appendChild(box);
+    const done = {}; const val = id => +host.querySelector(`[data-k="${id}"]`).value;
+    const check = () => { const a = val('a'), h = val('h'), k = val('k'); QCH.forEach(([id, , , ok]) => { if (ok(a, h, k)) done[id] = true; });
+      box.querySelector('.v26-out').innerHTML = `<ul class="v28-checks">${QCH.map(([id, en, ar, ok, why]) => `<li>${done[id] ? '<span class="v28-ok">✓</span>' : '<span class="v28-todo">○</span>'} ${esc(T(en, ar))}${ok(a, h, k) ? ` <b>${T('Yes — right now!', 'نعم!')}</b> <span class="v26-hint">${esc(why)}</span>` : ''}</li>`).join('')}</ul>`; return QCH.map(([id, , , ok]) => ok(a, h, k)); };
+    const mo = new MutationObserver(check); const cards = host.querySelector('.kx-cards'); if (cards) mo.observe(cards, { childList: true, subtree: true, characterData: true });
+    host.addEventListener('input', check); check();
+    return Object.assign({}, base, { destroy() { mo.disconnect(); base.destroy && base.destroy(); }, reset() { Object.keys(done).forEach(k => delete done[k]); base.reset && base.reset(); check(); }, _qch: (a, h, k) => QCH.map(([id, , , ok]) => [id, ok(a, h, k)]), _check: check }); }; }
 })();

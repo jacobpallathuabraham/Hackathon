@@ -19,7 +19,7 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
   const p = await ctx.newPage(); p.setDefaultTimeout(15000);
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error' && !/favicon|net::ERR/.test(m.text())) errs.push(m.text()); });
   const api = id => p.evaluate(id => { const h = document.createElement('div'); h.style.cssText = 'position:fixed;left:-9999px;width:900px'; document.body.appendChild(h); window.__api = LS.exp.DEFS[id].build(h, LS.exp.ctx()); return true; }, id);
-  const open = async id => { await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/exp/' + id); await p.waitForSelector('#lsView .kx-cv'); await p.waitForTimeout(900); };
+  const open = async (id, sel) => { await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/exp/' + id); await p.waitForSelector('#lsView ' + (sel || (id === 'number-words' ? '.nw__out' : '.kx-cv'))); await p.waitForTimeout(900); };
   const box = async sel => { const el = p.locator(sel).first(); await el.evaluate(e => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(250); return el.boundingBox(); };
 
   await t('both explorers are registered with Back breadcrumbs and open from the maths world', async () => {
@@ -150,6 +150,81 @@ const riem = (f, a, b, n, m) => { const dx = (b - a) / n; let s = 0; for (let i 
     assert.ok(!r.missing, 'both activities found: ' + JSON.stringify(r.missing));
     assert.deepEqual(r.g, [true, false, true, false], 'grader: c = 4 right, 0 wrong; c = 3 right, 5 wrong'); assert.match(r.a1, /c = 4/); assert.match(r.a2, /c = 3/);
   });
+  await t('Path finder (rebuilt): on mud terrain BFS returns a dearer path; Dijkstra and A* both find the cheapest (checked by an independent Dijkstra); A* explores fewer cells', async () => {
+    await open('pathfind'); await p.evaluate(() => { window.__api = LS.exp.live; __api._terrain(); });
+    const r = await p.evaluate(() => ({ b: __api._search('bfs'), d: __api._search('dijkstra'), a: __api._search('astar'), g: __api._search('greedy') }));
+    // independent Dijkstra on the same terrain (example terrain: mud x 8–24, y 5–13; walls x=16 y 0–4 and y=15 x 10–22)
+    const W = 32, H = 18, wall = new Set(), mud = new Set(); for (let x = 8; x <= 24; x++) for (let y = 5; y <= 13; y++) mud.add(x + ',' + y); for (let y = 0; y < 5; y++) wall.add('16,' + y); for (let x = 10; x <= 22; x++) wall.add(x + ',15');
+    const dist = { '2,9': 0 }, done = new Set(); for (;;) { let best = null; for (const k in dist) if (!done.has(k) && (best === null || dist[k] < dist[best])) best = k; if (best === null || best === '29,9') break; done.add(best); const [x, y] = best.split(',').map(Number); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, nk = nx + ',' + ny; if (nx < 0 || ny < 0 || nx >= W || ny >= H || wall.has(nk)) continue; const nd = dist[best] + (mud.has(nk) ? 5 : 1); if (!(nk in dist) || nd < dist[nk]) dist[nk] = nd; } }
+    assert.equal(r.d.cost, dist['29,9'], 'Dijkstra cost = independent optimum'); assert.equal(r.a.cost, dist['29,9'], 'A* cost = optimum');
+    assert.ok(r.b.cost > r.d.cost, `BFS ignores costs: ${r.b.cost} > ${r.d.cost}`); assert.ok(r.b.path.length <= r.d.path.length, 'BFS has the fewest steps');
+    assert.ok(r.a.order.length < r.d.order.length, `A* explored ${r.a.order.length} < Dijkstra ${r.d.order.length}`); assert.ok(r.g.order.length <= r.a.order.length, 'greedy explores least');
+    await p.click('#lsView [data-kb="dijkstra"]'); await p.waitForFunction(() => /Dijkstra\**: explored \d+ cells/.test(document.querySelector('#lsView .kx-read').textContent), null, { timeout: 10000 });
+    assert.match(await p.innerText('#lsView .kx-read'), new RegExp('cost ' + dist['29,9']));
+  });
+
+  await t('Logic gates: toggling an input sends a signal that settles gate 1 before gate 2; the truth table is unchanged', async () => {
+    await open('logic'); const before = await p.innerText('#lsView .kx-read');
+    await p.click('#lsView [data-kb="B"]'); await p.waitForTimeout(120);
+    const mid = await p.evaluate(() => { const c = document.querySelector('#lsView .kx-cv'); return c.toDataURL().length; }); await p.waitForTimeout(1500);
+    const end = await p.evaluate(() => { const c = document.querySelector('#lsView .kx-cv'); return c.toDataURL().length; }); assert.notEqual(mid, end, 'the picture changes while the signal travels');
+    assert.equal(await p.innerText('#lsView .kx-read'), before, 'the truth-table summary does not depend on the animation');
+    await api('logic'); assert.deepEqual(await p.evaluate(() => [__api._out(1, 1, 0), __api._out(1, 0, 0), __api._out(0, 0, 1)]), [1, 0, 1], 'AND then OR');
+  });
+
+  await t('Black hole camera: shadow 3√3⁄2 r_s; no beaming face-on, strong beaming edge-on; clock rate √(1 − r_s/r)', async () => {
+    await open('black-hole'); const r = await p.evaluate(() => { const c = LS.exp.live._cam(); return { s: c.shadow, r0: c.ratio6at0, r75: c.ratio6at75, d: c.dil(1.1), d4: c.dil(4) }; });
+    near(r.s, 2.598076, 1e-6, 'shadow'); near(r.r0, 1, 1e-12, 'face-on: no line-of-sight motion'); assert.ok(r.r75 > 3, 'edge-on beaming ratio ' + r.r75);
+    const beta = Math.sqrt(1 / 12), gam = 1 / Math.sqrt(1 - beta * beta), s = Math.sin(75 * Math.PI / 180), exp = Math.pow((1 + beta * s) / (1 - beta * s), 4); near(r.r75, exp, 1e-9, 'δ⁴ ratio at 6 r_s, 75°'); void gam;
+    near(r.d, Math.sqrt(1 - 1 / 1.1), 1e-12, 'dilation at 1.1 r_s'); near(r.d4, Math.sqrt(0.75), 1e-12, 'dilation at 4 r_s');
+    assert.match(await p.innerText('#lsView .kx-read >> nth=1'), /clock runs at/);
+  });
+
+  await t('Number words and telling the time: Spanish and French follow their rules', async () => {
+    await open('number-words'); const w = await p.evaluate(() => { const f = LS.exp.live._w; return [[21, 31, 100, 101, 500, 1000, 21000, 31000, 100000, 1000000, 2000000, 777, 16, 22].map(n => f('es', n)), [21, 71, 80, 81, 91, 99, 17, 200, 201, 1000, 80000, 200000, 1000000, 2000000, 1000080].map(n => f('fr', n))]; });
+    assert.deepEqual(w[0], ['veintiuno', 'treinta y uno', 'cien', 'ciento uno', 'quinientos', 'mil', 'veintiún mil', 'treinta y un mil', 'cien mil', 'un millón', 'dos millones', 'setecientos setenta y siete', 'dieciséis', 'veintidós']);
+    assert.deepEqual(w[1], ['vingt-et-un', 'soixante-et-onze', 'quatre-vingts', 'quatre-vingt-un', 'quatre-vingt-onze', 'quatre-vingt-dix-neuf', 'dix-sept', 'deux-cents', 'deux-cent-un', 'mille', 'quatre-vingt-mille', 'deux-cent-mille', 'un-million', 'deux-millions', 'un-million-quatre-vingts']);
+    await open('time-teller'); const t2 = await p.evaluate(() => [[2, 45], [1, 0], [1, 30], [12, 40], [16, 45], [12, 30], [0, 15], [7, 20]].map(([h, m]) => LS.exp.live._t(h, m)));
+    assert.deepEqual(t2.map(x => x.es), ['Son las tres menos cuarto.', 'Es la una en punto.', 'Es la una y media.', 'Es la una menos veinte.', 'Son las cinco menos cuarto.', 'Son las doce y media.', 'Son las doce y cuarto.', 'Son las siete y veinte.']);
+    assert.deepEqual(t2.map(x => x.fr), ['Il est trois heures moins le quart.', 'Il est une heure.', 'Il est une heure et demie.', 'Il est une heure moins vingt.', 'Il est cinq heures moins le quart.', 'Il est midi et demi.', 'Il est minuit et quart.', 'Il est sept heures vingt.']);
+  });
+
+  await t('Voting systems: winners match an independent count; story architect checks structure only', async () => {
+    await open('voting'); const r = await p.evaluate(() => ['split', 'classic', 'cycle'].map(k => { const c = LS.exp.live._load(k); return [c.pW, c.rW, c.irvW, c.bW, c.cond, c.borda]; }));
+    assert.deepEqual(r.map(x => x.slice(0, 5)), [['A', 'B', 'C', 'B', 'B'], ['A', 'C', 'D', 'B', 'C'], ['A', 'A', 'A', 'A', null]]);
+    const g = [[14, 'ABCD'], [10, 'CBDA'], [8, 'DCBA'], [4, 'BDCA'], [1, 'CDBA']], bd = { A: 0, B: 0, C: 0, D: 0 }; g.forEach(([n, s0]) => [...s0].forEach((c, i) => { bd[c] += n * (3 - i); })); assert.deepEqual(r[1][5], bd, 'Borda points');
+    await p.evaluate(() => LS.exp.live._load('classic')); assert.match(await p.innerText('#lsView .vt__res'), /Instant runoff\s*D/);
+    await open('story-architect'); const s0 = await p.evaluate(() => LS.exp.live._check()); assert.deepEqual(s0, [false, false, true, true, true]);
+    await p.fill('#lsView [data-who="name"]', 'Mira'); await p.fill('#lsView [data-who="want"]', 'to find her lost brother');
+    for (let i = 0; i < 5; i++) await p.fill(`#lsView [data-beat="${i}"]`, 'Something happens in this part of the story.');
+    await p.evaluate(() => { const r = document.querySelector('#lsView [data-bt="1"]'); r.value = 95; r.dispatchEvent(new Event('input', { bubbles: true })); });
+    const s1 = await p.evaluate(() => LS.exp.live._check()); assert.deepEqual(s1, [true, true, false, true, false], 'a beat above the climax is caught');
+    assert.match(await p.innerText('#lsView .sa__check'), /Right now it is at “Rising action”/);
+  });
+
+  await t('Dashboard discovery: time filter and concept search narrow the experiences; Noor receives an experience’s title and live state', async () => {
+    await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(1500);
+    await p.fill('#lsView [data-fq]', 'evaporation'); await p.waitForFunction(() => document.querySelectorAll('#lsView .dx-grid a[href="#/exp/water-cycle"]').length > 0, null, { timeout: 15000 }); let hrefs = await p.$$eval('#lsView .dx-grid a', a => a.map(x => x.getAttribute('href'))); assert.ok(hrefs.includes('#/exp/water-cycle') && hrefs.length < 6, 'concept search: ' + hrefs);
+    await p.fill('#lsView [data-fq]', ''); await p.click('#lsView [data-ft="s"]'); await p.click('#lsView [data-more]').catch(() => {}); await p.waitForTimeout(200);
+    hrefs = await p.$$eval('#lsView .dx-grid a', a => a.map(x => x.getAttribute('href').split('/').pop())); const mins = await p.evaluate(ids => ids.map(id => (LS.experiences.find(x => x.id === id) || {}).mins), hrefs);
+    assert.ok(hrefs.length > 3 && mins.every(m => m <= 6), 'quick filter: ' + mins);
+    await open('voting'); await p.evaluate(() => { try { document.querySelector('#lsView [data-x="noor"]').click(); } catch (e) { /* */ } });
+    await p.waitForTimeout(400); const sent = await p.evaluate(() => LS.noor.lastSent && LS.noor.lastSent.prompt);
+    assert.ok(sent && /Voting systems/.test(sent) && !/undefined/.test(sent) && /Plurality/.test(sent), 'Noor prompt: ' + sent);
+  });
+
+  await t('Quadratic lab challenges and periodic-table search are checked from live values', async () => {
+    await open('quad-lab'); const r = await p.evaluate(() => { const f = LS.exp.live._qch; return [f(2, 1, -8), f(1, -2, 0), f(-0.5, 3, 5), f(1, 2, 1), f(1, 1.2, -4)]; });
+    const ok = r.map(x => x.filter(y => y[1]).map(y => y[0]).join(',')); assert.deepEqual(ok, ['roots', 'touch', 'max', 'point', '']);
+    // y = 2(x − 1)² − 8 really has roots −1 and 3; y = (x − 2)² + 1 really passes through (0, 5)
+    assert.equal(2 * (-1 - 1) ** 2 - 8, 0); assert.equal(2 * (3 - 1) ** 2 - 8, 0); assert.equal((0 - 2) ** 2 + 1, 5);
+    for (const [id, v] of [['a', 2], ['h', 1], ['k', -8]]) await p.evaluate(([id, v]) => { const r0 = document.querySelector(`#lsView [data-k="${id}"]`); r0.value = v; r0.dispatchEvent(new Event('input', { bubbles: true })); }, [id, v]);
+    await p.waitForTimeout(300); assert.match(await p.innerText('#lsView .ql__ch'), /roots at x = −1 and x = 3\.\s*Yes — right now!/);
+    await p.goto('about:blank'); await p.goto(BASE + 'learn.html#/exp/periodic'); await p.waitForSelector('#lsView .pt__el'); await p.waitForTimeout(500);
+    const f = await p.evaluate(() => [LS.exp.live._find('fe'), LS.exp.live._find('26'), LS.exp.live._find('chl'), LS.exp.live._find('xx')]); assert.deepEqual(f, [[26], [26], [17], []]);
+    await p.fill('#lsView [data-pts]', 'neon'); await p.press('#lsView [data-pts]', 'Enter'); await p.waitForTimeout(200); assert.match(await p.innerText('#lsView .kx-read'), /Neon \(Ne\)/); assert.match(await p.innerText('#lsView .pt__links'), /build its atom/);
+  });
+
   await t('v28 canvases are painted after opening (no blank models)', async () => {
     for (const [id, sel] of [['derivative-lab', '.dl__f canvas'], ['derivative-lab', '.dl__d canvas'], ['integral-lab', '.il__f canvas'], ['integral-lab', '.il__A canvas'], ['water-cycle', '.wc__stage canvas']]) {
       await p.goto(BASE + 'learn.html#/exp/' + id); await p.waitForSelector('#lsView ' + sel); await p.waitForTimeout(900);
