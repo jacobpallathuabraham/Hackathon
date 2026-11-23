@@ -30,13 +30,13 @@
   const O = [0, 0, -280]; // where the worlds gather at the end
   const RING = id => { const W = LS.cosmosWorlds, i = W.ORDER.indexOf(id), a = -Math.PI / 2 + (i / 11) * Math.PI * 2; return [O[0] + Math.cos(a) * 13.5, O[1] - 2.6 + Math.sin(a * 2) * 0.9 + (i % 2 ? 0.5 : -0.3), O[2] + Math.sin(a) * 7.4]; };
   const ORIGIN = { pos: [-30, -21, -58], r: 22 };
-  const SUN0 = [-0.5, -0.33, -0.8], SUN1 = [0.6, 0.4, 0.69]; // behind the great planet → working angle
+  const SUN0 = [-0.2, -0.1, -0.975], SUN1 = [0.6, 0.4, 0.69]; /* the opening sun waits just behind the great planet’s upper limb (a sunrise), then sweeps to a three-quarter front light */ // behind the great planet → working angle
 
   function keyframes() {
     const W = LS.cosmosWorlds, K = [];
     const add = (pos, tgt, astro, look, scene) => K.push({ pos, tgt, astro, look, scene });
     add([0, 0.4, 12], [-2, -0.6, -20], [1.25, -0.3, -3.3], 'camera', 'void');
-    add([3, 2.2, -2], [-9, -5, -44], [-1.2, -0.55, -3.9], 'origin', 'light');
+    add([3, 2.2, -2], [-5, 4, -44], [1.35, -0.5, -3.9], 'origin', 'light'); /* first light: the limb sits low in frame, the sunrise above it; the astronaut stays clear of the words */
     add([0, 5, -8], [1, 0, -64], [0.95, -0.7, -3.8], 'maths', 'universe');
     W.ORDER.forEach(id => { const P = PATH[id], s = Math.sign(P[0]) || 1;
       add([P[0] - s * 1.4, P[1] + 0.7, P[2] + 6.6], [P[0] - s * 2.5, P[1] - 0.25, P[2] - 1], [s * 0.42, -0.74, -3.7], id, id); }); // astronaut between the words and the world, facing the world
@@ -116,11 +116,11 @@
       const P = new Float32Array(n * 3), S = new Float32Array(n), Cc = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) { let x, y, z; do { x = (R() - 0.5) * spread[0]; y = (R() - 0.5) * spread[1]; z = 60 - R() * spread[2]; } while (Math.abs(x) < 14 && Math.abs(y) < 9); P.set([x, y, z], i * 3); S[i] = sizeA + R() * R() * sizeB; const w = R(); Cc.set(warm && w > 0.7 ? [1, 0.86, 0.72] : w < 0.25 ? [0.75, 0.85, 1] : [1, 1, 1], i * 3); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('size', new THREE.BufferAttribute(S, 1)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
-      const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uPx: { value: dpr } },
-        vertexShader: 'attribute float size; attribute vec3 color; uniform float uT; uniform float uPx; varying vec3 vC; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; float tw=0.75+0.25*sin(uT*1.3+position.x*3.1+position.z); gl_PointSize=clamp(size*uPx*(220.0/-mv.z),1.0,9.0*uPx); vC=color; vA=tw*clamp(-mv.z/30.0,0.0,1.0); }',
+      const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uPx: { value: dpr }, uMove: { value: warm ? 1 : 0.15 } },
+        vertexShader: 'attribute float size; attribute vec3 color; uniform float uT; uniform float uPx; uniform float uMove; varying vec3 vC; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; float tw=0.85+0.15*sin(uT*0.9+position.x*3.1+position.z); gl_PointSize=clamp(size*uPx*(220.0/-mv.z),1.0,9.0*uPx); vC=color; vA=tw*clamp(-mv.z/30.0,0.0,1.0)*(0.2+0.8*uMove); }',
         fragmentShader: 'varying vec3 vC; varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float d=length(c); float a=smoothstep(0.5,0.0,d); a*=a; gl_FragColor=vec4(vC*a*vA,1.0); }' });
       const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); return pts; };
-    const stars = pointsLayer([1400, 3000, 5200][q], [700, 420, 900], 0.5, 2.6, 7, true);
+    const stars = pointsLayer([1100, 2200, 3400][q], [700, 420, 900], 0.5, 2.6, 7, true); /* sparse, with depth; the baked panorama carries the fine field */
     const dust = pointsLayer([140, 300, 520][q], [90, 50, 360], 0.12, 0.35, 19, false);
 
     const far = []; [[[-520, 260, -900], 340, 3, 210], [[760, -180, -1100], 260, 11, 25], [[-900, -320, -400], 220, 23, 280]].forEach(([p, s, seed, hue]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: galaxyTex(THREE, seed, hue), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55, fog: false })); m.position.set(...p); m.lookAt(0, 0, -150); m.rotateX(0.9); m.rotateZ(seed); scene.add(m); far.push(m); });
@@ -151,21 +151,39 @@
     /* camera choreography */
     const K = keyframes(), N = K.length, V3 = a => new THREE.Vector3(...a);
     const posC = new THREE.CatmullRomCurve3(K.map(k => V3(k.pos)), false, 'centripetal'), tgtC = new THREE.CatmullRomCurve3(K.map(k => V3(k.tgt)), false, 'centripetal');
-    const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), g = smooth(clamp((f - 0.1) / 0.8, 0, 1)); return { i, f: g, u: (i + g) / (N - 1) }; };
+    /* camera choreography by scene type. Every segment eases with smootherstep (zero velocity AND acceleration at both ends,
+       so no jerk and no overshoot) and rests briefly on each keyframe ("dwell"):
+         0 hero approach (slow, long dwell) · 1 first light, a planet reveal · 2…12 world focus, approached on a gentle arc ·
+         13→14 universe reveal, a wide pull-back that decelerates into the overview */
+    const sstep = t => t * t * t * (t * (t * 6 - 15) + 10);
+    const DWELL = i => (i === 0 ? 0.16 : i === N - 2 ? 0.04 : 0.11);
+    const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), d = DWELL(i), x = clamp((f - d) / (1 - 2 * d), 0, 1);
+      const g = i === N - 2 ? 1 - Math.pow(1 - sstep(x), 1.6) : sstep(x); return { i, f: g, raw: f, u: (i + g) / (N - 1) }; };
+    const arcSide = new THREE.Vector3(), arcUp = new THREE.Vector3(0, 1, 0);
 
     /* state */
     const st = { lastInput: 0, target: 0, p: 0, ptr: { x: 0, y: 0, tx: 0, ty: 0 }, hover: null, sel: null, flight: null, ret: null, t: 0, last: performance.now(), frames: [], cpu: [], visible: true, dirty: true, moved: false, astroPos: new THREE.Vector3(), lastCam: new THREE.Vector3() };
-    const rc = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4(), look = new THREE.Vector3(), camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
+    const look2 = new THREE.Vector3(), rc = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4(), look = new THREE.Vector3(), camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
     const worldPos = (id, p) => { const G = worlds[id]; if (!G) return V3(PATH[id]); return G.position; };
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
 
     function size() { const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (q ? 42 : 50) + (w / h < 0.8 ? 14 : 0); camera.updateProjectionMatrix(); st.dirty = true; }
-    const ro = new ResizeObserver(size); ro.observe(stage); size();
+    const ro = new ResizeObserver(() => { size(); if (st.frames.length) renderer.render(scene, camera); /* no black frame after a resize */ }); ro.observe(stage); size();
 
     function placeWorlds(p, t, dt) {
       const gk = gatherK(p);
-      W.ORDER.forEach((id, i) => { const G = worlds[id]; if (!G) return; const a = V3(PATH[id]), b = V3(RING(id)), k = smooth(clamp(gk * 1.35 - i * 0.03, 0, 1));
-        G.position.copy(a.lerp(b, k)); const sc = 1 - 0.36 * k; G.scale.setScalar(sc);
+      const focusId = st.hover || st.sel || (st.flight && st.flight.id), inOverview = gk > 0.9;
+      const portrait = camera.aspect < 0.9;
+      W.ORDER.forEach((id, i) => { const G = worlds[id]; if (!G) return; const a = V3(PATH[id]), b = V3(RING(id)); if (portrait) { b.x = O[0] + (b.x - O[0]) * 0.4; b.y += ((i % 4) - 1.5) * 2.5; b.z += 2; } /* portrait screens: a narrower, taller constellation instead of a ring cut off at both sides */ const _b = b, k = sstep(clamp(gk * 1.45 - (i % 6) * 0.07, 0, 1));
+        /* each world arrives on its own curved path (a quadratic Bézier with a per-world bow), staggered */
+        const ctl = a.clone().lerp(b, 0.5).add(tmpV.set(((i * 7) % 5 - 2) * 4, ((i * 3) % 4 - 1.5) * 3.5, 6 + (i % 3) * 3)); const u1 = 1 - k;
+        G.position.set(u1 * u1 * a.x + 2 * u1 * k * ctl.x + k * k * b.x, u1 * u1 * a.y + 2 * u1 * k * ctl.y + k * k * b.y, u1 * u1 * a.z + 2 * u1 * k * ctl.z + k * k * b.z);
+        let sc = 1 - 0.36 * k;
+        /* selection: the chosen world comes forward a little, the others recede; during travel the others clear away */
+        const sel = focusId === id, fly = st.flight ? clamp((performance.now() - st.flight.t0) / st.flight.ms, 0, 1) : 0;
+        if (inOverview && focusId) { tmpV.subVectors(camera.position, G.position).normalize(); if (sel) { G.position.addScaledVector(tmpV, 1.8 * G.userData.f); sc *= 1 + 0.1 * G.userData.f; } else { G.position.addScaledVector(tmpV, -0.8); sc *= 0.93; } }
+        if (fly && !sel) { sc *= 1 - 0.55 * sstep(fly); }
+        G.scale.setScalar(sc);
         const kf = i + 3, near = smooth(clamp(1 - (Math.abs(p - kf) - 0.35) / 1.25, 0, 1)), rv = Math.max(near, smooth(clamp((p - (N - 1.6)) / 0.6, 0, 1)) * 0.92, p < 2.6 ? 0 : 0.06);
         const want = (st.hover === id || st.sel === id) ? 1 : 0; G.userData.f += (want - G.userData.f) * (1 - Math.exp(-dt * 7)); G.userData.rv = rv;
         const inView = frustum.intersectsSphere(new THREE.Sphere(G.position, G.userData.radius * 3.2));
@@ -181,26 +199,39 @@
     const frustum = new THREE.Frustum();
 
     function cameraAt(p, out, outT) { const a = at(p); out.copy(posC.getPoint(a.u)); outT.copy(tgtC.getPoint(a.u));
-      // the overview keyframes follow the worlds as they gather
+      // a gentle arc: approaches swing out sideways (worlds) or rise (the reveal) and settle exactly on the keyframe (sin π·g = 0 at both ends)
+      const bow = Math.sin(Math.PI * a.f); if (bow > 0.001) { arcSide.subVectors(outT, out).normalize().cross(arcUp).normalize();
+        if (a.i === 1) out.addScaledVector(arcUp, bow * 1.2); else if (a.i >= 2 && a.i < N - 2) out.addScaledVector(arcSide, bow * 1.6 * (a.i % 2 ? 1 : -1)).addScaledVector(arcUp, bow * 0.5); else if (a.i === N - 2) out.addScaledVector(arcUp, bow * 3); }
       return a; }
 
     function astroUpdate(dt, a, p) {
       if (!astroReady) return; const k0 = K[a.i], k1 = K[Math.min(N - 1, a.i + 1)], off = V3(k0.astro).lerp(V3(k1.astro), a.f);
-      if (innerWidth < 700) { off.x *= 0.5; off.z *= 1.25; off.y = Math.abs(off.y) * 0.55 + 0.35; } // phones: text sits low, so the astronaut floats in the upper half
+      if (innerWidth < 700 && !(k1.scene === 'all' && a.f > 0.5)) { off.x *= 0.5; off.z *= 1.25; off.y = Math.abs(off.y) * 0.55 + 0.35; } // phones: text sits low, so the astronaut floats in the upper half (except in the overview, where the worlds need that space)
+      else if (innerWidth < 700) { off.x = 0.9; off.y = -2.1; off.z = -7.8; }
       // smoothed in camera space, so the astronaut can trail and drift but never falls behind the camera
       const camSpeed = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (camSpeed - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
       const trail = clamp(st.camSpeed * 0.012, 0, 0.7); off.z -= trail * 0.2; off.x *= 1 - trail * 0.15; off.y -= trail * 0.12;
-      if (!st.astroOff) st.astroOff = off.clone(); st.astroOff.lerp(off, 1 - Math.exp(-dt * 2.6));
+      off.z = Math.min(off.z, -2.9); // never close enough to clip the lens or cover the headline
+      /* inertia: a critically damped spring in camera space (settles in about a second, never overshoots) */
+      if (!st.astroOff) { st.astroOff = off.clone(); st.astroVel = new THREE.Vector3(); }
+      const kS = 7, cS = 2 * Math.sqrt(kS); st.astroVel.addScaledVector(tmpV.subVectors(off, st.astroOff), kS * dt).multiplyScalar(Math.max(0, 1 - cS * dt)); st.astroOff.addScaledVector(st.astroVel, dt);
       const camQ = camera.quaternion; tmpV.copy(st.astroOff).applyQuaternion(camQ).add(camera.position); st.astroPos.copy(tmpV);
+      const acc = (st.camSpeed - (st.prevSpeed || 0)) / Math.max(dt, 1e-3); st.prevSpeed = st.camSpeed; st.acc = (st.acc || 0) + (acc - (st.acc || 0)) * (1 - Math.exp(-dt * 3));
       const vel = st.camSpeed; astro.position.copy(st.astroPos);
       // where to look: the hovered world, the scene's subject, or back toward the student in the opening
-      const lk = (st.flight && st.flight.id) || st.hover || st.sel || (a.f < 0.5 ? k0.look : k1.look);
-      if (lk === 'camera') look.copy(camera.position).add(tmpV.set(-2.2 + st.ptr.x * 1.5, 0.4 + st.ptr.y * 0.6, 0).applyQuaternion(camQ));
+      const lookAtKey = (key, out) => { if (key === 'camera') return out.copy(camera.position).add(tmpV.set(-2.2 + st.ptr.x * 1.5, 0.4 + st.ptr.y * 0.6, 0).applyQuaternion(camQ)); if (key === 'origin') return out.set(...ORIGIN.pos); if (key === 'center') return out.set(...O); if (worlds[key]) return out.copy(worlds[key].position); return out.set(...(PATH[key] || O)); };
+      const lk = (st.flight && st.flight.id) || st.hover || st.sel;
+      if (!lk) { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes instead of switching half-way */
+      else if (lk === 'camera') look.copy(camera.position).add(tmpV.set(-2.2 + st.ptr.x * 1.5, 0.4 + st.ptr.y * 0.6, 0).applyQuaternion(camQ));
       else if (lk === 'origin') look.set(...ORIGIN.pos); else if (lk === 'center') look.set(...O); else if (worlds[lk]) look.copy(worlds[lk].position); else look.set(...(PATH[lk] || O));
       tmpM.lookAt(look, astro.position, camera.up); tmpQ.setFromRotationMatrix(tmpM); astro.quaternion.slerp(tmpQ, 1 - Math.exp(-dt * 1.6));
-      const t = st.t, sp = clamp(vel / 30, 0, 1);
-      inner.position.y = Math.sin(t * 0.7) * 0.035; inner.rotation.set(-0.12 * sp + Math.sin(t * 0.53) * 0.05, Math.sin(t * 0.31) * 0.08, Math.sin(t * 0.43) * 0.07 + st.ptr.x * -0.05);
-      jet.material.opacity += (clamp((sp - 0.25) * 0.8, 0, 0.45) - jet.material.opacity) * (1 - Math.exp(-dt * 6)); jet.scale.setScalar(0.12 + sp * 0.22); /* a soft puff only while travelling, never a white blotch */
+      const t = st.t, sp = clamp(vel / 30, 0, 1), ac = clamp(st.acc / 60, -1, 1);
+      /* zero-g drift: sums of incommensurate slow waves never visibly repeat; amplitude breathes slowly too */
+      const nz = (a1, a2, a3, ph) => Math.sin(t * a1 + ph) * 0.6 + Math.sin(t * a2 + ph * 1.7) * 0.3 + Math.sin(t * a3 + ph * 2.3) * 0.1, br = 0.75 + 0.25 * Math.sin(t * 0.071 + 1.1);
+      inner.position.set(nz(0.23, 0.41, 0.97, 0.3) * 0.02 * br, nz(0.31, 0.57, 1.13, 1.9) * 0.035 * br, 0);
+      /* lean responds to acceleration (forward when speeding up, back when slowing), only a little to speed */
+      inner.rotation.set(-0.16 * ac - 0.05 * sp + nz(0.19, 0.43, 0.89, 2.7) * 0.05 * br, nz(0.13, 0.29, 0.61, 0.9) * 0.09 * br, nz(0.17, 0.37, 0.79, 4.1) * 0.07 * br + st.ptr.x * -0.05);
+      jet.material.opacity += (clamp(ac * 0.6, 0, 0.35) - jet.material.opacity) * (1 - Math.exp(-dt * 6)); jet.scale.setScalar(0.1 + clamp(ac, 0, 1) * 0.16); /* propulsion shows only while accelerating, and stays understated */
       astro.userData.fade = Math.min(1, (astro.userData.fade || 0) + dt * 0.9);
     }
 
@@ -209,7 +240,8 @@
       const dt = Math.min(0.05, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
-      const pPrev = st.p; st.p = still ? Math.round(st.target) : st.p + (st.target - st.p) * (1 - Math.exp(-Math.min(0.12, (now - (st.lastP || now - 16)) / 1000) * 9)); /* tight follow: smooth, but never trailing the scroll */ st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+      const pPrev = st.p; { const gap = Math.abs(st.target - st.p), rate = 9 - 5 * clamp((gap - 0.6) / 3, 0, 1); /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
+        st.p = still ? Math.round(st.target) : st.p + (st.target - st.p) * (1 - Math.exp(-Math.min(0.12, (now - (st.lastP || now - 16)) / 1000) * rate)); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
       st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
@@ -219,6 +251,9 @@
       if (st.p > N - 2) { const gk = smooth(gatherK(st.p)); } // (overview keyframe is already at the gathering point)
       if (st.flight) { const F = st.flight, k = clamp((now - F.t0) / F.ms, 0, 1), e = ease(k); camPos.lerpVectors(F.p0, F.p1, e); camTgt.lerpVectors(F.q0, F.q1, e); o.onFlight && o.onFlight(k, F.id); if (k >= 1) { const id = F.id; st.flight = null; o.onArrive && o.onArrive(id); } }
       else if (st.ret) { const R = st.ret, k = clamp((now - R.t0) / R.ms, 0, 1), e = ease(k); camPos.lerpVectors(R.p0, camPos, e); camTgt.lerpVectors(R.q0, camTgt, e); if (k >= 1) st.ret = null; }
+      // the look target is critically damped, so it never snaps when a path, a flight or a return hands over
+      const dtr = Math.min(0.12, (now - (st.lastT || now - 16)) / 1000); st.lastT = now; /* real elapsed time, so slow devices converge as fast as quick ones */
+      if (!st.tgtS || still) st.tgtS = camTgt.clone(); else st.tgtS.lerp(camTgt, 1 - Math.exp(-dtr * (st.flight ? 12 : 8))); camTgt.copy(st.tgtS);
       const par = still ? 0 : (innerWidth < 700 ? 0.25 : 1);
       camera.position.copy(camPos); camera.lookAt(camTgt);
       camera.position.add(tmpV.set(st.ptr.x * 0.42 * par, -st.ptr.y * 0.26 * par, 0).applyQuaternion(camera.quaternion)); camera.lookAt(camTgt.x + st.ptr.x * 0.12 * par, camTgt.y - st.ptr.y * 0.08 * par, camTgt.z);
@@ -228,7 +263,7 @@
       // rim tint follows the world in front of us
       const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]), 1 - Math.exp(-dt * 2)); else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
       oCore.rotation.y += (still ? 0 : dt) * 0.006; oCore.material.uniforms.uT.value = st.t;
-      stars.material.uniforms.uT.value = st.t; stars.material.uniforms.uPx.value = dpr; dust.material.uniforms.uPx.value = dpr;
+      stars.material.uniforms.uT.value = st.t; stars.material.uniforms.uPx.value = dpr; dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
       clouds.forEach((c, i) => { c.material.rotation = st.t * 0.004 * (i % 2 ? 1 : -1); });
       astroUpdate(still ? 0.016 : dt, a, st.p);
       if (st.hover && !st.flight) o.onLabel && o.onLabel(st.hover, project(worlds[st.hover])); else o.onLabel && o.onLabel(null);
@@ -244,7 +279,7 @@
     }
     let raf = 0, idleT = 0, lastAdapt = 0;
     function adapt() { const f = st.frames; if (f.length < 60 || performance.now() - lastAdapt < 2000) return; const span = (f[f.length - 1] - f[0]) / (f.length - 1);
-      const floor = q === 0 ? 0.75 : 1; if (span > 24 && dpr > floor) { dpr = Math.max(floor, +(dpr - 0.2).toFixed(2)); renderer.setPixelRatio(dpr); size(); lastAdapt = performance.now(); } else if (span < 17 && dpr < maxDpr) { dpr = Math.min(maxDpr, +(dpr + 0.1).toFixed(2)); renderer.setPixelRatio(dpr); size(); lastAdapt = performance.now(); } }
+      const floor = q === 0 ? 0.75 : 1; if (span > 24 && dpr > floor) { dpr = Math.max(floor, +(dpr - 0.2).toFixed(2)); renderer.setPixelRatio(dpr); size(); renderer.render(scene, camera); lastAdapt = performance.now(); } /* re-render at once: a resize clears the canvas, which would show one black frame */ else if (span < 17 && dpr < maxDpr) { dpr = Math.min(maxDpr, +(dpr + 0.1).toFixed(2)); renderer.setPixelRatio(dpr); size(); renderer.render(scene, camera); lastAdapt = performance.now(); } }
     const start = () => { if (idleT) { clearTimeout(idleT); idleT = 0; } if (!raf && alive && st.visible && !document.hidden) { st.last = performance.now(); raf = requestAnimationFrame(frame); } };
     function project(G) { if (!G) return null; tmpV.copy(G.position); const r = G.userData.radius * G.scale.x; const top = tmpV.clone().add(new THREE.Vector3(0, -r * 1.25, 0)); tmpV.project(camera); top.project(camera); const w = stage.clientWidth, h = stage.clientHeight;
       return { x: (tmpV.x * 0.5 + 0.5) * w, y: (-top.y * 0.5 + 0.5) * h, behind: tmpV.z > 1 }; }
@@ -265,17 +300,17 @@
 
     const api = {
       THREE, stats: () => { const f = st.frames, c = st.cpu.slice().sort((a, b) => a - b); return { fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1] - f[0]) : 0, cpuMedian: c[c.length >> 1] || 0, cpuP95: c[Math.floor(c.length * 0.95)] || 0, dpr, tier: q, worlds: Object.keys(worlds).length, astronaut: astroReady, draws: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures }; },
-      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.dirty = true; start(); }, progress: () => st.p, N,
+      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.tgtS = null; st.astroOff = null; st.dirty = true; start(); }, progress: () => st.p, N,
       hover(id) { st.hover = id; st.dirty = true; start(); },
       enter(id, ms) { if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
         if (reduced() || ms === 0) { o.onArrive && o.onArrive(id); return; }
         const P = G.position.clone(), dir = camera.position.clone().sub(P).normalize(), r = G.userData.radius * G.scale.x;
-        st.flight = { id, t0: performance.now(), ms: ms || 1250, p0: camera.position.clone(), q0: camTgt.clone(), p1: P.clone().addScaledVector(dir, r * 1.55).add(new THREE.Vector3(0, r * 0.15, 0)), q1: P }; start(); },
+        st.flight = { id, t0: performance.now(), ms: ms || clamp(700 + camera.position.distanceTo(P) * 11, 750, 1300), p0: camera.position.clone(), q0: camTgt.clone(), p1: P.clone().addScaledVector(dir, r * 1.55).add(new THREE.Vector3(0, r * 0.15, 0)), q1: P }; start(); },
       skip: finish, flying: () => !!st.flight,
       returnFrom(id) { const G = worlds[id] || (buildNext(), worlds[id]); if (!G) return; placeWorlds(st.p, st.t, 0); const P = G.position.clone(), r = G.userData.radius * G.scale.x; st.ret = { t0: performance.now() + 60, ms: 1100, p0: P.clone().add(new THREE.Vector3(0, r * 0.2, r * 1.7)), q0: P }; start(); },
       debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p }; },
-      debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2) }; },
-      debugRaf: () => !!raf || !!idleT, scene, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
+      debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2), dist: +camera.position.distanceTo(G.position).toFixed(3) }; },
+      debugRaf: () => !!raf || !!idleT, scene, debugWords: id => worlds[id] && worlds[id].userData.words, debugCam: () => camera.position.toArray(), debugScale: id => worlds[id] && worlds[id].scale.x, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
       buildAll() { while (queue.length) buildNext(); },
       kick: start,
       destroy() { alive = false; cancelAnimationFrame(raf); clearTimeout(idleT); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);

@@ -71,9 +71,13 @@
     gl_FragColor=vec4(c,1.0);
     #include <colorspace_fragment>
   }`;
+  /* atmosphere: a thin limb whose brightness follows the sun (day side), a warm band at the terminator, a faint night-side rim
+     so dark hemispheres keep their silhouette, and forward scattering when the planet is backlit (the sunrise-over-the-limb shot) */
   const ATM_F = `uniform vec3 uSun; uniform vec3 uCol; uniform float uK; uniform float uFocus; varying vec3 vN; varying vec3 vW;
-  void main(){ vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.0-abs(dot(n,V)),2.6); float l=smoothstep(-0.35,0.6,dot(n,uSun));
-    gl_FragColor=vec4(uCol*f*(0.15+l)*(uK+uFocus*0.25),1.0); }`;
+  void main(){ vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.0-abs(dot(n,V)),3.0); float mu=dot(n,uSun);
+    float day=smoothstep(-0.3,0.55,mu); float term=exp(-pow((mu+0.05)*4.5,2.0)); float fwd=pow(max(dot(-V,uSun),0.0),5.0);
+    vec3 col=uCol*(0.07+day*0.95)+vec3(1.0,0.58,0.32)*term*0.28+uCol*fwd*1.6*smoothstep(-0.4,0.2,mu);
+    gl_FragColor=vec4(col*f*(uK+uFocus*0.25),1.0); }`;
   const ATM_V = `varying vec3 vN; varying vec3 vW; void main(){ vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`;
 
   const SUN = { v: null, renderer: null }; // shared sun direction, and the renderer used to bake surfaces (set by the universe / world header)
@@ -184,7 +188,8 @@
   B.chemistry = (THREE, q, G) => { // crystalline cell surface, ball-and-stick molecules in orbit, electron shells
     const r = 1.2, M = META.chemistry; const core = surface(THREE, q, r, 2, [M.c[0], M.c[1], M.c[2]], 2.7); G.add(core); G.add(atmosphere(THREE, r * 1.08, '#5fe6d4', 1));
     const atom = (col, s) => new THREE.Mesh(new THREE.SphereGeometry(s, 20, 14), new THREE.MeshStandardMaterial({ color: col, roughness: 0.35, metalness: 0.1 }));
-    const bond = (a, b) => { const d = b.clone().sub(a), m = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, d.length(), 8), new THREE.MeshStandardMaterial({ color: 0xd9e6e4, roughness: 0.5 })); m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m; };
+    const bondMat = new THREE.MeshStandardMaterial({ color: 0x8fa3a1, roughness: 0.6, metalness: 0.1 }); /* bonds recede behind the atoms: thinner and darker */
+    const bond = (a, b) => { const d = b.clone().sub(a), m = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, d.length(), 8), bondMat); m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m; };
     const mol = (spec) => { const g = new THREE.Group(); spec.atoms.forEach(([c, s, p]) => { const m = atom(c, s); m.position.set(...p); g.add(m); }); spec.bonds.forEach(([i, j]) => g.add(bond(new THREE.Vector3(...spec.atoms[i][2]), new THREE.Vector3(...spec.atoms[j][2])))); return g; };
     const a = 104.5 * Math.PI / 180, L = 0.2;
     const water = mol({ atoms: [[0xff5a5a, 0.11, [0, 0, 0]], [0xf4f7f6, 0.07, [Math.sin(a / 2) * L, -Math.cos(a / 2) * L, 0]], [0xf4f7f6, 0.07, [-Math.sin(a / 2) * L, -Math.cos(a / 2) * L, 0]]], bonds: [[0, 1], [0, 2]] });
@@ -196,7 +201,7 @@
     const mols = [water, methane, benzene, co2, water.clone(), methane.clone()]; mols.forEach(m => G.add(m));
     const shells = [0, 1, 2].map(i => { const L2 = ringLine(THREE, r * (1.6 + i * 0.28), 0x8ff5e6, 0.3); L2.rotation.set(0.6 + i * 0.9, i * 0.7, 0); const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshBasicMaterial({ color: 0xc9fff6 })); L2.add(e); G.add(L2); return { L: L2, e, R: r * (1.6 + i * 0.28) }; });
     return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.07; core.material.uniforms.uT.value = t;
-      mols.forEach((m, i) => { const ang = t * (0.13 + i * 0.02) + i * 1.05, R = r * (1.2 + 1.0 * smooth(rv)) + (i % 2) * 0.3; m.position.set(Math.cos(ang) * R, Math.sin(t * 0.3 + i) * 0.5, Math.sin(ang) * R); m.rotation.set(t * 0.5 + i, t * 0.4, i); m.scale.setScalar((0.35 + 0.5 * smooth(rv)) * (1 + fc * 0.15)); });
+      mols.forEach((m, i) => { const ang = t * (0.11 + (i % 3) * 0.015) + i * (Math.PI * 2 / mols.length), R = r * (1.25 + 1.0 * smooth(rv)) + (i % 3) * 0.35, inc = ((i % 3) - 1) * 0.35; /* evenly phased on three separated orbits, so molecules never clump */ m.position.set(Math.cos(ang) * R, Math.sin(ang) * R * inc + ((i % 2) - 0.5) * 0.3, Math.sin(ang) * R); m.rotation.set(t * 0.5 + i, t * 0.4, i); m.scale.setScalar((0.35 + 0.5 * smooth(rv)) * (1 + fc * 0.15)); });
       shells.forEach((s, i) => { const ang = t * (1.1 - i * 0.25); s.e.position.set(Math.cos(ang) * s.R, 0, Math.sin(ang) * s.R); s.L.material.opacity = 0.3 * rv; }); } };
   };
 
@@ -282,7 +287,11 @@
 
   B.languages = (THREE, q, G) => { // a warm dune world; two orbits of greetings in many writing systems, passing like conversation
     const r = 1.2, M = META.languages; const core = surface(THREE, q, r, 5, [M.c[0], M.c[1], M.c[2]], 7.7); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffd27a', 0.85));
-    const words = ['Hello', 'Hola', 'Bonjour', 'مرحبا', 'नमस्ते', '你好', 'Γειά σου', 'Привет', 'Jambo', 'こんにちは', 'Olá', '안녕하세요'].slice(0, q ? 12 : 8);
+    /* only scripts this device can actually draw: a word is dropped if any of its letters falls back to the "missing glyph" box */
+    const canDraw = w => { try { const g = document.createElement('canvas').getContext('2d'); g.font = '40px "Instrument Sans", "IBM Plex Sans Arabic", system-ui, sans-serif'; const box = g.measureText('\u0378').width, box2 = g.measureText('\uFFFF').width;
+      return [...w.replace(/\s/g, '')].every(ch => { const wd = g.measureText(ch).width; return wd > 0 && Math.abs(wd - box) > 0.01 && Math.abs(wd - box2) > 0.01; }); } catch (e) { return /^[\x20-\x7e\u00c0-\u017f]+$/.test(w); } };
+    const words = ['Hello', 'Hola', 'Bonjour', 'مرحبا', 'नमस्ते', '你好', 'Γειά σου', 'Привет', 'Jambo', 'こんにちは', 'Olá', '안녕하세요'].filter(canDraw).slice(0, q ? 12 : 8);
+    G.userData.words = words;
     const S = words.map((w, i) => { const s = textSprite(THREE, w, { color: i % 2 ? '#fff0c7' : '#f2b84b', h: 0.2, size: 72, font: /[؀-ۿ]/.test(w) ? '"IBM Plex Sans Arabic", sans-serif' : '"Instrument Sans", system-ui, sans-serif', weight: 500 }); G.add(s); return s; });
     const o1 = ringLine(THREE, r * 1.85, 0xffe2a0, 0.25), o2 = ringLine(THREE, r * 2.35, 0xffe2a0, 0.18); o1.rotation.x = 0.35; o2.rotation.set(-0.3, 0, 0.2); G.add(o1, o2);
     return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.05; core.material.uniforms.uT.value = t; o1.material.opacity = 0.25 * rv; o2.material.opacity = 0.18 * rv;
@@ -323,7 +332,7 @@
     const G = new THREE.Group(); G.name = 'world:' + id; const w = B[id](THREE, q, G);
     /* level of detail: far away, a world is only its body (planet, atmosphere); its structures appear as the camera approaches */
     const body = new Set([w.core, ...(w.body || [])]); G.children.forEach(c => { const atm = c.material && c.material.blending === THREE.AdditiveBlending && c.material.side === THREE.BackSide; if (!body.has(c) && !atm) c.userData.detail = true; });
-    w.core.userData.world = id; G.userData = { id, core: w.core, radius: w.r, reveal: 0, focus: 0,
+    const words = G.userData && G.userData.words; w.core.userData.world = id; G.userData = { words, id, core: w.core, radius: w.r, reveal: 0, focus: 0,
       setFar(far) { if (G.userData.far === far) return; G.userData.far = far; G.children.forEach(c => { if (c.userData.detail) c.visible = !far; }); },
       update(t, dt, rv, fc) { G.userData.reveal = rv; G.userData.focus = fc; G.traverse(o => { const u = o.material && o.material.uniforms; if (u && u.uFocus) u.uFocus.value = fc; }); w.update(t, dt, clamp(rv, 0, 1), clamp(fc, 0, 1)); },
       dispose() { G.traverse(o => { if (o.userData.rt) o.userData.rt.dispose(); if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };

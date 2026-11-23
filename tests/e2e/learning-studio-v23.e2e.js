@@ -22,7 +22,9 @@ const num = s => parseFloat(String(s).replace('−', '-'));
 
   /* ---------- entrance ---------- */
   await t('entrance: plays once per session, ends by itself within ~1 s, and any key skips it', async () => {
-    const p = await fresh(null, false); await p.goto(BASE + 'learn.html#/home'); await p.waitForTimeout(150);
+    /* v31: the universe is the entrance, so the intro never plays before #/home; it still plays (once) when the Studio is opened on another page */
+    const p0 = await fresh(null, false); await p0.goto(BASE + 'learn.html#/home'); await p0.waitForTimeout(150); assert.equal(await p0.locator('.at-enter').count(), 0, 'no intro before the universe'); await p0.context().close();
+    const p = await fresh(null, false); await p.goto(BASE + 'learn.html#/explore'); await p.waitForTimeout(150);
     assert.ok(await p.locator('.at-enter').count() === 1, 'entrance shown on first open');
     await p.keyboard.press('Space'); await p.waitForTimeout(700); assert.equal(await p.locator('.at-enter').count(), 0, 'skipped by a key');
     await p.reload(); await p.waitForTimeout(200); assert.equal(await p.locator('.at-enter').count(), 0, 'not again in the same session');

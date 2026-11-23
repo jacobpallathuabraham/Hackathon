@@ -5,21 +5,21 @@
   {
    "name": "Cinematic universe — opening (scene 0)",
    "route": "home",
-   "fps": 3.5,
-   "cpuMedianMs": 1.8,
-   "cpuP95Ms": 6.1,
+   "fps": 5.1,
+   "cpuMedianMs": 1.4,
+   "cpuP95Ms": 4.2,
    "dpr": 1,
    "tier": 1,
    "drawCalls": 150,
    "triangles": 81086,
-   "heapMB": 19.7
+   "heapMB": 22.4
   },
   {
    "name": "Cinematic universe — Geography world (scene 7)",
    "route": "home",
-   "fps": 6.1,
+   "fps": 6.3,
    "cpuMedianMs": 0.9,
-   "cpuP95Ms": 4.5,
+   "cpuP95Ms": 2.4,
    "dpr": 1,
    "tier": 1,
    "drawCalls": 54,
@@ -29,14 +29,14 @@
   {
    "name": "Cinematic universe — overview, all worlds (scene 14)",
    "route": "home",
-   "fps": 5.1,
+   "fps": 4.9,
    "cpuMedianMs": 3.2,
-   "cpuP95Ms": 7.3,
+   "cpuP95Ms": 7.6,
    "dpr": 1,
    "tier": 1,
-   "drawCalls": 267,
-   "triangles": 107176,
-   "heapMB": 18.3
+   "drawCalls": 265,
+   "triangles": 107172,
+   "heapMB": 18.1
   },
   {
    "name": "Solar System Explorer",
@@ -45,14 +45,14 @@
    "rafCallsIn1_5sWhenIdleAmbientOff": null,
    "scenes": 1,
    "bench": {
-    "frames": 52,
-    "fps": 12.857683095928401,
-    "meanMs": 0.9076923076802184,
-    "medianMs": 0.6999999999534339,
-    "p95Ms": 2.699999999953434,
+    "frames": 48,
+    "fps": 12.000204258795899,
+    "meanMs": 0.912500000015522,
+    "medianMs": 0.7999999998137355,
+    "p95Ms": 1.7000000001862645,
     "dpr": 1
    },
-   "heapMB": 18.8
+   "heapMB": 16.7
   },
   {
    "name": "Rotation Lab",
@@ -61,11 +61,11 @@
    "rafCallsIn1_5sWhenIdleAmbientOff": null,
    "scenes": 1,
    "bench": {
-    "frames": 40,
-    "fps": 9.915842465230988,
-    "meanMs": 0.8800000000046566,
+    "frames": 39,
+    "fps": 9.539828785178116,
+    "meanMs": 0.9641025640930121,
     "medianMs": 0.6000000000931323,
-    "p95Ms": 2.5,
+    "p95Ms": 4.7999999998137355,
     "dpr": 1
    },
    "heapMB": 15.1
@@ -73,34 +73,34 @@
   {
    "name": "Counting Studio",
    "route": "exp/counting-studio",
-   "rafCallsIn1_5sWhenIdle": 61,
+   "rafCallsIn1_5sWhenIdle": 81,
    "rafCallsIn1_5sWhenIdleAmbientOff": 0,
    "scenes": 1,
    "bench": {
-    "frames": 61,
-    "fps": 15.063265716007228,
-    "meanMs": 0.867213114758297,
-    "medianMs": 0.7000000000698492,
-    "p95Ms": 1.7000000000698492,
+    "frames": 62,
+    "fps": 15.641426703248802,
+    "meanMs": 1.1225806451552818,
+    "medianMs": 0.7000000001862645,
+    "p95Ms": 2.900000000372529,
     "dpr": 1
    },
-   "heapMB": 13.3
+   "heapMB": 13.1
   },
   {
    "name": "Probability Lab",
    "route": "exp/probability-lab",
-   "rafCallsIn1_5sWhenIdle": 83,
+   "rafCallsIn1_5sWhenIdle": 87,
    "rafCallsIn1_5sWhenIdleAmbientOff": 0,
    "scenes": 1,
    "bench": {
-    "frames": 91,
-    "fps": 22.882131597681273,
-    "meanMs": 0.6494505494528522,
-    "medianMs": 0.40000000002328306,
-    "p95Ms": 1.6000000000931323,
+    "frames": 84,
+    "fps": 21.102410251194954,
+    "meanMs": 0.5749999999977826,
+    "medianMs": 0.5,
+    "p95Ms": 1,
     "dpr": 1
    },
-   "heapMB": 13.6
+   "heapMB": 13.7
   }
  ]
 }

@@ -128,6 +128,27 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     assert.ok(r.inst >= 400, 'belt rocks ' + r.inst); assert.ok(r.shader >= 1, 'sun shader'); assert.match(await q.textContent('#lsView'), /asteroid belt is drawn as a thin band/); await q.context().close();
   });
 
+  await t('v32: languages shows only scripts this device can draw; the camera moves continuously; the astronaut keeps a safe distance', async () => {
+    await toScene(p, 11); await settle(p, 11);
+    const words = await p.evaluate(() => LS.__cosmos.debugWords('languages')); assert.ok(words && words.length >= 4, 'words ' + words);
+    const tofu = await p.evaluate(ws => { const g = document.createElement('canvas').getContext('2d'); g.font = '40px system-ui'; const box = g.measureText('\u0378').width; return ws.filter(w => [...w.replace(/\s/g, '')].some(ch => Math.abs(g.measureText(ch).width - box) < 0.01)); }, words); assert.deepEqual(tofu, []);
+    // camera continuity: fine scroll steps move the camera by small, similar amounts (no jumps or reversals)
+    const steps = await p.evaluate(async () => { const tr = document.querySelector('.cz-track'), r0 = tr.getBoundingClientRect(), base = scrollY + r0.top, span = r0.height - innerHeight, out = [];
+      for (let k = 30; k <= 50; k++) { scrollTo({ top: base + (k / 10) / 14 * span, behavior: 'instant' }); LS.__cosmos.jump(k / 10); await new Promise(z => requestAnimationFrame(() => requestAnimationFrame(z))); out.push(LS.__cosmos.debugCam()); } return out; });
+    const d = steps.slice(1).map((c, i) => Math.hypot(c[0] - steps[i][0], c[1] - steps[i][1], c[2] - steps[i][2])); const med = d.slice().sort((x, y) => x - y)[d.length >> 1]; assert.ok(Math.max(...d) < 9 && Math.max(...d) < med * 6 + 1, 'largest camera step ' + Math.max(...d).toFixed(2) + ' (median ' + med.toFixed(2) + ')'); /* a 0.1 scroll step mid-segment between worlds ~27 units apart */
+    for (const k of [0, 1, 3, 7, 13, 14]) { await toScene(p, k); await settle(p, k); await p.waitForTimeout(600); const a = await p.evaluate(() => LS.__cosmos.debugAstro()); const dist = Math.hypot(a.pos[0] - a.cam[0], a.pos[1] - a.cam[1], a.pos[2] - a.cam[2]); assert.ok(dist > 2.6, 'astronaut distance at ' + k + ': ' + dist.toFixed(2)); }
+  });
+
+  await t('v32: in the overview, focusing a world brings it forward and the others recede; entering clears the stage', async () => {
+    await toScene(p, 14); await settle(p, 14); await p.waitForTimeout(800);
+    const before = await p.evaluate(() => ({ c: LS.__cosmos.debugWorld('chemistry').dist, h: LS.__cosmos.debugScale('history') }));
+    await p.evaluate(() => LS.__cosmos.hover('chemistry')); await p.waitForTimeout(1500);
+    const after = await p.evaluate(() => ({ c: LS.__cosmos.debugWorld('chemistry').dist, h: LS.__cosmos.debugScale('history') }));
+    assert.ok(after.c < before.c, 'focused world closer: ' + before.c + ' → ' + after.c); assert.ok(after.h < before.h, 'others recede: ' + before.h + ' → ' + after.h);
+    await p.evaluate(() => LS.__cosmos.enter('chemistry', 6000)); const cleared = await p.waitForFunction(lim => LS.__cosmos.debugScale('history') < lim, after.h * 0.85, { timeout: 5500 }).then(() => true, () => false); assert.ok(cleared, 'others clear away during travel: ' + await p.evaluate(() => LS.__cosmos.debugScale('history')) + ' vs ' + after.h);
+    await p.evaluate(() => LS.__cosmos.skip()); await p.waitForFunction(() => location.hash === '#/world/chemistry', null, { timeout: 10000 }); await p.goBack(); await ready(p); await p.waitForTimeout(1200);
+  });
+
   await t('Device-aware: on a software WebGL renderer (no GPU) the painted universe is used by default; ?cosmos=gl forces 3D', async () => {
     const c = await b.newContext({ viewport: { width: 1360, height: 860 } }); await c.addInitScript(() => { sessionStorage.setItem('acubins-role', 'student'); sessionStorage.setItem('ls-entered', '1'); });
     const q = await c.newPage(); await q.goto(BASE + 'learn.html#/home'); await q.waitForSelector('.cz'); await q.waitForTimeout(800);

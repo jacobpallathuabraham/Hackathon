@@ -305,3 +305,155 @@ Real GPU frame rates still need checking on real devices.
 
 **For reviewers without WebGL** (for example AI assistants): `learn-guide/universe.html` is a static walkthrough
 with screenshots of all fifteen scenes, the astronaut close-up, a world page, the painted fallback and the Solar System.
+
+---
+
+## v32 — art direction, cinematic quality, interaction and performance
+
+### Audit (before changing anything)
+
+- **Astronaut GLB, inspected directly:**
+  - one mesh, 4,812 vertices, with position, normal and UV attributes;
+  - one material (`Astronaut_mat`) with an opaque JPEG base colour;
+  - **no skeleton and no animations**;
+  - origin at the feet, 2.01 units tall, front facing +z;
+  - 265 KB.
+
+  It was kept: the silhouette reads well at the sizes used, and it has no animation rig that a replacement would
+  improve on.
+- **Kept as is:** native-scroll spline camera, baked surfaces, progressive build with background shader warm-up, single
+  loop, quality tiers, painted fallback, travel into subject pages.
+- **Defects found in the code:**
+  - the astronaut's gaze target switched halfway through every segment (`a.f < 0.5`);
+  - its idle motion was three pure sines, so it repeated visibly;
+  - its lean followed speed, not acceleration;
+  - every camera segment used the same easing (smoothstep, which has non-zero acceleration at the ends), with no arcs
+    and no damping of the look target;
+  - overview worlds gathered along straight lines;
+  - nothing receded when a world was focused or entered;
+  - dust was as visible at rest as in motion;
+  - atmospheres had no forward scattering, so the backlit hero limb was dull;
+  - scripts a device lacks fonts for would render as boxes;
+  - an adaptive pixel-ratio change cleared the canvas, showing **one black frame** (seen in a phone screenshot);
+  - the new look-target damping, measured, converged too slowly on slow frames (it used a capped timestep).
+
+### What changed
+
+**Camera choreography (`ls-cosmos.js`):**
+- **Easing and dwell:** each segment now uses smootherstep, with zero velocity *and* acceleration at both ends, so
+  there is no jerk and no overshoot, plus a dwell tuned by scene type:
+  - a long rest on the hero approach;
+  - a short pull-back that decelerates into the universe reveal.
+- **Arcs:** approaches arc, and the arc is exactly zero on each keyframe:
+  - world-focus approaches swing out sideways, alternating sides;
+  - the first-light reveal rises;
+  - the overview pull-back lifts.
+- **Look target:** critically damped in real elapsed time, so hand-overs between path, flight and return never snap.
+  Direct jumps snap it.
+- **Scroll follow:** velocity-aware — tight for normal scrolling, calmer for long jumps (rail, "All worlds").
+- **Flight time:** distance-aware, 0.75–1.3 s, still skippable by any key, click or wheel.
+
+**Astronaut:**
+- **Following:** a critically damped spring in camera space, so it has inertia and settles in about a second without
+  overshooting. It can no longer come closer than 2.9 units to the camera, so it never clips or covers the headline.
+- **Lean and jet:** it leans with *acceleration*, forward when the camera speeds up and back when it slows. The jet
+  only shows while accelerating, and is small and dim.
+- **Drift:** idle drift is a sum of incommensurate slow waves with slowly breathing amplitude, so it doesn't visibly
+  repeat.
+- **Gaze:** it blends continuously between scene subjects instead of switching.
+- **Phones:** it floats in the upper half, except in the overview, where it drops below the worlds.
+
+**Light and hero:**
+- **Atmospheres:**
+  - a day-side limb that follows the sun;
+  - a warm terminator band;
+  - a faint night rim, so dark hemispheres keep their silhouette;
+  - **forward scattering** when backlit.
+- **Sunrise opening:** the opening sun now waits just behind the great planet's upper limb, so the opening is a
+  sunrise rather than an evenly lit ring.
+- **First light:** recomposed, with the planet's limb low in frame and the astronaut on the right, clear of the
+  headline. Before, the planet sat behind the text and the astronaut overlapped it.
+
+**Worlds:**
+- **Chemistry:** bonds are thinner and darker, so atoms read first. Molecules are evenly phased on three separated,
+  inclined orbits, so they never clump.
+- **Languages:** a greeting is shown only if every letter has a real glyph on this device (each character is compared
+  with the "missing glyph" box). On the test machine, Chinese, Japanese and Korean were correctly dropped; Hindi,
+  Arabic, Greek and Cyrillic remain.
+
+**Overview and selection:**
+- **Gathering:** each world arrives on its own curved path (a quadratic Bézier with a per-world bow), staggered in six
+  waves.
+- **Focus:** a focused world comes about 1.8 units forward and grows slightly, while the others recede and shrink about
+  7%.
+- **Entering:** on entering, the other worlds clear away during the flight.
+- **Portrait screens:** a narrower, taller constellation, so all eleven fit instead of a ring cut off at both sides.
+
+**Particles:** stars are sparser (3,400 / 2,200 / 1,100 by tier) and twinkle less. Near dust sits at 20% at rest and
+rises to full only while the camera moves.
+
+**Rendering glitch fixed:** any resolution change, whether adaptive or a resize, re-renders immediately, so no black
+frame appears.
+
+### Tests (all run on this code)
+
+`learning-studio-v30` is now 18 tests, with two new ones. One checks that Languages shows only drawable scripts, that
+the camera moves continuously across 21 fine scroll steps, and that the astronaut stays more than 2.6 units from the
+lens in six scenes. The other checks that in the overview a focused world comes closer while the others shrink, and
+that during travel the others shrink further. The rest of the regression results are listed below once the full run
+completes.
+
+### Performance: what could and could not be measured
+
+**No real-device GPU measurement was possible from this environment.** It has no graphics card, and the browser renders
+WebGL in software (SwiftShader). Per-pixel cost dominates there, so the software frame rate is only a relative indicator.
+The figures below must not be read as real-device FPS. Measuring the opening, a world and the overview on a GPU laptop
+and a mid-range phone is still needed: open `learn.html?cosmos=gl`, then `LS.__cosmos.stats()` in the console returns
+fps, CPU ms (median and 95th percentile), draw calls, triangles and textures.
+
+**Software-renderer measurements.** `tools/perf-studio.js` on 2026-11-23, headless Chromium with SwiftShader (no GPU),
+1360×900, pixel ratio 1, quality tier 1. These are a relative indicator only, not device FPS:
+
+| Scene | fps (software) | CPU per frame, median / 95th pct | Draw calls | Triangles | JS heap |
+|---|---|---|---|---|---|
+| Opening | 5.1 | 1.4 / 4.2 ms | 150 | 81k | 22 MB |
+| Geography world | 6.3 | 0.9 / 2.4 ms | 54 | 55k | 18 MB |
+| Overview | 4.9 | 3.2 / 7.6 ms | 265 | 107k | 18 MB |
+
+The phone tier on the same renderer (390×844, tier 0, pixel ratio 0.75–0.8): about 17 fps in world scenes, 133–156
+draw calls in the journey, 259 in the overview, and 25k–73k triangles.
+
+**Real-device tests performed: none.** None were possible here, because no GPU laptop or phone is attached to this
+environment. This is the main open item.
+
+### v32 test results (this code)
+
+| Suite | Result |
+|---|---|
+| `learning-studio-v30` (universe, incl. 2 new v32 tests) | 18/18 |
+| `learning-studio-v29` | 18/18 |
+| `learning-studio-v28` | 21/21 |
+| `learning-studio-v27` | 14/14 |
+| `learning-studio-v26` | 14/14 |
+| `learning-studio-v24` | 42/42 |
+| `learning-studio-v23` | 18/18 (entrance test updated: the intro no longer plays before the universe, by request; it still plays on other entry pages) |
+| `learning-studio-v22` | 22/22 |
+| `learning-studio-v21` | 21/21 |
+| `learning-studio` (base) | 34/34 |
+| `learn-inspect` | 14/14 |
+| `lab` | 34/34, no page errors |
+| `problems` | 14/14 |
+| `visual-chat` | 18/18 |
+| `nav`, `a11y`, `studio-noor` | all checks passed |
+
+### Remaining limitations
+
+- **Real GPU and phone frame rates are unmeasured.**
+- **World-specific geometry:** this pass improved the shared systems (camera, light, atmospheres, astronaut, overview,
+  particles), plus Chemistry and Languages. The other nine worlds keep their v30 geometry and surfaces. Deeper
+  per-world remodelling (Maths internal depth, Physics ring shadows, History instruments and so on) is still open.
+- **The astronaut has no skeletal animation** (the model has none); all motion is procedural.
+- **The walkthrough page** (`learn-guide/universe.html`) has refreshed screenshots, but it's live only after
+  deployment.
+
+**Deployment: not deployed.** The work is committed to the branch only.
