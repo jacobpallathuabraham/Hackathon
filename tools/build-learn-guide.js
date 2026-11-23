@@ -37,7 +37,7 @@ const page = (title, desc, body) => `<!doctype html>
 <link rel="stylesheet" href="../assets/css/learn-inspect.css">
 </head>
 <body>
-<header class="site"><a href="index.html">Learning Studio content directory</a><a href="../learn.html?inspect=1">Open the live Studio (read-only, no sign-in)</a><a href="../index.html">ERLY home</a></header>
+<header class="site"><a href="index.html">Learning Studio content directory</a><a href="../learn.html?inspect=1">Open the live Studio (read-only, no sign-in)</a><a href="universe.html">The 3D universe and astronaut (screenshots)</a><a href="../index.html">ERLY home</a></header>
 <main id="main">
 ${body}
 </main>

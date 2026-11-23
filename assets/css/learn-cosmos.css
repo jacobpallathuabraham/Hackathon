@@ -187,3 +187,14 @@ html.cz-on { scroll-behavior: auto !important; }
 .cz-ring__w:hover, .cz-ring__w:focus-visible { transform: translate(-50%, -50%) scale(1.08); outline: none; }
 .cz-ring__w:focus-visible span { text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 760px) { .cz--flat .cz-ring { top: 36vh; } .cz-ring__w span { font-size: .7rem; max-width: 80px; text-align: center; } }
+
+/* performance: no backdrop blur over the live 3D canvas (it would re-blur every frame); solid translucent panels instead */
+.cz-label, .cz-tool, .cz-dock .at-choice, .cz-map { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.cz-label { background: rgba(8, 11, 26, .86); } .cz-tool { background: rgba(10, 14, 30, .78); } .cz-dock .at-choice { background: rgba(9, 12, 26, .92) !important; } .cz-map { background: rgba(2, 3, 10, .72); }
+.cz-cv { contain: strict; }
+
+/* the rest of the home continues on the universe's dark ground (whatever the site theme), so there is no hard dark→bright edge */
+html.cz-on body.at { --bg: #06080f; --bg-2: #0b0e18; --surface: #10131f; --surface-2: #171b2a; --ink: #ECE7DD; --ink-2: #CAC4B9; --muted: #9B96A2;
+  --line: #262a3a; --line-2: #343a50; --accent: #9AA8FF; --accent-ink: #0E1020; --accent-soft: #23294B; --ls-accent-tx: #B4BEFF; background: #06080f; color: var(--ink); }
+.cz-index { background: linear-gradient(var(--cz-bg), #06080f 60%); }
+.cz-after { background: #06080f; }

@@ -75,9 +75,10 @@
   /* ---------- the universe ---------- */
   async function universe(stage, o) {
     const { THREE } = await LS.three(); const W = LS.cosmosWorlds, M = W.META; let q = tierOf();
-    const renderer = new THREE.WebGLRenderer({ antialias: q > 0, powerPreference: 'high-performance', alpha: false });
+    const maxDpr0 = Math.min(devicePixelRatio || 1, [1, 1.25, 1.5][q]); /* pixel-ratio caps: the scene is soft and atmospheric, so 1.5 is visually indistinguishable from 2 at a third of the pixels */
+    const renderer = new THREE.WebGLRenderer({ antialias: maxDpr0 < 1.5, powerPreference: 'high-performance', alpha: false, stencil: false });
     renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
-    const maxDpr = Math.min(devicePixelRatio || 1, [1.5, 1.6, 2][q]); let dpr = maxDpr; renderer.setPixelRatio(dpr);
+    const maxDpr = maxDpr0; let dpr = maxDpr; renderer.setPixelRatio(dpr); W.SUN.renderer = renderer; /* surfaces are baked with this renderer */
     const cv = renderer.domElement; cv.className = 'cz-cv'; cv.setAttribute('aria-hidden', 'true'); stage.prepend(cv);
     const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(q ? 42 : 50, 16 / 9, 0.05, 4000);
     const disposables = [];
@@ -123,7 +124,7 @@
     const dust = pointsLayer([140, 300, 520][q], [90, 50, 360], 0.12, 0.35, 19, false);
 
     const far = []; [[[-520, 260, -900], 340, 3, 210], [[760, -180, -1100], 260, 11, 25], [[-900, -320, -400], 220, 23, 280]].forEach(([p, s, seed, hue]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: galaxyTex(THREE, seed, hue), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55, fog: false })); m.position.set(...p); m.lookAt(0, 0, -150); m.rotateX(0.9); m.rotateZ(seed); scene.add(m); far.push(m); });
-    const clouds = []; [[[-26, 8, -70], 46, 'rgba(110,150,255,A)', 5], [[30, -10, -110], 54, 'rgba(255,140,170,A)', 9], [[-36, -14, -170], 60, 'rgba(120,255,220,A)', 13], [[34, 12, -230], 58, 'rgba(255,200,130,A)', 17], [[0, 18, -300], 90, 'rgba(160,140,255,A)', 21]].forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
+    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(255,140,170,A)', 9], [[0, 22, -310], 90, 'rgba(160,140,255,A)', 21]] : [[[0, 22, -310], 90, 'rgba(160,140,255,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
 
     /* the great planet of the opening ("Origin"): marbled indigo with a thin bright atmosphere — the sun rises from behind its limb */
     const origin = new THREE.Group(); origin.position.set(...ORIGIN.pos);
@@ -131,17 +132,20 @@
 
     /* worlds: nearest first, the rest in idle time */
     const worlds = {}; const queue = W.ORDER.slice();
-    const buildNext = () => { const id = queue.shift(); if (!id) return; const G = W.build(THREE, id, q); G.position.set(...PATH[id]); G.userData.f = 0; G.userData.rv = 0; scene.add(G); worlds[id] = G; };
+    /* warm-up: a world's shaders compile and its textures upload in the background as soon as it is built, so reaching it
+       mid-scroll never stalls a frame (first-use compilation was the cause of hitches) */
+    const warm = obj => { try { const par = renderer.extensions && renderer.extensions.has && renderer.extensions.has('KHR_parallel_shader_compile'); if (par && renderer.compileAsync) renderer.compileAsync(obj, camera, scene).catch(() => {}); else renderer.compile(obj, camera, scene); /* called from idle time */ obj.traverse(o => { const m = o.material; if (m && m.map && renderer.initTexture) renderer.initTexture(m.map); }); } catch (e) { /* best effort */ } };
+    const buildNext = () => { const id = queue.shift(); if (!id) return; const G = W.build(THREE, id, q); G.position.set(...PATH[id]); G.userData.f = 0; G.userData.rv = 0; scene.add(G); worlds[id] = G; warm(G); };
     buildNext(); buildNext();
     const idle = window.requestIdleCallback || (f => setTimeout(f, 60)); const idleBuild = () => { if (!alive || !queue.length) return; buildNext(); idle(idleBuild, { timeout: 400 }); }; let alive = true; idle(idleBuild, { timeout: 400 });
 
     /* astronaut */
     const astro = new THREE.Group(); astro.visible = false; scene.add(astro); const inner = new THREE.Group(); astro.add(inner);
-    const jet = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); jet.position.set(0, 0.12, -0.32); jet.scale.setScalar(0.35); inner.add(jet);
+    const jet = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); jet.position.set(0, 0.12, -0.32); jet.scale.setScalar(0.2); inner.add(jet);
     let astroReady = false;
     import('three/addons/loaders/GLTFLoader.js').then(({ GLTFLoader }) => new GLTFLoader().loadAsync('assets/models/astronaut.glb')).then(g => { if (!alive) return;
       const m = g.scene; m.traverse(x => { if (x.isMesh) { x.material.color.setScalar(1); x.material.roughness = 0.72; x.material.metalness = 0.05; x.castShadow = false; } });
-      m.position.set(0, -1.0, 0); const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.42); inner.add(holder); astroReady = true; astro.visible = true; astro.userData.fade = 0; o.onAstronaut && o.onAstronaut(true);
+      m.position.set(0, -1.0, 0); const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.42); inner.add(holder); warm(holder); astroReady = true; astro.visible = true; astro.userData.fade = 0; o.onAstronaut && o.onAstronaut(true);
     }).catch(() => { o.onAstronaut && o.onAstronaut(false); });
 
     /* camera choreography */
@@ -196,7 +200,7 @@
       tmpM.lookAt(look, astro.position, camera.up); tmpQ.setFromRotationMatrix(tmpM); astro.quaternion.slerp(tmpQ, 1 - Math.exp(-dt * 1.6));
       const t = st.t, sp = clamp(vel / 30, 0, 1);
       inner.position.y = Math.sin(t * 0.7) * 0.035; inner.rotation.set(-0.12 * sp + Math.sin(t * 0.53) * 0.05, Math.sin(t * 0.31) * 0.08, Math.sin(t * 0.43) * 0.07 + st.ptr.x * -0.05);
-      jet.material.opacity += (clamp(sp * 1.4, 0, 0.9) - jet.material.opacity) * (1 - Math.exp(-dt * 6)); jet.scale.setScalar(0.2 + sp * 0.5);
+      jet.material.opacity += (clamp((sp - 0.25) * 0.8, 0, 0.45) - jet.material.opacity) * (1 - Math.exp(-dt * 6)); jet.scale.setScalar(0.12 + sp * 0.22); /* a soft puff only while travelling, never a white blotch */
       astro.userData.fade = Math.min(1, (astro.userData.fade || 0) + dt * 0.9);
     }
 
@@ -205,11 +209,11 @@
       const dt = Math.min(0.05, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
-      const pPrev = st.p; st.p = still ? Math.round(st.target) : st.p + (st.target - st.p) * (1 - Math.exp(-Math.min(0.12, (now - (st.lastP || now - 16)) / 1000) * 4.2)); st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+      const pPrev = st.p; st.p = still ? Math.round(st.target) : st.p + (st.target - st.p) * (1 - Math.exp(-Math.min(0.12, (now - (st.lastP || now - 16)) / 1000) * 9)); /* tight follow: smooth, but never trailing the scroll */ st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
       st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
-      key.position.copy(sun).multiplyScalar(50); key.intensity = 0.5 + 2.0 * dawn; hemi.intensity = 0.18 + 0.16 * dawn; sunGlow.position.copy(sun).multiplyScalar(1500); sunGlow.material.opacity = 0.65 + 0.35 * dawn;
+      key.position.copy(sun).multiplyScalar(50); key.intensity = 0.5 + 2.0 * dawn; hemi.intensity = 0.18 + 0.16 * dawn; sunGlow.position.copy(sun).multiplyScalar(1500); sunGlow.material.opacity = 0.5 + 0.25 * dawn;
       // camera
       const a = cameraAt(st.p, camPos, camTgt);
       if (st.p > N - 2) { const gk = smooth(gatherK(st.p)); } // (overview keyframe is already at the gathering point)
@@ -271,14 +275,14 @@
       returnFrom(id) { const G = worlds[id] || (buildNext(), worlds[id]); if (!G) return; placeWorlds(st.p, st.t, 0); const P = G.position.clone(), r = G.userData.radius * G.scale.x; st.ret = { t0: performance.now() + 60, ms: 1100, p0: P.clone().add(new THREE.Vector3(0, r * 0.2, r * 1.7)), q0: P }; start(); },
       debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p }; },
       debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2) }; },
-      debugRaf: () => !!raf || !!idleT, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
+      debugRaf: () => !!raf || !!idleT, scene, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
       buildAll() { while (queue.length) buildNext(); },
       kick: start,
       destroy() { alive = false; cancelAnimationFrame(raf); clearTimeout(idleT); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);
-        Object.values(worlds).forEach(G => G.userData.dispose()); scene.traverse(x => { if (x.geometry) x.geometry.dispose(); const m = x.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); });
+        Object.values(worlds).forEach(G => G.userData.dispose()); scene.traverse(x => { if (x.userData.rt) x.userData.rt.dispose(); if (x.geometry) x.geometry.dispose(); const m = x.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); });
         rt.dispose(); renderer.dispose(); renderer.forceContextLoss(); cv.remove(); }
     };
-    start(); return api;
+    warm(scene); start(); return api;
   }
 
   /* ---------- device-aware rendering ----------
@@ -408,11 +412,11 @@
   async function mountWorldPlanet(head, id) {
     const { THREE } = await LS.three(); if (!head.isConnected) return null; const W = LS.cosmosWorlds, q = Math.min(1, tierOf());
     const host = document.createElement('div'); host.className = 'cz-wp'; host.setAttribute('aria-hidden', 'true'); head.appendChild(host);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75)); host.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ antialias: (devicePixelRatio || 1) < 1.5, alpha: true, stencil: false }); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); host.appendChild(renderer.domElement);
     const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200); camera.position.set(0, 1.4, 9.5); camera.lookAt(0, 0, 0);
     if (!W.SUN.v) W.SUN.v = new THREE.Vector3(); W.SUN.v.set(...SUN1).normalize();
     const key = new THREE.DirectionalLight(0xfff1df, 2.4); key.position.copy(W.SUN.v).multiplyScalar(20); scene.add(key, new THREE.HemisphereLight(0x9fb0d8, 0x0b0d14, 0.45));
-    const G = W.build(THREE, id, q); scene.add(G); const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+    W.SUN.renderer = renderer; const G = W.build(THREE, id, q); scene.add(G); const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
     let raf = 0, last = performance.now(), t = 0, vis = true, alive = true, rv = 0;
     const size = () => { const w = host.clientWidth || 300, h = host.clientHeight || 200; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
     const ro = new ResizeObserver(size); ro.observe(host); size();

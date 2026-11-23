@@ -274,3 +274,34 @@ noted below.
   testing.
 - **Older tests changed for the new design:** the v29 home check now targets the journey and index instead of the old
   hero; v22 counts the index's 11 worlds.
+
+---
+
+## v31 — performance and polish pass (after the first deployment)
+
+Feedback: the site felt laggy; the Learning Studio must open straight into the universe; some areas were too dark or too
+bright.
+
+| Change | Why |
+|---|---|
+| **Planet surfaces are baked.** The procedural colour is rendered once into a texture when a world is built, and the frame shader is one texture lookup plus lighting | Before, every planet pixel ran 5–20 3D-noise evaluations every frame. The great opening planet covered much of the screen. This was the largest GPU cost |
+| **Shaders compile in the background.** `compileAsync` with `KHR_parallel_shader_compile`, otherwise `compile` in idle time; textures pre-upload | First-use shader compilation froze frames (50–200 ms on Windows/ANGLE) the moment a new world came into view mid-scroll |
+| **Camera follows the scroll about 2× more tightly** (damping 4.2/s → 9/s) | The camera trailed the scroll by about 0.7 s, which reads as lag |
+| **Lower pixel-ratio caps:** 1 on phones, 1.25 modest, 1.5 capable (was 1.5/1.6/2); MSAA off at 1.5; still adaptive | Roughly half the pixels on high-density screens, no visible loss in a soft, atmospheric scene |
+| **No `backdrop-filter` over the canvas** | Blurring a constantly changing 3D image costs a full re-blur every frame |
+| **Fewer full-screen additive cloud sprites** (5 → 2 on capable, 1 elsewhere) | Pure overdraw; the baked nebula already carries the atmosphere |
+| **Bright and dark areas:** the jet glow is now a small, dim puff only while travelling (it read as a white blotch); the sun glow is softer; planets' night sides keep 8% light instead of 3.5% | The "too bright" and "too dark" spots |
+| **The rest of the home is dark** (whatever the site theme), continuing the universe's ground | Removes the hard dark→cream edge below the journey |
+| **The universe is the entrance:** the old 2D warp intro no longer plays before it | "Learning Studio" opens straight into the universe |
+
+**Measured** with `tools/perf-studio.js` on software WebGL. Software rendering is bound by per-pixel cost, so its frame
+rate is a fair proxy for the shader savings:
+- Geography world: 2.7 → 6.1–6.6 fps.
+- Overview: 4.8 → 5.1–6.0 fps.
+- Opening: 3.7 → 3.5–4.3 fps, within noise. A layer-by-layer profile showed no single dominant cost on the software
+  renderer.
+
+Real GPU frame rates still need checking on real devices.
+
+**For reviewers without WebGL** (for example AI assistants): `learn-guide/universe.html` is a static walkthrough
+with screenshots of all fifteen scenes, the astronaut close-up, a world page, the painted fallback and the Solar System.

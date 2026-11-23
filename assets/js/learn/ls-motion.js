@@ -58,7 +58,8 @@
   /* ---------- the entrance ---------- */
   function entrance() {
     let seen = false; try { seen = sessionStorage.getItem('ls-entered') === '1'; sessionStorage.setItem('ls-entered', '1'); } catch (e) { /* none */ }
-    if (seen || reduced() || envPref() === 'off') { root.classList.add('at-entered'); return; }
+    const toUniverse = !location.hash || /^#\/?(home)?$/.test(location.hash); /* the universe is the entrance: no separate intro before it */
+    if (seen || toUniverse || reduced() || envPref() === 'off') { root.classList.add('at-entered'); return; }
     const el = document.createElement('div'); el.className = 'at-enter'; el.setAttribute('aria-hidden', 'true');
     el.innerHTML = `<canvas class="at-enter__sky"></canvas><div class="at-enter__mark"><span class="at-enter__k">ERLY</span><span class="at-enter__t">${T('Learning Studio', 'استوديو التعلّم')}</span><span class="at-enter__line"></span></div>`;
     document.body.appendChild(el);

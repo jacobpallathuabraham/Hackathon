@@ -76,8 +76,51 @@
     gl_FragColor=vec4(uCol*f*(0.15+l)*(uK+uFocus*0.25),1.0); }`;
   const ATM_V = `varying vec3 vN; varying vec3 vW; void main(){ vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`;
 
-  const SUN = { v: null }; // shared world-space sun direction (a THREE.Vector3 set by the universe)
+  const SUN = { v: null, renderer: null }; // shared sun direction, and the renderer used to bake surfaces (set by the universe / world header)
+
+  /* Surfaces are BAKED: the procedural colour is rendered once into an equirectangular texture (matching three's sphere UVs),
+     then every frame costs one texture lookup plus lighting instead of 5–20 noise evaluations per pixel. */
+  const BAKE_F = (oct) => `#define OCT ${oct}
+  uniform vec3 uA; uniform vec3 uB; uniform vec3 uC; uniform float uMode; uniform float uSeed; varying vec2 vUv; ${NOISE}
+  void main(){ float ph=vUv.x*6.2831853, th=(1.0-vUv.y)*3.14159265; vec3 p=vec3(-cos(ph)*sin(th),cos(th),sin(ph)*sin(th)); vec3 col; float code=0.0;
+    if(uMode<0.5){ float lat=p.y+0.06*fbm(p*3.0+uSeed); float b=sin(lat*17.0+fbm(p*1.6+uSeed)*2.6); col=mix(uA,uB,0.5+0.5*b); col=mix(col,uC,smoothstep(0.55,1.0,abs(sin(lat*5.0)))*0.55);
+      float storm=smoothstep(0.86,1.0,1.0-length((p-normalize(vec3(0.7,-0.25,0.6)))*vec3(1.0,2.2,1.0))); col=mix(col,uC*1.3,storm*0.7); }
+    else if(uMode<1.5){ float h=fbm(p*2.2+uSeed); float land=smoothstep(0.02,0.08,h); vec3 sea=mix(uA*0.55,uA,smoothstep(-0.4,0.05,h)); vec3 gr=mix(uC,vec3(0.55,0.47,0.32),smoothstep(0.15,0.45,h)); col=mix(sea,gr,land);
+      float ice=smoothstep(0.78,0.86,abs(p.y)+0.05*h); col=mix(col,vec3(0.93,0.96,1.0),ice); float night=land*(1.0-ice)*smoothstep(0.3,0.62,fbm(p*22.0+3.0))*0.85;
+      code = land>0.5 ? 0.5+0.5*night : 0.4*(1.0-ice); }
+    else if(uMode<2.5){ vec3 q=p*5.0; float c1=fbm(q+uSeed); float cell=abs(fract(c1*3.0)-0.5); col=mix(uC,uA,smoothstep(0.0,0.45,cell)); col=mix(col,uB,smoothstep(0.42,0.5,cell)*0.8); }
+    else if(uMode<3.5){ float y=p.y*9.0+fbm(p*2.0+uSeed)*1.8; float band=fract(y); float k=floor(y); vec3 a=mix(uA,uC,fract(sin(k*12.9898)*43758.5)); col=mix(a,uB,smoothstep(0.82,0.98,band)*0.6); col*=0.85+0.25*fbm(p*14.0); }
+    else if(uMode<4.5){ vec3 q=p*1.6; vec3 w=vec3(fbm(q+uSeed),fbm(q+uSeed+4.1),fbm(q+uSeed+8.3)); float m=fbm(q+2.2*w); col=mix(uB,uA,smoothstep(-0.3,0.35,m)); col=mix(col,uC,smoothstep(0.35,0.7,m)); }
+    else if(uMode<5.5){ float d=sin(p.x*22.0+fbm(p*3.0+uSeed)*5.0)*0.5+0.5; col=mix(uC,uA,d*0.6+0.25*fbm(p*6.0)); col=mix(col,uB,smoothstep(0.82,1.0,d)*0.35); }
+    else if(uMode<6.5){ float h=fbm(p*2.5+uSeed); col=mix(uC,uA,smoothstep(-0.3,0.4,h)); float city=smoothstep(0.32,0.6,fbm(p*14.0+1.7))*smoothstep(0.0,0.2,h); code=0.5+0.5*city; }
+    else if(uMode<7.5){ float h=fbm(p*3.0+uSeed); col=mix(uC,uA,0.5+0.5*h); col=mix(col,uB,smoothstep(0.35,0.7,h)*0.4); }
+    else { float c=fbm(p*3.0+uSeed); col=vec3(1.0); code=smoothstep(0.05,0.5,c)*0.85; }
+    gl_FragColor=vec4(col,code); }`;
+  function bake(THREE, mode, cols, seed, w) {
+    const R = SUN.renderer; if (!R) return null;
+    const rt = new THREE.WebGLRenderTarget(w, w / 2, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, wrapS: THREE.RepeatWrapping });
+    const m = new THREE.ShaderMaterial({ depthTest: false, uniforms: { uA: { value: new THREE.Color(cols[0]) }, uB: { value: new THREE.Color(cols[1]) }, uC: { value: new THREE.Color(cols[2]) }, uMode: { value: mode }, uSeed: { value: seed } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }', fragmentShader: BAKE_F(5) });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m), sc = new THREE.Scene(); sc.add(quad);
+    const prev = R.getRenderTarget(); R.setRenderTarget(rt); R.render(sc, new THREE.Camera()); R.setRenderTarget(prev); quad.geometry.dispose(); m.dispose(); return rt;
+  }
+  const LIT_V = 'varying vec2 vUv; varying vec3 vN; varying vec3 vW; void main(){ vUv=uv; vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }';
+  const LIT_F = `uniform sampler2D uMap; uniform vec3 uSun; uniform vec3 uA; uniform float uFocus; varying vec2 vUv; varying vec3 vN; varying vec3 vW;
+  void main(){ vec4 t=texture2D(uMap,vUv); vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float ndl=dot(n,uSun); float lit=smoothstep(-0.18,0.55,ndl);
+    float spec=t.a<0.45?t.a/0.4:0.0, night=t.a>=0.5?(t.a-0.5)*2.0:0.0; vec3 H=normalize(uSun+V);
+    vec3 c=t.rgb*(0.08+0.95*lit)+spec*pow(max(dot(n,H),0.0),60.0)*0.9*vec3(1.0,0.95,0.85);
+    c+=night*(1.0-smoothstep(-0.15,0.1,ndl))*vec3(1.0,0.72,0.38)*0.95;
+    float rim=pow(1.0-max(dot(n,V),0.0),3.0); c+=uA*rim*0.18*(0.35+lit)+uA*uFocus*0.08;
+    gl_FragColor=vec4(c,1.0);
+    #include <colorspace_fragment>
+  }`;
+  const CLOUD_F = `uniform sampler2D uMap; uniform vec3 uSun; varying vec2 vUv; varying vec3 vN; void main(){ float a=texture2D(uMap,vUv).a; float l=smoothstep(-0.15,0.5,dot(normalize(vN),uSun)); gl_FragColor=vec4(vec3(1.0)*(0.05+0.95*l),a); }`;
+
   function surface(THREE, q, r, mode, cols, seed, seg) {
+    const s0 = seg || [24, 48, 64][q];
+    if (SUN.renderer) { const rt = bake(THREE, mode, cols, seed, r > 5 ? [1024, 1024, 2048][q] : [512, 1024, 1024][q]);
+      const u = { uMap: { value: rt.texture }, uSun: { value: SUN.v }, uA: { value: new THREE.Color(cols[0]) }, uFocus: { value: 0 }, uT: { value: 0 } };
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, s0, Math.round(s0 * 0.75)), new THREE.ShaderMaterial({ uniforms: u, vertexShader: LIT_V, fragmentShader: LIT_F })); mesh.userData.rt = rt; return mesh; }
     const u = { uSun: { value: SUN.v }, uA: { value: new THREE.Color(cols[0]) }, uB: { value: new THREE.Color(cols[1]) }, uC: { value: new THREE.Color(cols[2]) }, uT: { value: 0 }, uMode: { value: mode }, uSeed: { value: seed }, uFocus: { value: 0 } };
     const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SURF_V, fragmentShader: SURF_F(q >= 2 ? 5 : q === 1 ? 4 : 3) });
     const s = seg || [24, 48, 64][q]; return new THREE.Mesh(new THREE.SphereGeometry(r, s, Math.round(s * 0.75)), m);
@@ -184,9 +227,10 @@
   B.geography = (THREE, q, G) => { // the living planet: oceans, continents, ice caps, clouds, atmosphere, city lights at night
     const r = 1.75, M = META.geography; const core = surface(THREE, q, r, 1, [M.c[0], M.c[1], M.c[2]], 0.4, [32, 64, 96][q]); G.add(core);
     const cu = { uSun: { value: SUN.v }, uT: { value: 0 } };
-    const clouds = new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: cu, transparent: true, depthWrite: false,
+    const crt = SUN.renderer ? bake(THREE, 8, ['#ffffff', '#ffffff', '#ffffff'], 2.0, [512, 1024, 1024][q]) : null;
+    const clouds = crt ? new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: { uMap: { value: crt.texture }, uSun: { value: SUN.v } }, transparent: true, depthWrite: false, vertexShader: LIT_V, fragmentShader: CLOUD_F })) : new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: cu, transparent: true, depthWrite: false,
       vertexShader: SURF_V, fragmentShader: `#define OCT ${q >= 2 ? 5 : 4}\n uniform vec3 uSun; uniform float uT; varying vec3 vP; varying vec3 vN; varying vec3 vW; ${NOISE} void main(){ vec3 p=normalize(vP); float c=fbm(p*3.0+vec3(uT*0.006,0.0,0.0)); c=smoothstep(0.05,0.5,c); float l=smoothstep(-0.15,0.5,dot(normalize(vN),uSun)); gl_FragColor=vec4(vec3(1.0)*(0.05+0.95*l),c*0.85); }` }));
-    G.add(clouds, atmosphere(THREE, r * 1.1, '#7cc4ff', 1.35));
+    if (crt) clouds.userData.rt = crt; G.add(clouds, atmosphere(THREE, r * 1.1, '#7cc4ff', 1.35));
     return { core, r, body: [clouds], update(t, dt, rv, fc) { core.rotation.y += dt * 0.035; clouds.rotation.y += dt * 0.045; cu.uT.value = t; } };
   };
 
@@ -282,7 +326,7 @@
     w.core.userData.world = id; G.userData = { id, core: w.core, radius: w.r, reveal: 0, focus: 0,
       setFar(far) { if (G.userData.far === far) return; G.userData.far = far; G.children.forEach(c => { if (c.userData.detail) c.visible = !far; }); },
       update(t, dt, rv, fc) { G.userData.reveal = rv; G.userData.focus = fc; G.traverse(o => { const u = o.material && o.material.uniforms; if (u && u.uFocus) u.uFocus.value = fc; }); w.update(t, dt, clamp(rv, 0, 1), clamp(fc, 0, 1)); },
-      dispose() { G.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };
+      dispose() { G.traverse(o => { if (o.userData.rt) o.userData.rt.dispose(); if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };
     return G;
   }
   LS.cosmosWorlds = { META, ORDER, build, SUN, NOISE, textSprite, surface, atmosphere };

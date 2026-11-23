@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>The ERLY universe — astronaut and scenes · ERLY</title>
+<meta name="description" content="A static, no-JavaScript walkthrough of the ERLY Learning Studio's cinematic 3D universe and its astronaut, with screenshots of every scene and how each part works.">
+<link rel="icon" href="../assets/img/mark.svg" type="image/svg+xml">
+<style>
+  :root { --ink:#e9edfb; --muted:#a9b0c8; --line:rgba(255,255,255,.14); --bg:#05070e; --accent:#9fb4ff; color-scheme: dark; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:1rem/1.65 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:980px; margin:0 auto; padding:24px clamp(14px,3vw,28px) 60px; }
+  h1 { font:300 clamp(2rem,4.5vw,3rem)/1.05 Georgia,serif; letter-spacing:-.02em; margin:.2em 0 .3em; }
+  h2 { font:400 1.6rem Georgia,serif; margin:2.2em 0 .5em; } h3 { font:600 1rem system-ui; margin:1.8em 0 .5em; color:var(--accent); }
+  p, li { color:var(--muted); } a { color:var(--accent); } strong { color:var(--ink); }
+  figure { margin:0; } img { width:100%; height:auto; border-radius:14px; border:1px solid var(--line); display:block; }
+  figcaption { font-size:.92rem; color:var(--muted); margin-top:.5em; }
+  .duo { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  code { font-size:.88em; }
+</style>
+</head>
+<body><main>
+<p><a href="index.html">← Learning Studio content directory</a> · <a href="../learn.html">Open the live universe</a></p>
+<h1>The ERLY universe: the astronaut and every scene</h1>
+<p>This page is a <strong>static, text-and-image walkthrough</strong> of the 3D universe that opens the ERLY Learning Studio. It exists for reviewers and AI assistants whose browsers cannot run WebGL or scroll-driven pages. The live experience is at <a href="../learn.html">learn.html</a>. All screenshots come from the real build. They were captured in a headless browser with software rendering, so a real graphics card gives smoother edges and motion.</p>
+
+<h2>How it works</h2>
+<ul>
+<li><strong>Scroll is the journey.</strong> Page scroll sets a target, and the camera follows two Catmull-Rom splines (position and look target) through 15 keyframes, pausing briefly on each scene. Native scrolling is kept, so Back, the keyboard and screen readers keep working.</li>
+<li><strong>One renderer, one loop.</strong> The universe uses three.js r170. It renders only while visible, at 24 fps when idle, and is disposed on leaving the page.</li>
+<li><strong>Surfaces:</strong> each planet's surface is generated procedurally once and baked into a texture, so each frame is a single texture lookup plus lighting.</li>
+<li><strong>Loading and detail:</strong> distant worlds draw only their planet; their structures appear as you approach. Shaders compile in the background.</li>
+<li><strong>Device-aware:</strong> phones get a lighter scene. Machines without GPU acceleration, reduced-motion users and browsers without WebGL get a painted version of the same story.</li>
+<li><strong>Navigation:</strong> hovering a world shows its name, and selecting it flies there and opens the subject page, which shows the same planet in its header. A Destinations panel, a journey rail and a plain list of every world allow direct access.</li>
+</ul>
+
+<h2>The astronaut</h2>
+<div class="duo"><figure><img src="../assets/img/universe/astronaut-closeup.jpg" alt="Close-up of the 3D astronaut in the opening scene, lit by the scene&#x27;s key and fill lights" loading="lazy" width="1200" height="750"><figcaption>The astronaut in the opening scene.</figcaption></figure><figure><img src="../assets/img/universe/astronaut-biology.jpg" alt="The astronaut beside the Biology world, turned toward it" loading="lazy" width="1200" height="750"><figcaption>Beside Biology, turned to face the world.</figcaption></figure></div>
+<ul>
+<li><strong>Model:</strong> “Astronaut” by Poly by Google (CC-BY), from Google's model-viewer shared assets (Apache-2.0). It is credited on screen and in <a href="https://github.com/jacobpallathuabraham/Hackathon/blob/claude/erly-hackathon-website-8txbtd/assets/models/CREDITS.md">CREDITS.md</a>. File: <a href="../assets/models/astronaut.glb">assets/models/astronaut.glb</a> (glTF binary, 265 KB, 4,812 vertices; texture re-encoded from 2.8 MB).</li>
+<li><strong>It is a real 3D object in the scene,</strong> not an overlay. It is lit by the same sun, fill and world-tinted rim lights, and moves through world space. Its position follows the camera path with smoothing, so it trails slightly when you travel fast but never falls out of view.</li>
+<li><strong>Motion is procedural,</strong> because the model has no animations. It has a slow zero-gravity bob, roll and yaw drift. It turns (slerp) to look at the current world, at a world under the pointer, or toward the student at the start. It leans and gives a soft jet puff while travelling, and glances with the cursor.</li>
+</ul>
+
+<h2>The fifteen scenes</h2>
+<section><h3>Scene 00 · The void — opening</h3><figure><img src="../assets/img/universe/scene-00.jpg" alt="Screenshot of the ERLY universe, scene 0: The void — opening. The student arrives in space. Foreground: the great indigo planet, its sun hidden behind the limb so it is rim-lit. Midground: the astronaut (3D model, lit by the scene), turned three-quarters toward the viewer. Background: the eleven subject worlds receding along the route, a baked nebula panorama and a painted galaxy. Typography: Fraunces Light headline “A universe of questions.”, a one-line subtitle and a scroll cue." loading="lazy" width="1200" height="750"><figcaption>The student arrives in space. Foreground: the great indigo planet, its sun hidden behind the limb so it is rim-lit. Midground: the astronaut (3D model, lit by the scene), turned three-quarters toward the viewer. Background: the eleven subject worlds receding along the route, a baked nebula panorama and a painted galaxy. Typography: Fraunces Light headline “A universe of questions.”, a one-line subtitle and a scroll cue.</figcaption></figure></section>
+<section><h3>Scene 01 · First light</h3><figure><img src="../assets/img/universe/scene-01.jpg" alt="Screenshot of the ERLY universe, scene 1: First light. As the student scrolls, the sun sweeps from behind the great planet to its working angle; every world gains a lit side and a terminator. Copy: “Every question is a light in the dark.”" loading="lazy" width="1200" height="750"><figcaption>As the student scrolls, the sun sweeps from behind the great planet to its working angle; every world gains a lit side and a terminator. Copy: “Every question is a light in the dark.”</figcaption></figure></section>
+<section><h3>Scene 02 · The universe of knowledge</h3><figure><img src="../assets/img/universe/scene-02.jpg" alt="Screenshot of the ERLY universe, scene 2: The universe of knowledge. A high view down the route of worlds. Copy: “Eleven worlds. One journey.”" loading="lazy" width="1200" height="750"><figcaption>A high view down the route of worlds. Copy: “Eleven worlds. One journey.”</figcaption></figure></section>
+<section><h3>Scene 03 · Mathematics</h3><figure><img src="../assets/img/universe/scene-03.jpg" alt="Screenshot of the ERLY universe, scene 3: Mathematics. A faceted crystalline polyhedron with edge lines, three graduated coordinate rings, orbiting Platonic solids and a torus knot, and a saddle surface z = x² − y². Structures assemble as the camera arrives." loading="lazy" width="1200" height="750"><figcaption>A faceted crystalline polyhedron with edge lines, three graduated coordinate rings, orbiting Platonic solids and a torus knot, and a saddle surface z = x² − y². Structures assemble as the camera arrives.</figcaption></figure></section>
+<section><h3>Scene 04 · Physics</h3><figure><img src="../assets/img/universe/scene-04.jpg" alt="Screenshot of the ERLY universe, scene 4: Physics. A banded giant with a storm, tilted rings with a gap, two moons in visible orbit, pulsing dipole field lines." loading="lazy" width="1200" height="750"><figcaption>A banded giant with a storm, tilted rings with a gap, two moons in visible orbit, pulsing dipole field lines.</figcaption></figure></section>
+<section><h3>Scene 05 · Chemistry</h3><figure><img src="../assets/img/universe/scene-05.jpg" alt="Screenshot of the ERLY universe, scene 5: Chemistry. A crystal-cell surface; ball-and-stick molecules with real geometry (water at 104.5°, tetrahedral methane, benzene, linear CO₂) orbiting; electron shells." loading="lazy" width="1200" height="750"><figcaption>A crystal-cell surface; ball-and-stick molecules with real geometry (water at 104.5°, tetrahedral methane, benzene, linear CO₂) orbiting; electron shells.</figcaption></figure></section>
+<section><h3>Scene 06 · Biology</h3><figure><img src="../assets/img/universe/scene-06.jpg" alt="Screenshot of the ERLY universe, scene 6: Biology. A living cell: breathing translucent membrane, nucleus, mitochondria and ER; a DNA double helix with coloured base pairs arching around it. The astronaut floats between the words and the world, facing the world." loading="lazy" width="1200" height="750"><figcaption>A living cell: breathing translucent membrane, nucleus, mitochondria and ER; a DNA double helix with coloured base pairs arching around it. The astronaut floats between the words and the world, facing the world.</figcaption></figure></section>
+<section><h3>Scene 07 · Geography &amp; Earth</h3><figure><img src="../assets/img/universe/scene-07.jpg" alt="Screenshot of the ERLY universe, scene 7: Geography &amp; Earth. Oceans with sun glint, continents, ice caps, a separate cloud layer, blue atmosphere and city lights on the night side." loading="lazy" width="1200" height="750"><figcaption>Oceans with sun glint, continents, ice caps, a separate cloud layer, blue atmosphere and city lights on the night side.</figcaption></figure></section>
+<section><h3>Scene 08 · Computer Science</h3><figure><img src="../assets/img/universe/scene-08.jpg" alt="Screenshot of the ERLY universe, scene 8: Computer Science. A matte world wrapped in a geodesic network; data packets travel edge to edge; a ring of bits flips." loading="lazy" width="1200" height="750"><figcaption>A matte world wrapped in a geodesic network; data packets travel edge to edge; a ring of bits flips.</figcaption></figure></section>
+<section><h3>Scene 09 · English &amp; Study</h3><figure><img src="../assets/img/universe/scene-09.jpg" alt="Screenshot of the ERLY universe, scene 9: English &amp; Study. An ink-marbled world; a ring of turning printed pages; drifting letterforms (¶, &amp;, “, Q)." loading="lazy" width="1200" height="750"><figcaption>An ink-marbled world; a ring of turning printed pages; drifting letterforms (¶, &amp;, “, Q).</figcaption></figure></section>
+<section><h3>Scene 10 · History</h3><figure><img src="../assets/img/universe/scene-10.jpg" alt="Screenshot of the ERLY universe, scene 10: History. Sedimentary strata (layers of time); an orbiting colonnade with whole and fallen columns; a dial ring with a moving hand." loading="lazy" width="1200" height="750"><figcaption>Sedimentary strata (layers of time); an orbiting colonnade with whole and fallen columns; a dial ring with a moving hand.</figcaption></figure></section>
+<section><h3>Scene 11 · Languages</h3><figure><img src="../assets/img/universe/scene-11.jpg" alt="Screenshot of the ERLY universe, scene 11: Languages. A warm dune world; two counter-rotating orbits of greetings in many scripts (Hello, مرحبا, नमस्ते, 你好, Γειά σου, Привет, こんにちは…)." loading="lazy" width="1200" height="750"><figcaption>A warm dune world; two counter-rotating orbits of greetings in many scripts (Hello, مرحبا, नमस्ते, 你好, Γειά σου, Привет, こんにちは…).</figcaption></figure></section>
+<section><h3>Scene 12 · Social Science</h3><figure><img src="../assets/img/universe/scene-12.jpg" alt="Screenshot of the ERLY universe, scene 12: Social Science. A dusk world lit by cities on its night side; arcs of travel and exchange with travellers moving along them." loading="lazy" width="1200" height="750"><figcaption>A dusk world lit by cities on its night side; arcs of travel and exchange with travellers moving along them.</figcaption></figure></section>
+<section><h3>Scene 13 · Economics, Psychology &amp; More</h3><figure><img src="../assets/img/universe/scene-13.jpg" alt="Screenshot of the ERLY universe, scene 13: Economics, Psychology &amp; More. A ring of market bars rising and falling; a constellation of firing neurons." loading="lazy" width="1200" height="750"><figcaption>A ring of market bars rising and falling; a constellation of firing neurons.</figcaption></figure></section>
+<section><h3>Scene 14 · The whole universe</h3><figure><img src="../assets/img/universe/scene-14.jpg" alt="Screenshot of the ERLY universe, scene 14: The whole universe. The worlds glide out of their path into a ring before the camera. Pointing at a world shows its name; selecting it flies there and opens the subject. Copy: “Where will you go first?”" loading="lazy" width="1200" height="750"><figcaption>The worlds glide out of their path into a ring before the camera. Pointing at a world shows its name; selecting it flies there and opens the subject. Copy: “Where will you go first?”</figcaption></figure></section>
+
+<h2>Entering a world</h2>
+<figure><img src="../assets/img/universe/world-page-physics.jpg" alt="The Physics subject page, whose header shows the same ringed Physics world live in 3D" loading="lazy" width="1200" height="750"><figcaption>Selecting a world flies the camera into it. The subject page opens with that same world live in its header, and Back returns to the same point in the journey.</figcaption></figure>
+
+<h2>Without a graphics card</h2>
+<figure><img src="../assets/img/universe/painted-overview.jpg" alt="The painted universe used when 3D is unavailable: the eleven worlds as painted planets on an ellipse" loading="lazy" width="1200" height="750"><figcaption>The painted universe tells the same story with painted planets. Every world is a selectable button.</figcaption></figure>
+
+<h2>The Solar System Explorer</h2>
+<figure><img src="../assets/img/universe/solar-system.jpg" alt="The Solar System Explorer with the granulated Sun, orbits, planets and the asteroid belt" loading="lazy" width="1200" height="750"><figcaption>A living Sun (granulation and limb darkening), planets with NASA data, Saturn's and Uranus's rings, the Moon and the asteroid belt. It states clearly that sizes and distances are compressed.</figcaption></figure>
+
+<h2>Source</h2>
+<ul>
+<li><a href="https://github.com/jacobpallathuabraham/Hackathon/blob/claude/erly-hackathon-website-8txbtd/assets/js/learn/ls-cosmos.js">ls-cosmos.js</a> covers the universe, camera, story, astronaut, travel and performance.</li>
+<li><a href="https://github.com/jacobpallathuabraham/Hackathon/blob/claude/erly-hackathon-website-8txbtd/assets/js/learn/ls-cosmos-worlds.js">ls-cosmos-worlds.js</a> covers the eleven worlds and the surface baking.</li>
+<li><a href="https://github.com/jacobpallathuabraham/Hackathon/blob/claude/erly-hackathon-website-8txbtd/assets/css/learn-cosmos.css">learn-cosmos.css</a> holds the styles.</li>
+<li><a href="https://github.com/jacobpallathuabraham/Hackathon/blob/claude/erly-hackathon-website-8txbtd/docs/ERLY-V30-REPORT.md">ERLY-V30-REPORT.md</a> is the full report: what was built, tests, measurements and limits.</li>
+</ul>
+</main></body></html>
