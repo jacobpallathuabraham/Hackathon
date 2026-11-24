@@ -11,6 +11,7 @@ const { chromium, devices } = require('playwright');
 const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
 let pass = 0, fail = 0;
 const t = async (name, fn) => { try { await fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n    ', String(e.message).split('\n').slice(0, +(process.env.LOGN || 6)).join('\n     ')); } };
+const innerWidthOf = () => 1360;
 const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'english', 'history', 'languages', 'social', 'more'];
 
 (async () => {
@@ -147,6 +148,37 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     assert.ok(after.c < before.c, 'focused world closer: ' + before.c + ' → ' + after.c); assert.ok(after.h < before.h, 'others recede: ' + before.h + ' → ' + after.h);
     await p.evaluate(() => LS.__cosmos.enter('chemistry', 6000)); const cleared = await p.waitForFunction(lim => LS.__cosmos.debugScale('history') < lim, after.h * 0.85, { timeout: 5500 }).then(() => true, () => false); assert.ok(cleared, 'others clear away during travel: ' + await p.evaluate(() => LS.__cosmos.debugScale('history')) + ' vs ' + after.h);
     await p.evaluate(() => LS.__cosmos.skip()); await p.waitForFunction(() => location.hash === '#/world/chemistry', null, { timeout: 10000 }); await p.goBack(); await ready(p); await p.waitForTimeout(1200);
+  });
+
+  await t('v33: the astronaut flies a continuous world-space path — fine and fast scrolling never teleport it, it leads while travelling and stays in frame', async () => {
+    await toScene(p, 2); await settle(p, 2); await p.waitForTimeout(800); const rec = [];
+    const sample = async n => { for (let i = 0; i < n; i++) { rec.push(await p.evaluate(() => LS.__cosmos.debugAstro())); await p.waitForTimeout(120); } };
+    for (let v = 2; v <= 5; v += 0.25) { await toScene(p, v); await sample(2); }
+    await toScene(p, 12); await sample(40); /* a far jump by scroll: flown under a speed limit, never skipped */
+    const step = rec.slice(1).map((a, i) => Math.hypot(a.pos[0] - rec[i].pos[0], a.pos[1] - rec[i].pos[1], a.pos[2] - rec[i].pos[2]));
+    const dt = await p.evaluate(() => { const f = LS.__cosmos.stats().fps; return f; }); /* steps are per sample; at a few fps a sample spans one slow frame */
+    assert.ok(Math.max(...step) < 24, 'largest astronaut step between samples ' + Math.max(...step).toFixed(1) + ' (fps ' + dt.toFixed(1) + ')');
+    assert.ok(rec.some(a => a.lead > 0.008), 'leads while travelling: max lead ' + Math.max(...rec.map(a => a.lead)));
+    const out = rec.filter(a => Math.abs(a.ndc[0]) > 1.1 || Math.abs(a.ndc[1]) > 1.1 || a.ndc[2] > 1); assert.ok(out.length <= 2, 'samples out of frame: ' + out.length + '/' + rec.length + ' ' + JSON.stringify(out.slice(0, 3).map(a => [a.p, a.ndc])));
+    await settle(p, 12); await p.waitForTimeout(2500); assert.ok(Math.abs((await p.evaluate(() => LS.__cosmos.debugAstro())).lead) < 0.004, 'settles at rest');
+  });
+
+  await t('v33: the overview names all eleven worlds; the loading status reports progress and ends ready; one journey at a time', async () => {
+    assert.match(await p.textContent('.cz-load'), /ready/i); assert.equal(await p.getAttribute('.cz-load', 'role'), 'status'); assert.equal(await p.locator('.cz.is-ready').count(), 1);
+    await toScene(p, 14); await settle(p, 14); await p.waitForTimeout(1200);
+    const names = await p.$$eval('.cz-names span', els => els.map(e => ({ id: e.dataset.n, on: getComputedStyle(e).opacity !== '0' && e.closest('.cz-names').classList.contains('is-on'), r: e.getBoundingClientRect() })));
+    assert.equal(names.length, 11); const shown = names.filter(n => n.on && n.r.left >= 0 && n.r.right <= innerWidthOf(names) && n.r.top > 0); assert.equal(shown.length, 11, 'names shown: ' + shown.map(n => n.id));
+    // a rapid double selection: the first journey wins, the second does not restart it
+    await p.evaluate(() => LS.__cosmos.enter('physics', 4000)); const f1 = await p.evaluate(() => LS.__cosmos.flying()); await p.waitForTimeout(150);
+    await p.evaluate(() => LS.__cosmos.enter('history', 4000)); await p.evaluate(() => LS.__cosmos.skip()); await p.waitForFunction(() => /#\/world\//.test(location.hash), null, { timeout: 10000 });
+    assert.ok(f1); assert.equal(await p.evaluate(() => location.hash), '#/world/physics'); await p.goBack(); await ready(p); await p.waitForTimeout(1200);
+  });
+
+  await t('v33: every one of the eleven worlds opens its own subject (selection → journey → page), and Back returns to the universe', async () => {
+    for (const id of ORDER) { await p.waitForFunction(() => window.LS && LS.__cosmos && LS.__cosmos.stats().astronaut, null, { timeout: 60000 });
+      await p.evaluate(id => LS.__cosmos.enter(id, 400), id); await p.waitForFunction(id => location.hash === '#/world/' + id, id, { timeout: 15000 });
+      assert.ok(await p.locator('#lsView h1').count(), 'world page for ' + id); await p.goBack(); await p.waitForFunction(() => location.hash === '#/home' || location.hash === '', null, { timeout: 10000 }); }
+    await ready(p); assert.equal(await p.locator('canvas.cz-cv').count(), 1, 'one renderer after eleven round trips'); await p.waitForTimeout(1200);
   });
 
   await t('Device-aware: on a software WebGL renderer (no GPU) the painted universe is used by default; ?cosmos=gl forces 3D', async () => {

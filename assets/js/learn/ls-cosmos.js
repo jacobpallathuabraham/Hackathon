@@ -100,10 +100,10 @@
         void main(){ float lon=(vUv.x-0.5)*6.2831853, lat=(vUv.y-0.5)*3.14159265; vec3 d=vec3(cos(lat)*sin(lon),sin(lat),cos(lat)*cos(lon));
           vec3 axis=normalize(vec3(0.35,0.86,0.36)); float band=exp(-pow(dot(d,axis)*2.4,2.0));
           float n1=fbm(d*1.7+3.1), n2=fbm(d*3.4+9.2), n3=fbm(d*6.0-2.0);
-          vec3 col=vec3(0.004,0.006,0.016)+vec3(0.006,0.008,0.02)*band;
-          col+=vec3(0.03,0.13,0.17)*smoothstep(0.0,0.75,n1)*(0.35+band);
-          col+=vec3(0.16,0.05,0.2)*smoothstep(0.15,0.85,n2)*band*0.9;
-          col+=vec3(0.28,0.12,0.05)*smoothstep(0.45,0.95,n1*n2*2.0+0.3)*band*0.55;
+          vec3 col=vec3(0.003,0.005,0.014)+vec3(0.004,0.007,0.02)*band; /* deep midnight navy into near-black indigo */
+          col+=vec3(0.02,0.075,0.13)*smoothstep(0.0,0.75,n1)*(0.3+band); /* restrained cyan-blue haze */
+          col+=vec3(0.09,0.045,0.15)*smoothstep(0.2,0.85,n2)*band*0.75; /* subtle violet, not everywhere */
+          col+=vec3(0.30,0.16,0.05)*smoothstep(0.5,0.95,n1*n2*2.0+0.3)*band*0.6; /* occasional warm amber */
           col*=1.0-0.75*smoothstep(0.1,0.6,n3)*band;
           float s=stars(d,180.0,0.972)*1.3+stars(d,420.0,0.986)*0.8+stars(d,900.0,0.993)*0.5*(0.4+band);
           vec3 sc=mix(vec3(0.75,0.85,1.0),vec3(1.0,0.85,0.7),h3(floor(d*180.0)));
@@ -124,29 +124,25 @@
     const dust = pointsLayer([140, 300, 520][q], [90, 50, 360], 0.12, 0.35, 19, false);
 
     const far = []; [[[-520, 260, -900], 340, 3, 210], [[760, -180, -1100], 260, 11, 25], [[-900, -320, -400], 220, 23, 280]].forEach(([p, s, seed, hue]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: galaxyTex(THREE, seed, hue), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55, fog: false })); m.position.set(...p); m.lookAt(0, 0, -150); m.rotateX(0.9); m.rotateZ(seed); scene.add(m); far.push(m); });
-    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(255,140,170,A)', 9], [[0, 22, -310], 90, 'rgba(160,140,255,A)', 21]] : [[[0, 22, -310], 90, 'rgba(160,140,255,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
+    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(120,170,255,A)', 9], [[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]] : [[[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
 
     /* the great planet of the opening ("Origin"): marbled indigo with a thin bright atmosphere — the sun rises from behind its limb */
     const origin = new THREE.Group(); origin.position.set(...ORIGIN.pos);
     const oCore = W.surface(THREE, q, ORIGIN.r, 4, ['#3e57c9', '#a9b8ff', '#0b1030'], 11.3, [40, 72, 96][q]); origin.add(oCore, W.atmosphere(THREE, ORIGIN.r * 1.035, '#8fb0ff', 1.6)); scene.add(origin);
 
     /* worlds: nearest first, the rest in idle time */
+    let astroReady = false; /* declared before the worlds: their build reports loading progress */
     const worlds = {}; const queue = W.ORDER.slice();
     /* warm-up: a world's shaders compile and its textures upload in the background as soon as it is built, so reaching it
        mid-scroll never stalls a frame (first-use compilation was the cause of hitches) */
     const warm = obj => { try { const par = renderer.extensions && renderer.extensions.has && renderer.extensions.has('KHR_parallel_shader_compile'); if (par && renderer.compileAsync) renderer.compileAsync(obj, camera, scene).catch(() => {}); else renderer.compile(obj, camera, scene); /* called from idle time */ obj.traverse(o => { const m = o.material; if (m && m.map && renderer.initTexture) renderer.initTexture(m.map); }); } catch (e) { /* best effort */ } };
-    const buildNext = () => { const id = queue.shift(); if (!id) return; const G = W.build(THREE, id, q); G.position.set(...PATH[id]); G.userData.f = 0; G.userData.rv = 0; scene.add(G); worlds[id] = G; warm(G); };
+    const buildNext = () => { const id = queue.shift(); if (!id) return; const G = W.build(THREE, id, q); G.position.set(...PATH[id]); G.userData.f = 0; G.userData.rv = 0; scene.add(G); worlds[id] = G; warm(G); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: astroReady }); };
     buildNext(); buildNext();
     const idle = window.requestIdleCallback || (f => setTimeout(f, 60)); const idleBuild = () => { if (!alive || !queue.length) return; buildNext(); idle(idleBuild, { timeout: 400 }); }; let alive = true; idle(idleBuild, { timeout: 400 });
 
-    /* astronaut */
-    const astro = new THREE.Group(); astro.visible = false; scene.add(astro); const inner = new THREE.Group(); astro.add(inner);
-    const jet = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 })); jet.position.set(0, 0.12, -0.32); jet.scale.setScalar(0.2); inner.add(jet);
-    let astroReady = false;
-    import('three/addons/loaders/GLTFLoader.js').then(({ GLTFLoader }) => new GLTFLoader().loadAsync('assets/models/astronaut.glb')).then(g => { if (!alive) return;
-      const m = g.scene; m.traverse(x => { if (x.isMesh) { x.material.color.setScalar(1); x.material.roughness = 0.72; x.material.metalness = 0.05; x.castShadow = false; } });
-      m.position.set(0, -1.0, 0); const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.42); inner.add(holder); warm(holder); astroReady = true; astro.visible = true; astro.userData.fade = 0; o.onAstronaut && o.onAstronaut(true);
-    }).catch(() => { o.onAstronaut && o.onAstronaut(false); });
+    /* astronaut: a world-space flight controller (ls-cosmos-astro.js) sharing the camera's journey parameter */
+    const AST = LS.cosmosAstronaut(THREE, scene, { glow: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)') }); const astro = AST.root;
+    AST.load('assets/models/astronaut.glb', warm).then(() => { if (!alive) return; astroReady = true; o.onAstronaut && o.onAstronaut(true); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: true }); }).catch(() => { o.onAstronaut && o.onAstronaut(false); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: false, failed: true }); });
 
     /* camera choreography */
     const K = keyframes(), N = K.length, V3 = a => new THREE.Vector3(...a);
@@ -160,6 +156,12 @@
     const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), d = DWELL(i), x = clamp((f - d) / (1 - 2 * d), 0, 1);
       const g = i === N - 2 ? 1 - Math.pow(1 - sstep(x), 1.6) : sstep(x); return { i, f: g, raw: f, u: (i + g) / (N - 1) }; };
     const arcSide = new THREE.Vector3(), arcUp = new THREE.Vector3(0, 1, 0);
+    /* the astronaut's world-space path: one anchor per keyframe, where that keyframe's framing places it at rest */
+    const rebuildAnchors = () => { const pts = K.map(k => { const pos = V3(k.pos), q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, V3(k.tgt), new THREE.Vector3(0, 1, 0))), off = V3(k.astro);
+        if (innerWidth < 700) { if (k.scene === 'all') off.set(0.9, -2.1, -7.8); else { off.x *= 0.5; off.z *= 1.25; off.y = Math.abs(off.y) * 0.55 + 0.35; } }
+        off.z = Math.min(off.z, -2.9); return pos.add(off.applyQuaternion(q)); });
+      /* the overview anchor follows the gathered worlds' frame; the hero anchor sits in front of the great planet */
+      AST.setAnchors(pts); };
 
     /* state */
     const st = { lastInput: 0, target: 0, p: 0, ptr: { x: 0, y: 0, tx: 0, ty: 0 }, hover: null, sel: null, flight: null, ret: null, t: 0, last: performance.now(), frames: [], cpu: [], visible: true, dirty: true, moved: false, astroPos: new THREE.Vector3(), lastCam: new THREE.Vector3() };
@@ -168,7 +170,7 @@
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
 
     function size() { const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (q ? 42 : 50) + (w / h < 0.8 ? 14 : 0); camera.updateProjectionMatrix(); st.dirty = true; }
-    const ro = new ResizeObserver(() => { size(); if (st.frames.length) renderer.render(scene, camera); /* no black frame after a resize */ }); ro.observe(stage); size();
+    const ro = new ResizeObserver(() => { size(); rebuildAnchors(); if (st.frames.length) renderer.render(scene, camera); /* no black frame after a resize */ }); ro.observe(stage); size(); rebuildAnchors();
 
     function placeWorlds(p, t, dt) {
       const gk = gatherK(p);
@@ -205,34 +207,12 @@
       return a; }
 
     function astroUpdate(dt, a, p) {
-      if (!astroReady) return; const k0 = K[a.i], k1 = K[Math.min(N - 1, a.i + 1)], off = V3(k0.astro).lerp(V3(k1.astro), a.f);
-      if (innerWidth < 700 && !(k1.scene === 'all' && a.f > 0.5)) { off.x *= 0.5; off.z *= 1.25; off.y = Math.abs(off.y) * 0.55 + 0.35; } // phones: text sits low, so the astronaut floats in the upper half (except in the overview, where the worlds need that space)
-      else if (innerWidth < 700) { off.x = 0.9; off.y = -2.1; off.z = -7.8; }
-      // smoothed in camera space, so the astronaut can trail and drift but never falls behind the camera
-      const camSpeed = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (camSpeed - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
-      const trail = clamp(st.camSpeed * 0.012, 0, 0.7); off.z -= trail * 0.2; off.x *= 1 - trail * 0.15; off.y -= trail * 0.12;
-      off.z = Math.min(off.z, -2.9); // never close enough to clip the lens or cover the headline
-      /* inertia: a critically damped spring in camera space (settles in about a second, never overshoots) */
-      if (!st.astroOff) { st.astroOff = off.clone(); st.astroVel = new THREE.Vector3(); }
-      const kS = 7, cS = 2 * Math.sqrt(kS); st.astroVel.addScaledVector(tmpV.subVectors(off, st.astroOff), kS * dt).multiplyScalar(Math.max(0, 1 - cS * dt)); st.astroOff.addScaledVector(st.astroVel, dt);
-      const camQ = camera.quaternion; tmpV.copy(st.astroOff).applyQuaternion(camQ).add(camera.position); st.astroPos.copy(tmpV);
-      const acc = (st.camSpeed - (st.prevSpeed || 0)) / Math.max(dt, 1e-3); st.prevSpeed = st.camSpeed; st.acc = (st.acc || 0) + (acc - (st.acc || 0)) * (1 - Math.exp(-dt * 3));
-      const vel = st.camSpeed; astro.position.copy(st.astroPos);
-      // where to look: the hovered world, the scene's subject, or back toward the student in the opening
+      if (!astroReady) return; const k0 = K[a.i], k1 = K[Math.min(N - 1, a.i + 1)], camQ = camera.quaternion;
       const lookAtKey = (key, out) => { if (key === 'camera') return out.copy(camera.position).add(tmpV.set(-2.2 + st.ptr.x * 1.5, 0.4 + st.ptr.y * 0.6, 0).applyQuaternion(camQ)); if (key === 'origin') return out.set(...ORIGIN.pos); if (key === 'center') return out.set(...O); if (worlds[key]) return out.copy(worlds[key].position); return out.set(...(PATH[key] || O)); };
       const lk = (st.flight && st.flight.id) || st.hover || st.sel;
-      if (!lk) { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes instead of switching half-way */
-      else if (lk === 'camera') look.copy(camera.position).add(tmpV.set(-2.2 + st.ptr.x * 1.5, 0.4 + st.ptr.y * 0.6, 0).applyQuaternion(camQ));
-      else if (lk === 'origin') look.set(...ORIGIN.pos); else if (lk === 'center') look.set(...O); else if (worlds[lk]) look.copy(worlds[lk].position); else look.set(...(PATH[lk] || O));
-      tmpM.lookAt(look, astro.position, camera.up); tmpQ.setFromRotationMatrix(tmpM); astro.quaternion.slerp(tmpQ, 1 - Math.exp(-dt * 1.6));
-      const t = st.t, sp = clamp(vel / 30, 0, 1), ac = clamp(st.acc / 60, -1, 1);
-      /* zero-g drift: sums of incommensurate slow waves never visibly repeat; amplitude breathes slowly too */
-      const nz = (a1, a2, a3, ph) => Math.sin(t * a1 + ph) * 0.6 + Math.sin(t * a2 + ph * 1.7) * 0.3 + Math.sin(t * a3 + ph * 2.3) * 0.1, br = 0.75 + 0.25 * Math.sin(t * 0.071 + 1.1);
-      inner.position.set(nz(0.23, 0.41, 0.97, 0.3) * 0.02 * br, nz(0.31, 0.57, 1.13, 1.9) * 0.035 * br, 0);
-      /* lean responds to acceleration (forward when speeding up, back when slowing), only a little to speed */
-      inner.rotation.set(-0.16 * ac - 0.05 * sp + nz(0.19, 0.43, 0.89, 2.7) * 0.05 * br, nz(0.13, 0.29, 0.61, 0.9) * 0.09 * br, nz(0.17, 0.37, 0.79, 4.1) * 0.07 * br + st.ptr.x * -0.05);
-      jet.material.opacity += (clamp(ac * 0.6, 0, 0.35) - jet.material.opacity) * (1 - Math.exp(-dt * 6)); jet.scale.setScalar(0.1 + clamp(ac, 0, 1) * 0.16); /* propulsion shows only while accelerating, and stays understated */
-      astro.userData.fade = Math.min(1, (astro.userData.fade || 0) + dt * 0.9);
+      if (lk) lookAtKey(lk, look); else { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes */
+      const cs = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (cs - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
+      AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera }); st.astroPos.copy(AST.pos);
     }
 
     function frame(now) {
@@ -241,7 +221,8 @@
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
       const pPrev = st.p; { const gap = Math.abs(st.target - st.p), rate = 9 - 5 * clamp((gap - 0.6) / 3, 0, 1); /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
-        st.p = still ? Math.round(st.target) : st.p + (st.target - st.p) * (1 - Math.exp(-Math.min(0.12, (now - (st.lastP || now - 16)) / 1000) * rate)); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+        const fdt = Math.min(0.12, (now - (st.lastP || now - 16)) / 1000), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* plus a speed limit (3.2 scenes/s): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
+        st.p = still ? Math.round(st.target) : st.p + clamp(step, -3.2 * fdt, 3.2 * fdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
       st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
@@ -249,7 +230,7 @@
       // camera
       const a = cameraAt(st.p, camPos, camTgt);
       if (st.p > N - 2) { const gk = smooth(gatherK(st.p)); } // (overview keyframe is already at the gathering point)
-      if (st.flight) { const F = st.flight, k = clamp((now - F.t0) / F.ms, 0, 1), e = ease(k); camPos.lerpVectors(F.p0, F.p1, e); camTgt.lerpVectors(F.q0, F.q1, e); o.onFlight && o.onFlight(k, F.id); if (k >= 1) { const id = F.id; st.flight = null; o.onArrive && o.onArrive(id); } }
+      if (st.flight) { const F = st.flight, k = clamp((now - F.t0) / F.ms, 0, 1), e = ease(k); camPos.lerpVectors(F.p0, F.p1, e); camTgt.lerpVectors(F.q0, F.q1, e); o.onFlight && o.onFlight(k, F.id); if (k >= 1) { const id = F.id; st.flight = null; AST.endFlight(); o.onArrive && o.onArrive(id); } }
       else if (st.ret) { const R = st.ret, k = clamp((now - R.t0) / R.ms, 0, 1), e = ease(k); camPos.lerpVectors(R.p0, camPos, e); camTgt.lerpVectors(R.q0, camTgt, e); if (k >= 1) st.ret = null; }
       // the look target is critically damped, so it never snaps when a path, a flight or a return hands over
       const dtr = Math.min(0.12, (now - (st.lastT || now - 16)) / 1000); st.lastT = now; /* real elapsed time, so slow devices converge as fast as quick ones */
@@ -257,6 +238,7 @@
       const par = still ? 0 : (innerWidth < 700 ? 0.25 : 1);
       camera.position.copy(camPos); camera.lookAt(camTgt);
       camera.position.add(tmpV.set(st.ptr.x * 0.42 * par, -st.ptr.y * 0.26 * par, 0).applyQuaternion(camera.quaternion)); camera.lookAt(camTgt.x + st.ptr.x * 0.12 * par, camTgt.y - st.ptr.y * 0.08 * par, camTgt.z);
+      if (!still && AST.ready && !st.flight) camera.rotateZ(-AST.bank * 0.16); /* the camera banks a little with the astronaut's turns */
       camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(tmpM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       sky.position.copy(camera.position); rim.position.copy(camera.position).add(tmpV.set(-6, 3, -10).applyQuaternion(camera.quaternion)); rim.target.position.copy(camera.position); fill.position.copy(camera.position).add(tmpV.set(1.5, 2, 0).applyQuaternion(camera.quaternion)); fill.target.position.copy(st.astroPos); fill.intensity = 0.55 + 0.35 * (1 - dawn);
       placeWorlds(st.p, st.t, still ? 0 : dt);
@@ -268,6 +250,7 @@
       astroUpdate(still ? 0.016 : dt, a, st.p);
       if (st.hover && !st.flight) o.onLabel && o.onLabel(st.hover, project(worlds[st.hover])); else o.onLabel && o.onLabel(null);
       o.onProgress && o.onProgress(st.p);
+      if (o.onNames) { const show = st.p > N - 1.45 && !st.flight; if (show) { const w = stage.clientWidth, h = stage.clientHeight; o.onNames(W.ORDER.map(id => { const G = worlds[id]; if (!G) return null; tmpV.copy(G.position); tmpV.y -= G.userData.radius * G.scale.x * 1.25; tmpV.project(camera); return { id, x: (tmpV.x * 0.5 + 0.5) * w, y: (-tmpV.y * 0.5 + 0.5) * h, on: tmpV.z < 1 }; })); } else if (st.namesShown) o.onNames(null); st.namesShown = show; }
       const t0 = performance.now(); renderer.render(scene, camera); st.cpu.push(performance.now() - t0); if (st.cpu.length > 90) st.cpu.shift();
       adapt(); st.dirty = false; st.lastCam.copy(camera.position);
       const settling = (still ? Math.round(st.target) !== st.p : Math.abs(st.target - st.p) > 1e-4) || Math.abs(st.ptr.tx - st.ptr.x) > 1e-3 || st.flight || st.ret || st.dirty;
@@ -300,15 +283,16 @@
 
     const api = {
       THREE, stats: () => { const f = st.frames, c = st.cpu.slice().sort((a, b) => a - b); return { fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1] - f[0]) : 0, cpuMedian: c[c.length >> 1] || 0, cpuP95: c[Math.floor(c.length * 0.95)] || 0, dpr, tier: q, worlds: Object.keys(worlds).length, astronaut: astroReady, draws: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures }; },
-      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.tgtS = null; st.astroOff = null; st.dirty = true; start(); }, progress: () => st.p, N,
+      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.tgtS = null; st.astroOff = null; AST.resetTrail(); st.dirty = true; start(); }, progress: () => st.p, N,
       hover(id) { st.hover = id; st.dirty = true; start(); },
-      enter(id, ms) { if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
+      enter(id, ms) { if (st.flight) return; /* one journey at a time: a second click (or a double-click) while flying is ignored, never a second overlapping flight */ if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
         if (reduced() || ms === 0) { o.onArrive && o.onArrive(id); return; }
         const P = G.position.clone(), dir = camera.position.clone().sub(P).normalize(), r = G.userData.radius * G.scale.x;
+        { const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize(); AST.fly(P, P.clone().addScaledVector(dir, r * 2.6).addScaledVector(side, r * 0.9).add(new THREE.Vector3(0, -r * 0.25, 0)), ms || clamp(700 + camera.position.distanceTo(P) * 11, 750, 1300)); }
         st.flight = { id, t0: performance.now(), ms: ms || clamp(700 + camera.position.distanceTo(P) * 11, 750, 1300), p0: camera.position.clone(), q0: camTgt.clone(), p1: P.clone().addScaledVector(dir, r * 1.55).add(new THREE.Vector3(0, r * 0.15, 0)), q1: P }; start(); },
       skip: finish, flying: () => !!st.flight,
       returnFrom(id) { const G = worlds[id] || (buildNext(), worlds[id]); if (!G) return; placeWorlds(st.p, st.t, 0); const P = G.position.clone(), r = G.userData.radius * G.scale.x; st.ret = { t0: performance.now() + 60, ms: 1100, p0: P.clone().add(new THREE.Vector3(0, r * 0.2, r * 1.7)), q0: P }; start(); },
-      debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p }; },
+      debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p, lead: +AST.lead.toFixed(4), speed: +AST.speed.toFixed(2) }; },
       debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2), dist: +camera.position.distanceTo(G.position).toFixed(3) }; },
       debugRaf: () => !!raf || !!idleT, scene, debugWords: id => worlds[id] && worlds[id].userData.words, debugCam: () => camera.position.toArray(), debugScale: id => worlds[id] && worlds[id].scale.x, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
       buildAll() { while (queue.length) buildNext(); },
@@ -350,6 +334,8 @@
           <div class="cz-paint" aria-hidden="true"></div>
           <div class="cz-flat-origin" aria-hidden="true"></div>
           <div class="cz-scenes">${K.map((k, i) => `<div class="cz-scene cz-scene--${k.scene === 'void' ? 'hero' : PATH[k.scene] ? (PATH[k.scene][0] > 0 ? 'left' : 'right') : k.scene === 'all' ? 'all' : 'left'}" data-i="${i}" ${i ? 'hidden' : ''}>${!gl && PATH[k.scene] ? orb(k.scene, true) : ''}<div class="cz-copy">${sceneCopy(k, C0)}</div>${k.scene === 'all' ? ring() : ''}</div>`).join('')}</div>
+          <p class="cz-load" role="status" aria-live="polite">${T('Preparing the universe', 'نجهّز الكون')}…</p>
+          <div class="cz-names" aria-hidden="true">${W.ORDER.map(id => `<span data-n="${id}">${esc(M[id].name)}</span>`).join('')}</div>
           <div class="cz-label" hidden aria-hidden="true"><b></b><span></span><em>${T('Select to enter', 'اختر للدخول')}</em></div>
           <nav class="cz-rail" aria-label="${T('Journey', 'الرحلة')}">${K.map((k, i) => `<button type="button" data-cz-go="${i}" aria-label="${T('Go to', 'اذهب إلى')}: ${esc(M[k.scene] ? M[k.scene].name : { void: T('The beginning', 'البداية'), light: T('First light', 'الضوء الأول'), universe: T('The universe of knowledge', 'كون المعرفة'), all: T('The whole universe', 'الكون كله') }[k.scene])}"><i></i></button>`).join('')}</nav>
           <div class="cz-tools"><button type="button" class="cz-tool" data-cz-map aria-haspopup="dialog">${T('Destinations', 'الوجهات')}</button><button type="button" class="cz-tool" data-cz-end>${T('All worlds', 'كل العوالم')} ↓</button></div>
@@ -393,7 +379,8 @@
     const arrive = id => { const veil = veilEl(); veil.style.setProperty('--vc', M[id].c[2]); veil.classList.add('is-on'); try { sessionStorage.setItem('cz-return', JSON.stringify({ id, y: scrollY, at: Date.now() })); } catch (e) { /* */ }
       LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), reduced() ? 0 : 140); };
     const enter = id => { if (U) U.enter(id); else arrive(id); };
-    const labelShow = (id, pos) => { if (!id || !pos || pos.behind) { label.hidden = true; return; } if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('span').textContent = M[id].line; } label.hidden = false; label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 8px)`; };
+    const labelFocus = { id: null };
+    const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { label.hidden = true; return; } if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('span').textContent = M[id].line; } label.hidden = false; label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 8px)`; };
 
     /* clicks and keys */
     root.addEventListener('click', e => {
@@ -422,7 +409,9 @@
 
     if (!flat) {
       root.classList.add('is-loading');
-      universe(stage, { onProgress, onLabel: labelShow, onHover: id => { if (!id) label.hidden = true; }, onArrive: arrive, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
+      universe(stage, { onLoad: L => { const el = root.querySelector('.cz-load'); if (!el) return; if (L.failed) el.textContent = T('The astronaut could not load — the universe still works.', 'تعذّر تحميل رائد الفضاء'); else el.textContent = `${T('Preparing the universe', 'نجهّز الكون')} · ${L.worlds}/11 ${T('worlds', 'عوالم')}${L.astro ? '' : ' · ' + T('astronaut', 'رائد الفضاء')}…`; if (L.astro && L.worlds >= 11) { el.textContent = T('The universe is ready.', 'الكون جاهز.'); root.classList.add('is-ready'); } else if (L.astro && L.worlds >= 4) root.classList.add('is-ready'); },
+        onNames: list => { const box = root.querySelector('.cz-names'); if (!list) { box.classList.remove('is-on'); return; } box.classList.add('is-on'); list.forEach(n => { if (!n) return; const el = box.querySelector(`[data-n="${n.id}"]`); el.style.transform = `translate3d(${Math.round(n.x)}px, ${Math.round(n.y)}px, 0) translate(-50%, 0)`; el.style.opacity = n.on ? '' : '0'; el.classList.toggle('is-focus', n.id === labelFocus.id); }); },
+        onProgress, onLabel: labelShow, onHover: id => { if (!id) label.hidden = true; }, onArrive: arrive, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
         if (current !== ctl) { u.destroy(); return; } U = u; LS.__cosmos = u; root.classList.remove('is-loading'); root.classList.add('is-live'); const p = progressFromScroll(); u.jump(p);
         let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ }
         if (ret && Date.now() - ret.at < 30 * 60 * 1000 && M[ret.id]) { /* Back restores the scroll position; once it has, pull the camera back out of the world we visited */ setTimeout(() => { if (current !== ctl) return; const y = Math.abs(scrollY - ret.y) > 40 && scrollY < 10 ? (scrollTo({ top: ret.y, behavior: 'instant' }), ret.y) : scrollY; u.jump(progressFromScroll()); u.returnFrom(ret.id); }, 120); }

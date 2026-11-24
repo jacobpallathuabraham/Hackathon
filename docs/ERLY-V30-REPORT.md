@@ -457,3 +457,71 @@ environment. This is the main open item.
   deployment.
 
 **Deployment: not deployed.** The work is committed to the branch only.
+
+## v33 — the astronaut in world space, flight continuity, overview names, loading status
+
+### What changed
+
+- **A new module, `assets/js/learn/ls-cosmos-astro.js`, flies the astronaut through world space.** Before v33 it was
+  a camera-space offset, carried with the lens. Now:
+  - **Its own path.** It follows a centripetal Catmull–Rom path through one anchor per keyframe. Each anchor is the
+    keyframe's resting composition turned into a world position, so every still frame is unchanged. Anchors are
+    rebuilt on resize and on phone rotation.
+  - **Same journey parameter as the camera, plus a lead.** It reads the camera's damped journey parameter, plus a
+    *lead* that grows with journey speed (at most 0.022 of the journey). It leaves first, arrives first, and waits
+    while the camera catches up. The lead returns to 0 at rest.
+  - **Orientation, banking and pitch.** It faces along its direction of flight and turns toward the world it is
+    visiting at rest (quaternion slerp, rate-limited). It banks with lateral acceleration and pitches with
+    acceleration.
+  - **Effects only while moving.** Non-repeating zero-g drift is damped while travelling. A restrained jet glow and a
+    48-point fading additive trail appear only in flight. The trail restarts on a direct jump (Destinations, deep
+    link), so it never streaks across the sky.
+  - **Guards.** It never comes within 2.6 units of the lens or behind it, and is kept inside an inner frame
+    (NDC ±0.8 × ±0.72), so it can reach the edges but never leaves the shot.
+- **The camera banks gently into the astronaut's turns** (`camera.rotateZ(-bank × 0.16)`), except during a selection
+  flight.
+- **Journey speed limit.** The scroll-driven journey now has a cap of 3.2 scenes per second on top of the
+  exponential follow. A fast wheel flick or a far scroll is *flown*, never skipped, whatever the frame rate.
+  - Before the cap: one software-rendered frame moved the astronaut 78 units.
+  - After the cap: at most about 20 units per sample on the same machine (about 1 unit per frame at 60 fps).
+- **Selection.** Choosing a world flies the astronaut along a curved Bézier path to a point beside that world while
+  the camera flies in.
+  - **One journey at a time:** a second click or a double-click during a flight is ignored, never a second
+    overlapping flight.
+  - Touch keeps the existing behaviour: first tap focuses, second tap travels.
+- **Overview names.** In the final scene each of the eleven worlds carries its name, projected under the planet each
+  frame. The focused (hovered or keyboard-focused) one is emphasised.
+- **Loading status.** A `role="status"` line reports progress ("Preparing the universe · n/11 worlds…") and ends with
+  "The universe is ready." If the astronaut model fails, it says so and the universe still works.
+- **Palette.** The sky moves toward deep midnight navy, with restrained cyan, softened violet and a little amber.
+  Nebula sprites are now blue and amber.
+- **Fixed a v33 regression found during testing.** A temporal-dead-zone `ReferenceError` (`astroReady` was used
+  before its declaration) made the universe fall back to the painted mode.
+
+### Verified in a real browser (Chromium, software WebGL)
+
+These are new tests in `tests/e2e/learning-studio-v30.e2e.js`; the suite passes **21/21**.
+
+- **Continuity.** Fine scroll steps from 2 to 5 (in 0.25 increments) and a fast scroll from 5 to 12 were sampled
+  across 66 points.
+  - The largest astronaut move between samples stays under 24 units (measured 16–20 at about 3–5 fps).
+  - It leads while travelling, with a measured lead of up to 0.021.
+  - It is in frame in all but at most 2 samples (measured 0 in the latest probe run).
+  - It settles with lead < 0.004 at rest.
+- **Overview names:** all eleven are visible on screen in the overview.
+- **Loading status:** ends at "ready" with `role="status"`.
+- **No overlapping journeys:** a second selection during a flight is ignored, and the first world opens.
+- **Every world opens its own page:** all eleven worlds open `#/world/<id>` through the selection journey. After 11
+  round trips with Back there is still exactly one renderer.
+- Screenshots of mid-flight frames, the overview with names, and phone framing were reviewed by eye.
+
+### Not done or not verifiable here (honest)
+
+- **GPU frame rates on the target device (ASUS ProArt P16) are unmeasured.** This container has no GPU. Every frame
+  rate in this report is SwiftShader (CPU) rendering: about 3–12 fps, depending on scene and load. It is not an
+  indication of GPU performance.
+- **Per-world selection responses.** Each world has one shared selection response (flight + focus + the others
+  receding), not a distinct per-world effect.
+- **Planet surfaces.** Planet realism beyond the v32 work (terminator, night side, forward-scattering atmospheres,
+  clouds, LOD) was not extended in this pass.
+- **The astronaut model** still has no skeleton; all motion is whole-body and procedural.

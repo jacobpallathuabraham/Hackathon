@@ -198,3 +198,13 @@ html.cz-on body.at { --bg: #06080f; --bg-2: #0b0e18; --surface: #10131f; --surfa
   --line: #262a3a; --line-2: #343a50; --accent: #9AA8FF; --accent-ink: #0E1020; --accent-soft: #23294B; --ls-accent-tx: #B4BEFF; background: #06080f; color: var(--ink); }
 .cz-index { background: linear-gradient(var(--cz-bg), #06080f 60%); }
 .cz-after { background: #06080f; }
+
+/* loading status: quiet, bottom centre; fades once the essential scene is ready */
+.cz-load { position: absolute; z-index: 5; left: 50%; bottom: 18px; transform: translateX(-50%); margin: 0; font: 500 .68rem "JetBrains Mono", monospace; letter-spacing: .16em; text-transform: uppercase; color: rgba(210, 220, 250, .55); transition: opacity 1.2s ease 1.5s; pointer-events: none; white-space: nowrap; }
+.cz.is-ready .cz-load { opacity: 0; } .cz--flat .cz-load { display: none; }
+/* overview: each world named, quietly; the focused one brighter */
+.cz-names { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .6s ease; }
+.cz-names.is-on { opacity: 1; }
+.cz-names span { position: absolute; left: 0; top: 0; font: 500 .7rem "Instrument Sans", sans-serif; letter-spacing: .04em; color: rgba(222, 230, 250, .62); white-space: nowrap; text-shadow: 0 1px 8px rgba(0, 0, 0, .8); transition: color .25s, opacity .4s; }
+.cz-names span.is-focus { color: #fff; }
+@media (max-width: 760px) { .cz-names span { font-size: .62rem; } }
