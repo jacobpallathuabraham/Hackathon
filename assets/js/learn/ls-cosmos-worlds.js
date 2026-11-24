@@ -17,7 +17,7 @@
 
   const META = {
     maths: { name: 'Mathematics', line: 'Precise structures, curves and the shape of space.', c: ['#9fb4ff', '#e8edff', '#3c4fa8'], kick: 'Geometry · Algebra · Calculus' },
-    physics: { name: 'Physics', line: 'Motion, energy, gravity and the fields that bind them.', c: ['#f08a5d', '#ffd6a8', '#6e2b1f'], kick: 'Mechanics · Waves · Fields' },
+    physics: { name: 'Physics', line: 'Motion, energy, gravity and the fields that bind them.', c: ['#f08a5d', '#ffd6a8', '#1a2550'], kick: 'Mechanics · Waves · Fields' },
     chemistry: { name: 'Chemistry', line: 'Atoms, bonds and the architecture of matter.', c: ['#4fd1c0', '#c9fff6', '#0d4b4a'], kick: 'Atoms · Bonding · Reactions' },
     biology: { name: 'Biology', line: 'Life from the inside — cells, genes and ecosystems.', c: ['#7bd88f', '#e4ffd9', '#1d4d2c'], kick: 'Cells · Genetics · Ecology' },
     geography: { name: 'Geography & Earth', line: 'Oceans, mountains, climate and a living planet.', c: ['#3d8fd6', '#9fd9ff', '#1f5d2e'], kick: 'Water · Climate · Tectonics' },
@@ -169,20 +169,63 @@
       saddle.material.opacity = 0.28 * rv; saddle.rotation.z = t * 0.1; saddle.scale.setScalar(0.5 + 0.5 * smooth(rv)); } };
   };
 
-  B.physics = (THREE, q, G) => { // banded giant, tilted rings, two moons in orbit, dipole field lines
-    const r = 1.35, M = META.physics; const core = surface(THREE, q, r, 0, [M.c[0], M.c[1], M.c[2]], 1.3); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffb58a', 0.9));
-    const tilt = new THREE.Group(); tilt.rotation.set(0.42, 0, 0.18); G.add(tilt);
-    const rg = new THREE.RingGeometry(r * 1.45, r * 2.25, 128, 1); const rp = rg.attributes.position, uv = rg.attributes.uv; for (let i = 0; i < rp.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(rp, i); uv.setXY(i, (v.length() - r * 1.45) / (r * 0.8), 0); }
-    const ringMat = new THREE.ShaderMaterial({ transparent: true, side: THREE.DoubleSide, depthWrite: false, uniforms: { uO: { value: 0 } }, vertexShader: 'varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
-      fragmentShader: 'uniform float uO; varying vec2 vU; void main(){ float x=vU.x; float b=0.55+0.45*sin(x*70.0)*sin(x*23.0+1.0); float gap=smoothstep(0.52,0.55,x)*(1.0-smoothstep(0.58,0.61,x)); float a=b*(1.0-gap*0.9)*smoothstep(0.0,0.05,x)*(1.0-smoothstep(0.92,1.0,x)); gl_FragColor=vec4(mix(vec3(1.0,0.82,0.66),vec3(0.85,0.55,0.4),x)*a,a*0.75*uO); }' });
-    const ring = new THREE.Mesh(rg, ringMat); ring.rotation.x = -Math.PI / 2; tilt.add(ring);
-    const moons = [0.18, 0.11].map((s, i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(s, 24, 18), new THREE.MeshStandardMaterial({ color: i ? 0xd8c8b8 : 0xb8a898, roughness: 0.9 })); G.add(m); return m; });
-    const field = new THREE.Group(); for (let k = 0; k < 10; k++) { const pts = []; const L = 1.7 + (k % 5) * 0.35; for (let i = 0; i <= 64; i++) { const th = 0.25 + i / 64 * (Math.PI - 0.5); const rr = r * L * Math.sin(th) ** 2; pts.push(new THREE.Vector3(rr * Math.sin(th), rr * Math.cos(th), 0)); }
-      const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffc9a8, transparent: true, opacity: 0.25, depthWrite: false })); ln.rotation.y = k / 10 * Math.PI * 2; field.add(ln); }
+  /* Physics (v35): a world made of physics, not a generic ringed planet.
+     · surface: two-source interference (Young's double slit) — the fringe pattern of two coherent wave sources, computed
+       live from the geodesic distance to each source: I ∝ cos²(k(d₁−d₂)/2), with travelling wavefronts;
+     · three Keplerian orbits like an atom diagram: ellipses with the planet at a focus; each body moves by Kepler's equation
+       (fast near periapsis — 2nd law), and the periods follow T ∝ a^1.5 (3rd law);
+     · a standing wave ring on the equator: r(θ, t) = R + A·sin(6θ)·cos(ωt), with fixed nodes;
+     · magnetic dipole field lines r = L·sin²θ, with pulses flowing along them. */
+  B.physics = (THREE, q, G) => {
+    const r = 1.3, M = META.physics;
+    const u = { uSun: { value: SUN.v }, uA: { value: new THREE.Color(M.c[0]) }, uFocus: { value: 0 }, uT: { value: 0 } };
+    const core = new THREE.Mesh(new THREE.SphereGeometry(r, [32, 64, 80][q], [24, 48, 60][q]), new THREE.ShaderMaterial({ uniforms: u,
+      vertexShader: 'varying vec3 vN; varying vec3 vW; varying vec3 vP; void main(){ vP=normalize(position); vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
+      fragmentShader: `uniform vec3 uSun; uniform vec3 uA; uniform float uFocus; uniform float uT; varying vec3 vN; varying vec3 vW; varying vec3 vP;
+      float wave(vec3 p, vec3 s, float k, float w){ float d=acos(clamp(dot(p,s),-1.0,1.0)); return cos(k*d-w*uT)/(1.0+d*0.9); }
+      void main(){ vec3 p=normalize(vP); vec3 s1=normalize(vec3(0.32,0.12,0.94)), s2=normalize(vec3(-0.32,0.12,0.94)), s3=normalize(vec3(0.0,-0.2,-1.0));
+        float a=wave(p,s1,26.0,2.2)+wave(p,s2,26.0,2.2); float I=a*a*0.45; float env=smoothstep(1.7,0.2,acos(clamp(dot(p,normalize(s1+s2)),-1.0,1.0))); I*=0.35+0.65*env;
+        vec3 n=normalize(vN), V=normalize(cameraPosition-vW); float ndl=dot(n,uSun), lit=smoothstep(-0.2,0.6,ndl);
+        vec3 base=mix(vec3(0.004,0.007,0.022),vec3(0.012,0.02,0.055),0.5+0.5*p.y);
+        vec3 fr=mix(vec3(0.9,0.26,0.07),vec3(1.0,0.72,0.38),smoothstep(0.7,1.5,I));
+        vec3 c=base*(0.18+0.9*lit)+fr*pow(clamp(I,0.0,1.6),1.4)*(0.22+0.42*lit);
+        float src=exp(-acos(clamp(dot(p,s1),-1.0,1.0))*40.0)+exp(-acos(clamp(dot(p,s2),-1.0,1.0))*40.0); c+=vec3(1.0,0.9,0.7)*src*0.9;
+        vec3 H=normalize(uSun+V); c+=pow(max(dot(n,H),0.0),64.0)*0.18*lit;
+        float rim=pow(1.0-max(dot(n,V),0.0),3.0); c+=uA*rim*0.22*(0.35+lit)+uA*uFocus*0.08;
+        gl_FragColor=vec4(c,1.0);
+        #include <colorspace_fragment>
+      }` }));
+    G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ff9a6a', 0.45));
+    // Keplerian orbits (planet at a focus), atom-like orientations
+    const orbits = new THREE.Group(); G.add(orbits);
+    const glowC = document.createElement('canvas'); glowC.width = glowC.height = 64; { const g = glowC.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,210,160,0.6)'); gr.addColorStop(1, 'rgba(255,160,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+    const glowT = new THREE.CanvasTexture(glowC);
+    const OR = [[r * 1.6, 0.4, 0.0, 0.3], [r * 1.85, 0.45, Math.PI / 3, 1.1], [r * 2.1, 0.36, -Math.PI / 3, 2.0]].map(([a, e, tilt, ph], i) => {
+      const b = a * Math.sqrt(1 - e * e), pts = []; for (let k = 0; k <= 160; k++) { const E = k / 160 * Math.PI * 2; pts.push(new THREE.Vector3(a * (Math.cos(E) - e), 0, b * Math.sin(E))); }
+      const hold = new THREE.Group(); hold.rotation.set(0.25 + i * 0.12, ph, tilt); orbits.add(hold);
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: i === 1 ? 0xffd6a8 : 0xc9d6ff, transparent: true, opacity: 0.35, depthWrite: false })); hold.add(line);
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.065 + i * 0.012, 16, 12), new THREE.MeshBasicMaterial({ color: i === 1 ? 0xffe2b8 : 0xe6ecff })); hold.add(body);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); halo.scale.setScalar(0.45); body.add(halo);
+      return { a, e, b, line, body, T: 9 * Math.pow(a / (r * 1.6), 1.5), M0: ph * 2 }; });
+    // standing wave on the equator
+    const SW = 192, swPos = new Float32Array((SW + 1) * 3), swGeo = new THREE.BufferGeometry(); swGeo.setAttribute('position', new THREE.BufferAttribute(swPos, 3));
+    const sw = new THREE.Line(swGeo, new THREE.LineBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.7, depthWrite: false })); sw.rotation.set(0.18, 0, -0.08); G.add(sw);
+    // magnetic dipole field lines, with pulses flowing from pole to pole
+    const field = new THREE.Group(), pulses = []; for (let k = 0; k < 10; k++) { const pts = [], L = 1.55 + (k % 5) * 0.2; for (let i = 0; i <= 72; i++) { const th = 0.28 + i / 72 * (Math.PI - 0.56), rr = r * L * Math.sin(th) ** 2; pts.push(new THREE.Vector3(rr * Math.sin(th), rr * Math.cos(th), 0)); }
+      const hold = new THREE.Group(); hold.rotation.y = k / 10 * Math.PI * 2; field.add(hold);
+      hold.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffc9a8, transparent: true, opacity: 0.22, depthWrite: false })));
+      const dot = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, color: 0xffd2b0 })); dot.scale.setScalar(0.16); hold.add(dot); pulses.push({ dot, pts, ph: k * 0.37 }); }
     G.add(field);
-    return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.12; core.material.uniforms.uT.value = t; ringMat.uniforms.uO.value = 0.25 + 0.75 * smooth(rv); ring.rotation.z = t * 0.02;
-      moons.forEach((m, i) => { const a = t * (0.5 - i * 0.18) + i * 2, R = r * (2.7 + i * 0.7); m.position.set(Math.cos(a) * R, Math.sin(a) * 0.35 * (i ? -1 : 1), Math.sin(a) * R); });
-      field.rotation.y = t * 0.05; field.children.forEach((l, i) => { l.material.opacity = (0.08 + 0.22 * rv) * (0.6 + 0.4 * Math.sin(t * 1.4 - i)); }); field.scale.setScalar(0.7 + 0.3 * smooth(rv) + fc * 0.05); } };
+    return { core, r, update(t, dt, rv, fc) {
+      core.rotation.y += dt * 0.06; u.uT.value = t; const sr = smooth(rv);
+      OR.forEach((o, i) => { const Mn = (t / o.T) * Math.PI * 2 + o.M0; let E = Mn; for (let k = 0; k < 6; k++) E -= (E - o.e * Math.sin(E) - Mn) / (1 - o.e * Math.cos(E)); // Kepler: M = E − e·sin E
+        o.body.position.set(o.a * (Math.cos(E) - o.e), 0, o.b * Math.sin(E)); o.line.material.opacity = 0.32 * rv; o.body.scale.setScalar(0.3 + 0.7 * sr + fc * 0.2); });
+      orbits.scale.setScalar(0.55 + 0.45 * sr); orbits.rotation.y = t * 0.03;
+      const R0 = r * 1.42, A = 0.075 * (0.4 + 0.6 * sr), cw = Math.cos(t * 2.4); for (let k = 0; k <= SW; k++) { const th = k / SW * Math.PI * 2, rr = R0 + A * Math.sin(6 * th) * cw; swPos[k * 3] = Math.cos(th) * rr; swPos[k * 3 + 1] = A * 0.5 * Math.sin(6 * th) * cw; swPos[k * 3 + 2] = Math.sin(th) * rr; }
+      swGeo.attributes.position.needsUpdate = true; sw.material.opacity = 0.65 * rv;
+      field.rotation.y = t * 0.04; field.scale.setScalar(0.75 + 0.25 * sr + fc * 0.04); field.children.forEach(h => { h.children[0].material.opacity = (0.07 + 0.18 * rv); });
+      pulses.forEach(p => { const f = (((t * 0.18 + p.ph) % 1) + 1) % 1, j = f * (p.pts.length - 1), i0 = Math.floor(j); p.dot.position.lerpVectors(p.pts[i0], p.pts[Math.min(i0 + 1, p.pts.length - 1)], j - i0); p.dot.material.opacity = rv * Math.sin(Math.PI * f) * 0.9; });
+      } };
   };
 
   B.chemistry = (THREE, q, G) => { // crystalline cell surface, ball-and-stick molecules in orbit, electron shells

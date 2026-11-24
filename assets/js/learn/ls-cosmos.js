@@ -217,12 +217,12 @@
 
     function frame(now) {
       raf = 0; if (!alive || !st.visible || document.hidden) return;
-      const dt = Math.min(0.05, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
+      const dt = Math.min(0.05, (now - st.last) / 1000); st.rdtA = Math.min(0.25, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
       const pPrev = st.p; { const gap = Math.abs(st.target - st.p), rate = 9 - 5 * clamp((gap - 0.6) / 3, 0, 1); /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
-        const fdt = Math.min(0.12, (now - (st.lastP || now - 16)) / 1000), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* plus a speed limit (3.2 scenes/s): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
-        st.p = still ? Math.round(st.target) : st.p + clamp(step, -3.2 * fdt, 3.2 * fdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+        const rdt = Math.min(0.25, (now - (st.lastP || now - 16)) / 1000), fdt = Math.min(0.12, rdt), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* the speed limit uses real elapsed time, so a stalled frame on a slow device does not slow the journey to a crawl */ /* plus a speed limit (2 scenes/s since v35, a calmer flight): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
+        st.p = still ? Math.round(st.target) : st.p + clamp(step, -2.0 * rdt, 2.0 * rdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
       st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
@@ -247,7 +247,7 @@
       oCore.rotation.y += (still ? 0 : dt) * 0.006; oCore.material.uniforms.uT.value = st.t;
       stars.material.uniforms.uT.value = st.t; stars.material.uniforms.uPx.value = dpr; dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
       clouds.forEach((c, i) => { c.material.rotation = st.t * 0.004 * (i % 2 ? 1 : -1); });
-      astroUpdate(still ? 0.016 : dt, a, st.p);
+      astroUpdate(still ? 0.016 : st.rdtA, a, st.p); /* real elapsed time: the astronaut keeps its real-world pace on slow devices */
       if (st.hover && !st.flight) o.onLabel && o.onLabel(st.hover, project(worlds[st.hover])); else o.onLabel && o.onLabel(null);
       o.onProgress && o.onProgress(st.p);
       if (o.onNames) { const show = st.p > N - 1.45 && !st.flight; if (show) { const w = stage.clientWidth, h = stage.clientHeight; o.onNames(W.ORDER.map(id => { const G = worlds[id]; if (!G) return null; tmpV.copy(G.position); tmpV.y -= G.userData.radius * G.scale.x * 1.25; tmpV.project(camera); return { id, x: (tmpV.x * 0.5 + 0.5) * w, y: (-tmpV.y * 0.5 + 0.5) * h, on: tmpV.z < 1 }; })); } else if (st.namesShown) o.onNames(null); st.namesShown = show; }
