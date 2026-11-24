@@ -1,0 +1,69 @@
+{
+  "when": "2026-11-24T15:27:29.757Z",
+  "browser": "Chromium (Playwright) 153.0.8010.12, headless, software rendering, 1440×900",
+  "note": "frame intervals in ms (16.7 = 60 fps); route = time from hash change to the next frame",
+  "rows": {
+    "routeKnowledgeMap": {
+      "n": 5,
+      "median": 29.8,
+      "p95": 59.1,
+      "max": 59.1
+    },
+    "routeSubjectPhysics": {
+      "n": 5,
+      "median": 23.8,
+      "p95": 73.2,
+      "max": 73.2
+    },
+    "routeFlashcards": {
+      "n": 5,
+      "median": 40.2,
+      "p95": 64.1,
+      "max": 64.1
+    },
+    "routeAssessment": {
+      "n": 5,
+      "median": 36.6,
+      "p95": 50,
+      "max": 50
+    },
+    "mapFocusSubjectFrames": {
+      "n": 39,
+      "median": 16.7,
+      "p95": 33.3,
+      "max": 33.3
+    },
+    "mapFocusChapterFrames": {
+      "n": 41,
+      "median": 16.7,
+      "p95": 16.7,
+      "max": 16.8
+    },
+    "mapOverviewFrames": {
+      "n": 37,
+      "median": 16.7,
+      "p95": 33.3,
+      "max": 33.4
+    },
+    "mapNodes": 539,
+    "tabSwitchMs": {
+      "n": 8,
+      "median": 16.3,
+      "p95": 17.2,
+      "max": 17.2
+    },
+    "flipFrames": {
+      "n": 47,
+      "median": 16.7,
+      "p95": 16.7,
+      "max": 16.8
+    },
+    "nextCardFrames": {
+      "n": 35,
+      "median": 16.7,
+      "p95": 16.8,
+      "max": 16.8
+    },
+    "heapMB": 10.7
+  }
+}

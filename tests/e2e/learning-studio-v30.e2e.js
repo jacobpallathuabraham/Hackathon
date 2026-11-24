@@ -27,6 +27,7 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   const p = await mk(); await p.goto(BASE + 'learn.html#/home'); await ready(p); await p.evaluate(() => LS.__cosmos.buildAll());
 
   await t('The universe renders in WebGL with all eleven worlds, the astronaut, fifteen scenes and an index of every world', async () => {
+    await p.waitForFunction(() => LS.__cosmos.stats().draws > 50, null, { timeout: 15000 }).catch(() => {}); /* the frame right after buildAll() can be the one-call sky bake */
     const s = await p.evaluate(() => LS.__cosmos.stats()); assert.equal(s.worlds, 11); assert.equal(s.astronaut, true); assert.ok(s.draws > 50, 'draw calls ' + s.draws);
     assert.equal(await p.locator('.cz-scene').count(), 15); assert.equal(await p.locator('.cz-rail button').count(), 15); assert.equal(await p.locator('[data-cz-enter]').count(), 11);
     const idx = await p.$$eval('.cz-index__list a', a => a.map(x => x.getAttribute('href'))); assert.deepEqual(idx, ORDER.map(id => '#/world/' + id));

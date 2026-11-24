@@ -50,7 +50,7 @@
     if (a === 'chapter') { const ch = LS.curriculum && LS.curriculum.chapter(p[1]), s = ch && subj(ch.subject); sec('explore'); if (s) c.push({ r: 'world/' + s.id, l: T(s.name, s.ar) }); c.push({ l: ch ? ch.title : p[1] }); return c; }
     if (a === 'cards') { sec('cards', T('Flashcards', 'البطاقات')); const ch = p[1] && LS.curriculum && LS.curriculum.chapter(p[1]); if (!p[1]) { c[0] = { l: T('Flashcards', 'البطاقات') }; return c; } if (ch) c.push({ r: 'chapter/' + ch.id, l: ch.title }); c.push({ l: T('Study', 'دراسة') }); return c; }
     if (a === 'assess') { const ch = LS.curriculum && LS.curriculum.chapter(p[1]); sec('explore'); if (ch) c.push({ r: 'chapter/' + ch.id, l: ch.title }); c.push({ l: T('Chapter check', 'فحص الفصل') }); return c; }
-    if (a === 'space' || a === 'path' || a === 'constellation' || a === 'curiosity') { sec('explore'); c.push({ l: { space: T('Solar System Explorer', 'مستكشف النظام الشمسي'), path: T('Learning path', 'مسار التعلّم'), constellation: T('Knowledge Constellation', 'كوكبة المعرفة'), curiosity: T('Curiosity', 'الفضول') }[a] }); return c; }
+    if (a === 'space' || a === 'path' || a === 'constellation' || a === 'curiosity') { sec('explore'); c.push({ l: { space: T('Solar System Explorer', 'مستكشف النظام الشمسي'), path: T('Learning path', 'مسار التعلّم'), constellation: T('Knowledge Map', 'خريطة المعرفة'), curiosity: T('Curiosity', 'الفضول') }[a] }); return c; }
     if (a === 'discover') { sec('explore'); c.push({ l: SECTION.discover }); return c; }
     if (a === 'finder') { sec('explore'); c.push({ l: T('Experience finder', 'باحث التجارب') }); return c; }
     if (a === 'inspect' && p[1]) { const s = subj(p[1]); sec('inspect'); c.push({ l: s ? s.name : p[1] }); return c; }
