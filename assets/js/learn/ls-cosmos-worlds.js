@@ -169,63 +169,61 @@
       saddle.material.opacity = 0.28 * rv; saddle.rotation.z = t * 0.1; saddle.scale.setScalar(0.5 + 0.5 * smooth(rv)); } };
   };
 
-  /* Physics (v35): a world made of physics, not a generic ringed planet.
-     · surface: two-source interference (Young's double slit) — the fringe pattern of two coherent wave sources, computed
-       live from the geodesic distance to each source: I ∝ cos²(k(d₁−d₂)/2), with travelling wavefronts;
-     · three Keplerian orbits like an atom diagram: ellipses with the planet at a focus; each body moves by Kepler's equation
-       (fast near periapsis — 2nd law), and the periods follow T ∝ a^1.5 (3rd law);
-     · a standing wave ring on the equator: r(θ, t) = R + A·sin(6θ)·cos(ωt), with fixed nodes;
-     · magnetic dipole field lines r = L·sin²θ, with pulses flowing along them. */
+  /* Physics (v36): a black hole — gravity, light and relativity in one object.
+     · the shadow: a black sphere inside a thin, bright photon ring (light orbiting at 1.5 Schwarzschild radii);
+     · an accretion disk: turbulent plasma, white-hot at the inner edge and cooling to red outside; the side moving towards
+       the viewer is brighter (relativistic Doppler beaming), the inner disk turns faster (Keplerian ω ∝ r^−1.5);
+     · gravitational lensing: the far side of the disk is bent over and under the shadow — drawn as a camera-facing halo;
+     · relativistic jets from the poles, and matter spiralling in. */
   B.physics = (THREE, q, G) => {
-    const r = 1.3, M = META.physics;
-    const u = { uSun: { value: SUN.v }, uA: { value: new THREE.Color(M.c[0]) }, uFocus: { value: 0 }, uT: { value: 0 } };
-    const core = new THREE.Mesh(new THREE.SphereGeometry(r, [32, 64, 80][q], [24, 48, 60][q]), new THREE.ShaderMaterial({ uniforms: u,
-      vertexShader: 'varying vec3 vN; varying vec3 vW; varying vec3 vP; void main(){ vP=normalize(position); vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
-      fragmentShader: `uniform vec3 uSun; uniform vec3 uA; uniform float uFocus; uniform float uT; varying vec3 vN; varying vec3 vW; varying vec3 vP;
-      float wave(vec3 p, vec3 s, float k, float w){ float d=acos(clamp(dot(p,s),-1.0,1.0)); return cos(k*d-w*uT)/(1.0+d*0.9); }
-      void main(){ vec3 p=normalize(vP); vec3 s1=normalize(vec3(0.32,0.12,0.94)), s2=normalize(vec3(-0.32,0.12,0.94)), s3=normalize(vec3(0.0,-0.2,-1.0));
-        float a=wave(p,s1,26.0,2.2)+wave(p,s2,26.0,2.2); float I=a*a*0.45; float env=smoothstep(1.7,0.2,acos(clamp(dot(p,normalize(s1+s2)),-1.0,1.0))); I*=0.35+0.65*env;
-        vec3 n=normalize(vN), V=normalize(cameraPosition-vW); float ndl=dot(n,uSun), lit=smoothstep(-0.2,0.6,ndl);
-        vec3 base=mix(vec3(0.004,0.007,0.022),vec3(0.012,0.02,0.055),0.5+0.5*p.y);
-        vec3 fr=mix(vec3(0.9,0.26,0.07),vec3(1.0,0.72,0.38),smoothstep(0.7,1.5,I));
-        vec3 c=base*(0.18+0.9*lit)+fr*pow(clamp(I,0.0,1.6),1.4)*(0.22+0.42*lit);
-        float src=exp(-acos(clamp(dot(p,s1),-1.0,1.0))*40.0)+exp(-acos(clamp(dot(p,s2),-1.0,1.0))*40.0); c+=vec3(1.0,0.9,0.7)*src*0.9;
-        vec3 H=normalize(uSun+V); c+=pow(max(dot(n,H),0.0),64.0)*0.18*lit;
-        float rim=pow(1.0-max(dot(n,V),0.0),3.0); c+=uA*rim*0.22*(0.35+lit)+uA*uFocus*0.08;
-        gl_FragColor=vec4(c,1.0);
-        #include <colorspace_fragment>
-      }` }));
-    G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ff9a6a', 0.45));
-    // Keplerian orbits (planet at a focus), atom-like orientations
-    const orbits = new THREE.Group(); G.add(orbits);
-    const glowC = document.createElement('canvas'); glowC.width = glowC.height = 64; { const g = glowC.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,210,160,0.6)'); gr.addColorStop(1, 'rgba(255,160,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
-    const glowT = new THREE.CanvasTexture(glowC);
-    const OR = [[r * 1.6, 0.4, 0.0, 0.3], [r * 1.85, 0.45, Math.PI / 3, 1.1], [r * 2.1, 0.36, -Math.PI / 3, 2.0]].map(([a, e, tilt, ph], i) => {
-      const b = a * Math.sqrt(1 - e * e), pts = []; for (let k = 0; k <= 160; k++) { const E = k / 160 * Math.PI * 2; pts.push(new THREE.Vector3(a * (Math.cos(E) - e), 0, b * Math.sin(E))); }
-      const hold = new THREE.Group(); hold.rotation.set(0.25 + i * 0.12, ph, tilt); orbits.add(hold);
-      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: i === 1 ? 0xffd6a8 : 0xc9d6ff, transparent: true, opacity: 0.35, depthWrite: false })); hold.add(line);
-      const body = new THREE.Mesh(new THREE.SphereGeometry(0.065 + i * 0.012, 16, 12), new THREE.MeshBasicMaterial({ color: i === 1 ? 0xffe2b8 : 0xe6ecff })); hold.add(body);
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); halo.scale.setScalar(0.45); body.add(halo);
-      return { a, e, b, line, body, T: 9 * Math.pow(a / (r * 1.6), 1.5), M0: ph * 2 }; });
-    // standing wave on the equator
-    const SW = 192, swPos = new Float32Array((SW + 1) * 3), swGeo = new THREE.BufferGeometry(); swGeo.setAttribute('position', new THREE.BufferAttribute(swPos, 3));
-    const sw = new THREE.Line(swGeo, new THREE.LineBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.7, depthWrite: false })); sw.rotation.set(0.18, 0, -0.08); G.add(sw);
-    // magnetic dipole field lines, with pulses flowing from pole to pole
-    const field = new THREE.Group(), pulses = []; for (let k = 0; k < 10; k++) { const pts = [], L = 1.55 + (k % 5) * 0.2; for (let i = 0; i <= 72; i++) { const th = 0.28 + i / 72 * (Math.PI - 0.56), rr = r * L * Math.sin(th) ** 2; pts.push(new THREE.Vector3(rr * Math.sin(th), rr * Math.cos(th), 0)); }
-      const hold = new THREE.Group(); hold.rotation.y = k / 10 * Math.PI * 2; field.add(hold);
-      hold.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffc9a8, transparent: true, opacity: 0.22, depthWrite: false })));
-      const dot = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowT, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, color: 0xffd2b0 })); dot.scale.setScalar(0.16); hold.add(dot); pulses.push({ dot, pts, ph: k * 0.37 }); }
-    G.add(field);
-    return { core, r, update(t, dt, rv, fc) {
-      core.rotation.y += dt * 0.06; u.uT.value = t; const sr = smooth(rv);
-      OR.forEach((o, i) => { const Mn = (t / o.T) * Math.PI * 2 + o.M0; let E = Mn; for (let k = 0; k < 6; k++) E -= (E - o.e * Math.sin(E) - Mn) / (1 - o.e * Math.cos(E)); // Kepler: M = E − e·sin E
-        o.body.position.set(o.a * (Math.cos(E) - o.e), 0, o.b * Math.sin(E)); o.line.material.opacity = 0.32 * rv; o.body.scale.setScalar(0.3 + 0.7 * sr + fc * 0.2); });
-      orbits.scale.setScalar(0.55 + 0.45 * sr); orbits.rotation.y = t * 0.03;
-      const R0 = r * 1.42, A = 0.075 * (0.4 + 0.6 * sr), cw = Math.cos(t * 2.4); for (let k = 0; k <= SW; k++) { const th = k / SW * Math.PI * 2, rr = R0 + A * Math.sin(6 * th) * cw; swPos[k * 3] = Math.cos(th) * rr; swPos[k * 3 + 1] = A * 0.5 * Math.sin(6 * th) * cw; swPos[k * 3 + 2] = Math.sin(th) * rr; }
-      swGeo.attributes.position.needsUpdate = true; sw.material.opacity = 0.65 * rv;
-      field.rotation.y = t * 0.04; field.scale.setScalar(0.75 + 0.25 * sr + fc * 0.04); field.children.forEach(h => { h.children[0].material.opacity = (0.07 + 0.18 * rv); });
-      pulses.forEach(p => { const f = (((t * 0.18 + p.ph) % 1) + 1) % 1, j = f * (p.pts.length - 1), i0 = Math.floor(j); p.dot.position.lerpVectors(p.pts[i0], p.pts[Math.min(i0 + 1, p.pts.length - 1)], j - i0); p.dot.material.opacity = rv * Math.sin(Math.PI * f) * 0.9; });
-      } };
+    const r = 1.3, rh = 0.55, M = META.physics;
+    const core = new THREE.Mesh(new THREE.SphereGeometry(rh, 48, 32), new THREE.MeshBasicMaterial({ color: 0x000000 })); G.add(core);
+    const tilt = new THREE.Group(); tilt.rotation.set(0.28, 0, 0.12); G.add(tilt);
+    // accretion disk
+    const R0 = rh * 2.0, R1 = rh * 5.4, dg = new THREE.RingGeometry(R0, R1, [96, 160, 192][q], 6);
+    const du = { uT: { value: 0 }, uR0: { value: R0 }, uR1: { value: R1 }, uO: { value: 1 } };
+    const disk = new THREE.Mesh(dg, new THREE.ShaderMaterial({ uniforms: du, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec3 vL; varying vec3 vW; varying vec3 vNw; varying vec3 vC; void main(){ vL=position; vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; vC=(modelMatrix*vec4(0.0,0.0,0.0,1.0)).xyz; vNw=normalize(mat3(modelMatrix)*vec3(0.0,0.0,1.0)); gl_Position=projectionMatrix*viewMatrix*w; }',
+      fragmentShader: `uniform float uT; uniform float uR0; uniform float uR1; uniform float uO; varying vec3 vL; varying vec3 vW; varying vec3 vNw; varying vec3 vC;
+      float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+      float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }
+      void main(){ float rr=length(vL.xy), x=clamp((rr-uR0)/(uR1-uR0),0.0,1.0); float a=atan(vL.y,vL.x);
+        float w=uT*1.1*pow(uR0/rr,1.5); /* Keplerian: inner plasma turns faster */
+        float turb=n(vec2((a+w)*6.0/6.2832*6.0, rr*7.0))*0.55+n(vec2((a+w*1.3)*14.0/6.2832*6.0, rr*19.0))*0.3+n(vec2((a+w*0.8)*3.0, rr*3.0))*0.15;
+        vec3 hot=vec3(1.0,0.96,0.88), mid=vec3(1.0,0.62,0.22), cool=vec3(0.75,0.18,0.05);
+        vec3 col=mix(hot,mid,smoothstep(0.0,0.35,x)); col=mix(col,cool,smoothstep(0.35,1.0,x));
+        vec3 tang=normalize(cross(vNw,normalize(vW-vC))); float beam=1.0+0.75*dot(tang,normalize(cameraPosition-vW)); /* Doppler beaming */
+        float edge=smoothstep(0.0,0.06,x)*(1.0-smoothstep(0.7,1.0,x)); float I=edge*pow(1.0-x,1.4)*(0.45+0.85*turb)*beam;
+        gl_FragColor=vec4(col*I*1.35*uO, 1.0); }` }));
+    disk.rotation.x = -Math.PI / 2; tilt.add(disk);
+    // lensed halo + photon ring: a camera-facing plane, oriented each frame before it is drawn
+    const hu = { uT: { value: 0 }, uO: { value: 1 } };
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(rh * 7, rh * 7), new THREE.ShaderMaterial({ uniforms: hu, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec2 vU; void main(){ vU=uv*2.0-1.0; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: `uniform float uT; uniform float uO; varying vec2 vU; const float RH=${(rh / (rh * 3.5)).toFixed(4)};
+      void main(){ float d=length(vU), a=atan(vU.y,vU.x);
+        float ring=exp(-pow((d-RH*1.52)/0.007,2.0))*1.1; /* the photon ring */
+        float lens=exp(-pow((d-RH*1.95)/(0.10+0.05*abs(sin(a))),2.0))*(0.35+0.65*pow(abs(sin(a)),1.5)); /* the far disk, bent over and under */
+        float fl=0.85+0.15*sin(a*7.0+uT*1.6)*sin(a*3.0-uT*0.9);
+        float glow=exp(-d*3.2)*0.25*step(RH,d);
+        vec3 c=vec3(1.0,0.93,0.82)*ring+mix(vec3(1.0,0.72,0.32),vec3(1.0,0.45,0.15),smoothstep(RH*1.6,RH*2.6,d))*lens*fl*0.9+vec3(1.0,0.55,0.25)*glow;
+        float inside=step(d,RH*1.47); c*=1.0-inside; gl_FragColor=vec4(c*uO,1.0); }` }));
+    halo.renderOrder = 2; G.add(halo);
+    const pq = new THREE.Quaternion();
+    halo.onBeforeRender = (rd, sc, cam) => { halo.parent.getWorldQuaternion(pq).invert(); halo.quaternion.copy(pq).multiply(cam.quaternion); };
+    // jets
+    const jetMat = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uO: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      vertexShader: 'varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'uniform float uT; uniform float uO; varying vec2 vU; void main(){ float y=vU.y; float k=sin(y*40.0-uT*6.0)*0.25+0.75; float a=pow(1.0-y,2.4)*k*smoothstep(0.0,0.08,y)*0.16*uO; gl_FragColor=vec4(vec3(0.5,0.7,1.0)*a,1.0); }' });
+    [1, -1].forEach(sg => { const j = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.07, rh * 5.5, 20, 1, true), jetMat); j.geometry.translate(0, rh * 2.75 + rh * 0.9, 0); if (sg < 0) j.rotation.z = Math.PI; tilt.add(j); });
+    // matter spiralling in
+    const glowC = document.createElement('canvas'); glowC.width = glowC.height = 64; { const g = glowC.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,240,220,1)'); gr.addColorStop(0.35, 'rgba(255,170,90,0.5)'); gr.addColorStop(1, 'rgba(255,120,40,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+    const gt = new THREE.CanvasTexture(glowC), bits = Array.from({ length: q ? 18 : 10 }, (_, i) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: gt, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); tilt.add(sp); return { sp, life: (i * 0.137) % 1, a: i * 2.4 }; });
+    return { core, r, body: [halo, tilt], update(t, dt, rv, fc) { const sr = smooth(rv), o = 0.55 + 0.45 * sr + fc * 0.1;
+      du.uT.value = t; du.uO.value = o; hu.uT.value = t; hu.uO.value = o; jetMat.uniforms.uT.value = t; jetMat.uniforms.uO.value = 0.25 + 0.75 * sr;
+      tilt.rotation.y = t * 0.02;
+      bits.forEach(b => { b.life -= dt * 0.08; if (b.life <= 0) { b.life += 1; b.a = Math.random() * 6.283; } const rr = rh * (1.9 + 4.2 * b.life); b.a += dt * 1.4 * Math.pow(rh * 2 / rr, 1.5);
+        b.sp.position.set(Math.cos(b.a) * rr, Math.sin(b.a * 3) * 0.02, Math.sin(b.a) * rr); b.sp.scale.setScalar(0.05 + 0.08 * (1 - b.life)); b.sp.material.opacity = sr * Math.min(1, (1 - b.life) * 4) * Math.min(1, b.life * 6); }); } };
   };
 
   B.chemistry = (THREE, q, G) => { // crystalline cell surface, ball-and-stick molecules in orbit, electron shells

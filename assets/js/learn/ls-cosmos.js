@@ -40,7 +40,8 @@
     add([0, 5, -8], [1, 0, -64], [0.95, -0.7, -3.8], 'maths', 'universe');
     W.ORDER.forEach(id => { const P = PATH[id], s = Math.sign(P[0]) || 1;
       add([P[0] - s * 1.4, P[1] + 0.7, P[2] + 6.6], [P[0] - s * 2.5, P[1] - 0.25, P[2] - 1], [s * 0.42, -0.74, -3.7], id, id); }); // astronaut between the words and the world, facing the world
-    add([O[0], O[1] + 9.5, O[2] + 30], [O[0], O[1] - 3.2, O[2]], [3.5, -1.7, -7.4], 'center', 'all');
+    if (innerWidth < 700) add([O[0], O[1] + 9.5, O[2] + 30], [O[0], O[1] - 3.2, O[2]], [3.5, -1.7, -7.4], 'center', 'all'); /* phones: the tall constellation reads best from the lower angle */
+    else add([O[0], O[1] + 19, O[2] + 28], [O[0], O[1] + 1.6, O[2] - 2], [4.7, -2.7, -7.6], 'center', 'all'); /* v36: a higher view, so the ring opens up and no world hides another */
     return K;
   }
 
@@ -92,7 +93,7 @@
     sunGlow.scale.setScalar(150); scene.add(sunGlow);
 
     /* sky: nebula + stars painted once into an equirectangular render target */
-    const rtW = [1024, 2048, 2048][q], rt = new THREE.WebGLRenderTarget(rtW, rtW / 2, { colorSpace: THREE.LinearSRGBColorSpace, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+    const rtW = [1024, 2048, 2048][q], rt = new THREE.WebGLRenderTarget(rtW, rtW / 2, { colorSpace: THREE.LinearSRGBColorSpace, type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter }); /* v36: half-float — near-black sky values quantised per channel in 8 bits showed as greenish blotches */
     { const bake = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ depthTest: false, uniforms: {}, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }',
         fragmentShader: `#define OCT ${q ? 5 : 4}\nvarying vec2 vUv; ${W.NOISE}
         float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
@@ -100,10 +101,10 @@
         void main(){ float lon=(vUv.x-0.5)*6.2831853, lat=(vUv.y-0.5)*3.14159265; vec3 d=vec3(cos(lat)*sin(lon),sin(lat),cos(lat)*cos(lon));
           vec3 axis=normalize(vec3(0.35,0.86,0.36)); float band=exp(-pow(dot(d,axis)*2.4,2.0));
           float n1=fbm(d*1.7+3.1), n2=fbm(d*3.4+9.2), n3=fbm(d*6.0-2.0);
-          vec3 col=vec3(0.003,0.005,0.014)+vec3(0.004,0.007,0.02)*band; /* deep midnight navy into near-black indigo */
-          col+=vec3(0.02,0.075,0.13)*smoothstep(0.0,0.75,n1)*(0.3+band); /* restrained cyan-blue haze */
-          col+=vec3(0.09,0.045,0.15)*smoothstep(0.2,0.85,n2)*band*0.75; /* subtle violet, not everywhere */
-          col+=vec3(0.30,0.16,0.05)*smoothstep(0.5,0.95,n1*n2*2.0+0.3)*band*0.6; /* occasional warm amber */
+          vec3 col=vec3(0.0008,0.001,0.002)+vec3(0.0012,0.0016,0.004)*band; /* v36: near-black space */
+          col+=vec3(0.007,0.009,0.022)*smoothstep(0.3,0.95,n1)*(0.15+band); /* a whisper of blue haze */
+          col+=vec3(0.03,0.016,0.05)*smoothstep(0.45,0.95,n2)*band*0.5; /* the faintest violet */
+          col+=vec3(0.05,0.022,0.012)*smoothstep(0.7,0.99,n1*n2*2.0+0.3)*band*0.5; /* rare, faint warm glow */
           col*=1.0-0.75*smoothstep(0.1,0.6,n3)*band;
           float s=stars(d,180.0,0.972)*1.3+stars(d,420.0,0.986)*0.8+stars(d,900.0,0.993)*0.5*(0.4+band);
           vec3 sc=mix(vec3(0.75,0.85,1.0),vec3(1.0,0.85,0.7),h3(floor(d*180.0)));
@@ -124,7 +125,7 @@
     const dust = pointsLayer([140, 300, 520][q], [90, 50, 360], 0.12, 0.35, 19, false);
 
     const far = []; [[[-520, 260, -900], 340, 3, 210], [[760, -180, -1100], 260, 11, 25], [[-900, -320, -400], 220, 23, 280]].forEach(([p, s, seed, hue]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: galaxyTex(THREE, seed, hue), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55, fog: false })); m.position.set(...p); m.lookAt(0, 0, -150); m.rotateX(0.9); m.rotateZ(seed); scene.add(m); far.push(m); });
-    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(120,170,255,A)', 9], [[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]] : [[[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.6 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
+    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(120,170,255,A)', 9], [[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]] : [[[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.22 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
 
     /* the great planet of the opening ("Origin"): marbled indigo with a thin bright atmosphere — the sun rises from behind its limb */
     const origin = new THREE.Group(); origin.position.set(...ORIGIN.pos);
@@ -152,9 +153,9 @@
          0 hero approach (slow, long dwell) · 1 first light, a planet reveal · 2…12 world focus, approached on a gentle arc ·
          13→14 universe reveal, a wide pull-back that decelerates into the overview */
     const sstep = t => t * t * t * (t * (t * 6 - 15) + 10);
-    const DWELL = i => (i === 0 ? 0.16 : i === N - 2 ? 0.04 : 0.11);
+    const DWELL = i => (i === 0 ? 0.08 : i === N - 2 ? 0.03 : 0.05); /* v36: short rests, so the travel is spread over the scroll instead of a sudden dash */
     const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), d = DWELL(i), x = clamp((f - d) / (1 - 2 * d), 0, 1);
-      const g = i === N - 2 ? 1 - Math.pow(1 - sstep(x), 1.6) : sstep(x); return { i, f: g, raw: f, u: (i + g) / (N - 1) }; };
+      const g = i === N - 2 ? 1 - Math.pow(1 - sstep(x), 1.6) : 0.45 * x + 0.55 * sstep(x); /* gentler ease: peak speed ≈ 1.5× the average instead of 1.9× */ return { i, f: g, raw: f, u: (i + g) / (N - 1) }; };
     const arcSide = new THREE.Vector3(), arcUp = new THREE.Vector3(0, 1, 0);
     /* the astronaut's world-space path: one anchor per keyframe, where that keyframe's framing places it at rest */
     const rebuildAnchors = () => { const pts = K.map(k => { const pos = V3(k.pos), q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, V3(k.tgt), new THREE.Vector3(0, 1, 0))), off = V3(k.astro);
@@ -172,11 +173,12 @@
     function size() { const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = (q ? 42 : 50) + (w / h < 0.8 ? 14 : 0); camera.updateProjectionMatrix(); st.dirty = true; }
     const ro = new ResizeObserver(() => { size(); rebuildAnchors(); if (st.frames.length) renderer.render(scene, camera); /* no black frame after a resize */ }); ro.observe(stage); size(); rebuildAnchors();
 
-    function placeWorlds(p, t, dt) {
-      const gk = gatherK(p);
+    function placeWorlds(p, t, dt, gOver) {
+      const gk = gOver == null ? gatherK(p) : gOver;
+      if (gk > 0.05 && dt) st.ringA = (st.ringA || 0) + dt * 0.014 * gk; /* v36: the gathered system turns slowly — a living orbit, not a static diagram */
       const focusId = st.hover || st.sel || (st.flight && st.flight.id), inOverview = gk > 0.9;
-      const portrait = camera.aspect < 0.9;
-      W.ORDER.forEach((id, i) => { const G = worlds[id]; if (!G) return; const a = V3(PATH[id]), b = V3(RING(id)); if (portrait) { b.x = O[0] + (b.x - O[0]) * 0.4; b.y += ((i % 4) - 1.5) * 2.5; b.z += 2; } /* portrait screens: a narrower, taller constellation instead of a ring cut off at both sides */ const _b = b, k = sstep(clamp(gk * 1.45 - (i % 6) * 0.07, 0, 1));
+      const portrait = camera.aspect < 0.9, ra = portrait ? 0 : (st.ringA || 0), rc = Math.cos(ra), rs = Math.sin(ra);
+      W.ORDER.forEach((id, i) => { const G = worlds[id]; if (!G) return; const a = V3(PATH[id]), b = V3(RING(id)); if (portrait) { b.x = O[0] + (b.x - O[0]) * 0.4; b.y += ((i % 4) - 1.5) * 2.5; b.z += 2; } else if (ra) { const dx = b.x - O[0], dz = b.z - O[2]; b.x = O[0] + dx * rc - dz * rs; b.z = O[2] + dx * rs + dz * rc; } /* portrait screens: a narrower, taller constellation instead of a ring cut off at both sides */ const _b = b, k = sstep(clamp(gk * 1.45 - (i % 6) * 0.07, 0, 1));
         /* each world arrives on its own curved path (a quadratic Bézier with a per-world bow), staggered */
         const ctl = a.clone().lerp(b, 0.5).add(tmpV.set(((i * 7) % 5 - 2) * 4, ((i * 3) % 4 - 1.5) * 3.5, 6 + (i % 3) * 3)); const u1 = 1 - k;
         G.position.set(u1 * u1 * a.x + 2 * u1 * k * ctl.x + k * k * b.x, u1 * u1 * a.y + 2 * u1 * k * ctl.y + k * k * b.y, u1 * u1 * a.z + 2 * u1 * k * ctl.z + k * k * b.z);
@@ -191,7 +193,7 @@
         const inView = frustum.intersectsSphere(new THREE.Sphere(G.position, G.userData.radius * 3.2));
         /* the words always read clearly: a distant world drifting behind the text column recedes (shrinks smoothly) while it is there */
         const own = K[Math.round(clamp(p, 0, N - 1))].scene, dist = camera.position.distanceTo(G.position);
-        if (own !== id && own !== 'all' && dist > 14 && !st.flight) { tmpV.copy(G.position).project(camera); const side = own === 'all' ? 0 : PATH[own] ? (PATH[own][0] > 0 ? -1 : 1) : -1;
+        if (own !== id && own !== 'all' && dist > 14 && !st.flight && !st.cruise) { tmpV.copy(G.position).project(camera); const side = own === 'all' ? 0 : PATH[own] ? (PATH[own][0] > 0 ? -1 : 1) : -1;
           const m = side ? smooth(clamp((side * tmpV.x + 0.02) / 0.25, 0, 1)) * smooth(clamp((0.75 - Math.abs(tmpV.y)) / 0.3, 0, 1)) : smooth(clamp((tmpV.y - 0.25) / 0.2, 0, 1)) * smooth(clamp((0.6 - Math.abs(tmpV.x)) / 0.2, 0, 1));
           G.userData.hide = (G.userData.hide || 0) + (m - (G.userData.hide || 0)) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
         else if (G.userData.hide) { G.userData.hide += (0 - G.userData.hide) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
@@ -220,9 +222,9 @@
       const dt = Math.min(0.05, (now - st.last) / 1000); st.rdtA = Math.min(0.25, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
-      const pPrev = st.p; { const gap = Math.abs(st.target - st.p), rate = 9 - 5 * clamp((gap - 0.6) / 3, 0, 1); /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
+      const pPrev = st.p; if (!st.cruise) { const gap = Math.abs(st.target - st.p), rate = 3.4 - 1.4 * clamp((gap - 0.6) / 3, 0, 1); /* v36: a soft follow — the camera glides after the scroll */ /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
         const rdt = Math.min(0.25, (now - (st.lastP || now - 16)) / 1000), fdt = Math.min(0.12, rdt), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* the speed limit uses real elapsed time, so a stalled frame on a slow device does not slow the journey to a crawl */ /* plus a speed limit (2 scenes/s since v35, a calmer flight): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
-        st.p = still ? Math.round(st.target) : st.p + clamp(step, -2.0 * rdt, 2.0 * rdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+        st.p = still ? Math.round(st.target) : st.p + clamp(step, -1.0 * rdt, 1.0 * rdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
       st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
@@ -230,6 +232,11 @@
       // camera
       const a = cameraAt(st.p, camPos, camTgt);
       if (st.p > N - 2) { const gk = smooth(gatherK(st.p)); } // (overview keyframe is already at the gathering point)
+      let pv = st.p, gOver = null; /* v36: a cinematic move ("All worlds", far rail jumps): one curved camera path, the worlds gathering as it goes */
+      if (st.cruise) { const C = st.cruise, k = clamp((now - C.t0) / C.ms, 0, 1), e = 0.5 - 0.5 * Math.cos(Math.PI * k), u1 = 1 - e;
+        camPos.set(u1 * u1 * C.p0.x + 2 * u1 * e * C.c.x + e * e * C.p1.x, u1 * u1 * C.p0.y + 2 * u1 * e * C.c.y + e * e * C.p1.y, u1 * u1 * C.p0.z + 2 * u1 * e * C.c.z + e * e * C.p1.z);
+        camTgt.lerpVectors(C.q0, C.q1, sstep(k)); pv = C.from + (C.to - C.from) * e; gOver = C.g0 + (C.g1 - C.g0) * smooth(clamp((k - 0.2) / 0.65, 0, 1));
+        if (k >= 1) { st.cruise = null; st.p = st.target = C.to; st.tgtS = C.q1.clone(); gOver = null; pv = st.p; C.done && C.done(); } }
       if (st.flight) { const F = st.flight, k = clamp((now - F.t0) / F.ms, 0, 1), e = ease(k); camPos.lerpVectors(F.p0, F.p1, e); camTgt.lerpVectors(F.q0, F.q1, e); o.onFlight && o.onFlight(k, F.id); if (k >= 1) { const id = F.id; st.flight = null; AST.endFlight(); o.onArrive && o.onArrive(id); } }
       else if (st.ret) { const R = st.ret, k = clamp((now - R.t0) / R.ms, 0, 1), e = ease(k); camPos.lerpVectors(R.p0, camPos, e); camTgt.lerpVectors(R.q0, camTgt, e); if (k >= 1) st.ret = null; }
       // the look target is critically damped, so it never snaps when a path, a flight or a return hands over
@@ -241,19 +248,19 @@
       if (!still && AST.ready && !st.flight) camera.rotateZ(-AST.bank * 0.16); /* the camera banks a little with the astronaut's turns */
       camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(tmpM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       sky.position.copy(camera.position); rim.position.copy(camera.position).add(tmpV.set(-6, 3, -10).applyQuaternion(camera.quaternion)); rim.target.position.copy(camera.position); fill.position.copy(camera.position).add(tmpV.set(1.5, 2, 0).applyQuaternion(camera.quaternion)); fill.target.position.copy(st.astroPos); fill.intensity = 0.55 + 0.35 * (1 - dawn);
-      placeWorlds(st.p, st.t, still ? 0 : dt);
+      placeWorlds(pv, st.t, still ? 0 : dt, gOver);
       // rim tint follows the world in front of us
       const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]), 1 - Math.exp(-dt * 2)); else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
       oCore.rotation.y += (still ? 0 : dt) * 0.006; oCore.material.uniforms.uT.value = st.t;
       stars.material.uniforms.uT.value = st.t; stars.material.uniforms.uPx.value = dpr; dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
       clouds.forEach((c, i) => { c.material.rotation = st.t * 0.004 * (i % 2 ? 1 : -1); });
-      astroUpdate(still ? 0.016 : st.rdtA, a, st.p); /* real elapsed time: the astronaut keeps its real-world pace on slow devices */
+      astroUpdate(still ? 0.016 : st.rdtA, st.cruise ? at(pv) : a, pv); /* real elapsed time: the astronaut keeps its real-world pace on slow devices */
       if (st.hover && !st.flight) o.onLabel && o.onLabel(st.hover, project(worlds[st.hover])); else o.onLabel && o.onLabel(null);
-      o.onProgress && o.onProgress(st.p);
+      o.onProgress && o.onProgress(st.cruise ? (() => { const C = st.cruise, k = clamp((now - C.t0) / C.ms, 0, 1), sg = Math.sign(C.to - C.from); return k < 0.5 ? C.from + sg * Math.min(0.48, k * 0.96) : C.to - sg * Math.min(0.48, (1 - k) * 0.96); })() : st.p); /* during a cinematic move the old words fade out and the new ones fade in */
       if (o.onNames) { const show = st.p > N - 1.45 && !st.flight; if (show) { const w = stage.clientWidth, h = stage.clientHeight; o.onNames(W.ORDER.map(id => { const G = worlds[id]; if (!G) return null; tmpV.copy(G.position); tmpV.y -= G.userData.radius * G.scale.x * 1.25; tmpV.project(camera); return { id, x: (tmpV.x * 0.5 + 0.5) * w, y: (-tmpV.y * 0.5 + 0.5) * h, on: tmpV.z < 1 }; })); } else if (st.namesShown) o.onNames(null); st.namesShown = show; }
       const t0 = performance.now(); renderer.render(scene, camera); st.cpu.push(performance.now() - t0); if (st.cpu.length > 90) st.cpu.shift();
       adapt(); st.dirty = false; st.lastCam.copy(camera.position);
-      const settling = (still ? Math.round(st.target) !== st.p : Math.abs(st.target - st.p) > 1e-4) || Math.abs(st.ptr.tx - st.ptr.x) > 1e-3 || st.flight || st.ret || st.dirty;
+      const settling = (still ? Math.round(st.target) !== st.p : Math.abs(st.target - st.p) > 1e-4) || Math.abs(st.ptr.tx - st.ptr.x) > 1e-3 || st.flight || st.ret || st.cruise || st.dirty;
       const active = settling || !astroReady || st.hover || now - st.lastInput < 1500;
       if (active) raf = requestAnimationFrame(frame);
       else if (!still) { /* idle: the ambient motion is slow, so it renders at 24 fps (6 fps if frames are very slow), leaving the main thread free */
@@ -288,9 +295,13 @@
       enter(id, ms) { if (st.flight) return; /* one journey at a time: a second click (or a double-click) while flying is ignored, never a second overlapping flight */ if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
         if (reduced() || ms === 0) { o.onArrive && o.onArrive(id); return; }
         const P = G.position.clone(), dir = camera.position.clone().sub(P).normalize(), r = G.userData.radius * G.scale.x;
-        { const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize(); AST.fly(P, P.clone().addScaledVector(dir, r * 2.6).addScaledVector(side, r * 0.9).add(new THREE.Vector3(0, -r * 0.25, 0)), ms || clamp(700 + camera.position.distanceTo(P) * 11, 750, 1300)); }
-        st.flight = { id, t0: performance.now(), ms: ms || clamp(700 + camera.position.distanceTo(P) * 11, 750, 1300), p0: camera.position.clone(), q0: camTgt.clone(), p1: P.clone().addScaledVector(dir, r * 1.55).add(new THREE.Vector3(0, r * 0.15, 0)), q1: P }; start(); },
-      skip: finish, flying: () => !!st.flight,
+        { const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize(); AST.fly(P, P.clone().addScaledVector(dir, r * 2.6).addScaledVector(side, r * 0.9).add(new THREE.Vector3(0, -r * 0.25, 0)), ms || clamp(1500 + camera.position.distanceTo(P) * 22, 1700, 2600)); }
+        st.flight = { id, t0: performance.now(), ms: ms || clamp(1500 + camera.position.distanceTo(P) * 22, 1700, 2600), p0: camera.position.clone(), q0: camTgt.clone(), p1: P.clone().addScaledVector(dir, r * 1.55).add(new THREE.Vector3(0, r * 0.15, 0)), q1: P }; start(); },
+      skip: finish, flying: () => !!st.flight || !!st.cruise, cruising: () => !!st.cruise,
+      /* a cinematic move to scene `to`: one curved path from wherever the camera is, rising and easing (0.5 − 0.5·cos) */
+      cruise(to, done) { to = clamp(to, 0, N - 1); if (reduced() || st.flight) { done && done(); return false; } const p1 = new THREE.Vector3(), q1 = new THREE.Vector3(); cameraAt(to, p1, q1);
+        const p0 = camera.position.clone(), q0 = (st.tgtS || camTgt).clone(), d = p0.distanceTo(p1), c = p0.clone().lerp(p1, 0.5).add(new THREE.Vector3(0, Math.min(26, d * 0.22), Math.min(18, d * 0.08)));
+        st.cruise = { t0: performance.now(), ms: clamp(2600 + d * 16, 3000, 6500), from: st.p, to, p0, p1, q0, q1, c, g0: gatherK(st.p), g1: gatherK(to), done }; st.lastInput = performance.now(); start(); return true; },
       returnFrom(id) { const G = worlds[id] || (buildNext(), worlds[id]); if (!G) return; placeWorlds(st.p, st.t, 0); const P = G.position.clone(), r = G.userData.radius * G.scale.x; st.ret = { t0: performance.now() + 60, ms: 1100, p0: P.clone().add(new THREE.Vector3(0, r * 0.2, r * 1.7)), q0: P }; start(); },
       debugAstro() { const v = astro.position.clone().project(camera); return { vis: astro.visible, ready: astroReady, pos: astro.position.toArray().map(x => +x.toFixed(2)), cam: camera.position.toArray().map(x => +x.toFixed(2)), ndc: [v.x, v.y, v.z].map(x => +x.toFixed(2)), p: st.p, lead: +AST.lead.toFixed(4), speed: +AST.speed.toFixed(2) }; },
       debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2), dist: +camera.position.distanceTo(G.position).toFixed(3) }; },
@@ -377,7 +388,7 @@
     addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
     const arrive = id => { const veil = veilEl(); veil.style.setProperty('--vc', M[id].c[2]); veil.classList.add('is-on'); try { sessionStorage.setItem('cz-return', JSON.stringify({ id, y: scrollY, at: Date.now() })); } catch (e) { /* */ }
-      LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), reduced() ? 0 : 140); };
+      LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), reduced() ? 0 : 340); }; /* v36: change page only once the veil is fully opaque, so the swap is never seen */
     const enter = id => { if (U) U.enter(id); else arrive(id); };
     const labelFocus = { id: null };
     const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { label.hidden = true; return; } if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('span').textContent = M[id].line; } label.hidden = false; label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 8px)`; };
@@ -385,8 +396,8 @@
     /* clicks and keys */
     root.addEventListener('click', e => {
       const en = e.target.closest('[data-cz-enter]'); if (en) { enter(en.dataset.czEnter); return; }
-      const go = e.target.closest('[data-cz-go]'); if (go) { scrollToScene(+go.dataset.czGo, true); return; } /* the page jumps; the camera flies there through its own damping */
-      if (e.target.closest('[data-cz-end]')) { scrollToScene(N - 1, true); return; }
+      const go = e.target.closest('[data-cz-go]'); if (go) { const to = +go.dataset.czGo; if (U && Math.abs(to - U.progress()) > 1.5 && U.cruise(to, () => scrollToScene(to, true))) return; scrollToScene(to, true); return; } /* the page jumps; the camera flies there through its own damping */
+      if (e.target.closest('[data-cz-end]')) { if (U && U.progress() < N - 1.5 && U.cruise(N - 1, () => scrollToScene(N - 1, true))) return; scrollToScene(N - 1, true); return; } /* v36: one cinematic move to the whole system instead of racing past every world */
       if (e.target.closest('[data-cz-skip]')) { e.preventDefault(); after.focus({ preventScroll: true }); view.querySelector('.cz-index').scrollIntoView({ behavior: 'instant' }); return; } /* a skip is instant */
       if (e.target.closest('[data-cz-map]')) { openMap(); return; } if (e.target.closest('[data-cz-close]') || e.target === map) { closeMap(); return; }
       const d = e.target.closest('[data-cz-dest]'); if (d) { closeMap(); enter(d.dataset.czDest); }
@@ -428,7 +439,7 @@
     el.appendChild(c); }
 
   function veilEl() { let v = document.getElementById('czVeil'); if (!v) { v = document.createElement('div'); v.id = 'czVeil'; v.className = 'cz-veil'; v.setAttribute('aria-hidden', 'true'); document.body.appendChild(v); } return v; }
-  LS.on('route', ({ area }) => { const v = document.getElementById('czVeil'); if (v && v.classList.contains('is-on') && area !== 'home') requestAnimationFrame(() => requestAnimationFrame(() => v.classList.remove('is-on'))); });
+  LS.on('route', ({ area }) => { const v = document.getElementById('czVeil'); if (v && v.classList.contains('is-on') && area !== 'home') setTimeout(() => v.classList.remove('is-on'), 420); }); /* the veil lifts after the world page has built its first frames, so its set-up hitch is never visible */
   LS.on('leave', a => { if (a === 'home' && current) { current.destroy(); current = null; } });
 
   /* ---------- the subject world's own planet, live in its page header (#/world/<id>) ---------- */

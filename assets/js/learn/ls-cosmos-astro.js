@@ -21,13 +21,14 @@
   const LS = window.LS;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const sstep = t => t * t * t * (t * (t * 6 - 15) + 10);
+  const sstepA = t => t * t * t * (t * (t * 6 - 15) + 10);
   const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const damp = (k, dt) => 1 - Math.exp(-k * dt);
 
   LS.cosmosAstronaut = function (THREE, scene, o = {}) {
     const root = new THREE.Group(); root.visible = false; scene.add(root);
     const body = new THREE.Group(); root.add(body);
-    const st = { ready: false, curve: null, uPrev: 0, uVel: 0, lead: 0, pos: new THREE.Vector3(), off: null, offV: new THREE.Vector3(), vel: new THREE.Vector3(), prev: new THREE.Vector3(), speed: 0, acc: 0, thrust: 0, bank: 0, flight: null, fresh: true, wave: { next: 9, t: -1 }, pulse: { next: 4, t: -1 } };
+    const st = { ready: false, curve: null, uPrev: 0, uVel: 0, lead: 0, pos: new THREE.Vector3(), off: null, offV: new THREE.Vector3(), vel: new THREE.Vector3(), prev: new THREE.Vector3(), speed: 0, acc: 0, thrust: 0, bank: 0, flight: null, fresh: true, wave: { next: 9, t: -1 }, pulse: { next: 4, t: -1 }, trav: 0, sup: { next: 5, t: -1 }, roll: { next: 3.5, t: -1 } };
     const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), m4 = new THREE.Matrix4(), qa = new THREE.Quaternion(), qr = new THREE.Quaternion(), e3 = new THREE.Euler();
     let rig = null, jets = [], puffs = null;
 
@@ -102,8 +103,8 @@
           tmp.z = zf; tmp.x = clamp(tmp.x, -d * th * camera.aspect * 0.78, d * th * camera.aspect * 0.78); tmp.y = clamp(tmp.y, -d * th * 0.7, d * th * 0.7);
           if (!st.off || st.fresh) { st.off = tmp.clone(); st.offV.set(0, 0, 0); st.fresh = false; }
           // critically damped spring with a speed limit: slow-to-medium movement in the frame
-          const w = 1.5; tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
-          const vmax = 1.1; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
+          const w = 0.85; tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
+          const vmax = 0.55; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
           st.pos.copy(st.off); camera.localToWorld(st.pos);
         }
         root.position.copy(st.pos);
@@ -118,7 +119,7 @@
         m4.lookAt(tmp, root.position, up); qa.setFromRotationMatrix(m4);
         const lat = st.off ? clamp(-st.offV.x * 0.35, -0.3, 0.3) : 0; st.bank += (lat - st.bank) * damp(2, dt);
         qr.setFromEuler(e3.set(0.32 * moving + clamp(-st.acc * 0.004, -0.15, 0.15), 0, st.bank)); qa.multiply(qr); // lean into the flight; roll with drift
-        root.quaternion.slerp(qa, damp(st.flight ? 2.6 : 1.4, dt));
+        root.quaternion.slerp(qa, damp(st.flight ? 1.8 : 0.9, dt)); /* v36: turns slowly and steadily */
         animate(t, dt, moving, still);
       },
       dispose() { scene.remove(root); if (puffs) puffs.list.forEach(p => { scene.remove(p.s); p.s.material.dispose(); }); jets.forEach(j => { j.fl.material.dispose(); j.glow.material.dispose(); }); }
@@ -135,20 +136,33 @@
       // an occasional wave toward the world being visited (only at rest)
       const W = st.wave; if (rest > 0.9 && calm && W.t < 0 && t > W.next) W.t = 0; if (W.t >= 0) { W.t += dt; if (W.t > 3.2 || rest < 0.5) { W.t = -1; W.next = t + 14 + Math.random() * 10; } }
       const wv = W.t >= 0 ? Math.sin(Math.PI * clamp(W.t / 3.2, 0, 1)) : 0, wag = Math.sin(W.t * 7.5) * 0.35 * wv;
+      /* v36 travel choreography (only while flying between worlds): a zero-g "swim" — alternating arm strokes and a slow
+         flutter kick — an occasional superman pose (one arm reaching ahead), and on longer trips one slow barrel roll */
+      if (fly > 0.3 && calm) st.trav += dt; else st.trav = Math.max(0, st.trav - dt * 2);
+      const ph = st.trav * Math.PI * 2 / 2.8, sw = fly * calm;
+      const S = st.sup; if (fly > 0.6 && calm && S.t < 0 && st.trav > S.next) S.t = 0; if (S.t >= 0) { S.t += dt; if (S.t > 3 || fly < 0.2) { S.t = -1; S.next = st.trav + 7 + Math.random() * 4; } }
+      const sup = S.t >= 0 ? Math.sin(Math.PI * Math.min(1, S.t / 3)) : 0;
+      const Rr = st.roll; if (fly > 0.6 && calm && Rr.t < 0 && st.trav > Rr.next) Rr.t = 0; if (Rr.t >= 0) { Rr.t += dt; if (Rr.t > 2.6) { Rr.t = -1; Rr.next = st.trav + 11 + Math.random() * 6; } }
+      const roll = Rr.t >= 0 ? sstepA(Math.min(1, Rr.t / 2.6)) * Math.PI * 2 : 0;
+      body.rotation.z = roll;
       // torso and head
       J('pelvis', nz(t, 0.21, 0.37, 0.83, 0.4) * 0.05 * br - 0.06 * fly, nz(t, 0.17, 0.33, 0.71, 1.3) * 0.06 * br, nz(t, 0.19, 0.41, 0.9, 2.2) * 0.04 * br, 2, dt);
-      J('chest', nz(t, 0.23, 0.45, 0.97, 3.1) * 0.05 * br + 0.08 * fly - 0.05 * brake, nz(t, 0.19, 0.39, 0.77, 0.6) * 0.07 * br, nz(t, 0.27, 0.51, 1.1, 1.7) * 0.04 * br, 2, dt);
+      J('chest', nz(t, 0.23, 0.45, 0.97, 3.1) * 0.05 * br + 0.08 * fly - 0.05 * brake, nz(t, 0.19, 0.39, 0.77, 0.6) * 0.07 * br + Math.sin(ph) * 0.12 * sw, nz(t, 0.27, 0.51, 1.1, 1.7) * 0.04 * br, 2, dt);
       J('head', nz(t, 0.13, 0.29, 0.61, 2.6) * 0.1 * br - 0.12 * fly, nz(t, 0.11, 0.23, 0.53, 4.2) * 0.22 * br + 0.15 * wv, 0, 1.6, dt);
+      const phS = ph, swF = sw; // stroke phase and strength (named apart from the per-arm phase below)
       // arms: relaxed float (slightly out, elbows soft) → swept back and in while flying → forward to brake; right arm waves
       [['L', 1], ['R', -1]].forEach(([s, sx], i) => {
         const ph = i * 2.1, waveArm = s === 'R' ? wv : 0;
-        const abd = (0.26 + nz(t, 0.29, 0.53, 1.07, ph) * 0.09 * br) * rest + 0.1 * fly + 1.15 * waveArm, swing = (nz(t, 0.23, 0.47, 0.91, ph + 1) * 0.12 * br - 0.08) * rest + 0.55 * fly - 0.9 * brake - 0.35 * waveArm;
-        J('uArm' + s, swing, 0, abd * sx, 2.4, dt);
-        J('fArm' + s, -(0.38 + nz(t, 0.31, 0.61, 1.3, ph + 2) * 0.12 * br) * rest - 0.12 * fly - 0.5 * brake - (0.7 + wag) * waveArm, 0, wag * 0.6 * sx * waveArm, 2.8, dt);
+        const stroke = Math.sin(phS + i * Math.PI), reach = s === 'R' ? sup : -sup * 0.6; // reach>0: arm ahead; <0: arm tucked back
+        const abd = (0.26 + nz(t, 0.29, 0.53, 1.07, ph) * 0.09 * br) * rest + (0.18 + 0.32 * Math.max(0, -stroke)) * swF * (1 - sup) + 0.08 * sup + 1.15 * waveArm,
+          swing = (nz(t, 0.23, 0.47, 0.91, ph + 1) * 0.12 * br - 0.08) * rest + (0.35 + 0.75 * stroke) * swF * (1 - sup) - 2.5 * Math.max(0, reach) + 0.45 * Math.max(0, -reach) - 0.9 * brake - 0.35 * waveArm;
+        J('uArm' + s, swing, 0, abd * sx, fly > 0.3 ? 3.6 : 2.4, dt);
+        J('fArm' + s, -(0.38 + nz(t, 0.31, 0.61, 1.3, ph + 2) * 0.12 * br) * rest - (0.25 + 0.55 * Math.max(0, stroke)) * swF * (1 - sup) - 0.15 * Math.abs(reach) - 0.5 * brake - (0.7 + wag) * waveArm, 0, wag * 0.6 * sx * waveArm, fly > 0.3 ? 3.8 : 2.8, dt);
         // legs: loose, slowly bicycling at rest; together and trailing while flying
         const kick = nz(t, 0.25, 0.49, 0.97, ph + 0.7);
-        J('thigh' + s, (-0.12 + kick * 0.12 * br) * rest + 0.18 * fly, 0, (0.06 + nz(t, 0.2, 0.4, 0.8, ph) * 0.03 * br) * sx * rest + 0.01 * sx * fly, 2.2, dt);
-        J('shin' + s, (0.28 + Math.max(0, -kick) * 0.25 * br) * rest + 0.12 * fly, 0, 0, 2.4, dt); });
+        const flutter = Math.sin(phS * 1.5 + i * Math.PI);
+        J('thigh' + s, (-0.12 + kick * 0.12 * br) * rest + (0.2 + 0.16 * flutter) * swF + 0.1 * sup, 0, (0.06 + nz(t, 0.2, 0.4, 0.8, ph) * 0.03 * br) * sx * rest + 0.02 * sx * swF, fly > 0.3 ? 3.2 : 2.2, dt);
+        J('shin' + s, (0.28 + Math.max(0, -kick) * 0.25 * br) * rest + (0.18 + 0.3 * Math.max(0, flutter)) * swF + 0.05 * sup, 0, 0, fly > 0.3 ? 3.4 : 2.4, dt); });
       // body drift in the frame (tiny; the root carries the real motion)
       body.position.set(nz(t, 0.23, 0.41, 0.97, 0.3) * 0.025 * br, nz(t, 0.31, 0.57, 1.13, 1.9) * 0.035 * br, 0);
       // boosters: main thrust while travelling; short attitude pulses at rest

@@ -5,7 +5,8 @@
 .cz-on #lsView { padding-top: 0 !important; }
 .cz { position: relative; margin-inline: calc(50% - 50vw); margin-top: calc(-1 * var(--cz-top, 0px)); background: var(--cz-bg); color: var(--cz-ink); isolation: isolate; }
 .cz-track { position: relative; }
-.cz-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+.cz-stage { position: sticky; top: 0; height: 100vh; height: 100lvh; overflow: hidden; } /* v36: the LARGE viewport height — on iPad/iPhone Safari the toolbars shrink while scrolling and a 100svh stage left a strip of page showing underneath */
+html.cz-on, html.cz-on body { overscroll-behavior-y: none; background-color: #010103; } /* no rubber-band gap, and black behind everything */
 .cz-cv, .cz-paint, .cz-paint canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .cz-paint canvas { object-fit: cover; }
 .cz-cv { z-index: 1; opacity: 0; transition: opacity 1.4s ease; }
@@ -108,8 +109,8 @@
 .cz-after { outline: none; }
 
 /* travel veil: the destination's colour fills the view as we arrive, and clears on the other side */
-.cz-veil { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--vc, #222) 55%, #fff 8%), color-mix(in srgb, var(--vc, #222) 70%, #02030a) 55%, #02030a 100%); transition: opacity .5s ease; }
-.cz-veil.is-on { opacity: 1; transition: opacity .25s ease; }
+.cz-veil { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--vc, #222) 40%, #02030a), #010103 70%); transition: opacity .8s cubic-bezier(.22, 1, .36, 1); }
+.cz-veil.is-on { opacity: 1; transition: opacity .3s ease-in; }
 
 /* the shell over space: a transparent header until the journey has scrolled away */
 .cz-on:not(.cz-past) .at-spine { background: linear-gradient(rgba(3, 5, 13, .7), rgba(3, 5, 13, 0)) !important; border-color: transparent !important; box-shadow: none !important; color: var(--cz-ink); }

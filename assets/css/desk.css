@@ -26,3 +26,8 @@
 @media (prefers-reduced-motion: reduce) { .desk__next, .desk__next:hover { transition: none; transform: none; } }
 /* with the desk above it, the explainer hero no longer needs to fill the screen */
 .desk + .hero { min-height: 0; }
+/* v36: the next-step card was var(--ink) — near-black in light mode but cream in dark mode, so it flipped from the calm
+   emphasis to the brightest thing on the page. It is now the same deep card in both themes (raised a touch in dark). */
+.desk__next { background: #1d1b18; color: #f4efe6; }
+html[data-theme="dark"] .desk__next { background: linear-gradient(160deg, #2a2621, #1f1d19); color: #f1ebe0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+html[data-theme="dark"] .desk__next:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), 0 18px 40px -24px rgba(0, 0, 0, .7); }
