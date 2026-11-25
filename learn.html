@@ -12,11 +12,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=19">
-  <link rel="stylesheet" href="assets/css/portal.css?v=19">
+  <link rel="stylesheet" href="assets/css/style.css?v=37">
+  <link rel="stylesheet" href="assets/css/portal.css?v=37">
   <link rel="stylesheet" href="assets/css/accents.css?v=19">
-  <link rel="stylesheet" href="assets/css/erly.css?v=19">
-  <link rel="stylesheet" href="assets/css/realtrack.css?v=19">
+  <link rel="stylesheet" href="assets/css/erly.css?v=37">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=37">
   <link rel="stylesheet" href="assets/css/hand.css?v=19">
   <link rel="stylesheet" href="assets/css/companion.css?v=19">
   <link rel="stylesheet" href="assets/css/studio.css?v=19">
@@ -43,21 +43,28 @@
       } catch (e) {}
     })();
   </script>
+  <link rel="stylesheet" href="assets/css/ls-warp.css?v=37">
+  <script>
+    // v37: arriving through the warp from the student portal — the page opens already inside it (ls-warp.css)
+    try { var w = +sessionStorage.getItem('ls-warp'); sessionStorage.removeItem('ls-warp'); if (w && Date.now() - w < 15000 && !matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('ls-warp-in'); sessionStorage.setItem('ls-entered', '1'); } } catch (e) {}
+  </script>
   <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
   <link rel="stylesheet" href="assets/css/v9.css?v=23">
   <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
   <link rel="stylesheet" href="assets/css/learn.css?v=21">
-  <link rel="stylesheet" href="assets/css/learn-atelier.css?v=23d">
+  <link rel="stylesheet" href="assets/css/learn-atelier.css?v=37">
   <link rel="stylesheet" href="assets/css/learn-kit.css?v=24">
   <link rel="stylesheet" href="assets/css/learn-dash.css?v=24b">
   <link rel="stylesheet" href="assets/css/learn-inspect.css?v=25">
-  <link rel="stylesheet" href="assets/css/learn-v26.css?v=28c">
+  <link rel="stylesheet" href="assets/css/learn-v26.css?v=37">
   <link rel="stylesheet" href="assets/css/learn-v29.css?v=29g">
   <link rel="stylesheet" href="assets/css/learn-v34.css?v=34">
-<link rel="stylesheet" href="assets/css/learn-cosmos.css?v=36">
+<link rel="stylesheet" href="assets/css/learn-cosmos.css?v=37">
   <link rel="alternate" type="text/html" href="learn-guide/index.html" title="Learning Studio content directory (plain HTML, no JavaScript)">
 </head>
 <body class="ls-page at">
+<div class="lw lw--arrive" id="lsWarp" aria-hidden="true"><div class="lw__portal"></div><div class="lw__streaks"></div><div class="lw__streaks lw__streaks--b"></div><div class="lw__streaks lw__streaks--c"></div><div class="lw__core"></div><div class="lw__scan"></div><div class="lw__hud"><div class="lw__ring"></div><div class="lw__ring lw__ring--t"></div><div class="lw__ring lw__ring--a"></div><div class="lw__ring lw__ring--b"></div></div><div class="lw__label"><span class="lw__k">ERLY · Arriving</span><span class="lw__t">The Learning Studio</span><span class="lw__bar"></span></div></div>
+<script>(function () { var w = document.getElementById('lsWarp'); w.classList.toggle('is-go', document.documentElement.classList.contains('ls-warp-in')); if (document.documentElement.lang === 'ar') { w.querySelector('.lw__k').textContent = 'إيرلي · الوصول إلى'; w.querySelector('.lw__t').textContent = 'استوديو التعلّم'; } })();</script>
 <a class="skip ls-skip" href="#lsView">Skip to content</a>
 <header class="at-spine">
   <div class="at-brand"><a class="at-brand__back" href="student.html" aria-label="Back to ERLY"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a><a href="#/home" style="display:flex;align-items:center;gap:10px;text-decoration:none" aria-label="Learning Studio home"><img src="assets/img/erly-mark.svg" alt="" class="at-brand__mark"><span class="at-brand__word">Learning Studio <i>· ERLY</i></span></a></div>
@@ -112,7 +119,7 @@
 <noscript><p style="padding:2rem">The Learning Studio needs JavaScript.</p></noscript>
 <p class="ls-foot">Acubins University is a fictional institution used to demonstrate ERLY; ERLY is not an officially deployed university service. Lessons and questions are ERLY demonstration content, not official exam material.</p>
 <script src="assets/js/icons.js?v=19"></script>
-<script src="assets/js/i18n.js?v=19"></script>
+<script src="assets/js/i18n.js?v=37"></script>
 <script src="assets/js/fun.js?v=19"></script>
 <script src="assets/js/main.js?v=19"></script>
 <script src="assets/js/accent.js?v=19"></script>
@@ -151,7 +158,7 @@
 <script src="assets/js/ambient.js?v=19" defer></script>
 <script src="assets/js/a11y.js?v=19"></script>
 <script src="assets/js/companion/holo.js?v=19" defer></script>
-<script src="assets/js/learn/ls-core.js?v=29"></script>
+<script src="assets/js/learn/ls-core.js?v=37"></script>
 <script src="assets/js/learn/ls-lazy.js?v=28b"></script>
 <script src="assets/js/learn/ls-grade.js?v=19"></script>
 <script src="assets/js/learn/ls-schema.js?v=22"></script>
@@ -186,19 +193,32 @@
 <script src="assets/js/learn/ls-journey.js?v=22b"></script>
 <script src="assets/js/learn/ls-adapt.js?v=22b"></script>
 <script src="assets/js/learn/ls-topic.js?v=24"></script>
-<script src="assets/js/learn/ls-motion.js?v=31"></script>
+<script src="assets/js/learn/ls-motion.js?v=37"></script>
   <script src="assets/js/learn/ls-dash.js?v=28b"></script>
   <script src="assets/js/learn/ls-universe.js?v=34"></script>
   <script src="assets/js/learn/ls-kmap.js?v=34"></script>
 <script src="assets/js/learn/ls-cosmos-worlds.js?v=36"></script>
 <script src="assets/js/learn/ls-cosmos-astro.js?v=36"></script>
-<script src="assets/js/learn/ls-cosmos.js?v=36"></script>
+<script src="assets/js/learn/ls-cosmos.js?v=37"></script>
 <script src="assets/js/learn/ls-inspect.js?v=26"></script>
-<script src="assets/js/learn/ls-nav.js?v=29a"></script>
+<script src="assets/js/learn/ls-nav.js?v=37"></script>
 <script>
   // main.js switches language and theme; the Studio re-renders so its own text follows the language
   document.getElementById('langToggle').addEventListener('click', function () { setTimeout(function () { LS.render(); }, 0); });
   LS.start();
+  // v37: drop out of the warp once the Studio can be seen — the universe ready (or the painted one), any other page
+  // rendered — never sooner than half a second, never later than 2.6 s
+  (function () {
+    var root = document.documentElement, el = document.getElementById('lsWarp'); if (!el) return;
+    if (!root.classList.contains('ls-warp-in')) { el.remove(); return; }
+    var t0 = performance.now(), done = false;
+    addEventListener('pagereveal', function (e) { if (e.viewTransition) e.viewTransition.skipTransition(); });
+    function out() { if (done) return; done = true; el.classList.add('is-out'); root.classList.add('ls-warp-land');
+      setTimeout(function () { el.remove(); root.classList.remove('ls-warp-land', 'ls-warp-in'); }, 1100); }
+    function ready() { var cz = document.querySelector('#lsView > .cz'); if (!cz) return document.readyState === 'complete'; return cz.classList.contains('is-ready') || cz.classList.contains('cz--flat') || cz.classList.contains('is-live'); }
+    (function tick() { var t = performance.now() - t0; if (done) return; if ((t > 500 && ready()) || t > 2600) { requestAnimationFrame(function () { requestAnimationFrame(out); }); return; } setTimeout(tick, 90); })();
+    el.addEventListener('click', out);
+  })();
 </script>
 </body>
 </html>

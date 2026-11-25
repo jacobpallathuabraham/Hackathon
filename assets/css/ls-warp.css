@@ -1,0 +1,73 @@
+/* ERLY — the warp into the Learning Studio (v37).
+   Leaving the student portal: a portal opens from the link you pressed, light streaks into hyperspace and a HUD locks on.
+   Arriving in the Studio: the page opens already inside the same warp (static markup, so it is there on the first paint),
+   keeps moving while the Studio's scripts load, then drops out of hyperspace into the universe.
+   Everything here animates transform and opacity only, so it runs on the compositor and stays smooth even while the
+   main thread is busy loading the next page. Reduced motion: none of it runs. */
+.lw { position: fixed; inset: 0; z-index: 2147483600; pointer-events: auto; overflow: hidden; contain: strict; color: #e8ecff; font-family: var(--f-mono, 'JetBrains Mono', ui-monospace, monospace); }
+.lw[hidden] { display: none; }
+/* the portal: a disc of deep space that grows from the click point to cover the screen */
+.lw__portal { position: absolute; left: var(--x, 50%); top: var(--y, 50%); width: var(--d, 300vmax); aspect-ratio: 1; border-radius: 50%; translate: -50% -50%; scale: 0;
+  background: radial-gradient(circle, #0c1240 0%, #070a22 28%, #03040f 55%, #010208 70%); box-shadow: 0 0 0 2px rgba(140, 170, 255, .55), 0 0 60px 18px rgba(98, 120, 255, .45), inset 0 0 120px 30px rgba(120, 90, 255, .35); will-change: scale; }
+.lw.is-go .lw__portal { animation: lwOpen .66s cubic-bezier(.72, 0, .18, 1) forwards; }
+@keyframes lwOpen { to { scale: 1; } }
+/* hyperspace: radial light streaks drawn with a conic gradient, masked to leave the centre clear, then pushed outward */
+.lw__streaks { position: absolute; inset: -30%; opacity: 0; will-change: transform, opacity;
+  background: repeating-conic-gradient(from var(--r, 0deg) at 50% 50%, transparent 0deg 2.2deg, rgba(186, 206, 255, .9) 2.35deg, transparent 2.6deg 4.1deg, rgba(160, 130, 255, .55) 4.2deg, transparent 4.4deg 7deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 9%, rgba(0, 0, 0, .25) 16%, #000 34%, rgba(0, 0, 0, .55) 60%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 0 9%, rgba(0, 0, 0, .25) 16%, #000 34%, rgba(0, 0, 0, .55) 60%, transparent 72%); }
+.lw__streaks--b { --r: 1.3deg; filter: blur(.6px); }
+.lw__streaks--c { --r: 3.1deg; filter: blur(1.4px); }
+.lw.is-go .lw__streaks { animation: lwStreak .9s cubic-bezier(.5, 0, .9, .4) .18s infinite; }
+.lw.is-go .lw__streaks--b { animation-delay: .48s; }
+.lw.is-go .lw__streaks--c { animation-delay: .33s; animation-duration: 1.1s; }
+@keyframes lwStreak { 0% { opacity: 0; transform: scale(.35) rotate(0deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(2.6) rotate(4deg); } }
+/* the star at the end of the tunnel */
+.lw__core { position: absolute; left: 50%; top: 50%; width: 22vmin; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; opacity: 0; scale: .2;
+  background: radial-gradient(circle, #fff 0 6%, rgba(200, 214, 255, .9) 12%, rgba(120, 140, 255, .45) 30%, rgba(110, 80, 255, .12) 52%, transparent 70%); will-change: transform, opacity; }
+.lw.is-go .lw__core { animation: lwCore 1.4s ease-in-out .25s infinite alternate; }
+@keyframes lwCore { from { opacity: .55; scale: .7; } to { opacity: 1; scale: 1.05; } }
+/* the HUD: two counter-rotating rings, a ticked ring, the destination and a lock-on line */
+.lw__hud { position: absolute; left: 50%; top: 50%; width: min(64vmin, 520px); aspect-ratio: 1; translate: -50% -50%; opacity: 0; scale: .86; will-change: transform, opacity; }
+.lw.is-go .lw__hud { animation: lwHud .5s cubic-bezier(.2, .9, .3, 1) .3s forwards; }
+@keyframes lwHud { to { opacity: 1; scale: 1; } }
+.lw__ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(160, 185, 255, .35); }
+.lw__ring--a { inset: 6%; border: 1.5px dashed rgba(170, 195, 255, .45); animation: lwSpin 9s linear infinite; }
+.lw__ring--b { inset: 14%; border: 0; background: conic-gradient(from 0deg, rgba(122, 162, 255, .0), rgba(122, 162, 255, .85) 12%, transparent 13% 50%, rgba(178, 132, 255, .8) 62%, transparent 63%);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(70% - 2px), #000 calc(70% - 1px) 70%, transparent calc(70% + 1px)); mask: radial-gradient(circle, transparent 0 calc(70% - 2px), #000 calc(70% - 1px) 70%, transparent calc(70% + 1px)); animation: lwSpin 2.6s linear infinite reverse; }
+.lw__ring--t { inset: 0; border: 0; background: repeating-conic-gradient(rgba(190, 205, 255, .55) 0 .6deg, transparent .6deg 6deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(71% - 7px), #000 calc(71% - 6px) 71%, transparent calc(71% + 1px)); mask: radial-gradient(circle, transparent 0 calc(71% - 7px), #000 calc(71% - 6px) 71%, transparent calc(71% + 1px)); animation: lwSpin 24s linear infinite; }
+@keyframes lwSpin { to { rotate: 360deg; } }
+.lw__label { position: absolute; left: 50%; top: calc(50% + min(36vmin, 290px)); translate: -50% 0; display: grid; justify-items: center; gap: 10px; white-space: nowrap; text-align: center; }
+.lw__k { font-size: 11px; letter-spacing: .5em; text-transform: uppercase; color: rgba(200, 212, 255, .72); }
+.lw__t { font: 400 clamp(22px, 3.4vw, 34px)/1 var(--f-display, Fraunces, Georgia, serif); letter-spacing: .01em; color: #fff; text-shadow: 0 0 24px rgba(130, 150, 255, .7); }
+.lw__bar { position: relative; width: 180px; height: 2px; border-radius: 2px; background: rgba(160, 180, 255, .18); overflow: hidden; }
+.lw__bar::after { content: ""; position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #7aa2ff, #c39bff); box-shadow: 0 0 10px #8da8ff; }
+.lw.is-go .lw__bar::after { animation: lwBar 2.4s cubic-bezier(.2, .7, .2, 1) .35s forwards; }
+@keyframes lwBar { to { transform: scaleX(.94); } }
+.lw__scan { position: absolute; inset: 0; opacity: 0; background: repeating-linear-gradient(180deg, rgba(150, 170, 255, .05) 0 1px, transparent 1px 4px); }
+.lw.is-go .lw__scan { animation: lwFade .4s ease .3s forwards; }
+@keyframes lwFade { to { opacity: 1; } }
+
+/* ---------- arrival: the overlay is already "in hyperspace" from the first paint ---------- */
+html.ls-warp-in .lw { display: block; }
+html:not(.ls-warp-in) .lw--arrive { display: none; }
+.lw--arrive .lw__portal { left: 50%; top: 50%; scale: 1; animation: none !important; }
+.lw--arrive .lw__hud { opacity: 1; scale: 1; animation: none !important; }
+.lw--arrive .lw__bar::after { animation: lwBar 1.6s cubic-bezier(.2, .7, .2, 1) forwards; transform: scaleX(.6); }
+html.ls-warp-in:not(.ls-warp-land) body { overflow: hidden; }
+/* drop out of hyperspace: the streaks burst past, the star flares and opens like an iris, the universe settles in */
+.lw.is-out { pointer-events: none; animation: lwOut .75s cubic-bezier(.4, 0, .2, 1) .12s forwards; }
+.lw.is-out .lw__streaks { animation: lwBurst .55s cubic-bezier(.3, 0, .2, 1) forwards !important; }
+.lw.is-out .lw__core { animation: lwFlare .7s cubic-bezier(.2, .7, .2, 1) forwards !important; }
+.lw.is-out .lw__hud { animation: lwHudOut .45s cubic-bezier(.4, 0, 1, 1) forwards !important; }
+.lw.is-out .lw__bar::after { animation: none; transform: scaleX(1); }
+@keyframes lwBurst { from { opacity: 1; transform: scale(1.2); } to { opacity: 0; transform: scale(5); } }
+@keyframes lwFlare { 0% { opacity: 1; scale: 1; } 40% { opacity: 1; scale: 4; } 100% { opacity: 0; scale: 12; } }
+@keyframes lwHudOut { to { opacity: 0; scale: 1.5; } }
+@keyframes lwOut { to { opacity: 0; } }
+html.ls-warp-land #lsView, html.ls-warp-land .at-spine { animation: lwLand 1s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes lwLand { from { opacity: .15; transform: scale(1.05); } }
+
+@media (prefers-reduced-motion: reduce) { .lw { display: none !important; } html.ls-warp-in body { overflow: auto; } html.ls-warp-land #lsView, html.ls-warp-land .at-spine { animation: none; } }
+html.a11y-still .lw { display: none !important; }

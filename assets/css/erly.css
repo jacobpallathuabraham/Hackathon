@@ -859,3 +859,6 @@ section.section { transition: background-color .6s ease; }
   .catalogue__col > .catg { order: var(--ci); }
 }
 .studio-cta__more { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; } .studio-cta__more .muted { font-size: .9rem; max-width: 46ch; }
+
+/* v37 contrast pass: indicator ids use their family colour; deepened in light mode so the 11px mono id stays readable */
+:root:not([data-theme="dark"]) .catg__id { color: color-mix(in srgb, var(--c) 62%, #000); }

@@ -97,3 +97,5 @@ html.ink-arrive[data-theme="dark"] body::before { background: #050b20; }
   .hws-pg__b canvas, .hws-pg__b img { max-height: 44px; width: auto; }
   .hws-consent { padding: 6px 10px; gap: 6px; } .hws-consent p { font-size: .8rem; }
 }
+/* v37: in dark mode the accent is a light coral, so its label must be the dark accent ink, not white */
+.hws-btn--accent { color: var(--accent-ink, #fff); }

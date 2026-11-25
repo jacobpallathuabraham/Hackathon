@@ -14,11 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Lexend:wght@300;400;500&family=Atkinson+Hyperlegible:wght@400;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=19">
-  <link rel="stylesheet" href="assets/css/portal.css?v=19">
+  <link rel="stylesheet" href="assets/css/style.css?v=37">
+  <link rel="stylesheet" href="assets/css/portal.css?v=37">
   <link rel="stylesheet" href="assets/css/accents.css?v=19">
-  <link rel="stylesheet" href="assets/css/erly.css?v=19">
-  <link rel="stylesheet" href="assets/css/realtrack.css?v=19">
+  <link rel="stylesheet" href="assets/css/erly.css?v=37">
+  <link rel="stylesheet" href="assets/css/realtrack.css?v=37">
   <link rel="stylesheet" href="assets/css/hand.css?v=19">
   <link rel="stylesheet" href="assets/css/companion.css?v=19">
   <link rel="stylesheet" href="assets/css/studio.css?v=19">
@@ -46,8 +46,9 @@
   </script>
   <link rel="stylesheet" href="assets/css/theme-fx.css?v=19">
   <link rel="stylesheet" href="assets/css/v9.css?v=23">
-  <link rel="stylesheet" href="assets/css/desk.css?v=36">
+  <link rel="stylesheet" href="assets/css/desk.css?v=37">
   <link rel="stylesheet" href="assets/css/companion-holo.css?v=19">
+  <link rel="stylesheet" href="assets/css/ls-warp.css?v=37">
 </head>
 <body>
   <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
@@ -62,7 +63,7 @@
       <nav class="nav__links" aria-label="Primary">
         <a href="#flow" data-i18n="nav.flow">How it works</a>
         <a href="#tracking" data-i18n="nav.tracking">Tracking</a>
-        <a href="learn.html" class="nav__learn">Learning Studio</a>
+        <a href="learn.html" class="nav__learn" data-i18n="nav.learnstudio">Learning Studio</a>
         <a href="#videos" data-i18n="nav.videos">Videos</a>
         <a href="games.html" data-i18n="nav.lgames">Learning Games</a>
         <a href="#insight" data-i18n="nav.insight">Insight</a>
@@ -95,14 +96,12 @@
   <main id="main">
 
   <!-- ============ HERO ============ -->
-  <section class="desk" id="desk" aria-label="Your desk"><noscript><p class="wrap">Your desk needs JavaScript.</p></noscript></section>
-
   <section class="hero" id="top">
     <div class="amb amb--fade-b" data-ambient="aurora constellation" aria-hidden="true"></div>
     <div class="wrap hero__grid">
       <div class="hero__copy">
         <p class="eyebrow reveal"><span class="dot"></span><span data-i18n="hero.eyebrow">Student Accessibility Services · Welcome back, Acubins</span></p>
-        <h2 class="display reveal" data-i18n="h3.title">Notice sooner.<br><em>On your terms.</em></h2>
+        <h1 class="display reveal" data-i18n="h3.title">Notice sooner.<br><em>On your terms.</em></h1>
         <p class="lead reveal" data-i18n="h3.lead">ERLY is a consent-first study companion. After you sign a Support Pact, it quietly notices study strain — re-reads, pace, abandoned drafts, 11th-hour spikes — measured only against your own normal. No quizzes, no labels. If a pattern persists, you see it first, and you choose who comes with you to SAS.</p>
         <div class="hero__cta reveal">
           <a class="btn btn--accent btn--glow" href="learn.html"><span class="ic-wrap" id="heroIc1"></span><span data-i18n="h2.cta1">Open the Learning Studio</span></a>
@@ -139,6 +138,45 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ LEARNING STUDIO (v37) ============ -->
+  <section class="lsx" id="studio-portal" aria-labelledby="lsxH">
+    <div class="lsx__sky" aria-hidden="true"></div>
+    <div class="wrap lsx__grid">
+      <div class="lsx__copy">
+        <p class="lsx__k reveal"><span class="lsx__dot"></span><span data-i18n="lsx.k">ERLY · The Learning Studio</span></p>
+        <h2 id="lsxH" class="lsx__h reveal" data-i18n="lsx.h">A universe of questions.<br><em>Step inside.</em></h2>
+        <p class="lsx__p reveal" data-i18n="lsx.p">Eleven subject worlds to travel through — interactive lessons, live experiments you can touch, flashcards that remember for you, and Noor beside every page. All of it on your device.</p>
+        <ul class="lsx__chips reveal">
+          <li><b>11</b> <span data-i18n="lsx.c1">subject worlds</span></li>
+          <li><b>174</b> <span data-i18n="lsx.c2">live models</span></li>
+          <li><b>∞</b> <span data-i18n="lsx.c3">questions to follow</span></li>
+        </ul>
+        <div class="lsx__cta reveal"><a class="lsx__go" href="learn.html"><span data-i18n="lsx.cta">Open the Learning Studio</span><span class="lsx__arrow" aria-hidden="true">→</span></a><a class="lsx__alt" href="learn.html#/explore" data-i18n="lsx.alt">Browse subjects as a list</a></div>
+      </div>
+      <a class="lsx__portal reveal" href="learn.html" aria-label="Enter the Learning Studio universe">
+        <span class="lsx__sys" aria-hidden="true">
+          <span class="lsx__orbit lsx__orbit--0"></span><span class="lsx__orbit lsx__orbit--1"></span><span class="lsx__orbit lsx__orbit--2"></span>
+          <span class="lsx__sun"></span>
+          <i class="lsx__pl lsx__pl--r0" style="--ang:0deg;--a:#9fb4ff;--b:#e8edff;--c:#3c4fa8"><b></b></i>
+          <i class="lsx__pl lsx__pl--r1" style="--ang:50deg;--a:#f08a5d;--b:#ffd6a8;--c:#1a2550"><b></b></i>
+          <i class="lsx__pl lsx__pl--r2" style="--ang:99deg;--a:#4fd1c0;--b:#c9fff6;--c:#0d4b4a"><b></b></i>
+          <i class="lsx__pl lsx__pl--r0" style="--ang:98deg;--a:#7bd88f;--b:#e4ffd9;--c:#1d4d2c"><b></b></i>
+          <i class="lsx__pl lsx__pl--r1" style="--ang:148deg;--a:#3d8fd6;--b:#9fd9ff;--c:#1f5d2e"><b></b></i>
+          <i class="lsx__pl lsx__pl--r2" style="--ang:198deg;--a:#a68cff;--b:#e5dcff;--c:#2a1f55"><b></b></i>
+          <i class="lsx__pl lsx__pl--r0" style="--ang:196deg;--a:#f0a6be;--b:#fff3ea;--c:#6b2a43"><b></b></i>
+          <i class="lsx__pl lsx__pl--r1" style="--ang:246deg;--a:#d6a466;--b:#f5e2c0;--c:#5e3b1c"><b></b></i>
+          <i class="lsx__pl lsx__pl--r2" style="--ang:296deg;--a:#f2b84b;--b:#fff0c7;--c:#6a4310"><b></b></i>
+          <i class="lsx__pl lsx__pl--r0" style="--ang:295deg;--a:#7fa3c8;--b:#dbe8f5;--c:#1d2c40"><b></b></i>
+          <i class="lsx__pl lsx__pl--r1" style="--ang:344deg;--a:#c8b35a;--b:#f4ecc4;--c:#3d3412"><b></b></i>
+        </span>
+        <span class="lsx__enter" aria-hidden="true"><span data-i18n="lsx.enter">Enter</span></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ THE DECK: places to explore, dealt and turned as you scroll (v37) ============ -->
+  <section class="deck" id="desk" aria-labelledby="deckH"><noscript><p class="wrap">Your desk needs JavaScript.</p></noscript></section>
 
   <!-- ============ GAP ============ -->
   <section class="section" id="gap">
@@ -595,7 +633,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/js/icons.js?v=19"></script>
-  <script src="assets/js/i18n.js?v=19"></script>
+  <script src="assets/js/i18n.js?v=37"></script>
   <script src="assets/js/fun.js?v=19"></script>
   <script src="assets/js/main.js?v=19"></script>
   <script src="assets/js/accent.js?v=19"></script>
@@ -667,7 +705,8 @@
   <script src="assets/js/handoff.js?v=19"></script>
   <script src="assets/js/ramp.js?v=19"></script>
   <script src="assets/js/flow.js?v=19"></script>
-  <script src="assets/js/desk.js?v=23" defer></script>
+  <script src="assets/js/desk.js?v=37" defer></script>
+  <script src="assets/js/ls-warp.js?v=37"></script>
 <script src="assets/js/session.js?v=19"></script>
   <script>
     [['heroIc1','book'],['scIc1','text'],['scIc2','volume'],['scIc3','chat'],['scIc4','globe'],['scIc5','arrow'],['scIc6','arrow']].forEach(function (p) { var el = document.getElementById(p[0]); if (el) el.innerHTML = ICON(p[1]); });

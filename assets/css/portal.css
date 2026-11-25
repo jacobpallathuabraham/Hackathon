@@ -626,3 +626,4 @@ body.is-leaving { opacity: 0; filter: blur(4px); }
 .lcard.is-university .fld__box:focus-within { border-color: #B07F14; box-shadow: 0 0 0 4px color-mix(in srgb, #B07F14 18%, transparent); }
 .wipe.is-violet { background: #4f36b0; }
 .wipe.is-gold { background: linear-gradient(135deg, #B07F14, #6b4a07); }
+[data-theme="dark"] .lcard__badge--university { color: #E2B851; }

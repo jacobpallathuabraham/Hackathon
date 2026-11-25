@@ -35,9 +35,10 @@
   LS.render = function () {
     const same = location.hash === lastHash; lastHash = location.hash;
     if (same) { orig(); return; } // a re-render of the same page (a plan item ticked, a setting changed) is instant
-    if (reduced() || !document.startViewTransition || !document.getElementById('lsView') || document.hidden) { orig(); stagger(); return; }
-    try { const vt = document.startViewTransition(() => { orig(); }); vt.ready.catch(() => {}); /* a skipped transition rejects; the page has still rendered */ vt.updateCallbackDone.then(stagger, stagger); vt.finished.catch(() => {}).finally(() => { pendingName = null; document.querySelectorAll('[style*="view-transition-name"]').forEach(el => { if (el.dataset.vtKeep == null) el.style.viewTransitionName = ''; }); }); }
-    catch (e) { orig(); stagger(); }
+    /* v37: no View Transition here. startViewTransition shows a frozen screenshot of the old page for as long as the next
+       page takes to build (a heavy page held a still image for a third of a second, then cut) — the "goes static, then
+       jumps" feeling. The new page now renders at once and moves in with a CSS slide (ls-nav.js) and a staggered rise. */
+    orig(); requestAnimationFrame(stagger); pendingName = null;
   };
   removeEventListener('hashchange', orig); addEventListener('hashchange', LS.render);
   // the main blocks of a page rise in, 45 ms apart (only what is on screen; at most 8)
@@ -48,12 +49,6 @@
     kids.forEach((k, i) => { k.classList.remove('m-rise'); void k.offsetWidth; k.style.setProperty('--i', i); k.classList.add('m-rise'); });
   }
   LS.stagger = stagger;
-  // shared element: a world card morphs into its world's hero (where View Transitions exist)
-  document.addEventListener('click', e => {
-    const a = e.target.closest('a[href^="#/subject/"], a[href^="#/topic/"], a[href^="#/exp/"]'); if (!a || reduced() || !document.startViewTransition) return;
-    const card = a.querySelector('.at-world, [data-vt]') || a.closest('[data-vt]'); if (!card) return;
-    const id = a.getAttribute('href').split('/').pop(); card.style.viewTransitionName = 'world-hero'; pendingName = id;
-  }, true);
 
   /* ---------- the entrance ---------- */
   function entrance() {

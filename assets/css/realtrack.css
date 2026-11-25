@@ -142,3 +142,6 @@
 .pstep .small.muted { display: flex; gap: 6px; align-items: flex-start; margin: 10px 0 0; }
 .pstep .small.muted svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
 @media (max-width: 720px) { .csl { grid-template-columns: 1fr; } }
+
+/* v37 contrast pass: white initials on the lighter end of the avatar gradient were ~2.5:1 */
+.csl__av { background: linear-gradient(135deg, hsl(var(--h) 62% 47%), hsl(var(--h) 58% 31%)); text-shadow: 0 1px 2px rgba(0, 0, 0, .25); }

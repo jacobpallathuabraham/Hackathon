@@ -1,4 +1,4 @@
-/* ERLY — "Your desk" (v23): the first thing on the student portal.
+/* ERLY — "Your desk" (v23; a deck of cards since v37), right after the Learning Studio on the student portal.
    It reads ONLY what this browser already holds (Learning Studio, Growth Plan, Support Pact, Handwriting Studio), works out
    the one most useful next step, and shows it first. Nothing is sent anywhere, nothing is scored, and when there is no data
    it says so plainly instead of inventing progress. */
@@ -58,20 +58,85 @@
     return out;
   }
 
-  function render() {
-    const d = gather(), n = nextStep(d), hr = new Date().getHours();
-    const hello = hr < 12 ? T('Good morning', 'صباح الخير') : hr < 18 ? T('Good afternoon', 'مساء الخير') : T('Good evening', 'مساء الخير');
-    host.innerHTML = `<div class="wrap desk__in">
-      <header class="desk__head"><p class="desk__date">${esc(new Date().toLocaleDateString(window.I18N && I18N.lang === 'ar' ? 'ar' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))}</p><h1 class="desk__h">${hello}.</h1></header>
-      <div class="desk__grid">
-        <a class="desk__next" href="${n.href}"><span class="desk__k">${n.k}</span><span class="desk__t">${n.h}</span><span class="desk__p">${n.p}</span><span class="desk__go">${n.cta} <span aria-hidden="true">→</span></span></a>
-        <ul class="desk__tiles">${tiles(d).map(t => `<li><a href="${t.href}"><span class="desk__ic" aria-hidden="true">${t.ic}</span><span><b>${t.name}</b><small>${t.line}</small></span></a></li>`).join('')}</ul>
-      </div>
-      <nav class="desk__jump" aria-label="${T('On this page', 'في هذه الصفحة')}"><span>${T('Also here', 'هنا أيضاً')}:</span> <a href="#games">${T('Learning Games', 'ألعاب التعلم')}</a> <a href="#videos">${T('Videos', 'الفيديوهات')}</a> <a href="#ramp">${T('Tiny first steps', 'خطوات أولى صغيرة')}</a> <a href="#handoff">${T('Talk to someone', 'تحدّث مع أحد')}</a> <a href="#privacy">${T('Privacy', 'الخصوصية')}</a> <a href="#top">${T('How ERLY works', 'كيف يعمل إيرلي')}</a></nav>
-      <p class="desk__note">${d.any ? T('Read from this browser only. Nothing here is sent anywhere or scored.', 'تُقرأ من هذا المتصفح فقط. لا يُرسل شيء ولا يُقيَّم.') : T('Nothing is saved in this browser yet, so this desk is empty — it fills in only from what you choose to save on this device.', 'لا شيء محفوظ في هذا المتصفح بعد — يمتلئ هذا المكتب فقط مما تختار حفظه على هذا الجهاز.')}</p>
-    </div>`;
+  /* v37: the desk is now a deck of playing cards, dealt face-down onto the table and turned over one by one as you scroll.
+     Each card is a place to explore; the first one is your personal next step. On narrow screens and with reduced motion
+     they are simply turned as they come into view (or shown face-up). Every card is a real link from the start: focusing
+     or pressing a face-down card turns it at once. */
+  const SUITS = ['★', '◆', '♣', '♥', '♠', '◆', '♣', '♥'], RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7'];
+  const ICONS = { next: 'compass', L: 'book', G: 'sprout', P: 'shield', H: 'pen', games: 'target', videos: 'play', talk: 'chat' };
+  const HUES = { next: 22, L: 232, G: 140, P: 176, H: 268, games: 340, videos: 38, talk: 8 };
+  const ic = k => (window.ICON ? ICON(ICONS[k] || 'sparkle') : '');
+  function cards(d) {
+    const n = nextStep(d), t = tiles(d), byIc = {}; t.forEach(x => { byIc[x.ic] = x; });
+    return [
+      { k: 'next', cls: ' desk__next', href: n.href, kick: n.k, title: n.h, line: n.p, cta: n.cta },
+      { k: 'L', href: byIc.L.href, kick: T('Explore', 'استكشف'), title: byIc.L.name, line: byIc.L.line, cta: T('Enter the universe', 'ادخل الكون') },
+      { k: 'G', href: byIc.G.href, kick: T('Grow', 'انمُ'), title: byIc.G.name, line: byIc.G.line, cta: T('Open the plan', 'افتح الخطة') },
+      { k: 'P', href: byIc.P.href, kick: T('Notice', 'لاحظ'), title: byIc.P.name, line: byIc.P.line, cta: T('See the pact', 'اطّلع على الميثاق') },
+      { k: 'H', href: byIc.H.href, kick: T('Write', 'اكتب'), title: byIc.H.name, line: byIc.H.line, cta: T('Open the studio', 'افتح الاستوديو') },
+      { k: 'games', href: 'games.html', kick: T('Play', 'العب'), title: T('Learning Games', 'ألعاب التعلّم'), line: T('Short games that build reading, memory and focus', 'ألعاب قصيرة تبني القراءة والذاكرة والتركيز'), cta: T('Pick a game', 'اختر لعبة') },
+      { k: 'videos', href: '#videos', kick: T('Watch', 'شاهد'), title: T('Videos', 'الفيديوهات'), line: T('Lessons where Noor notices the tricky parts', 'دروس يلاحظ فيها نور الأجزاء الصعبة'), cta: T('Watch and learn', 'شاهد وتعلّم') },
+      { k: 'talk', href: '#handoff', kick: T('Talk', 'تحدّث'), title: T('Talk to someone', 'تحدّث مع أحد'), line: T('SAS, a counsellor or someone you trust — your choice', 'خدمات الطلبة أو مرشد أو من تثق به — باختيارك'), cta: T('Get support', 'احصل على الدعم') }
+    ];
   }
+  const face = (c, i) => `<span class="dk__corner" aria-hidden="true"><b>${RANKS[i]}</b><i>${SUITS[i]}</i></span><span class="dk__corner dk__corner--b" aria-hidden="true"><b>${RANKS[i]}</b><i>${SUITS[i]}</i></span>
+      <span class="dk__ic" aria-hidden="true">${ic(c.k)}</span><span class="dk__kick desk__k">${c.kick}</span><span class="dk__t desk__t">${c.title}</span><span class="dk__p desk__p">${c.line}</span><span class="dk__go desk__go">${c.cta} <span aria-hidden="true">→</span></span>`;
+  const back = `<span class="dk__back" aria-hidden="true"><span class="dk__lattice"></span><span class="dk__medal"><img src="assets/img/erly-mark.svg" alt=""></span><span class="dk__brand">ERLY</span></span>`;
+
+  function render() {
+    const d = gather(), hr = new Date().getHours();
+    const hello = hr < 12 ? T('Good morning', 'صباح الخير') : hr < 18 ? T('Good afternoon', 'مساء الخير') : T('Good evening', 'مساء الخير');
+    const cs = cards(d);
+    host.innerHTML = `<div class="deck__pin"><div class="deck__stage">
+      <header class="wrap deck__head"><p class="deck__k desk__date">${esc(new Date().toLocaleDateString(window.I18N && I18N.lang === 'ar' ? 'ar' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))} · ${T('Your desk', 'مكتبك')}</p>
+        <h2 id="deckH" class="deck__h">${hello}. <em>${T('Where to next?', 'إلى أين بعد ذلك؟')}</em></h2>
+        <p class="deck__sub">${T('Scroll and the cards turn over — each one is a place to explore.', 'مرّر لتنقلب البطاقات — كل واحدة مكانٌ تستكشفه.')}</p></header>
+      <ol class="deck__table" role="list">${cs.map((c, i) => `<li class="dk" style="--i:${i};--h:${HUES[c.k]}"><div class="dk__in"><a class="dk__front${c.cls || ''}" href="${c.href}">${face(c, i)}</a>${back}</div></li>`).join('')}</ol>
+      <p class="deck__note desk__note">${d.any ? T('Read from this browser only. Nothing here is sent anywhere or scored.', 'تُقرأ من هذا المتصفح فقط. لا يُرسل شيء ولا يُقيَّم.') : T('Nothing is saved in this browser yet, so your cards show where to start — they fill in only from what you choose to save on this device.', 'لا شيء محفوظ في هذا المتصفح بعد — تمتلئ البطاقات فقط مما تختار حفظه على هذا الجهاز.')}</p>
+    </div></div>`;
+    const portal = document.querySelector('.lsx__portal'); if (portal) portal.setAttribute('aria-label', T('Enter the Learning Studio universe', 'ادخل كون استوديو التعلّم'));
+    deal();
+  }
+
+  /* ---------- dealing and turning ---------- */
+  const root = document.documentElement;
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches || root.classList.contains('a11y-still');
+  const pinned = () => innerWidth > 860 && innerHeight > 600 && !still();
+  let els = [], geo = null, raf = 0, io = null, forced = new Set();
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const smooth = k => k * k * (3 - 2 * k);
+  function measure() { // where each card would sit as part of the deck in the middle of the table
+    const table = host.querySelector('.deck__table'); if (!table) return; const tr = table.getBoundingClientRect(), cx = tr.left + tr.width / 2, cy = tr.top + tr.height / 2;
+    els.forEach((li, i) => { li.style.setProperty('--dx', '0px'); li.style.setProperty('--dy', '0px'); });
+    els.forEach((li, i) => { const r = li.getBoundingClientRect(); li.style.setProperty('--dx', (cx - (r.left + r.width / 2)) + 'px'); li.style.setProperty('--dy', (cy - (r.top + r.height / 2) + i * -1.5) + 'px'); li.style.setProperty('--r', ((i % 2 ? 1 : -1) * (2 + i * 1.3)) + 'deg'); });
+  }
+  function frame() {
+    raf = 0; if (!host.isConnected) return;
+    const pin = host.querySelector('.deck__pin'); if (!pin) return;
+    const r = pin.getBoundingClientRect(), span = Math.max(1, r.height - innerHeight), p = clamp(-r.top / span, 0, 1);
+    // 0 → .22: the deck is dealt onto the table (face-down) · .2 → .92: the cards turn over one after another
+    const deal = smooth(clamp(p / 0.22, 0, 1)), n = els.length;
+    els.forEach((li, i) => { const a = 0.2 + i * (0.72 / n), f = forced.has(i) ? 1 : smooth(clamp((p - a) / 0.16, 0, 1)), dl = smooth(clamp((deal * (n + 2) - i) / 3, 0, 1));
+      const fv = f.toFixed(3), dv = dl.toFixed(3); if (li.__f !== fv) { li.__f = fv; li.style.setProperty('--f', fv); li.classList.toggle('is-up', f > 0.5); } if (li.__d !== dv) { li.__d = dv; li.style.setProperty('--d', dv); } });
+  }
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function deal() {
+    els = [...host.querySelectorAll('.dk')]; forced = new Set(); if (io) { io.disconnect(); io = null; }
+    removeEventListener('scroll', onScroll); host.classList.remove('is-pinned', 'is-flow', 'is-still');
+    if (still()) { host.classList.add('is-still'); els.forEach(li => { li.style.setProperty('--f', 1); li.style.setProperty('--d', 1); li.classList.add('is-up'); }); return; }
+    if (pinned()) { host.classList.add('is-pinned'); requestAnimationFrame(() => { measure(); frame(); }); addEventListener('scroll', onScroll, { passive: true }); }
+    else { host.classList.add('is-flow'); els.forEach(li => { li.style.setProperty('--d', 1); li.style.setProperty('--f', 0); });
+      io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { const li = e.target; setTimeout(() => { li.style.setProperty('--f', 1); li.classList.add('is-up'); }, 120 + (+li.style.getPropertyValue('--i') % 2) * 140); io.unobserve(li); } }), { threshold: 0.45 }); els.forEach(li => io.observe(li)); }
+    // a card that is focused or pressed while face-down turns over straight away
+    els.forEach((li, i) => { const a = li.querySelector('.dk__front'); const turn = () => { if (li.classList.contains('is-up')) return false; forced.add(i); li.classList.add('is-forced'); li.style.setProperty('--f', 1); li.classList.add('is-up'); li.__f = '1.000'; return true; };
+      a.addEventListener('pointerdown', () => { li.__pd = performance.now(); });
+      a.addEventListener('focus', () => { if (performance.now() - (li.__pd || 0) > 500) turn(); }); /* keyboard: turn it so you can read it */
+      a.addEventListener('click', e => { if (!turn()) return; e.preventDefault(); setTimeout(() => a.click(), 460); }); }); /* pointer: it turns over, then opens — one press */
+  }
+  let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (pinned() !== host.classList.contains('is-pinned')) deal(); else if (pinned()) { measure(); frame(); } }, 150); });
   render();
+  // the Learning Studio band's orbits only turn while it is on screen
+  const lsx = document.querySelector('.lsx'); if (lsx && 'IntersectionObserver' in window) new IntersectionObserver(es => lsx.classList.toggle('is-vis', es[0].isIntersecting)).observe(lsx); else if (lsx) lsx.classList.add('is-vis');
   document.addEventListener('erly:lang', render);
   addEventListener('storage', render);
   addEventListener('pageshow', e => { if (e.persisted) render(); });

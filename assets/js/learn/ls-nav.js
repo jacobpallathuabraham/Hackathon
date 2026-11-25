@@ -79,7 +79,7 @@
     if (busy && performance.now() - busy < 450) return; busy = performance.now();
     const prev = S.e[cur - 1];
     if (prev && prev.r) history.back();                           // the previous Studio page in this tab
-    else { dir = 'back'; root.classList.add('ls-nav-back'); root.classList.remove('ls-nav-fwd'); LS.go(parentOf(hashRoute()), { replace: true }); } // opened directly: go up, without leaving a loop behind
+    else { dir = 'up'; root.classList.add('ls-nav-back'); root.classList.remove('ls-nav-fwd'); LS.go(parentOf(hashRoute()), { replace: true }); } // opened directly: go up, without leaving a loop behind
   }
   LS.nav.back = back;
   bar.addEventListener('click', e => { if (e.target.closest('[data-ls-back]')) back(); });
@@ -103,16 +103,24 @@
   let lastLink = null;
   document.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (a) lastLink = a.getAttribute('href'); }, true);
 
-  // runs before the Studio renders (capture phase on window fires first)
-  addEventListener('hashchange', () => {
+  /* must run before the Studio renders a new address: it records where the page being left was scrolled to, and works out
+     whether this is Back/Forward or a new page. v37: the router calls it directly (LS.beforeRender) — it used to rely on
+     its hashchange listener firing before the router's, which it did not, so Back had no position to return to. */
+  let seenHref = location.href;
+  const beforeRender = () => {
+    if (location.href === seenHref) return; seenHref = location.href;
     if (S.e[cur]) { S.e[cur].y = scrollY; S.e[cur].link = lastLink; S.e[cur].st = capture(); }
     lastLink = null;
     const st = history.state && history.state.lsi;
-    if (st != null && S.e[st]) { dir = st < cur ? 'back' : 'fwd'; cur = st; }
+    if (replacing) { replacing = false; try { history.replaceState(Object.assign({}, history.state || {}, { lsi: cur }), ''); } catch (e) { /* none */ } if (S.e[cur]) S.e[cur] = { r: hashRoute() }; }
+    else if (st != null && S.e[st]) { dir = st < cur ? 'back' : 'fwd'; cur = st; }
     else { dir = 'new'; stamp(); }
     save();
-    root.classList.toggle('ls-nav-back', dir === 'back'); root.classList.toggle('ls-nav-fwd', dir !== 'back');
-  }, true);
+    root.classList.toggle('ls-nav-back', dir === 'back' || dir === 'up'); root.classList.toggle('ls-nav-fwd', dir !== 'back' && dir !== 'up');
+  };
+  let replacing = false;
+  LS.beforeRender = beforeRender; LS.navReplacing = () => { replacing = true; };
+  addEventListener('hashchange', beforeRender, true);
 
   let restoreT = [];
   LS.on('route', () => {
@@ -121,13 +129,23 @@
     paintBar();
     restoreT.forEach(clearTimeout); restoreT = [];
     const view = document.getElementById('lsView');
-    if (!reduced() && view && !document.startViewTransition) { view.classList.remove('ls-in-fwd', 'ls-in-back'); void view.offsetWidth; view.classList.add(dir === 'back' ? 'ls-in-back' : 'ls-in-fwd'); }
+    // v37: a short slide in the direction of travel. Pure CSS on the freshly rendered page — no View Transition snapshot,
+    // which froze the old page as a still image while the next one was being built. The class is removed when the
+    // animation ends, so #lsView never keeps a transform (that would re-anchor position:fixed children).
+    if (!reduced() && view && !area0(view)) { view.classList.remove('ls-in-fwd', 'ls-in-back'); void view.offsetWidth; view.classList.add(dir === 'back' || dir === 'up' ? 'ls-in-back' : 'ls-in-fwd'); clearTimeout(view.__inT); view.__inT = setTimeout(() => view.classList.remove('ls-in-fwd', 'ls-in-back'), 400); }
     if (dir !== 'back') return;
     const E = S.e[cur] || {}; let userScrolled = false; const onUser = () => { userScrolled = true; }; addEventListener('wheel', onUser, { once: true, passive: true }); addEventListener('touchmove', onUser, { once: true, passive: true });
-    const apply = final => { if (userScrolled) return; restore(final ? E.st : null); if (E.y) window.scrollTo({ top: E.y, behavior: 'instant' }); if (final && E.link) { const a = view && view.querySelector(`a[href="${CSS.escape(E.link).replace(/\\\//g, '/')}"]`) || (view && [...view.querySelectorAll('a[href]')].find(x => x.getAttribute('href') === E.link)); if (a) a.focus({ preventScroll: true }); } };
-    // pages that load parts lazily grow after the first paint: restore again as they do
-    requestAnimationFrame(() => apply(false)); restoreT.push(setTimeout(() => apply(true), 90), setTimeout(() => apply(false), 350), setTimeout(() => apply(false), 900));
+    // the scroll itself was already set before the first paint (LS.scrollTarget below). Here: put the page's filters back,
+    // return focus to the link used to leave, and — only if a lazily-built page was still too short to reach the saved
+    // position — finish the restore once, when it has grown. Never a second jump once the position is right.
+    const settle = () => { if (userScrolled || !E.y) return; if (Math.abs(scrollY - E.y) > 3) LS.scrollTo(E.y); };
+    const final = () => { if (userScrolled) return; restore(E.st); settle(); if (E.link) { const a = view && view.querySelector(`a[href="${CSS.escape(E.link).replace(/\\\//g, '/')}"]`) || (view && [...view.querySelectorAll('a[href]')].find(x => x.getAttribute('href') === E.link)); if (a) a.focus({ preventScroll: true }); } };
+    restoreT.push(setTimeout(final, 60));
+    if (E.y && Math.abs(scrollY - E.y) > 3) { const ro = new ResizeObserver(() => { if (userScrolled || Math.abs(scrollY - E.y) <= 3) { ro.disconnect(); return; } if (document.documentElement.scrollHeight - innerHeight >= E.y) { LS.scrollTo(E.y); ro.disconnect(); } }); ro.observe(document.body); restoreT.push(setTimeout(() => ro.disconnect(), 1500)); }
   });
+  const area0 = v => !!v.querySelector(':scope > .cz'); /* the universe has its own entrance */
+  // read by the router right after it renders a page: where that page should be scrolled to before it is painted
+  LS.scrollTarget = () => { if (dir !== 'back') return null; const E = S.e[cur]; return E && E.y ? E.y : 0; };
   // Alt + ← is the browser's own Back; on the Studio it also covers pages opened directly (parent navigation)
   addEventListener('keydown', e => { if (e.altKey && (e.key === 'ArrowLeft') && !S.e[cur - 1] && trail(hashRoute()).length) { e.preventDefault(); back(); } });
   addEventListener('pageshow', placeBar);

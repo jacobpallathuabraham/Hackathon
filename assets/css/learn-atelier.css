@@ -23,7 +23,7 @@ body.at {
 }
 body.at ::selection { background: color-mix(in srgb, var(--accent) 26%, transparent); }
 body.at :focus-visible { outline: none; box-shadow: var(--at-ring); border-radius: 6px; }
-body.at a { color: inherit; }
+:where(body.at) a { color: inherit; } /* zero-specificity body scope, so any component class (.s34-next, cards) wins over it */
 .at-subj-maths { --at-hue: 236; } .at-subj-physics { --at-hue: 204; } .at-subj-chemistry { --at-hue: 168; } .at-subj-biology { --at-hue: 352; }
 .at-subj-cs { --at-hue: 278; } .at-subj-english { --at-hue: 32; } .at-subj-geography { --at-hue: 128; } .at-subj-more { --at-hue: 20; }
 .at-hue { color: hsl(var(--at-hue) 62% 44%); } [data-theme="dark"] .at-hue { color: hsl(var(--at-hue) 75% 72%); }

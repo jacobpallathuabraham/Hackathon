@@ -221,7 +221,7 @@ html.portal-arrive body { animation: portalArrive .9s cubic-bezier(.2, .8, .2, 1
 .gw-roles { display: flex; flex-wrap: wrap; gap: 8px; }
 .gw-roles span { padding: 6px 12px; border-radius: 999px; font-size: 13px; background: color-mix(in srgb, var(--teal) 10%, transparent); color: var(--teal); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent); }
 .gw-card__go { margin-top: auto; align-self: flex-start; }
-.gw-card--uni .gw-card__go { background: linear-gradient(135deg, #D6A83A, #A87510); border-color: transparent; }
+.gw-card--uni .gw-card__go, .gw-card--uni .btn--accent { background: linear-gradient(135deg, #B8861E, #835B08); border-color: transparent; color: #fff; }
 .gw-card--people .gw-card__go { background: var(--teal); border-color: transparent; }
 .gw-form h2 { font-size: 26px; margin-bottom: 4px; }
 .gw-form .lcard__back { align-self: flex-start; }
@@ -244,3 +244,9 @@ html.portal-arrive body { animation: portalArrive .9s cubic-bezier(.2, .8, .2, 1
 .uni-backlink { white-space: nowrap; }
 @media (max-width: 900px) { .gw-choices { grid-template-columns: 1fr; } .gw-stats { grid-template-columns: repeat(2, 1fr); } .gw-colgrid { grid-template-columns: repeat(2, 1fr); } .gw-card { min-height: 0; } }
 .gw-form .lbtn { background: linear-gradient(135deg, #D6A83A, #A87510); border-color: transparent; }
+
+/* v37 contrast pass: the orb's light highlight sat right behind "8,420 students" (and in dark mode the coral accent made it
+   near-white). The highlight moves off-centre, the body deepens, and the label gets a soft shadow. */
+.uni-orbit__core { background: radial-gradient(circle at 30% 24%, color-mix(in srgb, var(--accent) 55%, #fff) 0 8%, color-mix(in srgb, var(--accent) 88%, #000) 46%, color-mix(in srgb, color-mix(in srgb, var(--accent) 60%, var(--teal)) 75%, #000)); }
+.uni-orbit__core b, .uni-orbit__core small { text-shadow: 0 2px 16px rgba(0, 0, 0, .35); }
+.uni-orbit__core small { opacity: 1; }

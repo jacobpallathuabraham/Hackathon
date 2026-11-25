@@ -130,17 +130,28 @@
   /* ---------- router ----------  #/area/id/sub  */
   const routes = {};
   LS.route = (name, fn) => { routes[name] = fn; }; LS.routeFn = name => routes[name];
-  LS.go = (path, o) => { const h = '#/' + path.replace(/^#?\/?/, ''); if (location.hash === h) render(); else if (o && o.replace) { history.replaceState(null, '', h); render(); } else location.hash = h; };
+  LS.go = (path, o) => { const h = '#/' + path.replace(/^#?\/?/, ''); if (location.hash === h) render(); else if (o && o.replace) { if (LS.navReplacing) LS.navReplacing(); history.replaceState(null, '', h); render(); } else location.hash = h; };
   LS.current = () => (location.hash.replace(/^#\/?/, '') || 'home').split('/').map(decodeURIComponent);
   let lastArea = null;
+  /* v37 scroll memory. The browser's own restoration ran AFTER the new page had painted at the top (a visible jump down),
+     and scrollTo({top:0}) inherited the site's `scroll-behavior: smooth`, so opening a page from far down the universe
+     scrolled the new page up past the reader for a second. Now every history entry gets an index; leaving a page records
+     its scroll, Back/Forward put it back in the same frame as the render, and a new page starts at the top instantly. */
+  try { history.scrollRestoration = 'manual'; } catch (e) { /* older browsers */ }
+  LS.scrollTo = y => { const r = document.documentElement, b = r.style.scrollBehavior; r.style.scrollBehavior = 'auto'; window.scrollTo(0, y); r.style.scrollBehavior = b; };
   function render() {
     const parts = LS.current(), area = routes[parts[0]] ? parts[0] : 'home';
     const view = document.getElementById('lsView'); if (!view) return;
+    if (LS.beforeRender) LS.beforeRender();
     emit('leave', lastArea); view.onclick = null; view.onkeydown = null;
     try { routes[area](view, parts.slice(1)); }
     catch (e) { console.error(e); view.innerHTML = `<section class="ls-err" role="alert"><h1>${T('Something went wrong on this screen', 'حدث خطأ في هذه الشاشة')}</h1><p>${esc(e.message)}</p><p>${T('Your saved work is not affected.', 'عملك المحفوظ لم يتأثر.')}</p><button class="ls-btn" type="button" onclick="LS.go('home')">${T('Back to Home', 'العودة')}</button></section>`; }
+    // the scroll position is set in the same task as the render, before the first paint of the new page (ls-nav.js knows
+    // where Back should land; a new page starts at the top)
+    const y = LS.scrollTarget ? LS.scrollTarget() : null;
+    if (y != null) LS.scrollTo(y); else if (lastArea !== null) LS.scrollTo(0);
     emit('route', { area, parts });
-    if (lastArea !== null) { const h = view.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } window.scrollTo({ top: 0 }); }
+    if (lastArea !== null) { const h = view.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
     lastArea = area;
   }
   LS.render = render;

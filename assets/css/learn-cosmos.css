@@ -209,3 +209,11 @@ html.cz-on body.at { --bg: #06080f; --bg-2: #0b0e18; --surface: #10131f; --surfa
 .cz-names span { position: absolute; left: 0; top: 0; font: 500 .7rem "Instrument Sans", sans-serif; letter-spacing: .04em; color: rgba(222, 230, 250, .62); white-space: nowrap; text-shadow: 0 1px 8px rgba(0, 0, 0, .8); transition: color .25s, opacity .4s; }
 .cz-names span.is-focus { color: #fff; }
 @media (max-width: 760px) { .cz-names span { font-size: .62rem; } }
+/* v37: the header planet fades and drifts in once it has been built after the page (never pops in) */
+.cz-wp { animation: czWpIn .9s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes czWpIn { from { opacity: 0; transform: translateX(24px) scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .cz-wp { animation: none; } }
+html.a11y-still .cz-wp { animation: none; }
+/* v37: the storage card sat under the accessibility button (bottom-left, 16px + 46px); it now starts to its right */
+.cz-dock { left: 76px; width: min(440px, calc(100vw - 92px)); }
+@media (max-width: 700px) { .cz-dock { left: 12px; width: auto; bottom: 82px; } }

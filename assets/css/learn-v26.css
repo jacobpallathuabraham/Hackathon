@@ -67,7 +67,7 @@ html.at-focus .ls-backbar { top: 0; }
 @media print { .ls-backbar { display: none; } }
 
 /* direction-aware page motion: forward slides in from the right, back from the left (only the page content moves) */
-#lsView { view-transition-name: ls-page; }
+#lsView { view-transition-name: none; } /* v37: page changes no longer use View Transitions (they froze a snapshot while the next page built) */
 html.ls-nav-fwd::view-transition-old(ls-page) { animation: 150ms cubic-bezier(.4,0,1,1) both lsOutL; }
 html.ls-nav-fwd::view-transition-new(ls-page) { animation: 300ms cubic-bezier(.2,.8,.2,1) both lsInR; }
 html.ls-nav-back::view-transition-old(ls-page) { animation: 150ms cubic-bezier(.4,0,1,1) both lsOutR; }

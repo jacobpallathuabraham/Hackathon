@@ -279,10 +279,12 @@
     const onMove = e => { st.lastInput = performance.now(); st.ptr.tx = (e.clientX / innerWidth - 0.5) * 2; st.ptr.ty = (e.clientY / innerHeight - 0.5) * 2; pend = e; start(); };
     const pick = e => { const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); rc.setFromCamera(ndc, camera);
       const cores = Object.values(worlds).filter(G => G.visible).map(G => G.userData.core); const h = rc.intersectObjects(cores, false)[0]; return h ? h.object.userData.world : null; };
+    /* a forgiving pick: a click just beside a small, distant world still counts (within ~28 px of its centre on screen) */
+    const pickNear = e => { const r = cv.getBoundingClientRect(); let best = null, bd = 28 * 28; Object.entries(worlds).forEach(([id, G]) => { if (!G.visible) return; const v = tmpV.copy(G.position).project(camera); if (v.z > 1) return; const x = r.left + (v.x * 0.5 + 0.5) * r.width, y = r.top + (-v.y * 0.5 + 0.5) * r.height, d = (x - e.clientX) ** 2 + (y - e.clientY) ** 2; if (d < bd) { bd = d; best = id; } }); return best; };
     const hoverTick = () => { if (pend && !st.flight) { const id = pick(pend); if (id !== st.hover) { st.hover = id; cv.style.cursor = id ? 'pointer' : ''; o.onHover && o.onHover(id); } pend = null; } };
     setInterval(() => alive && hoverTick(), 50);
-    const onClick = e => { if (e.target.closest('a, button, input, .cz-map, .cz-dock, .cz-label')) return; if (st.flight) return finish(); const id = pick(e); if (!id) { if (st.sel) { st.sel = null; o.onHover && o.onHover(null); } return; }
-      const touch = e.pointerType === 'touch' || matchMedia('(pointer: coarse)').matches; if (touch && st.sel !== id) { st.sel = id; st.hover = id; o.onHover && o.onHover(id); start(); return; } api.enter(id); };
+    const onClick = e => { if (e.target.closest('a, button, input, .cz-map, .cz-dock, .cz-label')) return; if (st.flight) return finish(); const id = pick(e) || pickNear(e); if (!id) { if (st.sel) { st.sel = null; o.onHover && o.onHover(null); } return; }
+      api.enter(id); }; /* v37: one tap or click travels — the old "tap once to focus, tap again to go" read as a click that did nothing */
     stage.addEventListener('pointermove', onMove, { passive: true }); stage.addEventListener('click', onClick);
     const onVis = () => { if (!document.hidden) start(); }; document.addEventListener('visibilitychange', onVis);
     const io = new IntersectionObserver(es => { st.visible = es[0].isIntersecting; if (st.visible) start(); }, { threshold: 0 }); io.observe(cv);
@@ -333,9 +335,18 @@
 
   /* ---------- the route ---------- */
   let current = null;
+  /* v37 keep-alive: leaving the universe used to destroy it (GPU resources, shaders, the astronaut) and coming Back rebuilt
+     everything — over a second of frozen frames before the page could move. Now the universe is parked when you leave
+     (its loop stops by itself once its canvas is off-screen) and Back re-attaches the very same scene in one frame.
+     A parked universe is released after a few minutes away, or when the language changes. */
+  let parked = null, parkT = 0;
+  const langKey = () => (window.I18N && I18N.lang) || document.documentElement.lang || 'en';
+  const unpark = () => { clearTimeout(parkT); const p = parked; parked = null; return p; };
   function cosmosHome(view) {
     if (current) { current.destroy(); current = null; }
-    const W = LS.cosmosWorlds, M = W.META, C0 = LS.curriculum, K = keyframes(), N = K.length, gl = useGL();
+    const gl0 = useGL();
+    if (parked) { const p = unpark(); if (p.lang === langKey() && p.gl === gl0 && p.ctl.resume) { view.replaceChildren(...p.nodes); current = p.ctl; p.ctl.resume(view); return p.ctl; } p.ctl.destroy(); }
+    const W = LS.cosmosWorlds, M = W.META, C0 = LS.curriculum, K = keyframes(), N = K.length, gl = gl0;
     const seg = () => (innerWidth < 700 ? 0.8 : 1.05) * innerHeight;
     document.documentElement.classList.add('cz-on');
     view.innerHTML = `<section class="cz${gl ? '' : ' cz--flat'}" aria-label="${T('The ERLY learning universe', 'كون التعلّم في ERLY')}">
@@ -387,8 +398,14 @@
     onScroll = () => { const p = progressFromScroll(); if (U) U.setTarget(p); else onProgress(p); };
     addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-    const arrive = id => { const veil = veilEl(); veil.style.setProperty('--vc', M[id].c[2]); veil.classList.add('is-on'); try { sessionStorage.setItem('cz-return', JSON.stringify({ id, y: scrollY, at: Date.now() })); } catch (e) { /* */ }
-      LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), reduced() ? 0 : 340); }; /* v36: change page only once the veil is fully opaque, so the swap is never seen */
+    /* v37: the veil starts to close during the last part of the flight, while the camera is still moving, so the arrival
+       is one continuous motion (no still frame between "arrived" and "new page") and the page swap happens behind it */
+    let veilAt = 0;
+    const veilOn = id => { if (veilAt) return; const veil = veilEl(); veil.style.setProperty('--vc', M[id].c[2]); veil.classList.remove('is-off'); void veil.offsetWidth; veil.classList.add('is-on'); veilAt = performance.now(); };
+    const onFlight = (k, id) => { if (k > 0.66) veilOn(id); };
+    const arrive = id => { veilOn(id); try { sessionStorage.setItem('cz-return', JSON.stringify({ id, y: scrollY, at: Date.now() })); } catch (e) { /* */ }
+      const wait = reduced() ? 0 : Math.max(40, 320 - (performance.now() - veilAt)); veilAt = 0;
+      LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), wait); }; /* change page only once the veil is fully opaque, so the swap is never seen */
     const enter = id => { if (U) U.enter(id); else arrive(id); };
     const labelFocus = { id: null };
     const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { label.hidden = true; return; } if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('span').textContent = M[id].line; } label.hidden = false; label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 8px)`; };
@@ -414,16 +431,26 @@
     addEventListener('keydown', onKey, true);
     const onWheelSkip = () => { if (U && U.flying()) U.skip(); }; addEventListener('wheel', onWheelSkip, { passive: true });
 
-    const ctl = { destroy() { removeEventListener('resize', fitTop); removeEventListener('scroll', onScroll); removeEventListener('keydown', onKey, true); removeEventListener('wheel', onWheelSkip); document.documentElement.classList.remove('cz-on', 'cz-past'); if (U) U.destroy(); U = null; LS.__cosmos = null; } };
+    const past = new IntersectionObserver(es => document.documentElement.classList.toggle('cz-past', !es[0].isIntersecting), { threshold: 0, rootMargin: '-64px 0px 0px 0px' }); past.observe(stage.parentElement);
+    const detach = () => { removeEventListener('resize', fitTop); removeEventListener('scroll', onScroll); removeEventListener('keydown', onKey, true); removeEventListener('wheel', onWheelSkip); past.disconnect(); document.documentElement.classList.remove('cz-on', 'cz-past'); };
+    const ctl = {
+      destroy() { detach(); if (U) U.destroy(); U = null; LS.__cosmos = null; },
+      park(nodes) { detach(); if (U && U.flying()) U.skip && U.skip(); LS.__cosmos = null; return { nodes, ctl, lang: langKey(), gl }; },
+      resume() { /* the router sets the scroll right after this returns; everything that depends on it runs in the next frame */
+        document.documentElement.classList.add('cz-on'); addEventListener('resize', fitTop); addEventListener('scroll', onScroll, { passive: true }); addEventListener('keydown', onKey, true); addEventListener('wheel', onWheelSkip, { passive: true }); past.observe(stage.parentElement);
+        const old = root.querySelector('.cz-dock .at-choice'); if (old) old.remove(); after.innerHTML = ''; if (LS.__uvHome) LS.__uvHome(after); const ch = after.querySelector('.at-choice'); if (ch) root.querySelector('.cz-dock').appendChild(ch);
+        label.hidden = true; if (U) { LS.__cosmos = U; U.hover(null); }
+        requestAnimationFrame(() => { if (current !== ctl) return; fitTop(); const p = progressFromScroll(); if (U) { U.jump(p); U.kick(); let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ } if (ret && M[ret.id] && Date.now() - ret.at < 30 * 60 * 1000) U.returnFrom(ret.id); } else onProgress(p); });
+      }
+    };
     current = ctl;
-    const past = new IntersectionObserver(es => document.documentElement.classList.toggle('cz-past', !es[0].isIntersecting), { threshold: 0, rootMargin: '-64px 0px 0px 0px' }); past.observe(stage.parentElement); const d0 = ctl.destroy; ctl.destroy = () => { past.disconnect(); d0(); };
 
     if (!flat) {
       root.classList.add('is-loading');
       universe(stage, { onLoad: L => { const el = root.querySelector('.cz-load'); if (!el) return; if (L.failed) el.textContent = T('The astronaut could not load — the universe still works.', 'تعذّر تحميل رائد الفضاء'); else el.textContent = `${T('Preparing the universe', 'نجهّز الكون')} · ${L.worlds}/11 ${T('worlds', 'عوالم')}${L.astro ? '' : ' · ' + T('astronaut', 'رائد الفضاء')}…`; if (L.astro && L.worlds >= 11) { el.textContent = T('The universe is ready.', 'الكون جاهز.'); root.classList.add('is-ready'); } else if (L.astro && L.worlds >= 4) root.classList.add('is-ready'); },
         onNames: list => { const box = root.querySelector('.cz-names'); if (!list) { box.classList.remove('is-on'); return; } box.classList.add('is-on'); list.forEach(n => { if (!n) return; const el = box.querySelector(`[data-n="${n.id}"]`); el.style.transform = `translate3d(${Math.round(n.x)}px, ${Math.round(n.y)}px, 0) translate(-50%, 0)`; el.style.opacity = n.on ? '' : '0'; el.classList.toggle('is-focus', n.id === labelFocus.id); }); },
-        onProgress, onLabel: labelShow, onHover: id => { if (!id) label.hidden = true; }, onArrive: arrive, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
-        if (current !== ctl) { u.destroy(); return; } U = u; LS.__cosmos = u; root.classList.remove('is-loading'); root.classList.add('is-live'); const p = progressFromScroll(); u.jump(p);
+        onProgress, onLabel: labelShow, onHover: id => { if (!id) label.hidden = true; }, onArrive: arrive, onFlight, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
+        if (current !== ctl && !(parked && parked.ctl === ctl)) { u.destroy(); return; } U = u; if (current === ctl) LS.__cosmos = u; root.classList.remove('is-loading'); root.classList.add('is-live'); const p = progressFromScroll(); u.jump(p);
         let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ }
         if (ret && Date.now() - ret.at < 30 * 60 * 1000 && M[ret.id]) { /* Back restores the scroll position; once it has, pull the camera back out of the world we visited */ setTimeout(() => { if (current !== ctl) return; const y = Math.abs(scrollY - ret.y) > 40 && scrollY < 10 ? (scrollTo({ top: ret.y, behavior: 'instant' }), ret.y) : scrollY; u.jump(progressFromScroll()); u.returnFrom(ret.id); }, 120); }
       }).catch(err => { console.warn('cosmos: falling back to the painted universe', err); root.classList.remove('is-loading'); root.classList.add('cz--flat'); scenes.forEach(el => { const s = K[+el.dataset.i].scene; if (PATH[s] && !el.querySelector('.cz-orb')) el.insertAdjacentHTML('afterbegin', orb(s, true)); }); });
@@ -440,7 +467,11 @@
 
   function veilEl() { let v = document.getElementById('czVeil'); if (!v) { v = document.createElement('div'); v.id = 'czVeil'; v.className = 'cz-veil'; v.setAttribute('aria-hidden', 'true'); document.body.appendChild(v); } return v; }
   LS.on('route', ({ area }) => { const v = document.getElementById('czVeil'); if (v && v.classList.contains('is-on') && area !== 'home') setTimeout(() => v.classList.remove('is-on'), 420); }); /* the veil lifts after the world page has built its first frames, so its set-up hitch is never visible */
-  LS.on('leave', a => { if (a === 'home' && current) { current.destroy(); current = null; } });
+  LS.on('leave', a => { if (a !== 'home' || !current) return; const view = document.getElementById('lsView'), c = current; current = null;
+    if (!c.park || !view || !view.querySelector(':scope > .cz')) { c.destroy(); return; }
+    if (parked) unpark().ctl.destroy();
+    parked = c.park([...view.childNodes]); parkT = setTimeout(() => { const p = unpark(); if (p) p.ctl.destroy(); }, 4 * 60 * 1000); });
+  document.addEventListener('erly:lang', () => { const p = unpark(); if (p) p.ctl.destroy(); });
 
   /* ---------- the subject world's own planet, live in its page header (#/world/<id>) ---------- */
   let worldPlanet = null;
@@ -467,7 +498,10 @@
   LS.on('route', ({ area, parts }) => {
     if (worldPlanet) { worldPlanet.then(x => x && x.destroy()); worldPlanet = null; }
     if (area !== 'world' || !LS.cosmosWorlds.META[parts[1]] || !useGL()) return;
-    const head = document.querySelector('#lsView .uv-wh'); if (!head) return; head.classList.add('has-planet'); worldPlanet = mountWorldPlanet(head, parts[1]).catch(() => null);
+    const head = document.querySelector('#lsView .uv-wh'); if (!head) return; head.classList.add('has-planet');
+    /* v37: the header planet (its own WebGL context and shaders) is built once the page has been shown and has settled —
+       not in the same task as the page — so opening a world never stalls; it then fades in */
+    const id = parts[1]; worldPlanet = new Promise(res => { const go = () => { if (!head.isConnected) return res(null); mountWorldPlanet(head, id).then(res, () => res(null)); }; const later = () => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 700 }) : setTimeout(go, 120)); setTimeout(later, LS.__czArrive ? 650 : 180); }); LS.__czArrive = null;
   });
 
   LS.cosmosKeyframes = keyframes; LS.cosmosPATH = PATH;
