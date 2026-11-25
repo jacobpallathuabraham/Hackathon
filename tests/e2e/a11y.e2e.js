@@ -40,7 +40,7 @@ const BASE = process.env.ERLY_BASE || 'http://localhost:8765/';
   await p.emulateMedia({ colorScheme: 'light' }); await p.waitForTimeout(200);
   assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'light', 'and changes when the device changes');
   await p.click('[data-seg="tint"][data-v="cream"]'); assert.match(await p.evaluate(() => getComputedStyle(document.documentElement, '::after').backgroundColor), /255, 236, 179/, 'colour tint overlay');
-  await p.click('.a11y__row:has([data-k="calm"])'); assert.equal(await css('.ticker', 'display'), 'none', 'fewer distractions hides the moving ticker');
+  await p.click('.a11y__row:has([data-k="calm"])'); assert.equal(await css('.lsx__sky', 'display'), 'none', 'fewer distractions hides the drifting star field'); assert.equal(await css('.amb', 'display'), 'none', 'and the decorative backgrounds');
   await p.click('.a11y__row:has([data-k="contrast"])'); assert.match(await cls(), /a11y-contrast/);
   // Interaction
   await p.click('[data-tab="interaction"]');

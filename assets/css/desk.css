@@ -148,11 +148,75 @@ html.a11y-still .lsx__sky, html.a11y-still .lsx__pl, html.a11y-still .lsx__sun {
 @container (max-width: 160px) { .dk__p { -webkit-line-clamp: 2; } .dk__kick { display: none; } }
 /* right-to-left: the corner indices follow the reading direction, arrows point the way you read, and Arabic is never
    letter-spaced (spacing breaks the joins between letters) */
-.dk__corner { left: auto; inset-inline-start: 12px; }
-.dk__corner--b { inset-inline-start: auto; inset-inline-end: 12px; right: auto; }
+.dk__corner { left: auto; right: auto; inset-inline-start: 12px; inset-inline-end: auto; }
+.dk__corner--b { left: auto; right: auto; inset-inline-start: auto; inset-inline-end: 12px; }
 [dir="rtl"] .dk__go > span, [dir="rtl"] .lsx__arrow { display: inline-block; transform: scaleX(-1); }
 [dir="rtl"] .dk.is-up:hover .dk__go > span { transform: scaleX(-1) translateX(4px); }
 [dir="rtl"] .lsx__go:hover .lsx__arrow { transform: scaleX(-1) translateX(4px); }
 [dir="rtl"] :is(.dk__kick, .deck__k, .lsx__k, .lsx__enter, .dk__brand) { letter-spacing: 0; text-indent: 0; }
 [dir="rtl"] .lsx__go { padding: 15px 26px 15px 24px; }
 [dir="rtl"] :is(.dk__kick, .deck__k, .lsx__k, .lsx__enter, .dk__brand) { font-family: var(--f-ar, 'IBM Plex Sans Arabic', sans-serif); }
+
+/* ================= v38 · one continuous sky ================= */
+/* the principles ticker is gone; the hero simply breathes out into the Learning Studio */
+.hero { padding-bottom: clamp(24px, 4vh, 56px); }
+/* the Learning Studio band no longer starts and ends with a hard edge: its deep-space colour fades in from the page
+   above and fades back out into the deck below, in both themes (the page colour shows through the faded edges) */
+.lsx { background: none; padding: clamp(150px, 17vw, 240px) 0 clamp(170px, 19vw, 260px); margin-top: clamp(-90px, -6vw, -40px); }
+.lsx::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(1100px 600px at 82% 46%, rgba(88, 92, 220, .28), transparent 62%), radial-gradient(800px 520px at 8% 78%, rgba(186, 74, 150, .16), transparent 60%), linear-gradient(180deg, #070a1c, #050713 55%, #070818);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .1) 4%, rgba(0, 0, 0, .45) 9%, rgba(0, 0, 0, .85) 15%, #000 20%, #000 78%, rgba(0, 0, 0, .85) 84%, rgba(0, 0, 0, .45) 90%, rgba(0, 0, 0, .1) 96%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, rgba(0, 0, 0, .1) 4%, rgba(0, 0, 0, .45) 9%, rgba(0, 0, 0, .85) 15%, #000 20%, #000 78%, rgba(0, 0, 0, .85) 84%, rgba(0, 0, 0, .45) 90%, rgba(0, 0, 0, .1) 96%, transparent 100%); }
+.lsx__sky { inset: 0; -webkit-mask-image: linear-gradient(180deg, transparent 2%, #000 22%, #000 76%, transparent 98%); mask-image: linear-gradient(180deg, transparent 2%, #000 22%, #000 76%, transparent 98%); }
+.lsx__sky { animation-name: lsxTwinkle; animation-duration: 7s; animation-timing-function: ease-in-out; animation-direction: alternate; }
+@keyframes lsxTwinkle { from { opacity: .55; } to { opacity: 1; } }
+/* the deck sits on the same night where the band fades out, then eases into the page */
+.deck { border-top: 0; }
+
+/* ================= v38 · the cards, refined ================= */
+.dk__front { border-radius: 20px; padding: clamp(16px, 1.7vw, 22px); padding-top: clamp(46px, 5vh, 56px); gap: 7px; isolation: isolate;
+  background: radial-gradient(130% 70% at 0% 0%, hsl(var(--h) 85% 92% / .95), transparent 62%), radial-gradient(90% 60% at 100% 100%, hsl(var(--h) 70% 90% / .7), transparent 70%), linear-gradient(170deg, #fffdf8, #fbf7ef);
+  border: 1px solid hsl(var(--h) 45% 72% / .55);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .7) inset, 0 1px 0 rgba(255, 255, 255, .9) inset, 0 2px 4px rgba(30, 20, 10, .05), 0 22px 44px -26px hsl(var(--h) 40% 25% / .55); }
+html[data-theme="dark"] .dk__front { background: radial-gradient(130% 70% at 0% 0%, hsl(var(--h) 60% 30% / .55), transparent 62%), radial-gradient(90% 60% at 100% 100%, hsl(var(--h) 55% 24% / .45), transparent 70%), linear-gradient(170deg, #1c1a20, #141317);
+  border-color: hsl(var(--h) 50% 60% / .28); box-shadow: 0 0 0 1px rgba(255, 255, 255, .04) inset, 0 1px 0 rgba(255, 255, 255, .07) inset, 0 24px 48px -26px rgba(0, 0, 0, .85), 0 0 0 0 hsl(var(--h) 80% 60% / 0); }
+/* an inner frame, like a real playing card */
+.dk__front::before { content: ""; position: absolute; inset: 7px; z-index: -1; border-radius: 14px; border: 1px solid hsl(var(--h) 50% 50% / .18); pointer-events: none; }
+html[data-theme="dark"] .dk__front::before { border-color: hsl(var(--h) 70% 70% / .14); }
+/* a light sheen that sweeps across when you point at a turned card */
+.dk__front::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .45) 48%, transparent 62%); transform: translateX(-110%); transition: transform .9s cubic-bezier(.2, .8, .2, 1); }
+html[data-theme="dark"] .dk__front::after { background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .09) 48%, transparent 62%); }
+.dk.is-up:hover .dk__front::after { transform: translateX(110%); }
+.dk.is-up:hover .dk__front { border-color: hsl(var(--h) 60% 55% / .7); box-shadow: 0 0 0 1px rgba(255, 255, 255, .7) inset, 0 30px 60px -26px hsl(var(--h) 55% 30% / .6); }
+html[data-theme="dark"] .dk.is-up:hover .dk__front { border-color: hsl(var(--h) 70% 65% / .5); box-shadow: 0 0 0 1px rgba(255, 255, 255, .05) inset, 0 30px 60px -26px rgba(0, 0, 0, .9), 0 0 40px -12px hsl(var(--h) 80% 60% / .45); }
+/* the suit, large and faint, as the card's watermark */
+.dk__wm { position: absolute; right: -6%; bottom: 10%; z-index: -1; font-size: clamp(90px, 9vw, 140px); line-height: 1; color: hsl(var(--h) 60% 45% / .07); pointer-events: none; transition: transform .8s cubic-bezier(.2, .8, .2, 1); }
+html[data-theme="dark"] .dk__wm { color: hsl(var(--h) 80% 70% / .07); }
+[dir="rtl"] .dk__wm { right: auto; left: -6%; }
+.dk.is-up:hover .dk__wm { transform: rotate(-8deg) scale(1.06); }
+.dk__corner { top: 13px; } .dk__corner--b { top: auto; bottom: 13px; }
+.dk__corner b { font-weight: 600; }
+.dk__ic { width: clamp(40px, 3.5vw, 48px); border-radius: 50%; background: radial-gradient(circle at 35% 30%, hsl(var(--h) 90% 97%), hsl(var(--h) 70% 86%)); border: 1px solid hsl(var(--h) 55% 65% / .45); box-shadow: 0 6px 14px -8px hsl(var(--h) 60% 35% / .6); }
+html[data-theme="dark"] .dk__ic { background: radial-gradient(circle at 35% 30%, hsl(var(--h) 45% 32%), hsl(var(--h) 45% 18%)); border-color: hsl(var(--h) 60% 60% / .35); box-shadow: 0 6px 18px -8px hsl(var(--h) 80% 55% / .55); }
+.dk__t { font-weight: 500; }
+/* the way in: a small pill, kept clear of the bottom corner index */
+.dk__go { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: auto; margin-bottom: 4px; margin-inline-end: 34px; padding: 7px 12px 7px 13px; border-radius: 999px; font-size: 12.5px; line-height: 1.2;
+  background: hsl(var(--h) 70% 50% / .1); border: 1px solid hsl(var(--h) 60% 45% / .22); transition: background-color .25s, border-color .25s; }
+html[data-theme="dark"] .dk__go { background: hsl(var(--h) 70% 60% / .12); border-color: hsl(var(--h) 70% 65% / .25); }
+.dk.is-up:hover .dk__go { background: hsl(var(--h) 70% 50% / .18); border-color: hsl(var(--h) 60% 45% / .4); }
+html[data-theme="dark"] .dk.is-up:hover .dk__go { background: hsl(var(--h) 70% 60% / .2); }
+/* the ace: deep, warm and gilt-framed in both themes */
+.dk:first-child .dk__front { background: radial-gradient(120% 80% at 100% 0%, rgba(232, 119, 77, .38), transparent 60%), radial-gradient(90% 60% at 0% 100%, rgba(226, 184, 81, .14), transparent 70%), linear-gradient(160deg, #2b2620, #15130e); border-color: rgba(226, 184, 81, .45); }
+.dk:first-child .dk__front::before { border-color: rgba(226, 184, 81, .35); }
+.dk:first-child .dk__wm { color: rgba(243, 162, 127, .08); }
+.dk:first-child .dk__ic { background: radial-gradient(circle at 35% 30%, #4a3326, #241a13); border-color: rgba(243, 162, 127, .4); }
+.dk:first-child .dk__go { background: rgba(243, 162, 127, .14); border-color: rgba(243, 162, 127, .35); }
+/* the back gets the same gentle frame radius */
+.dk__back { border-radius: 20px; }
+@container (max-width: 200px) { .dk__go { margin-inline-end: 26px; padding: 6px 10px; font-size: 12px; } .dk__wm { font-size: 90px; } }
+@media (prefers-reduced-motion: reduce) { .dk__front::after { display: none; } }
+/* the hero's soft aurora used to be clipped at the bottom of the section (a straight seam above the Learning Studio);
+   it now fades out before the edge */
+.hero__bgfx { -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 96%); mask-image: linear-gradient(180deg, #000 55%, transparent 96%); }
+/* the card buttons stay on one line */
+.dk__go { white-space: nowrap; max-width: calc(100% - 30px); }

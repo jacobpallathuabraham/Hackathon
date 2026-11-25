@@ -124,7 +124,7 @@ html.a11y-word body :where(p, li, small, label, td, dd, blockquote, .cmsg__b, sp
 html.a11y-width body :where(main p, main li, .cmsg__b, .md p) { max-width: var(--a11y-width) !important; }
 html.a11y-tint::after { content: ""; position: fixed; inset: 0; background: var(--a11y-tint); pointer-events: none; z-index: 2147483000; mix-blend-mode: multiply; }
 html[data-theme="dark"].a11y-tint::after { mix-blend-mode: screen; opacity: .5; }
-html.a11y-calm :where(.ticker, .q-bg, .amb, .acu-marq, .gw-grow__pollen, .cursor-dot, .gm-art svg *) { display: none !important; }
+html.a11y-calm :where(.ticker, .lsx__sky, .q-bg, .amb, .acu-marq, .gw-grow__pollen, .cursor-dot, .gm-art svg *) { display: none !important; }
 html.a11y-calm :where(.gm-art svg) { opacity: .6; }
 html.a11y-targets body :where(button, [role="button"], input[type="checkbox"], input[type="radio"], select, summary, .btn) { min-height: 44px; min-width: 44px; }
 html.a11y-targets body :where(nav a, .btn, .chip) { min-height: 44px; display: inline-flex; align-items: center; }

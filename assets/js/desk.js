@@ -70,17 +70,17 @@
     const n = nextStep(d), t = tiles(d), byIc = {}; t.forEach(x => { byIc[x.ic] = x; });
     return [
       { k: 'next', cls: ' desk__next', href: n.href, kick: n.k, title: n.h, line: n.p, cta: n.cta },
-      { k: 'L', href: byIc.L.href, kick: T('Explore', 'استكشف'), title: byIc.L.name, line: byIc.L.line, cta: T('Enter the universe', 'ادخل الكون') },
-      { k: 'G', href: byIc.G.href, kick: T('Grow', 'انمُ'), title: byIc.G.name, line: byIc.G.line, cta: T('Open the plan', 'افتح الخطة') },
-      { k: 'P', href: byIc.P.href, kick: T('Notice', 'لاحظ'), title: byIc.P.name, line: byIc.P.line, cta: T('See the pact', 'اطّلع على الميثاق') },
-      { k: 'H', href: byIc.H.href, kick: T('Write', 'اكتب'), title: byIc.H.name, line: byIc.H.line, cta: T('Open the studio', 'افتح الاستوديو') },
-      { k: 'games', href: 'games.html', kick: T('Play', 'العب'), title: T('Learning Games', 'ألعاب التعلّم'), line: T('Short games that build reading, memory and focus', 'ألعاب قصيرة تبني القراءة والذاكرة والتركيز'), cta: T('Pick a game', 'اختر لعبة') },
-      { k: 'videos', href: '#videos', kick: T('Watch', 'شاهد'), title: T('Videos', 'الفيديوهات'), line: T('Lessons where Noor notices the tricky parts', 'دروس يلاحظ فيها نور الأجزاء الصعبة'), cta: T('Watch and learn', 'شاهد وتعلّم') },
+      { k: 'L', href: byIc.L.href, kick: T('Explore', 'استكشف'), title: byIc.L.name, line: byIc.L.line, cta: T('Step inside', 'ادخل') },
+      { k: 'G', href: byIc.G.href, kick: T('Grow', 'انمُ'), title: byIc.G.name, line: byIc.G.line, cta: T('Open plan', 'افتح الخطة') },
+      { k: 'P', href: byIc.P.href, kick: T('Notice', 'لاحظ'), title: byIc.P.name, line: byIc.P.line, cta: T('See pact', 'الميثاق') },
+      { k: 'H', href: byIc.H.href, kick: T('Write', 'اكتب'), title: byIc.H.name, line: byIc.H.line, cta: T('Open studio', 'افتح الاستوديو') },
+      { k: 'games', href: 'games.html', kick: T('Play', 'العب'), title: T('Learning Games', 'ألعاب التعلّم'), line: T('Short games that build reading, memory and focus', 'ألعاب قصيرة تبني القراءة والذاكرة والتركيز'), cta: T('Play now', 'العب الآن') },
+      { k: 'videos', href: '#videos', kick: T('Watch', 'شاهد'), title: T('Videos', 'الفيديوهات'), line: T('Lessons where Noor notices the tricky parts', 'دروس يلاحظ فيها نور الأجزاء الصعبة'), cta: T('Watch now', 'شاهد الآن') },
       { k: 'talk', href: '#handoff', kick: T('Talk', 'تحدّث'), title: T('Talk to someone', 'تحدّث مع أحد'), line: T('SAS, a counsellor or someone you trust — your choice', 'خدمات الطلبة أو مرشد أو من تثق به — باختيارك'), cta: T('Get support', 'احصل على الدعم') }
     ];
   }
   const face = (c, i) => `<span class="dk__corner" aria-hidden="true"><b>${RANKS[i]}</b><i>${SUITS[i]}</i></span><span class="dk__corner dk__corner--b" aria-hidden="true"><b>${RANKS[i]}</b><i>${SUITS[i]}</i></span>
-      <span class="dk__ic" aria-hidden="true">${ic(c.k)}</span><span class="dk__kick desk__k">${c.kick}</span><span class="dk__t desk__t">${c.title}</span><span class="dk__p desk__p">${c.line}</span><span class="dk__go desk__go">${c.cta} <span aria-hidden="true">→</span></span>`;
+      <span class="dk__wm" aria-hidden="true">${SUITS[i]}</span><span class="dk__ic" aria-hidden="true">${ic(c.k)}</span><span class="dk__kick desk__k">${c.kick}</span><span class="dk__t desk__t">${c.title}</span><span class="dk__p desk__p">${c.line}</span><span class="dk__go desk__go">${c.cta} <span aria-hidden="true">→</span></span>`;
   const back = `<span class="dk__back" aria-hidden="true"><span class="dk__lattice"></span><span class="dk__medal"><img src="assets/img/erly-mark.svg" alt=""></span><span class="dk__brand">ERLY</span></span>`;
 
   function render() {
