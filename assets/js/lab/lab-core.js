@@ -240,12 +240,14 @@
   L.explainNow = explainNow;
   L.hud = html => { if (ws) ws.querySelector('.lab__hud').innerHTML = html || ''; };
 
+  let closeTok = 0;
   async function open(id, params, o) {
     o = o || {};
     const engine = L.engines.find(e => e.id === id); if (!engine) throw new Error('No lab engine ' + id);
-    shell();
+    shell(); closeTok++; /* v37: a close() just before this open must not hide the new model 220 ms later */
     if (current && current.inst.destroy) { try { current.inst.destroy(); } catch (e) { /* already gone */ } }
     current = null;
+    if (!ws.isConnected) { if (o.host) inline(o.host); else document.body.appendChild(ws); } /* models such as JSXGraph look their container up in the document */
     const side = ws.querySelector('.lab__side'), stage = ws.querySelector('.lab__canvas'), ex = ws.querySelector('.lab__ex');
     side.innerHTML = ''; stage.innerHTML = ''; ex.innerHTML = ''; L.hud('');
     ws.dataset.engine = id; ws.dataset.family = engine.family || 'math';
@@ -289,7 +291,7 @@
   function close() {
     if (!ws) return; ws.classList.remove('is-in', 'is-expanded'); document.documentElement.classList.remove('lab-on');
     if (current && current.inst.destroy) { try { current.inst.destroy(); } catch (e) { /* ok */ } }
-    current = null; setTimeout(() => { if (!current) ws.hidden = true; }, 220);
+    current = null; const tok = ++closeTok; setTimeout(() => { if (!current && tok === closeTok) ws.hidden = true; }, 220);
     if (window.ERLY && ERLY.emit) ERLY.emit('lab:close', {});
   }
   // a command for the open model ("make it wider", "set m to 3", "show the derivative")

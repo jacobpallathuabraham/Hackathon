@@ -18,7 +18,7 @@
     const L = window.ERLY_LAB; if (!L) { host.innerHTML = '<p class="ls-muted">The Visual Lab could not load on this page.</p>'; return; }
     if (liveHost && liveHost !== host && liveHost.isConnected) { liveHost.innerHTML = `<button type="button" class="ls-btn ls-btn--quiet" data-relive>${T('Show the model here again', 'اعرض النموذج هنا مجدداً')}</button>`; liveHost.closest('.ls-labcard') && liveHost.closest('.ls-labcard').classList.remove('is-live'); }
     host.innerHTML = `<p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Building the model…', 'أبني النموذج…')}</p>`;
-    try { await L.open(engine, params || {}); L.inline(host); host.querySelector('.ls-loading') && host.querySelector('.ls-loading').remove(); liveHost = host; host.closest('.ls-labcard') && host.closest('.ls-labcard').classList.add('is-live'); LS.store.useFormat('visual'); if (meta) LS.store.touch('lab', engine, meta.title || engine); }
+    try { L.inline(host); await L.open(engine, params || {}, { host }); L.inline(host); host.querySelector('.ls-loading') && host.querySelector('.ls-loading').remove(); liveHost = host; host.closest('.ls-labcard') && host.closest('.ls-labcard').classList.add('is-live'); LS.store.useFormat('visual'); if (meta) LS.store.touch('lab', engine, meta.title || engine); }
     catch (e) { host.innerHTML = `<p class="ls-fb ls-fb--warn" role="alert">${T('This model could not be built here: ', 'تعذر بناء النموذج: ')}${esc(e.message || e)}</p>`; }
   };
   LS.on('leave', () => { if (liveHost && window.ERLY_LAB) { try { ERLY_LAB.close(); } catch (e) { /* ok */ } liveHost = null; } });

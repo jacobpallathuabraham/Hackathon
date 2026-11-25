@@ -18,7 +18,7 @@
     ['indicators', 'realtrack', 'tracker'].reduce((a, f) => a.then(() => load(`assets/js/${f}.js?v=19`)), Promise.resolve()).then(() => { q.splice(0).forEach(a => E.track(...a)); }).catch(() => {});
   })();
   const FILES = ['lab-core', 'lab-math', 'lab-geo3d', 'lab-physics', 'lab-problems', 'lab-concepts', 'syl-core', 'syl-math', 'syl-physics', 'syl-chem', 'syl-life', 'syl-applied', 'syl-extra', 'syl-studio'];
-  const V = '?v=28b';
+  const V = '?v=37';
   let p = null;
   const one = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = () => rej(new Error('Could not load ' + src)); document.head.appendChild(s); });
   LS.needLab = () => {
