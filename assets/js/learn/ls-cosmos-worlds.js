@@ -74,64 +74,115 @@
   /* atmosphere: a thin limb whose brightness follows the sun (day side), a warm band at the terminator, a faint night-side rim
      so dark hemispheres keep their silhouette, and forward scattering when the planet is backlit (the sunrise-over-the-limb shot) */
   const ATM_F = `uniform vec3 uSun; uniform vec3 uCol; uniform float uK; uniform float uFocus; varying vec3 vN; varying vec3 vW;
-  void main(){ vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.0-abs(dot(n,V)),3.0); float mu=dot(n,uSun);
-    float day=smoothstep(-0.3,0.55,mu); float term=exp(-pow((mu+0.05)*4.5,2.0)); float fwd=pow(max(dot(-V,uSun),0.0),5.0);
-    vec3 col=uCol*(0.07+day*0.95)+vec3(1.0,0.58,0.32)*term*0.28+uCol*fwd*1.6*smoothstep(-0.4,0.2,mu);
-    gl_FragColor=vec4(col*f*(uK+uFocus*0.25),1.0); }`;
+  void main(){ vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float ndv=abs(dot(n,V)); float f=pow(1.0-ndv,2.8)*smoothstep(0.0,0.06,ndv); /* a thin limb, as seen from space */ float mu=dot(n,uSun);
+    float day=smoothstep(-0.35,0.5,mu); float term=exp(-pow((mu+0.04)*5.0,2.0)); float fwd=pow(max(dot(-V,uSun),0.0),6.0);
+    vec3 col=uCol*(0.03+day*1.05)+vec3(1.0,0.5,0.25)*term*0.35+mix(uCol,vec3(1.0,0.85,0.7),0.4)*fwd*0.8*smoothstep(-0.45,0.15,mu);
+    gl_FragColor=vec4(col*f*(uK*0.9+uFocus*0.2),1.0); }`;
   const ATM_V = `varying vec3 vN; varying vec3 vW; void main(){ vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`;
 
   const SUN = { v: null, renderer: null }; // shared sun direction, and the renderer used to bake surfaces (set by the universe / world header)
 
-  /* Surfaces are BAKED: the procedural colour is rendered once into an equirectangular texture (matching three's sphere UVs),
-     then every frame costs one texture lookup plus lighting instead of 5–20 noise evaluations per pixel. */
+  /* Surfaces are BAKED (v39): the procedural colour AND a height field are rendered once into two equirectangular textures
+     (matching three's sphere UVs). Every frame then costs three texture lookups plus lighting: the height field gives real
+     relief — craters, mountain ranges, dune ridges, cell walls — that catches the low sun at the terminator. */
   const BAKE_F = (oct) => `#define OCT ${oct}
-  uniform vec3 uA; uniform vec3 uB; uniform vec3 uC; uniform float uMode; uniform float uSeed; varying vec2 vUv; ${NOISE}
-  void main(){ float ph=vUv.x*6.2831853, th=(1.0-vUv.y)*3.14159265; vec3 p=vec3(-cos(ph)*sin(th),cos(th),sin(ph)*sin(th)); vec3 col; float code=0.0;
-    if(uMode<0.5){ float lat=p.y+0.06*fbm(p*3.0+uSeed); float b=sin(lat*17.0+fbm(p*1.6+uSeed)*2.6); col=mix(uA,uB,0.5+0.5*b); col=mix(col,uC,smoothstep(0.55,1.0,abs(sin(lat*5.0)))*0.55);
-      float storm=smoothstep(0.86,1.0,1.0-length((p-normalize(vec3(0.7,-0.25,0.6)))*vec3(1.0,2.2,1.0))); col=mix(col,uC*1.3,storm*0.7); }
-    else if(uMode<1.5){ float h=fbm(p*2.2+uSeed); float land=smoothstep(0.02,0.08,h); vec3 sea=mix(uA*0.55,uA,smoothstep(-0.4,0.05,h)); vec3 gr=mix(uC,vec3(0.55,0.47,0.32),smoothstep(0.15,0.45,h)); col=mix(sea,gr,land);
-      float ice=smoothstep(0.78,0.86,abs(p.y)+0.05*h); col=mix(col,vec3(0.93,0.96,1.0),ice); float night=land*(1.0-ice)*smoothstep(0.3,0.62,fbm(p*22.0+3.0))*0.85;
-      code = land>0.5 ? 0.5+0.5*night : 0.4*(1.0-ice); }
-    else if(uMode<2.5){ vec3 q=p*5.0; float c1=fbm(q+uSeed); float cell=abs(fract(c1*3.0)-0.5); col=mix(uC,uA,smoothstep(0.0,0.45,cell)); col=mix(col,uB,smoothstep(0.42,0.5,cell)*0.8); }
-    else if(uMode<3.5){ float y=p.y*9.0+fbm(p*2.0+uSeed)*1.8; float band=fract(y); float k=floor(y); vec3 a=mix(uA,uC,fract(sin(k*12.9898)*43758.5)); col=mix(a,uB,smoothstep(0.82,0.98,band)*0.6); col*=0.85+0.25*fbm(p*14.0); }
-    else if(uMode<4.5){ vec3 q=p*1.6; vec3 w=vec3(fbm(q+uSeed),fbm(q+uSeed+4.1),fbm(q+uSeed+8.3)); float m=fbm(q+2.2*w); col=mix(uB,uA,smoothstep(-0.3,0.35,m)); col=mix(col,uC,smoothstep(0.35,0.7,m)); }
-    else if(uMode<5.5){ float d=sin(p.x*22.0+fbm(p*3.0+uSeed)*5.0)*0.5+0.5; col=mix(uC,uA,d*0.6+0.25*fbm(p*6.0)); col=mix(col,uB,smoothstep(0.82,1.0,d)*0.35); }
-    else if(uMode<6.5){ float h=fbm(p*2.5+uSeed); col=mix(uC,uA,smoothstep(-0.3,0.4,h)); float city=smoothstep(0.32,0.6,fbm(p*14.0+1.7))*smoothstep(0.0,0.2,h); code=0.5+0.5*city; }
-    else if(uMode<7.5){ float h=fbm(p*3.0+uSeed); col=mix(uC,uA,0.5+0.5*h); col=mix(col,uB,smoothstep(0.35,0.7,h)*0.4); }
-    else { float c=fbm(p*3.0+uSeed); col=vec3(1.0); code=smoothstep(0.05,0.5,c)*0.85; }
-    gl_FragColor=vec4(col,code); }`;
-  function bake(THREE, mode, cols, seed, w) {
+  uniform vec3 uA; uniform vec3 uB; uniform vec3 uC; uniform float uMode; uniform float uSeed; uniform float uOut; varying vec2 vUv; ${NOISE}
+  float hh(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
+  float craters(vec3 p, float sc, float dens){ p*=sc; vec3 i=floor(p); float h=0.0;
+    for(int x=-1;x<=1;x++) for(int y=-1;y<=1;y++) for(int z=-1;z<=1;z++){ vec3 c=i+vec3(float(x),float(y),float(z)); if(hh(c+3.1)>dens) continue;
+      vec3 o=c+vec3(hh(c),hh(c+1.7),hh(c+5.3)); float r=0.18+0.32*hh(c+7.9); float d=length(p-o)/r;
+      h+= d<1.0 ? -(1.0-d*d)*0.9 : (d<1.35 ? 0.4*(1.0-(d-1.0)/0.35) : 0.0); }
+    return h; }
+  float ridged(vec3 p){ float a=0.5,s=0.0; for(int i=0;i<5;i++){ float n=1.0-abs(snoise(p)); s+=a*n*n; p*=2.1; a*=0.5; } return s; }
+  void main(){ float ph=vUv.x*6.2831853, th=(1.0-vUv.y)*3.14159265; vec3 p=vec3(-cos(ph)*sin(th),cos(th),sin(ph)*sin(th)); vec3 col; float code=0.0; float hgt=0.5;
+    float mott=fbm(p*9.0+uSeed*1.3)*0.5+fbm(p*26.0+uSeed)*0.25;                       // fine albedo variation everywhere
+    if(uMode<0.5){ // banded giant: zonal bands, turbulent edges, a great storm
+      float wv=fbm(p*vec3(2.0,9.0,2.0)+uSeed)*0.08; float lat=p.y+0.05*fbm(p*3.0+uSeed)+wv; float b=sin(lat*19.0+fbm(p*1.6+uSeed)*2.4);
+      col=mix(uA,uB,0.5+0.5*b); col=mix(col,uC,smoothstep(0.5,1.0,abs(sin(lat*6.0)))*0.5);
+      float sw=fbm(p*vec3(14.0,3.0,14.0)+uSeed*2.0); col*=0.88+0.22*sw;
+      vec3 sc=normalize(vec3(0.7,-0.25,0.6)); float sd=length((p-sc)*vec3(1.0,2.3,1.0)); float storm=smoothstep(0.32,0.0,sd); float swirl=sin(atan(p.y-sc.y,p.x-sc.x)*3.0+sd*30.0);
+      col=mix(col,mix(uC*1.25,uB,0.4+0.3*swirl),storm*0.85); hgt=0.5+0.04*b; }
+    else if(uMode<1.5){ // a living world: oceans, continents, mountains, deserts, forests, ice
+      float h=fbm(p*2.2+uSeed)+0.12*ridged(p*5.0+uSeed); float land=smoothstep(0.0,0.07,h);
+      float depth=smoothstep(-0.5,0.02,h); vec3 sea=mix(uA*0.35,uA*0.95,depth); sea=mix(sea,uB*0.8,smoothstep(-0.02,0.02,h)*0.35);
+      float hum=fbm(p*3.5+uSeed+4.0); vec3 forest=uC*(0.8+0.3*mott), desert=vec3(0.62,0.52,0.36)*(0.9+0.2*mott), rockc=vec3(0.42,0.38,0.33);
+      vec3 gr=mix(desert,forest,smoothstep(-0.15,0.2,hum)); gr=mix(gr,rockc,smoothstep(0.3,0.55,h)); gr=mix(gr,vec3(0.92,0.94,0.97),smoothstep(0.55,0.7,h));
+      col=mix(sea,gr,land); float ice=smoothstep(0.76,0.86,abs(p.y)+0.06*h); col=mix(col,vec3(0.93,0.96,1.0),ice);
+      float night=land*(1.0-ice)*smoothstep(0.35,0.62,fbm(p*24.0+3.0))*smoothstep(-0.1,0.25,hum)*0.85;
+      code = land>0.5 ? 0.5+0.5*night : 0.4*(1.0-ice); hgt = land>0.5 ? 0.5+0.5*clamp(h,0.0,0.8)+0.15*ridged(p*9.0) : 0.5; }
+    else if(uMode<2.5){ // crystalline ice world: fractured plates, cracks, frost, impact scars
+      vec3 q=p*2.0; float c1=fbm(q+uSeed); float cell=abs(fract(c1*1.6)-0.5); float crack=smoothstep(0.035,0.0,cell)*smoothstep(0.2,0.6,fbm(p*5.0+uSeed));
+      col=mix(uC,uA,smoothstep(0.0,0.45,cell)); col=mix(col,uB,0.35+0.35*mott); col=mix(col,uC*0.55,crack*0.8);
+      col=mix(col,uB,smoothstep(0.1,0.6,fbm(p*3.0+uSeed+5.0))*0.35); float cr=craters(p,5.0,0.18); col*=0.94+0.08*cr; hgt=0.5+0.18*smoothstep(0.0,0.4,cell)-0.18*crack+0.14*cr; }
+    else if(uMode<3.5){ // layered canyon world: strata, mesas and eroded valleys
+      float y=p.y*8.0+fbm(p*2.0+uSeed)*1.9; float band=fract(y); float k=floor(y); vec3 a=mix(uA,uC,fract(sin(k*12.9898)*43758.5));
+      col=mix(a,uB,smoothstep(0.82,0.98,band)*0.55); col*=0.8+0.3*mott; float val=smoothstep(0.55,0.85,ridged(p*3.0+uSeed));
+      col=mix(col,uC*0.7,val*0.5); hgt=0.5+0.15*floor(band*4.0)/4.0-0.3*val+0.1*craters(p,5.0,0.2); }
+    else if(uMode<4.5){ // marbled world: swirling cloud tops in soft colour
+      vec3 q=p*1.6; vec3 w=vec3(fbm(q+uSeed),fbm(q+uSeed+4.1),fbm(q+uSeed+8.3)); float m=fbm(q+2.2*w);
+      col=mix(uB,uA,smoothstep(-0.3,0.35,m)); col=mix(col,uC,smoothstep(0.35,0.7,m)); col*=0.9+0.18*mott; hgt=0.5+0.08*m; }
+    else if(uMode<5.5){ // dune sea: wind-aligned ridges, dark interdune flats, rocky outcrops
+      float d=sin(p.x*26.0+p.z*6.0+fbm(p*3.0+uSeed)*6.0)*0.5+0.5; d=pow(d,1.6); float rk=smoothstep(0.5,0.8,fbm(p*4.0+uSeed+9.0));
+      col=mix(uC*1.1,uA,d*0.65+0.25*mott); col=mix(col,uB,smoothstep(0.85,1.0,d)*0.35); col=mix(col,uC*0.6,rk*0.6);
+      hgt=0.5+0.22*d+0.25*rk; }
+    else if(uMode<6.5){ // twilight world with cities
+      float h=fbm(p*2.5+uSeed)+0.1*ridged(p*6.0+uSeed); col=mix(uC,uA,smoothstep(-0.3,0.4,h)); col*=0.85+0.25*mott; float city=smoothstep(0.32,0.6,fbm(p*16.0+1.7))*smoothstep(0.0,0.2,h); code=0.5+0.5*city; hgt=0.5+0.35*clamp(h,0.0,1.0); }
+    else if(uMode<7.5){ // rocky, airless: highlands and maria, crater fields at every scale
+      float h=fbm(p*3.0+uSeed); float mare=smoothstep(0.05,0.3,fbm(p*1.4+uSeed+2.0)); col=mix(uC,uA,0.5+0.5*h); col=mix(col,uB,smoothstep(0.35,0.7,h)*0.35); col=mix(col,col*0.55,mare*0.6);
+      float cr=craters(p,4.0,0.3)+0.6*craters(p,11.0,0.35)+0.35*craters(p,27.0,0.4); col*=0.85+0.25*mott+0.08*cr; hgt=0.5+0.2*h-0.12*mare+0.22*cr; }
+    else { float c=fbm(p*3.0+uSeed)+0.35*fbm(p*9.0+uSeed+2.0); col=vec3(1.0); code=smoothstep(0.08,0.55,c)*0.85; }
+    gl_FragColor = uOut<0.5 ? vec4(col,code) : vec4(vec3(clamp(hgt,0.0,1.0)),1.0); }`;
+  function bake(THREE, mode, cols, seed, w, outH) {
     const R = SUN.renderer; if (!R) return null;
     const rt = new THREE.WebGLRenderTarget(w, w / 2, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, wrapS: THREE.RepeatWrapping });
-    const m = new THREE.ShaderMaterial({ depthTest: false, uniforms: { uA: { value: new THREE.Color(cols[0]) }, uB: { value: new THREE.Color(cols[1]) }, uC: { value: new THREE.Color(cols[2]) }, uMode: { value: mode }, uSeed: { value: seed } },
-      vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }', fragmentShader: BAKE_F(5) });
+    const m = new THREE.ShaderMaterial({ depthTest: false, uniforms: { uA: { value: new THREE.Color(cols[0]) }, uB: { value: new THREE.Color(cols[1]) }, uC: { value: new THREE.Color(cols[2]) }, uMode: { value: mode }, uSeed: { value: seed }, uOut: { value: outH ? 1 : 0 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }', fragmentShader: BAKE_F(6) });
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m), sc = new THREE.Scene(); sc.add(quad);
     const prev = R.getRenderTarget(); R.setRenderTarget(rt); R.render(sc, new THREE.Camera()); R.setRenderTarget(prev); quad.geometry.dispose(); m.dispose(); return rt;
   }
-  const LIT_V = 'varying vec2 vUv; varying vec3 vN; varying vec3 vW; void main(){ vUv=uv; vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }';
-  const LIT_F = `uniform sampler2D uMap; uniform vec3 uSun; uniform vec3 uA; uniform float uFocus; varying vec2 vUv; varying vec3 vN; varying vec3 vW;
-  void main(){ vec4 t=texture2D(uMap,vUv); vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float ndl=dot(n,uSun); float lit=smoothstep(-0.18,0.55,ndl);
-    float spec=t.a<0.45?t.a/0.4:0.0, night=t.a>=0.5?(t.a-0.5)*2.0:0.0; vec3 H=normalize(uSun+V);
-    vec3 c=t.rgb*(0.08+0.95*lit)+spec*pow(max(dot(n,H),0.0),60.0)*0.9*vec3(1.0,0.95,0.85);
-    c+=night*(1.0-smoothstep(-0.15,0.1,ndl))*vec3(1.0,0.72,0.38)*0.95;
-    float rim=pow(1.0-max(dot(n,V),0.0),3.0); c+=uA*rim*0.18*(0.35+lit)+uA*uFocus*0.08;
+  const LIT_V = 'varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vTu; void main(){ vUv=uv; vN=normalize(mat3(modelMatrix)*normal); vTu=normalize(mat3(modelMatrix)*vec3(position.z,0.0,-position.x)+vec3(1e-5)); vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }';
+  /* lighting for a real planet: Lambert on the bumped normal, a soft terminator (the atmosphere bends light a little past
+     the edge), a warm sunset band along it, specular sun-glint and Fresnel on water, city lights on the night side, and
+     aerial perspective — the limb dissolves into the atmosphere's colour */
+  const LIT_F = `uniform sampler2D uMap; uniform sampler2D uH; uniform vec2 uTx; uniform float uBump; uniform vec3 uSun; uniform vec3 uA; uniform vec3 uAtm; uniform float uAtmK; uniform float uFocus;
+  varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vTu;
+  void main(){ vec4 t=texture2D(uMap,vUv); vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW);
+    vec3 nb=n;
+    if(uBump>0.0){ float h0=texture2D(uH,vUv).r, hu=texture2D(uH,vUv+vec2(uTx.x,0.0)).r, hv=texture2D(uH,vUv+vec2(0.0,uTx.y)).r;   // relief (skipped for smooth gas worlds)
+      vec3 Tu=normalize(vTu-n*dot(vTu,n)); vec3 Tv=cross(n,Tu); nb=normalize(n-uBump*((hu-h0)*Tu+(hv-h0)*Tv)); }
+    float ndl0=dot(n,uSun), ndl=dot(nb,uSun); float ndv=max(dot(n,V),0.0);
+    float term=smoothstep(-0.1,0.22,ndl0);
+    float diff=max(ndl,0.0)*term + max(ndl0+0.08,0.0)*0.06*uAtmK;          // + a little light scattered past the terminator
+    vec3 c=t.rgb*(diff*1.18+0.014+0.05*(1.0-term));                      // + faint light on the night side (starlight and bounce), so a backlit world still reads as a world
+    float water=t.a<0.45&&t.a>0.001?t.a/0.4:0.0, night=t.a>=0.5?(t.a-0.5)*2.0:0.0; vec3 H=normalize(uSun+V);
+    float fres=0.03+0.97*pow(1.0-ndv,5.0);
+    c+=water*(pow(max(dot(n,H),0.0),900.0)*1.0+pow(max(dot(n,H),0.0),70.0)*0.1)*vec3(1.0,0.93,0.82)*term;
+    c+=water*fres*uAtm*0.35*smoothstep(-0.05,0.5,ndl0);
+    c+=night*(1.0-smoothstep(-0.18,0.06,ndl0))*vec3(1.0,0.7,0.36)*1.05;
+    float haze=pow(1.0-ndv,2.2)*uAtmK;
+    c=mix(c,uAtm*(0.02+0.85*smoothstep(-0.12,0.6,ndl0)),clamp(haze*0.75,0.0,0.85));
+    c+=vec3(1.0,0.46,0.2)*exp(-pow(ndl0*7.0,2.0))*(0.08+haze*0.6)*uAtmK;   // sunset along the terminator
+    c+=uA*uFocus*0.05;
     gl_FragColor=vec4(c,1.0);
     #include <colorspace_fragment>
   }`;
-  const CLOUD_F = `uniform sampler2D uMap; uniform vec3 uSun; varying vec2 vUv; varying vec3 vN; void main(){ float a=texture2D(uMap,vUv).a; float l=smoothstep(-0.15,0.5,dot(normalize(vN),uSun)); gl_FragColor=vec4(vec3(1.0)*(0.05+0.95*l),a); }`;
+  const CLOUD_F = `uniform sampler2D uMap; uniform vec3 uSun; varying vec2 vUv; varying vec3 vN; varying vec3 vW; void main(){ float a=texture2D(uMap,vUv).a; vec3 n=normalize(vN); float ndl=dot(n,uSun); float l=smoothstep(-0.12,0.45,ndl); vec3 V=normalize(cameraPosition-vW);
+    vec3 col=mix(vec3(1.0,0.62,0.4),vec3(1.0),smoothstep(-0.05,0.35,ndl))*(0.03+1.05*l); float edge=1.0-pow(1.0-max(dot(n,V),0.0),3.0); gl_FragColor=vec4(col,a*(0.4+0.6*edge)); }`;
+  // how strongly each surface type takes relief and how much air it has
+  const SURF_K = { 0: [0, 0.9], 1: [3.2, 1.0], 2: [2.4, 0.45], 3: [5.5, 0.55], 4: [0, 0.8], 5: [4.0, 0.7], 6: [3.5, 0.9], 7: [6.5, 0.15] };
 
-  function surface(THREE, q, r, mode, cols, seed, seg) {
-    const s0 = seg || [24, 48, 64][q];
-    if (SUN.renderer) { const rt = bake(THREE, mode, cols, seed, r > 5 ? [1024, 1024, 2048][q] : [512, 1024, 1024][q]);
-      const u = { uMap: { value: rt.texture }, uSun: { value: SUN.v }, uA: { value: new THREE.Color(cols[0]) }, uFocus: { value: 0 }, uT: { value: 0 } };
-      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, s0, Math.round(s0 * 0.75)), new THREE.ShaderMaterial({ uniforms: u, vertexShader: LIT_V, fragmentShader: LIT_F })); mesh.userData.rt = rt; return mesh; }
+  function surface(THREE, q, r, mode, cols, seed, seg, atmCol) {
+    const s0 = seg || [32, 64, 96][q];
+    if (SUN.renderer) { const w = r > 5 ? [1024, 2048, 2048][q] : [1024, 2048, 2048][q]; const K = SURF_K[mode] || [3, 0.6]; const rt = bake(THREE, mode, cols, seed, w), ht = K[0] > 0 ? bake(THREE, mode, cols, seed, w / 2, true) : null; /* relief at half resolution is plenty */
+      const u = { uMap: { value: rt.texture }, uH: { value: ht ? ht.texture : rt.texture }, uTx: { value: new THREE.Vector2(2 / w, 4 / w) }, uBump: { value: K[0] * (w / 2048) }, uSun: { value: SUN.v }, uA: { value: new THREE.Color(cols[0]) }, uAtm: { value: new THREE.Color(atmCol || cols[0]) }, uAtmK: { value: K[1] }, uFocus: { value: 0 }, uT: { value: 0 } };
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, s0, Math.round(s0 * 0.75)), new THREE.ShaderMaterial({ uniforms: u, vertexShader: LIT_V, fragmentShader: LIT_F })); mesh.userData.rt = rt; if (ht) mesh.userData.rt2 = ht; return mesh; }
     const u = { uSun: { value: SUN.v }, uA: { value: new THREE.Color(cols[0]) }, uB: { value: new THREE.Color(cols[1]) }, uC: { value: new THREE.Color(cols[2]) }, uT: { value: 0 }, uMode: { value: mode }, uSeed: { value: seed }, uFocus: { value: 0 } };
     const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: SURF_V, fragmentShader: SURF_F(q >= 2 ? 5 : q === 1 ? 4 : 3) });
     const s = seg || [24, 48, 64][q]; return new THREE.Mesh(new THREE.SphereGeometry(r, s, Math.round(s * 0.75)), m);
   }
   function atmosphere(THREE, r, col, k) {
     const u = { uSun: { value: SUN.v }, uCol: { value: new THREE.Color(col) }, uK: { value: k == null ? 1 : k }, uFocus: { value: 0 } };
-    return new THREE.Mesh(new THREE.SphereGeometry(r, 40, 30), new THREE.ShaderMaterial({ uniforms: u, vertexShader: ATM_V, fragmentShader: ATM_F, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.BackSide }));
+    return new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), new THREE.ShaderMaterial({ uniforms: u, vertexShader: ATM_V, fragmentShader: ATM_F, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, side: THREE.BackSide }));
   }
   /* canvas text → sprite (letters, words in many scripts) */
   function textSprite(THREE, txt, o = {}) {
@@ -151,12 +202,9 @@
 
   B.maths = (THREE, q, G) => { // a faceted, crystalline polyhedron world with coordinate rings, orbiting solids and a saddle surface
     const r = 1.25, M = META.maths;
-    const geo = new THREE.IcosahedronGeometry(r, q ? 3 : 2); const pos = geo.attributes.position, cols = [];
-    const A = new THREE.Color(M.c[0]), Bc = new THREE.Color(M.c[1]), C = new THREE.Color(M.c[2]);
-    for (let i = 0; i < pos.count; i += 3) { const k = (Math.sin(i * 12.9898) * 43758.5453) % 1; const c = A.clone().lerp(Bc, Math.abs(k) * 0.55).lerp(C, (i / 3) % 7 === 0 ? 0.35 : 0); for (let j = 0; j < 3; j++) cols.push(c.r, c.g, c.b); }
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-    const core = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.38, metalness: 0.25, emissive: 0x0a1030 }));
-    G.add(core); const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(r * 1.004, 1)), new THREE.LineBasicMaterial({ color: 0xdfe6ff, transparent: true, opacity: 0.35 })); G.add(edges);
+    /* v39: a real body — a crystalline ice world with fractured plates and frost, lit like a planet — the mathematics
+       lives in its orbit (coordinate rings, the Platonic solids, a saddle surface) */
+    const core = surface(THREE, q, r, 2, ['#9fb4ff', '#eef2ff', '#2c3a86'], 1.9, 0, '#a9c0ff'); G.add(core, atmosphere(THREE, r * 1.06, '#a9c0ff', 0.8));
     const rings = new THREE.Group(); [[0, 0], [Math.PI / 2, 0], [Math.PI / 2, Math.PI / 2]].forEach(([a, b], i) => { const L = ringLine(THREE, r * (1.55 + i * 0.12), 0xc8d4ff, 0.42); L.rotation.set(a, b, 0); rings.add(L);
       for (let k = 0; k < 24; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, k % 6 ? 0.05 : 0.11), new THREE.MeshBasicMaterial({ color: 0xc8d4ff })); const ang = k / 24 * Math.PI * 2, R = r * (1.55 + i * 0.12); t.position.set(Math.cos(ang) * R, 0, Math.sin(ang) * R); t.lookAt(0, 0, 0); const h = new THREE.Group(); h.add(t); h.rotation.set(a, b, 0); rings.add(h); } });
     G.add(rings);
@@ -164,7 +212,7 @@
     const S = solids.map((g, i) => { const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: i % 2 ? 0xe8edff : 0x9fb4ff, roughness: 0.3, metalness: 0.4, flatShading: true })); const w = new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 })); m.add(w); G.add(m); return m; });
     const N = 22, sg = new THREE.PlaneGeometry(1.5, 1.5, N, N); const sp = sg.attributes.position; for (let i = 0; i < sp.count; i++) { const x = sp.getX(i), y = sp.getY(i); sp.setZ(i, (x * x - y * y) * 0.5); }
     const saddle = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ color: 0xbfd0ff, wireframe: true, transparent: true, opacity: 0.28 })); saddle.rotation.x = -Math.PI / 2.4; saddle.position.set(0, r * 1.9, 0); G.add(saddle);
-    return { core, r, body: [edges], update(t, dt, rv, fc) { core.rotation.y += dt * 0.05; edges.rotation.copy(core.rotation); rings.rotation.y = t * 0.04; rings.scale.setScalar(0.6 + 0.4 * smooth(rv)); rings.children.forEach(c => { if (c.material) c.material.opacity = 0.42 * rv; });
+    return { core, r, update(t, dt, rv, fc) { core.rotation.y += dt * 0.05; rings.rotation.y = t * 0.04; rings.scale.setScalar(0.6 + 0.4 * smooth(rv)); rings.children.forEach(c => { if (c.material) c.material.opacity = 0.42 * rv; });
       S.forEach((m, i) => { const a = t * (0.16 + i * 0.015) + i * Math.PI / 3, R = r * (1.05 + 1.05 * smooth(rv)) + 0.08 * Math.sin(t + i); m.position.set(Math.cos(a) * R, Math.sin(a * 1.3 + i) * 0.45 * rv, Math.sin(a) * R); m.rotation.set(t * 0.4 + i, t * 0.3, 0); m.scale.setScalar(0.4 + 0.6 * smooth(rv) + fc * 0.15); });
       saddle.material.opacity = 0.28 * rv; saddle.rotation.z = t * 0.1; saddle.scale.setScalar(0.5 + 0.5 * smooth(rv)); } };
   };
@@ -227,7 +275,7 @@
   };
 
   B.chemistry = (THREE, q, G) => { // crystalline cell surface, ball-and-stick molecules in orbit, electron shells
-    const r = 1.2, M = META.chemistry; const core = surface(THREE, q, r, 2, [M.c[0], M.c[1], M.c[2]], 2.7); G.add(core); G.add(atmosphere(THREE, r * 1.08, '#5fe6d4', 1));
+    const r = 1.2, M = META.chemistry; const core = surface(THREE, q, r, 2, [M.c[0], M.c[1], M.c[2]], 2.7, 0, '#5fe6d4'); G.add(core); G.add(atmosphere(THREE, r * 1.08, '#5fe6d4', 1));
     const atom = (col, s) => new THREE.Mesh(new THREE.SphereGeometry(s, 20, 14), new THREE.MeshStandardMaterial({ color: col, roughness: 0.35, metalness: 0.1 }));
     const bondMat = new THREE.MeshStandardMaterial({ color: 0x8fa3a1, roughness: 0.6, metalness: 0.1 }); /* bonds recede behind the atoms: thinner and darker */
     const bond = (a, b) => { const d = b.clone().sub(a), m = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, d.length(), 8), bondMat); m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m; };
@@ -246,17 +294,12 @@
       shells.forEach((s, i) => { const ang = t * (1.1 - i * 0.25); s.e.position.set(Math.cos(ang) * s.R, 0, Math.sin(ang) * s.R); s.L.material.opacity = 0.3 * rv; }); } };
   };
 
-  B.biology = (THREE, q, G) => { // a living cell: translucent membrane, nucleus, mitochondria; a DNA helix arching around
+  B.biology = (THREE, q, G) => { // v39: a living ocean world — reefs, rainforest, weather — wrapped in the double helix of life
     const r = 1.3, M = META.biology;
-    const memU = { uSun: { value: SUN.v }, uT: { value: 0 }, uFocus: { value: 0 } };
-    const membrane = new THREE.Mesh(new THREE.SphereGeometry(r, [24, 48, 64][q], [18, 36, 48][q]), new THREE.ShaderMaterial({ uniforms: memU, transparent: true, depthWrite: false,
-      vertexShader: 'uniform float uT; varying vec3 vN; varying vec3 vW; void main(){ vec3 p=position*(1.0+0.025*sin(position.y*6.0+uT*1.2)*sin(position.x*5.0+uT)); vN=normalize(mat3(modelMatrix)*normal); vec4 w=modelMatrix*vec4(p,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
-      fragmentShader: 'uniform vec3 uSun; uniform float uFocus; varying vec3 vN; varying vec3 vW; void main(){ vec3 n=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.0-abs(dot(n,V)),2.0); float l=0.35+0.65*smoothstep(-0.3,0.7,dot(n,uSun)); vec3 c=mix(vec3(0.25,0.62,0.38),vec3(0.75,1.0,0.7),f)*l; gl_FragColor=vec4(c,0.16+0.6*f+uFocus*0.05); }' }));
-    const core = new THREE.Mesh(new THREE.SphereGeometry(r * 1.02, 16, 12), new THREE.MeshBasicMaterial({ visible: false })); // pick target
-    const nucleus = surface(THREE, q, r * 0.42, 4, ['#a77bd8', '#e6d4ff', '#3d2463'], 5.2, 40); nucleus.position.set(0.15, 0.1, 0);
-    const mito = []; for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.22, 4, 10), new THREE.MeshStandardMaterial({ color: 0xff9f6b, roughness: 0.5, emissive: 0x401808 })); const a = i * 1.3; m.position.set(Math.cos(a) * r * 0.68, Math.sin(a * 1.7) * r * 0.4, Math.sin(a) * r * 0.62); m.rotation.set(a, a * 0.5, 0); mito.push(m); }
-    const er = new THREE.Mesh(new THREE.TorusGeometry(r * 0.6, 0.025, 8, 80), new THREE.MeshStandardMaterial({ color: 0x9fe8b0, roughness: 0.6 })); er.rotation.x = 1.2;
-    G.add(membrane, core, nucleus, er, ...mito);
+    const core = surface(THREE, q, r, 1, ['#1a8f8a', '#9ff2da', '#2f7a33'], 3.4, [40, 72, 96][q], '#8af0c4'); G.add(core);
+    let clouds = null; const crt = SUN.renderer ? bake(THREE, 8, ['#ffffff', '#ffffff', '#ffffff'], 7.3, [512, 1024, 1024][q]) : null;
+    if (crt) { clouds = new THREE.Mesh(new THREE.SphereGeometry(r * 1.018, [24, 48, 64][q], [18, 36, 48][q]), new THREE.ShaderMaterial({ uniforms: { uMap: { value: crt.texture }, uSun: { value: SUN.v } }, transparent: true, depthWrite: false, vertexShader: LIT_V, fragmentShader: CLOUD_F })); clouds.userData.rt = crt; G.add(clouds); }
+    G.add(atmosphere(THREE, r * 1.09, '#8af0c4', 1.25));
     // DNA: two helical strands with base-pair rungs (instanced)
     const dna = new THREE.Group(); const n = [60, 90, 120][q], curve = i => { const u = i / n, ang = u * Math.PI * 1.25 - 0.6; return new THREE.Vector3(Math.cos(ang) * r * 2.0, (u - 0.5) * 1.4, Math.sin(ang) * r * 2.0); };
     const s1 = [], s2 = []; const rung = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 6), new THREE.MeshStandardMaterial({ color: 0xe4ffd9 }), n); const tmp = new THREE.Object3D();
@@ -265,13 +308,12 @@
       if (i < n) { tmp.position.copy(c); tmp.scale.set(1, off.length() * 2, 1); tmp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), off.clone().normalize()); tmp.updateMatrix(); rung.setMatrixAt(i, tmp.matrix); rung.setColorAt(i, new THREE.Color(['#7bd88f', '#ffd36b', '#ff8fa3', '#8fc7ff'][i % 4])); } }
     const strand = pts => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, 0.028, 6, false), new THREE.MeshStandardMaterial({ color: 0xbff5c8, roughness: 0.4, emissive: 0x0d2a14 }));
     dna.add(strand(s1), strand(s2), rung); G.add(dna);
-    return { core, r, body: [membrane, nucleus], update(t, dt, rv, fc) { memU.uT.value = t; memU.uFocus.value = fc; nucleus.rotation.y += dt * 0.1; nucleus.material.uniforms.uT.value = t; const pulse = 1 + 0.015 * Math.sin(t * 1.3); nucleus.scale.setScalar(pulse);
-      mito.forEach((m, i) => { m.rotation.y += dt * (0.3 + i * 0.05); m.position.y += Math.sin(t * 0.8 + i) * 0.0008; }); er.rotation.z = t * 0.08;
+    return { core, r, body: clouds ? [clouds] : [], update(t, dt, rv, fc) { core.rotation.y += dt * 0.04; if (clouds) clouds.rotation.y += dt * 0.052;
       dna.rotation.y = t * 0.06; dna.scale.setScalar(0.55 + 0.45 * smooth(rv)); dna.visible = rv > 0.02; } };
   };
 
   B.geography = (THREE, q, G) => { // the living planet: oceans, continents, ice caps, clouds, atmosphere, city lights at night
-    const r = 1.75, M = META.geography; const core = surface(THREE, q, r, 1, [M.c[0], M.c[1], M.c[2]], 0.4, [32, 64, 96][q]); G.add(core);
+    const r = 1.75, M = META.geography; const core = surface(THREE, q, r, 1, [M.c[0], M.c[1], M.c[2]], 0.4, [48, 80, 112][q], '#7cc4ff'); G.add(core);
     const cu = { uSun: { value: SUN.v }, uT: { value: 0 } };
     const crt = SUN.renderer ? bake(THREE, 8, ['#ffffff', '#ffffff', '#ffffff'], 2.0, [512, 1024, 1024][q]) : null;
     const clouds = crt ? new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: { uMap: { value: crt.texture }, uSun: { value: SUN.v } }, transparent: true, depthWrite: false, vertexShader: LIT_V, fragmentShader: CLOUD_F })) : new THREE.Mesh(new THREE.SphereGeometry(r * 1.015, [24, 48, 72][q], [18, 36, 54][q]), new THREE.ShaderMaterial({ uniforms: cu, transparent: true, depthWrite: false,
@@ -281,7 +323,7 @@
   };
 
   B.cs = (THREE, q, G) => { // a matte world wrapped in a geodesic network; packets of data travel along its edges; a ring of bits
-    const r = 1.2, M = META.cs; const core = surface(THREE, q, r, 7, [M.c[0], M.c[1], M.c[2]], 6.1); G.add(core); G.add(atmosphere(THREE, r * 1.06, '#b9a5ff', 0.7));
+    const r = 1.2, M = META.cs; const core = surface(THREE, q, r, 7, ['#8f7fd0', '#d9d0f5', '#2a2348'], 6.1, 0, '#b9a5ff'); G.add(core); G.add(atmosphere(THREE, r * 1.06, '#b9a5ff', 0.7));
     const ico = new THREE.IcosahedronGeometry(r * 1.55, 1), P = ico.attributes.position, key = v => v.toArray().map(x => x.toFixed(3)).join(','); const verts = [], idx = new Map();
     for (let i = 0; i < P.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(P, i), k = key(v); if (!idx.has(k)) { idx.set(k, verts.length); verts.push(v); } }
     const E = new Set(); for (let i = 0; i < P.count; i += 3) { const ids = [0, 1, 2].map(j => idx.get(key(new THREE.Vector3().fromBufferAttribute(P, i + j)))); [[0, 1], [1, 2], [2, 0]].forEach(([a, b]) => { const x = Math.min(ids[a], ids[b]), y = Math.max(ids[a], ids[b]); E.add(x + '_' + y); }); }
@@ -299,7 +341,7 @@
   };
 
   B.english = (THREE, q, G) => { // ink-marbled world; a ring of turning pages; letterforms drifting in orbit
-    const r = 1.2, M = META.english; const core = surface(THREE, q, r, 4, [M.c[0], M.c[1], M.c[2]], 3.3); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffc2d4', 0.8));
+    const r = 1.2, M = META.english; const core = surface(THREE, q, r, 4, ['#e597b0', '#fbe7dc', '#7a3550'], 3.3, 0, '#ffc2d4'); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffc2d4', 0.8));
     const NPG = [16, 24, 32][q], pg = new THREE.PlaneGeometry(0.22, 0.3, 6, 1); const pp = pg.attributes.position; for (let i = 0; i < pp.count; i++) { const x = pp.getX(i); pp.setZ(i, -0.06 * (x / 0.11) ** 2); }
     const pc = document.createElement('canvas'); pc.width = 128; pc.height = 176; { const g = pc.getContext('2d'); g.fillStyle = '#fbf1e6'; g.fillRect(0, 0, 128, 176); g.fillStyle = 'rgba(70,40,50,.55)'; for (let y = 22, k = 0; y < 160; y += 9, k++) { const w = k % 6 === 5 ? 40 + (k * 13) % 30 : 96 - (k * 7) % 14; g.fillRect(16, y, w, 2.2); } g.fillStyle = 'rgba(160,60,90,.8)'; g.font = 'italic 18px Fraunces, Georgia, serif'; g.fillText('II', 58, 16); }
     const ptex = new THREE.CanvasTexture(pc); ptex.colorSpace = THREE.SRGBColorSpace;
@@ -312,7 +354,7 @@
   };
 
   B.history = (THREE, q, G) => { // sedimentary strata (layers of time); an orbiting colonnade, some columns whole, some fallen; a dial ring
-    const r = 1.3, M = META.history; const core = surface(THREE, q, r, 3, [M.c[0], M.c[1], M.c[2]], 4.4); G.add(core); G.add(atmosphere(THREE, r * 1.06, '#ffd29a', 0.6));
+    const r = 1.3, M = META.history; const core = surface(THREE, q, r, 3, ['#c4925a', '#ecd4ac', '#5e3b1c'], 4.4, 0, '#ffd29a'); G.add(core); G.add(atmosphere(THREE, r * 1.06, '#ffd29a', 0.6));
     const NC = 14, col = new THREE.CylinderGeometry(0.045, 0.05, 1, 12); col.translate(0, 0.5, 0); const cap = new THREE.BoxGeometry(0.14, 0.035, 0.14);
     const stone = new THREE.MeshStandardMaterial({ color: 0xe9dcc3, roughness: 0.85 }); const cols = new THREE.InstancedMesh(col, stone, NC), caps = new THREE.InstancedMesh(cap, stone, NC); const tmp = new THREE.Object3D();
     const H = Array.from({ length: NC }, (_, i) => [0.5, 0.5, 0.32, 0.5, 0.18, 0.5, 0.5, 0.41, 0.5, 0.27, 0.5, 0.5, 0.36, 0.5][i]);
@@ -327,7 +369,7 @@
   };
 
   B.languages = (THREE, q, G) => { // a warm dune world; two orbits of greetings in many writing systems, passing like conversation
-    const r = 1.2, M = META.languages; const core = surface(THREE, q, r, 5, [M.c[0], M.c[1], M.c[2]], 7.7); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffd27a', 0.85));
+    const r = 1.2, M = META.languages; const core = surface(THREE, q, r, 5, ['#e0a648', '#fbe6b4', '#7a4a12'], 7.7, 0, '#ffd27a'); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#ffd27a', 0.85));
     /* only scripts this device can actually draw: a word is dropped if any of its letters falls back to the "missing glyph" box */
     const canDraw = w => { try { const g = document.createElement('canvas').getContext('2d'); g.font = '40px "Instrument Sans", "IBM Plex Sans Arabic", system-ui, sans-serif'; const box = g.measureText('\u0378').width, box2 = g.measureText('\uFFFF').width;
       return [...w.replace(/\s/g, '')].every(ch => { const wd = g.measureText(ch).width; return wd > 0 && Math.abs(wd - box) > 0.01 && Math.abs(wd - box2) > 0.01; }); } catch (e) { return /^[\x20-\x7e\u00c0-\u017f]+$/.test(w); } };
@@ -341,7 +383,7 @@
   };
 
   B.social = (THREE, q, G) => { // a dusk world whose night side is lit by cities; arcs of travel and exchange connect them
-    const r = 1.3, M = META.social; const core = surface(THREE, q, r, 6, [M.c[0], M.c[1], M.c[2]], 8.8); G.add(core); G.add(atmosphere(THREE, r * 1.08, '#a9c8ec', 1));
+    const r = 1.3, M = META.social; const core = surface(THREE, q, r, 6, [M.c[0], M.c[1], M.c[2]], 8.8, 0, '#a9c8ec'); G.add(core); G.add(atmosphere(THREE, r * 1.08, '#a9c8ec', 1));
     const cities = [[0.6, 0.3], [-0.3, 1.2], [0.2, 2.3], [-0.5, 3.4], [0.45, 4.2], [-0.15, 5.4], [0.8, 0.9], [-0.7, 2.0]].map(([la, lo]) => new THREE.Vector3(Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)).multiplyScalar(r * 1.01));
     const arcs = new THREE.Group(); const travellers = []; const pairs = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [0, 6], [6, 2], [7, 3], [5, 0], [1, 7]];
     pairs.forEach(([a, b], i) => { const A = cities[a], Bv = cities[b], mid = A.clone().add(Bv).normalize().multiplyScalar(r * (1.35 + A.distanceTo(Bv) * 0.18)); const cv = new THREE.QuadraticBezierCurve3(A, mid, Bv);
@@ -354,7 +396,7 @@
   };
 
   B.more = (THREE, q, G) => { // markets and minds: a ring of bars that rises and falls like a market; a small constellation of firing neurons
-    const r = 1.2, M = META.more; const core = surface(THREE, q, r, 0, ['#c8b35a', '#f4ecc4', '#5a4a18'], 9.9); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#f0dc8a', 0.7));
+    const r = 1.2, M = META.more; const core = surface(THREE, q, r, 0, ['#c8a65a', '#f1e4bf', '#6a4c1c'], 9.9, 0, '#f0dc8a'); G.add(core); G.add(atmosphere(THREE, r * 1.07, '#f0dc8a', 0.7));
     const NB = [32, 48, 64][q], bar = new THREE.BoxGeometry(0.05, 1, 0.05); bar.translate(0, 0.5, 0); const bars = new THREE.InstancedMesh(bar, new THREE.MeshStandardMaterial({ color: 0xf4ecc4, roughness: 0.5, emissive: 0x2a2408 }), NB); const tmp = new THREE.Object3D();
     const ringG = new THREE.Group(); ringG.rotation.set(0.32, 0, -0.12); ringG.add(bars); G.add(ringG);
     const NN = [10, 16, 22][q], nodes = Array.from({ length: NN }, (_, i) => new THREE.Vector3(Math.cos(i * 2.4) * (1 + (i % 3) * 0.25), 1.6 + Math.sin(i * 1.7) * 0.35, Math.sin(i * 2.4) * (1 + (i % 3) * 0.25)).multiplyScalar(r));
@@ -376,7 +418,7 @@
     const words = G.userData && G.userData.words; w.core.userData.world = id; G.userData = { words, id, core: w.core, radius: w.r, reveal: 0, focus: 0,
       setFar(far) { if (G.userData.far === far) return; G.userData.far = far; G.children.forEach(c => { if (c.userData.detail) c.visible = !far; }); },
       update(t, dt, rv, fc) { G.userData.reveal = rv; G.userData.focus = fc; G.traverse(o => { const u = o.material && o.material.uniforms; if (u && u.uFocus) u.uFocus.value = fc; }); w.update(t, dt, clamp(rv, 0, 1), clamp(fc, 0, 1)); },
-      dispose() { G.traverse(o => { if (o.userData.rt) o.userData.rt.dispose(); if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };
+      dispose() { G.traverse(o => { if (o.userData.rt) o.userData.rt.dispose(); if (o.userData.rt2) o.userData.rt2.dispose(); if (o.geometry) o.geometry.dispose(); const m = o.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); }); } };
     return G;
   }
   LS.cosmosWorlds = { META, ORDER, build, SUN, NOISE, textSprite, surface, atmosphere };

@@ -5,12 +5,15 @@
 
    Architecture (one file per concern would be over-split for ~700 lines; the sections below are independent):
      Quality      tier from the device (0 phone · 1 modest · 2 capable) + adaptive pixel ratio from measured frame times
-     Sky          a nebula + star panorama rendered ONCE on the GPU into a texture; star and dust point layers for parallax;
-                  painted galaxies and soft clouds as distant billboards
+     Sky          ls-cosmos-sky.js (v39): a photographic Milky Way baked once, pin-sharp stars with real colours and a
+                  power-law brightness, shader-drawn galaxies, and an environment map for reflections; near motes for motion
+     Life         ls-cosmos-fx.js (v39): GPU-tumbling asteroid fields and a belt, meteors, speed streaks, a lens flare
      Light        a sun whose direction sweeps from behind the great planet ("first light") to its working angle
      Worlds       LS.cosmosWorlds.build() — built progressively (nearest first, the rest in idle time)
-     Astronaut    GLB (Poly by Google, CC-BY; see CREDITS) with procedural zero-gravity motion, steered by the camera path
-     Camera       two Catmull-Rom splines (position, look target) through 15 keyframes; each segment eased with a dwell
+     Astronaut    ls-cosmos-astro.js: built in code (v39) — a jointed EVA suit with a reflective visor — never inside or
+                  behind a world (its target is slid along the line of sight), held in the composition by a damped spring
+     Camera       two Catmull-Rom splines (position, look target) through 15 keyframes; each segment eased with a dwell;
+                  position and gaze each follow a critically damped spring (v39), and the horizon never rolls
      Story        page scroll → target progress → damped progress (no scroll-jacking: the page scrolls natively)
      Interaction  hover / focus / select / enter; touch: tap to focus, tap again (or Enter) to travel; keyboard: the
                   Destinations map and the scene buttons
@@ -36,7 +39,7 @@
     const W = LS.cosmosWorlds, K = [];
     const add = (pos, tgt, astro, look, scene) => K.push({ pos, tgt, astro, look, scene });
     add([0, 0.4, 12], [-2, -0.6, -20], [1.25, -0.3, -3.3], 'camera', 'void');
-    add([3, 2.2, -2], [-5, 4, -44], [1.35, -0.5, -3.9], 'origin', 'light'); /* first light: the limb sits low in frame, the sunrise above it; the astronaut stays clear of the words */
+    add([3, 2.2, -2], [-5, 4, -44], [1.8, -0.95, -3.9], 'origin', 'light'); /* first light: the limb sits low in frame, the sunrise above it; the astronaut stays clear of the words */
     add([0, 5, -8], [1, 0, -64], [0.95, -0.7, -3.8], 'maths', 'universe');
     W.ORDER.forEach(id => { const P = PATH[id], s = Math.sign(P[0]) || 1;
       add([P[0] - s * 1.4, P[1] + 0.7, P[2] + 6.6], [P[0] - s * 2.5, P[1] - 0.25, P[2] - 1], [s * 0.42, -0.74, -3.7], id, id); }); // astronaut between the words and the world, facing the world
@@ -58,31 +61,19 @@
       <button type="button" class="cz-enter" data-cz-enter="${id}">${T('Enter', 'ادخل')} ${esc(m.name)} <span aria-hidden="true">→</span></button>`;
   }
 
-  /* ---------- painted textures (galaxies, clouds, glow) ---------- */
+  /* ---------- painted texture (glow) ---------- */
   function glowTex(THREE, inner, outer) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, inner); gr.addColorStop(0.18, inner); gr.addColorStop(0.45, outer); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
-  function galaxyTex(THREE, seed, hue) {
-    const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const core = g.createRadialGradient(256, 256, 0, 256, 256, 90); core.addColorStop(0, 'rgba(255,240,215,0.9)'); core.addColorStop(1, 'rgba(255,220,180,0)'); g.fillStyle = core; g.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 5200; i++) { const arm = i % 2, t = R() * 4.2, a = t * 1.25 + arm * Math.PI + (R() - 0.5) * 0.55, r = 18 + t * 52 + (R() - 0.5) * 22; const x = 256 + Math.cos(a) * r, y = 256 + Math.sin(a) * r;
-      const b = R(); g.fillStyle = b > 0.93 ? 'rgba(255,255,255,0.8)' : `hsla(${hue + R() * 30},70%,${70 + R() * 20}%,${0.08 + R() * 0.22})`; const z = b > 0.93 ? 1.4 : 1 + R() * 2.4; g.fillRect(x, y, z, z); }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-  }
-  function cloudTex(THREE, seed, col) {
-    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 46; i++) { const x = 128 + (R() - 0.5) * 120, y = 128 + (R() - 0.5) * 80, r = 20 + R() * 60, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, col.replace('A', (0.06 + R() * 0.08).toFixed(3))); gr.addColorStop(1, col.replace('A', '0')); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); }
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-  }
-
   /* ---------- the universe ---------- */
   async function universe(stage, o) {
     const { THREE } = await LS.three(); const W = LS.cosmosWorlds, M = W.META; let q = tierOf();
+    if (!LS.__bgu) try { LS.__bgu = await import('three/addons/utils/BufferGeometryUtils.js'); } catch (e) { /* rocks fall back to faceted normals */ }
     const maxDpr0 = Math.min(devicePixelRatio || 1, [1, 1.25, 1.5][q]); /* pixel-ratio caps: the scene is soft and atmospheric, so 1.5 is visually indistinguishable from 2 at a third of the pixels */
     const renderer = new THREE.WebGLRenderer({ antialias: maxDpr0 < 1.5, powerPreference: 'high-performance', alpha: false, stencil: false });
     renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
     const maxDpr = maxDpr0; let dpr = maxDpr; renderer.setPixelRatio(dpr); W.SUN.renderer = renderer; /* surfaces are baked with this renderer */
     const cv = renderer.domElement; cv.className = 'cz-cv'; cv.setAttribute('aria-hidden', 'true'); stage.prepend(cv);
     const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(q ? 42 : 50, 16 / 9, 0.05, 4000);
-    const disposables = [];
+    const disposables = []; const V3s = a => new THREE.Vector3(...a).normalize();
 
     /* sun and lights */
     const sun = new THREE.Vector3(...SUN0).normalize(); W.SUN.v = W.SUN.v || new THREE.Vector3(); W.SUN.v.copy(sun);
@@ -92,44 +83,23 @@
     const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(THREE, 'rgba(255,246,228,1)', 'rgba(255,170,90,0.22)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
     sunGlow.scale.setScalar(150); scene.add(sunGlow);
 
-    /* sky: nebula + stars painted once into an equirectangular render target */
-    const rtW = [1024, 2048, 2048][q], rt = new THREE.WebGLRenderTarget(rtW, rtW / 2, { colorSpace: THREE.LinearSRGBColorSpace, type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter }); /* v36: half-float — near-black sky values quantised per channel in 8 bits showed as greenish blotches */
-    { const bake = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ depthTest: false, uniforms: {}, vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }',
-        fragmentShader: `#define OCT ${q ? 5 : 4}\nvarying vec2 vUv; ${W.NOISE}
-        float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
-        float stars(vec3 d,float sc,float th){ vec3 g=d*sc; vec3 c=floor(g); float h=h3(c); if(h<th) return 0.0; vec3 j=vec3(h3(c+1.3),h3(c+2.7),h3(c+5.1)); float dist=length(fract(g)-j); return smoothstep(0.42,0.0,dist)*(h-th)/(1.0-th); }
-        void main(){ float lon=(vUv.x-0.5)*6.2831853, lat=(vUv.y-0.5)*3.14159265; vec3 d=vec3(cos(lat)*sin(lon),sin(lat),cos(lat)*cos(lon));
-          vec3 axis=normalize(vec3(0.35,0.86,0.36)); float band=exp(-pow(dot(d,axis)*2.4,2.0));
-          float n1=fbm(d*1.7+3.1), n2=fbm(d*3.4+9.2), n3=fbm(d*6.0-2.0);
-          vec3 col=vec3(0.0008,0.001,0.002)+vec3(0.0012,0.0016,0.004)*band; /* v36: near-black space */
-          col+=vec3(0.007,0.009,0.022)*smoothstep(0.3,0.95,n1)*(0.15+band); /* a whisper of blue haze */
-          col+=vec3(0.03,0.016,0.05)*smoothstep(0.45,0.95,n2)*band*0.5; /* the faintest violet */
-          col+=vec3(0.05,0.022,0.012)*smoothstep(0.7,0.99,n1*n2*2.0+0.3)*band*0.5; /* rare, faint warm glow */
-          col*=1.0-0.75*smoothstep(0.1,0.6,n3)*band;
-          float s=stars(d,180.0,0.972)*1.3+stars(d,420.0,0.986)*0.8+stars(d,900.0,0.993)*0.5*(0.4+band);
-          vec3 sc=mix(vec3(0.75,0.85,1.0),vec3(1.0,0.85,0.7),h3(floor(d*180.0)));
-          gl_FragColor=vec4(col+s*sc,1.0); }` }));
-      const bs = new THREE.Scene(); bs.add(bake); const bc = new THREE.Camera(); renderer.setRenderTarget(rt); renderer.render(bs, bc); renderer.setRenderTarget(null); bake.geometry.dispose(); bake.material.dispose(); }
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(2600, 48, 32), new THREE.MeshBasicMaterial({ map: rt.texture, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false })); sky.rotation.y = 1.1; scene.add(sky);
-
-    /* star layers (real 3D points: they parallax as the camera travels) and near dust */
-    const pointsLayer = (n, spread, sizeA, sizeB, seed, warm) => { let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-      const P = new Float32Array(n * 3), S = new Float32Array(n), Cc = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) { let x, y, z; do { x = (R() - 0.5) * spread[0]; y = (R() - 0.5) * spread[1]; z = 60 - R() * spread[2]; } while (Math.abs(x) < 14 && Math.abs(y) < 9); P.set([x, y, z], i * 3); S[i] = sizeA + R() * R() * sizeB; const w = R(); Cc.set(warm && w > 0.7 ? [1, 0.86, 0.72] : w < 0.25 ? [0.75, 0.85, 1] : [1, 1, 1], i * 3); }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('size', new THREE.BufferAttribute(S, 1)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
-      const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uPx: { value: dpr }, uMove: { value: warm ? 1 : 0.15 } },
-        vertexShader: 'attribute float size; attribute vec3 color; uniform float uT; uniform float uPx; uniform float uMove; varying vec3 vC; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; float tw=0.85+0.15*sin(uT*0.9+position.x*3.1+position.z); gl_PointSize=clamp(size*uPx*(220.0/-mv.z),1.0,9.0*uPx); vC=color; vA=tw*clamp(-mv.z/30.0,0.0,1.0)*(0.2+0.8*uMove); }',
-        fragmentShader: 'varying vec3 vC; varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float d=length(c); float a=smoothstep(0.5,0.0,d); a*=a; gl_FragColor=vec4(vC*a*vA,1.0); }' });
+    /* sky (v39, ls-cosmos-sky.js): a photographic Milky Way, pin-sharp stars with real colours and brightnesses, distant
+       galaxies, and an environment map for reflections */
+    const SKY = LS.cosmosSky(THREE, renderer, scene, q, W.NOISE, V3s(SUN1));
+    /* near motes: a few tiny specks of dust close to the lens give a sense of motion (stars themselves are at infinity) */
+    const pointsLayer = (n, spread, sizeA, sizeB, seed) => { let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+      const P = new Float32Array(n * 3), S = new Float32Array(n);
+      for (let i = 0; i < n; i++) { let x, y, z; do { x = (R() - 0.5) * spread[0]; y = (R() - 0.5) * spread[1]; z = 60 - R() * spread[2]; } while (Math.abs(x) < 3 && Math.abs(y) < 2); P.set([x, y, z], i * 3); S[i] = sizeA + R() * R() * sizeB; }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('size', new THREE.BufferAttribute(S, 1));
+      const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uPx: { value: dpr }, uMove: { value: 0.15 } },
+        vertexShader: 'attribute float size; uniform float uPx; uniform float uMove; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv; gl_PointSize=clamp(size*uPx*(160.0/-mv.z),1.0,4.0*uPx); vA=clamp(-mv.z/6.0,0.0,1.0)*(1.0-smoothstep(40.0,90.0,-mv.z))*(0.15+0.85*uMove); }',
+        fragmentShader: 'varying float vA; void main(){ vec2 c=gl_PointCoord-0.5; float a=exp(-dot(c,c)*18.0); gl_FragColor=vec4(vec3(0.78,0.84,1.0)*a*vA*0.6,1.0); }' });
       const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); return pts; };
-    const stars = pointsLayer([1100, 2200, 3400][q], [700, 420, 900], 0.5, 2.6, 7, true); /* sparse, with depth; the baked panorama carries the fine field */
-    const dust = pointsLayer([140, 300, 520][q], [90, 50, 360], 0.12, 0.35, 19, false);
-
-    const far = []; [[[-520, 260, -900], 340, 3, 210], [[760, -180, -1100], 260, 11, 25], [[-900, -320, -400], 220, 23, 280]].forEach(([p, s, seed, hue]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: galaxyTex(THREE, seed, hue), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55, fog: false })); m.position.set(...p); m.lookAt(0, 0, -150); m.rotateX(0.9); m.rotateZ(seed); scene.add(m); far.push(m); });
-    const clouds = []; (q === 2 ? [[[40, -14, -170], 56, 'rgba(120,170,255,A)', 9], [[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]] : [[[0, 22, -310], 90, 'rgba(255,190,120,A)', 21]]) /* full-screen additive sprites are pure overdraw; the baked nebula already carries the atmosphere */.forEach(([p, s, c, seed]) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex(THREE, seed, c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.22 })); sp.position.set(...p); sp.scale.setScalar(s); scene.add(sp); clouds.push(sp); });
+    const dust = pointsLayer([120, 260, 420][q], [90, 50, 360], 0.08, 0.22, 19);
 
     /* the great planet of the opening ("Origin"): marbled indigo with a thin bright atmosphere — the sun rises from behind its limb */
     const origin = new THREE.Group(); origin.position.set(...ORIGIN.pos);
-    const oCore = W.surface(THREE, q, ORIGIN.r, 4, ['#3e57c9', '#a9b8ff', '#0b1030'], 11.3, [40, 72, 96][q]); origin.add(oCore, W.atmosphere(THREE, ORIGIN.r * 1.035, '#8fb0ff', 1.6)); scene.add(origin);
+    const oCore = W.surface(THREE, q, ORIGIN.r, 0, ['#5b74c4', '#d4dcf7', '#1e2a62'], 11.3, [64, 96, 128][q], '#8fb0ff'); oCore.rotation.z = 0.32; origin.add(oCore, W.atmosphere(THREE, ORIGIN.r * 1.03, '#8fb0ff', 1.5)); scene.add(origin);
 
     /* worlds: nearest first, the rest in idle time */
     let astroReady = false; /* declared before the worlds: their build reports loading progress */
@@ -142,8 +112,8 @@
     const idle = window.requestIdleCallback || (f => setTimeout(f, 60)); const idleBuild = () => { if (!alive || !queue.length) return; buildNext(); idle(idleBuild, { timeout: 400 }); }; let alive = true; idle(idleBuild, { timeout: 400 });
 
     /* astronaut: a world-space flight controller (ls-cosmos-astro.js) sharing the camera's journey parameter */
-    const AST = LS.cosmosAstronaut(THREE, scene, { glow: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)') }); const astro = AST.root;
-    AST.load('assets/models/astronaut.glb', warm).then(() => { if (!alive) return; astroReady = true; o.onAstronaut && o.onAstronaut(true); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: true }); }).catch(() => { o.onAstronaut && o.onAstronaut(false); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: false, failed: true }); });
+    const AST = LS.cosmosAstronaut(THREE, scene, { glow: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), env: SKY.env }); const astro = AST.root;
+    AST.load(null, warm).then(() => { if (!alive) return; astroReady = true; o.onAstronaut && o.onAstronaut(true); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: true }); }).catch(() => { o.onAstronaut && o.onAstronaut(false); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: false, failed: true }); });
 
     /* camera choreography */
     const K = keyframes(), N = K.length, V3 = a => new THREE.Vector3(...a);
@@ -157,6 +127,15 @@
     const at = p => { const i = clamp(Math.floor(p), 0, N - 2), f = clamp(p - i, 0, 1), d = DWELL(i), x = clamp((f - d) / (1 - 2 * d), 0, 1);
       const g = i === N - 2 ? 1 - Math.pow(1 - sstep(x), 1.6) : 0.45 * x + 0.55 * sstep(x); /* gentler ease: peak speed ≈ 1.5× the average instead of 1.9× */ return { i, f: g, raw: f, u: (i + g) / (N - 1) }; };
     const arcSide = new THREE.Vector3(), arcUp = new THREE.Vector3(0, 1, 0);
+    /* asteroids, meteors, streaks, flare (v39, ls-cosmos-fx.js) — rocks keep clear of the camera's path, the worlds,
+       their places in the final ring and the great planet */
+    let FX = null;
+    const pathPts = Array.from({ length: 260 }, (_, i) => posC.getPoint(i / 259)), worldPts = W.ORDER.map(id => [V3(PATH[id]), V3(RING(id))]), originV = V3(ORIGIN.pos);
+    const avoidRock = (p, size, belt) => { if (!belt) for (const c of pathPts) if (c.distanceToSquared(p) < (8 + size * 2) * (8 + size * 2)) return true;
+      for (const [a, b] of worldPts) { if (a.distanceToSquared(p) < (6.5 + size) * (6.5 + size) || b.distanceToSquared(p) < (3.4 + size) * (3.4 + size)) return true; }
+      return originV.distanceTo(p) < ORIGIN.r + 5; };
+    const buildFX = () => { if (!alive || FX) return; FX = LS.cosmosFX(THREE, scene, q, { avoid: avoidRock, belt: { c: [O[0], O[1] - 2.6, O[2]], r0: 17.5, r1: 26, h: 1.3, squash: 0.62 } }); FX.rocks.forEach(m => warm(m)); };
+    setTimeout(() => (window.requestIdleCallback || (f => setTimeout(f, 30)))(buildFX, { timeout: 900 }), 250);
     /* the astronaut's world-space path: one anchor per keyframe, where that keyframe's framing places it at rest */
     const rebuildAnchors = () => { const pts = K.map(k => { const pos = V3(k.pos), q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, V3(k.tgt), new THREE.Vector3(0, 1, 0))), off = V3(k.astro);
         if (innerWidth < 700) { if (k.scene === 'all') off.set(0.9, -2.1, -7.8); else { off.x *= 0.5; off.z *= 1.25; off.y = Math.abs(off.y) * 0.55 + 0.35; } }
@@ -167,6 +146,10 @@
     /* state */
     const st = { lastInput: 0, target: 0, p: 0, ptr: { x: 0, y: 0, tx: 0, ty: 0 }, hover: null, sel: null, flight: null, ret: null, t: 0, last: performance.now(), frames: [], cpu: [], visible: true, dirty: true, moved: false, astroPos: new THREE.Vector3(), lastCam: new THREE.Vector3() };
     const look2 = new THREE.Vector3(), rc = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), tmpM = new THREE.Matrix4(), look = new THREE.Vector3(), camPos = new THREE.Vector3(), camTgt = new THREE.Vector3();
+    /* a critically damped spring: follows its target with continuous velocity — no jerks, no overshoot, no snapping */
+    const spring = (x, v, target, w, dt) => { tmpV2.subVectors(target, x).multiplyScalar(w * w).addScaledVector(v, -2 * w); v.addScaledVector(tmpV2, dt); x.addScaledVector(v, dt); };
+    const tmpV2 = new THREE.Vector3(), camS = new THREE.Vector3(), camSV = new THREE.Vector3(), tgtSV = new THREE.Vector3(), camVel = new THREE.Vector3(); let camInit = false;
+    const obstacles = [], occluders = [];
     const worldPos = (id, p) => { const G = worlds[id]; if (!G) return V3(PATH[id]); return G.position; };
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
 
@@ -195,7 +178,7 @@
         const own = K[Math.round(clamp(p, 0, N - 1))].scene, dist = camera.position.distanceTo(G.position);
         if (own !== id && own !== 'all' && dist > 14 && !st.flight && !st.cruise) { tmpV.copy(G.position).project(camera); const side = own === 'all' ? 0 : PATH[own] ? (PATH[own][0] > 0 ? -1 : 1) : -1;
           const m = side ? smooth(clamp((side * tmpV.x + 0.02) / 0.25, 0, 1)) * smooth(clamp((0.75 - Math.abs(tmpV.y)) / 0.3, 0, 1)) : smooth(clamp((tmpV.y - 0.25) / 0.2, 0, 1)) * smooth(clamp((0.6 - Math.abs(tmpV.x)) / 0.2, 0, 1));
-          G.userData.hide = (G.userData.hide || 0) + (m - (G.userData.hide || 0)) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
+          G.userData.hide = clamp((G.userData.hide || 0) + (m - (G.userData.hide || 0)) * (1 - Math.exp(-dt * 6)), 0, 1); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
         else if (G.userData.hide) { G.userData.hide += (0 - G.userData.hide) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
         const far = dist > 48 + 20 * G.userData.f; G.userData.setFar(far);
         if ((inView && !far) || reduced()) G.userData.update(t, reduced() ? 0 : dt, rv, G.userData.f); else if (inView) G.userData.core.rotation.y += dt * 0.04; G.visible = inView; });
@@ -214,18 +197,21 @@
       const lk = (st.flight && st.flight.id) || st.hover || st.sel;
       if (lk) lookAtKey(lk, look); else { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes */
       const cs = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (cs - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
-      AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera }); st.astroPos.copy(AST.pos);
+      obstacles.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) obstacles.push({ p: G.position, r: G.userData.radius * G.scale.x * (id === 'physics' ? 2.6 : 1.9) + 0.45 }); }); obstacles.push({ p: origin.position, r: ORIGIN.r * 1.07 + 0.5 });
+      AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera, obstacles }); st.astroPos.copy(AST.pos);
     }
 
     function frame(now) {
       raf = 0; if (!alive || !st.visible || document.hidden) return;
-      const dt = Math.min(0.05, (now - st.last) / 1000); st.rdtA = Math.min(0.25, (now - st.last) / 1000); st.last = now; const still = reduced(); if (!still) st.t += dt;
+      /* v39: never a negative step — a frame's timestamp can precede the performance.now() taken when the loop restarted,
+         and a negative step turned every exponential smoothing into an amplifier (a world's scale once grew a thousandfold) */
+      const dt = clamp((now - st.last) / 1000, 0, 0.05); st.rdtA = clamp((now - st.last) / 1000, 0, 0.25); st.last = Math.max(st.last, now); const still = reduced(); if (!still) st.t += dt;
       st.frames.push(now); if (st.frames.length > 90) st.frames.shift();
       // progress: damped toward the scroll target (instant with reduced motion)
       const pPrev = st.p; if (!st.cruise) { const gap = Math.abs(st.target - st.p), rate = 3.4 - 1.4 * clamp((gap - 0.6) / 3, 0, 1); /* v36: a soft follow — the camera glides after the scroll */ /* tight for normal scrolling; long jumps (rail, "All worlds") travel at a calmer pace instead of a dizzy whip */
-        const rdt = Math.min(0.25, (now - (st.lastP || now - 16)) / 1000), fdt = Math.min(0.12, rdt), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* the speed limit uses real elapsed time, so a stalled frame on a slow device does not slow the journey to a crawl */ /* plus a speed limit (2 scenes/s since v35, a calmer flight): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
-        st.p = still ? Math.round(st.target) : st.p + clamp(step, -1.0 * rdt, 1.0 * rdt); } st.lastP = now; /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
-      st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 3)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 3));
+        const rdt = clamp((now - (st.lastP || now - 16)) / 1000, 0, 0.25), fdt = Math.min(0.12, rdt), step = (st.target - st.p) * (1 - Math.exp(-fdt * rate)); /* the speed limit uses real elapsed time, so a stalled frame on a slow device does not slow the journey to a crawl */ /* plus a speed limit (2 scenes/s since v35, a calmer flight): a flick of the wheel or a far jump is flown, never skipped, whatever the frame rate */
+        st.p = still ? Math.round(st.target) : st.p + clamp(step, -1.0 * rdt, 1.0 * rdt); } st.lastP = Math.max(st.lastP || 0, now); /* real elapsed time (capped), so slow devices still catch up */ if (Math.abs(st.target - st.p) < 1e-4) st.p = st.target;
+      st.ptr.x += (st.ptr.tx - st.ptr.x) * (1 - Math.exp(-dt * 1.8)); st.ptr.y += (st.ptr.ty - st.ptr.y) * (1 - Math.exp(-dt * 1.8));
       // sun: first light sweeps the direction during the first segment
       const dawn = smooth(clamp(st.p - 0.15, 0, 1)); sun.set(...SUN0).lerp(V3(SUN1), dawn).normalize(); W.SUN.v.copy(sun);
       key.position.copy(sun).multiplyScalar(50); key.intensity = 0.5 + 2.0 * dawn; hemi.intensity = 0.18 + 0.16 * dawn; sunGlow.position.copy(sun).multiplyScalar(1500); sunGlow.material.opacity = 0.5 + 0.25 * dawn;
@@ -240,20 +226,28 @@
       if (st.flight) { const F = st.flight, k = clamp((now - F.t0) / F.ms, 0, 1), e = ease(k); camPos.lerpVectors(F.p0, F.p1, e); camTgt.lerpVectors(F.q0, F.q1, e); o.onFlight && o.onFlight(k, F.id); if (k >= 1) { const id = F.id; st.flight = null; AST.endFlight(); o.onArrive && o.onArrive(id); } }
       else if (st.ret) { const R = st.ret, k = clamp((now - R.t0) / R.ms, 0, 1), e = ease(k); camPos.lerpVectors(R.p0, camPos, e); camTgt.lerpVectors(R.q0, camTgt, e); if (k >= 1) st.ret = null; }
       // the look target is critically damped, so it never snaps when a path, a flight or a return hands over
-      const dtr = Math.min(0.12, (now - (st.lastT || now - 16)) / 1000); st.lastT = now; /* real elapsed time, so slow devices converge as fast as quick ones */
-      if (!st.tgtS || still) st.tgtS = camTgt.clone(); else st.tgtS.lerp(camTgt, 1 - Math.exp(-dtr * (st.flight ? 12 : 8))); camTgt.copy(st.tgtS);
+      const dtr = clamp((now - (st.lastT || now - 16)) / 1000, 0, 0.12); st.lastT = Math.max(st.lastT || 0, now); /* real elapsed time, so slow devices converge as fast as quick ones */
+      // v39 cinematic camera: the position and the gaze each follow a critically damped spring (continuous velocity and
+      // acceleration), so starts, stops and turns ease in and out like a camera on a dolly — never a snap or a whip
+      const scripted = st.flight || st.cruise || st.ret;
+      if (!st.tgtS) { st.tgtS = camTgt.clone(); tgtSV.set(0, 0, 0); } /* a jump() resets the gaze */
+      if (!camInit || still) { camS.copy(camPos); camSV.set(0, 0, 0); st.tgtS = camTgt.clone(); tgtSV.set(0, 0, 0); camInit = true; }
+      else if (scripted) { camS.copy(camPos); camSV.set(0, 0, 0); spring(st.tgtS, tgtSV, camTgt, 9, dtr); }
+      else { spring(camS, camSV, camPos, 4.2, dtr); spring(st.tgtS, tgtSV, camTgt, 3.4, dtr); }
+      camPos.copy(camS); camTgt.copy(st.tgtS);
       const par = still ? 0 : (innerWidth < 700 ? 0.25 : 1);
       camera.position.copy(camPos); camera.lookAt(camTgt);
-      camera.position.add(tmpV.set(st.ptr.x * 0.42 * par, -st.ptr.y * 0.26 * par, 0).applyQuaternion(camera.quaternion)); camera.lookAt(camTgt.x + st.ptr.x * 0.12 * par, camTgt.y - st.ptr.y * 0.08 * par, camTgt.z);
-      if (!still && AST.ready && !st.flight) camera.rotateZ(-AST.bank * 0.16); /* the camera banks a little with the astronaut's turns */
+      camera.position.add(tmpV.set(st.ptr.x * 0.22 * par, -st.ptr.y * 0.14 * par, 0).applyQuaternion(camera.quaternion)); camera.lookAt(camTgt.x + st.ptr.x * 0.06 * par, camTgt.y - st.ptr.y * 0.04 * par, camTgt.z); /* a gentle handheld parallax with the pointer; the horizon never rolls */
       camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(tmpM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
-      sky.position.copy(camera.position); rim.position.copy(camera.position).add(tmpV.set(-6, 3, -10).applyQuaternion(camera.quaternion)); rim.target.position.copy(camera.position); fill.position.copy(camera.position).add(tmpV.set(1.5, 2, 0).applyQuaternion(camera.quaternion)); fill.target.position.copy(st.astroPos); fill.intensity = 0.55 + 0.35 * (1 - dawn);
+      SKY.update(camera, st.t, dpr); rim.position.copy(camera.position).add(tmpV.set(-6, 3, -10).applyQuaternion(camera.quaternion)); rim.target.position.copy(camera.position); fill.position.copy(camera.position).add(tmpV.set(1.5, 2, 0).applyQuaternion(camera.quaternion)); fill.target.position.copy(st.astroPos); fill.intensity = 0.55 + 0.35 * (1 - dawn);
       placeWorlds(pv, st.t, still ? 0 : dt, gOver);
+      if (FX) { camVel.subVectors(camera.position, st.lastCam).divideScalar(Math.max(dt, 1e-3)); if (camVel.length() > 300) camVel.set(0, 0, 0);
+        occluders.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) occluders.push({ p: G.position, r: G.userData.radius * G.scale.x }); }); occluders.push({ p: origin.position, r: ORIGIN.r });
+        FX.update(camera, st.t, still ? 0 : dt, camVel, sun, still, occluders); }
       // rim tint follows the world in front of us
       const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]), 1 - Math.exp(-dt * 2)); else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
       oCore.rotation.y += (still ? 0 : dt) * 0.006; oCore.material.uniforms.uT.value = st.t;
-      stars.material.uniforms.uT.value = st.t; stars.material.uniforms.uPx.value = dpr; dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
-      clouds.forEach((c, i) => { c.material.rotation = st.t * 0.004 * (i % 2 ? 1 : -1); });
+      dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
       astroUpdate(still ? 0.016 : st.rdtA, st.cruise ? at(pv) : a, pv); /* real elapsed time: the astronaut keeps its real-world pace on slow devices */
       if (st.hover && !st.flight) o.onLabel && o.onLabel(st.hover, project(worlds[st.hover])); else o.onLabel && o.onLabel(null);
       o.onProgress && o.onProgress(st.cruise ? (() => { const C = st.cruise, k = clamp((now - C.t0) / C.ms, 0, 1), sg = Math.sign(C.to - C.from); return k < 0.5 ? C.from + sg * Math.min(0.48, k * 0.96) : C.to - sg * Math.min(0.48, (1 - k) * 0.96); })() : st.p); /* during a cinematic move the old words fade out and the new ones fade in */
@@ -292,7 +286,7 @@
 
     const api = {
       THREE, stats: () => { const f = st.frames, c = st.cpu.slice().sort((a, b) => a - b); return { fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1] - f[0]) : 0, cpuMedian: c[c.length >> 1] || 0, cpuP95: c[Math.floor(c.length * 0.95)] || 0, dpr, tier: q, worlds: Object.keys(worlds).length, astronaut: astroReady, draws: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures }; },
-      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.tgtS = null; st.astroOff = null; AST.resetTrail(); st.dirty = true; start(); }, progress: () => st.p, N,
+      setTarget(p) { st.target = clamp(p, 0, N - 1); st.lastInput = performance.now(); start(); }, jump(p) { st.target = st.p = clamp(p, 0, N - 1); st.tgtS = null; camInit = false; st.astroOff = null; AST.resetTrail(); st.dirty = true; start(); }, progress: () => st.p, N,
       hover(id) { st.hover = id; st.dirty = true; start(); },
       enter(id, ms) { if (st.flight) return; /* one journey at a time: a second click (or a double-click) while flying is ignored, never a second overlapping flight */ if (!worlds[id]) { while (queue.length && !worlds[id]) buildNext(); } const G = worlds[id]; if (!G) return; st.sel = id;
         if (reduced() || ms === 0) { o.onArrive && o.onArrive(id); return; }
@@ -312,7 +306,7 @@
       kick: start,
       destroy() { alive = false; cancelAnimationFrame(raf); clearTimeout(idleT); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);
         Object.values(worlds).forEach(G => G.userData.dispose()); scene.traverse(x => { if (x.userData.rt) x.userData.rt.dispose(); if (x.geometry) x.geometry.dispose(); const m = x.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); });
-        rt.dispose(); renderer.dispose(); renderer.forceContextLoss(); cv.remove(); }
+        SKY.dispose(); if (FX) FX.dispose(); renderer.dispose(); renderer.forceContextLoss(); cv.remove(); }
     };
     warm(scene); start(); return api;
   }
@@ -362,7 +356,6 @@
           <nav class="cz-rail" aria-label="${T('Journey', 'الرحلة')}">${K.map((k, i) => `<button type="button" data-cz-go="${i}" aria-label="${T('Go to', 'اذهب إلى')}: ${esc(M[k.scene] ? M[k.scene].name : { void: T('The beginning', 'البداية'), light: T('First light', 'الضوء الأول'), universe: T('The universe of knowledge', 'كون المعرفة'), all: T('The whole universe', 'الكون كله') }[k.scene])}"><i></i></button>`).join('')}</nav>
           <div class="cz-tools"><button type="button" class="cz-tool" data-cz-map aria-haspopup="dialog">${T('Destinations', 'الوجهات')}</button><button type="button" class="cz-tool" data-cz-end>${T('All worlds', 'كل العوالم')} ↓</button></div>
           <div class="cz-dock"></div>
-          <p class="cz-credit">${T('Astronaut model', 'نموذج رائد الفضاء')}: Poly by Google · CC-BY</p>
         </div>
       </div>
       <div class="cz-map" data-no-rise role="dialog" aria-modal="true" aria-labelledby="czMapH" hidden><div class="cz-map__in">
@@ -486,7 +479,7 @@
     let raf = 0, last = performance.now(), t = 0, vis = true, alive = true, rv = 0;
     const size = () => { const w = host.clientWidth || 300, h = host.clientHeight || 200; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
     const ro = new ResizeObserver(size); ro.observe(host); size();
-    const frame = now => { raf = 0; if (!alive || !vis || document.hidden) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; const still = reduced(); if (!still) t += dt;
+    const frame = now => { raf = 0; if (!alive || !vis || document.hidden) return; const dt = clamp((now - last) / 1000, 0, 0.05); last = Math.max(last, now); const still = reduced(); if (!still) t += dt;
       rv = still ? 1 : Math.min(1, rv + dt * 0.8); ptr.x += (ptr.tx - ptr.x) * 0.06; ptr.y += (ptr.ty - ptr.y) * 0.06; G.rotation.x = ptr.y * 0.15; G.rotation.y = ptr.x * 0.35;
       G.userData.update(t, still ? 0 : dt, smooth(rv), 0); renderer.render(scene, camera); if (!still || rv < 1) raf = requestAnimationFrame(frame); };
     const start = () => { if (!raf && alive) { last = performance.now(); raf = requestAnimationFrame(frame); } };

@@ -1,8 +1,7 @@
 # 3D model credits
 
-| File | Work | Author | Licence | Changes |
-|---|---|---|---|---|
-| `astronaut.glb` | Astronaut | Poly by Google | CC-BY 3.0 (credited in the Studio, bottom-right of the universe), distributed in [google/model-viewer](https://github.com/google/model-viewer) `packages/shared-assets` (Apache-2.0) | Base-colour texture re-encoded from a 2048² PNG to a 1024² JPEG (2.8 MB → 265 KB); geometry unchanged. Motion in the Studio is procedural. |
+The Learning Studio universe uses no third-party models. Everything in it — the astronaut (built in code since v39; it
+replaced the earlier "Astronaut" by Poly by Google, CC-BY), the planets, the Milky Way, stars, galaxies, asteroids,
+meteors and structures — is generated in code at run time; no textures or models are downloaded for it.
 
-Everything else in the universe (planets, nebula, stars, galaxies, structures) is generated in code at run time; no other
-textures or models are downloaded.
+The companion avatars have their own licences next to their files: `humans/LICENSE-Rocketbox.txt` and `people/LICENSE.md`.

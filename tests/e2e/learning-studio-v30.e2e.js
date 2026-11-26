@@ -33,7 +33,8 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     const idx = await p.$$eval('.cz-index__list a', a => a.map(x => x.getAttribute('href'))); assert.deepEqual(idx, ORDER.map(id => '#/world/' + id));
     assert.equal(await p.$$eval('#lsView .dx-filter, #lsView [data-fk]', x => x.length), 0, 'no filter pills');
     assert.match(await p.textContent('.cz-scene[data-i="0"]'), /A universe of questions/); assert.equal(await p.locator('canvas.cz-cv').count(), 1);
-    assert.ok(fs.existsSync(path.join(__dirname, '../../assets/models/astronaut.glb')) && /Poly by Google/.test(fs.readFileSync(path.join(__dirname, '../../assets/models/CREDITS.md'), 'utf8')), 'model and its credit are shipped');
+    // v39: the astronaut is built in code (no downloaded model): a jointed suit with a reflective visor
+    assert.ok(await p.evaluate(() => { let joints = 0, visor = false; LS.__cosmos.scene.traverse(o => { if (/^(pelvis|chest|head|uArm[LR]|fArm[LR]|thigh[LR]|shin[LR])$/.test(o.name)) joints++; if (o.material && o.material.metalness === 1 && o.material.envMap) visor = true; }); return joints === 11 && visor; }), 'procedural astronaut with 11 joints and an environment-mapped visor');
   });
 
   await t('Scroll drives the journey forward and backward; the matching scene text is the one shown; the rail marks the current scene', async () => {
