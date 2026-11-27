@@ -265,7 +265,7 @@
         const travel = still ? 0 : clamp(Math.abs(st.uVel) * 9, 0, 1);
         st.lead += ((still ? 0 : clamp(st.uVel * 0.25, -0.012, 0.012)) - st.lead) * damp(3, dt);
         st.prev.copy(root.position);
-        const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); th0.v = th; th0.a = camera.aspect; const frame = v => { v.z = Math.min(v.z, -2.9); const d = -v.z; v.x = clamp(v.x, -d * th * camera.aspect * 0.74, d * th * camera.aspect * 0.74); v.y = clamp(v.y, -d * th * 0.64, d * th * 0.5); return v; }; /* v44: never up under the page header */
+        const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); th0.v = th; th0.a = camera.aspect; const frame = v => { v.z = Math.min(v.z, -2.9); const d = -v.z; v.x = clamp(v.x, -d * th * camera.aspect * 0.74, d * th * camera.aspect * 0.74); v.y = clamp(v.y, -d * th * 0.64, Math.max(-d * th * 0.64, d * th * 0.8 - 1.95 * root.scale.y)); return v; }; /* v44: the origin is at the boots, so the bound keeps the top of the helmet (~1.9 above it) below the page header (top 10% of the view) */
         if (st.flight) { const F = st.flight, k = sstep(clamp((performance.now() - F.t0) / F.ms, 0, 1)), a = 1 - k;
           st.pos.set(a * a * F.p0.x + 2 * a * k * F.c.x + k * k * F.p1.x, a * a * F.p0.y + 2 * a * k * F.c.y + k * k * F.p1.y, a * a * F.p0.z + 2 * a * k * F.c.z + k * k * F.p1.z); }
         else {

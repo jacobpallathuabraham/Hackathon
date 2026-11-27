@@ -23,7 +23,9 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   const settle = async (to, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = await ev(() => LS.__cosmos.progress()); if (Math.abs(v - to) < 0.002) return v; await p.waitForTimeout(250); } return ev(() => LS.__cosmos.progress()); };
   const check = () => ev(() => { const C = LS.__cosmos, a = C.debugAstro(), s = C.debugAstroState(), T = C.THREE; const ap = new T.Vector3(...a.pos); let minClear = Infinity, who = null;
     C.scene.traverse(o => { if (/^world:/.test(o.name) && o.visible) { const r = o.userData.radius * o.scale.x, d = ap.distanceTo(o.position) - r; if (d < minClear) { minClear = d; who = o.name; } } });
-    const cam = new T.Vector3(...a.cam); return { p: a.p, ndc: a.ndc, nanT: s.nanTransforms, guards: s.nanGuards, w: s.weights, th: s.thrust, minClear, who, camDist: ap.distanceTo(cam) }; });
+    const cam = new T.Vector3(...a.cam); let headY = -9; C.scene.traverse(o => { if (o.name === 'head' && o.parent) { const hp = new T.Vector3(0, 0.3, 0); o.localToWorld(hp); hp.project(C.camera); headY = hp.y; } });
+    const hb = document.querySelector('header.at-spine'), hdr = hb ? 1 - 2 * hb.getBoundingClientRect().bottom / innerHeight : 1;
+    return { headY, hdr, p: a.p, ndc: a.ndc, nanT: s.nanTransforms, guards: s.nanGuards, w: s.weights, th: s.thrust, minClear, who, camDist: ap.distanceTo(cam) }; });
 
   await t('scene: astronaut (jointed, with articulated fingers and a live-reflecting visor), eleven worlds with eleven distinct surfaces, a ringed gas giant, and the asteroid families', async () => {
     await open();
@@ -36,10 +38,10 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
     assert.ok(r.ring, 'the physics world has its rings'); assert.ok(r.rockGroups >= 10, 'rock families × detail tiers: ' + r.rockGroups); assert.ok(Math.max(...r.rockTris) > 4 * Math.min(...r.rockTris), 'large rocks use more detailed geometry'); assert.ok(r.visorEnv && r.envLive, 'visor reflects the universe live');
     assert.equal(r.stats.worlds, 11);
   });
-  await t('pass A (slow): scene by scene from the start to the overview — joints valid, astronaut in frame, never inside a world', async () => {
+  await t('pass A (slow): scene by scene from the start to the overview — joints valid, astronaut in frame and below the page header, never inside a world', async () => {
     const bad = [];
     for (let k = 0; k <= 14; k += 0.5) { await ev(x => LS.__cosmos.setTarget(x), k); await p.waitForTimeout(k % 1 ? 700 : 1300); const c = await check();
-      if (c.nanT || c.guards) bad.push(`${k}: NaN transforms ${c.nanT}/${c.guards}`); if (c.minClear < 0.15) bad.push(`${k}: ${c.who} clearance ${c.minClear.toFixed(2)}`); if (c.camDist < 1.0) bad.push(`${k}: too close to the lens ${c.camDist.toFixed(2)}`); }
+      if (c.nanT || c.guards) bad.push(`${k}: NaN transforms ${c.nanT}/${c.guards}`); if (c.minClear < 0.15) bad.push(`${k}: ${c.who} clearance ${c.minClear.toFixed(2)}`); if (c.camDist < 1.0) bad.push(`${k}: too close to the lens ${c.camDist.toFixed(2)}`); if (k % 1 === 0 && c.headY > c.hdr) bad.push(`${k}: helmet under the page header (top ${c.headY.toFixed(2)} > ${c.hdr.toFixed(2)})`); }
     await settle(14); const c = await check(); assert.ok(Math.abs(c.ndc[0]) < 1.05 && Math.abs(c.ndc[1]) < 1.05 && c.ndc[2] < 1, 'in frame at the end ' + c.ndc);
     assert.deepEqual(bad, []);
   });
