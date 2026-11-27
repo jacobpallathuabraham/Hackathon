@@ -265,7 +265,7 @@
         const travel = still ? 0 : clamp(Math.abs(st.uVel) * 9, 0, 1);
         st.lead += ((still ? 0 : clamp(st.uVel * 0.25, -0.012, 0.012)) - st.lead) * damp(3, dt);
         st.prev.copy(root.position);
-        const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); th0.v = th; th0.a = camera.aspect; const frame = v => { v.z = Math.min(v.z, -2.9); const d = -v.z; v.x = clamp(v.x, -d * th * camera.aspect * 0.74, d * th * camera.aspect * 0.74); v.y = clamp(v.y, -d * th * 0.64, Math.max(-d * th * 0.64, d * th * 0.8 - 1.95 * root.scale.y)); return v; }; /* v44: the origin is at the boots, so the bound keeps the top of the helmet (~1.9 above it) below the page header (top 10% of the view) */
+        const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); th0.v = th; th0.a = camera.aspect; const frame = v => { v.z = Math.min(v.z, -2.9); const d = -v.z; v.x = clamp(v.x, -d * th * camera.aspect * 0.74, d * th * camera.aspect * 0.74); v.y = clamp(v.y, -d * th * 0.64, yTop(d, th)); return v; }; /* v44: the origin is at the boots, so the bound keeps the top of the helmet (~1.9 above it) below the page header (top 10% of the view) */
         if (st.flight) { const F = st.flight, k = sstep(clamp((performance.now() - F.t0) / F.ms, 0, 1)), a = 1 - k;
           st.pos.set(a * a * F.p0.x + 2 * a * k * F.c.x + k * k * F.p1.x, a * a * F.p0.y + 2 * a * k * F.c.y + k * k * F.p1.y, a * a * F.p0.z + 2 * a * k * F.c.z + k * k * F.p1.z); }
         else {
@@ -313,6 +313,8 @@
     };
 
     /* keep the target clear of every world: in front of it along the line of sight, and away from its silhouette on screen */
+    /* v44: the origin is at the boots, so the highest the origin may sit keeps the top of the helmet (~1.9 above it) below the page header (top 10% of the view) */
+    function yTop(d, th) { return Math.max(-d * th * 0.64, d * th * 0.8 - 1.95 * root.scale.y); }
     function keepClear(T, camera, obstacles, frame) {
       const cp = camera.position, wv = tmp3;
       wv.copy(T); camera.localToWorld(wv);
@@ -325,7 +327,7 @@
       const cost = (x, y) => { let c = 0; for (let i = 0; i < list.length; i += 4) { const dd = Math.hypot(x - list[i], y - list[i + 1]); if (dd < list[i + 2]) c += 40 + (list[i + 2] - dd) * 60; if (dd < list[i + 3]) c += (list[i + 3] - dd) * 2.5; } return c; };
       const ox = T.x, oy = T.y, lx = st.lastT ? st.lastT.x : ox, ly = st.lastT ? st.lastT.y : oy, hw = d * th0.v * th0.a * 0.74, hh = d * th0.v * 0.64;
       let bx = ox, by = oy, best = cost(ox, oy) + 0.35 * Math.hypot(ox - lx, oy - ly);
-      if (best > 0.001) for (let r = 0.2; r <= 3.4; r += 0.2) for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = clamp(ox + Math.cos(a) * r, -hw, hw), y = clamp(oy + Math.sin(a) * r, -hh, hh);
+      if (best > 0.001) for (let r = 0.2; r <= 3.4; r += 0.2) for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = clamp(ox + Math.cos(a) * r, -hw, hw), y = clamp(oy + Math.sin(a) * r, -hh, yTop(d, th0.v));
         const c = cost(x, y) + 0.5 * Math.hypot(x - ox, y - oy) + 0.35 * Math.hypot(x - lx, y - ly); if (c < best) { best = c; bx = x; by = y; } }
       T.x = bx; T.y = by; st.lastT = st.lastT || new THREE.Vector2(); st.lastT.set(bx, by);
     }

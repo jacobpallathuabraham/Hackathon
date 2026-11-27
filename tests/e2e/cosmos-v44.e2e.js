@@ -20,6 +20,9 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   /* the camera follows a critically damped spring in real time; on a slow (software-GL) machine a long jump can take several seconds
      to come to rest, so "the same scene looks the same" is compared once the camera has actually stopped, not after a fixed wait */
   const camRest = async (ms = 30000) => { const t0 = Date.now(); let a = await ev(() => LS.__cosmos.debugCam()); while (Date.now() - t0 < ms) { await p.waitForTimeout(1000); const b = await ev(() => LS.__cosmos.debugCam()); if (a.every((x, i) => Math.abs(x - b[i]) < 0.002)) return b; a = b; } throw new Error('camera never came to rest: ' + a); };
+  /* the astronaut's step is capped at 0.05 s per frame, so at 1–2 fps (software GL) a few seconds of wall time is only a fraction of a
+     second of its motion: tests that need it at rest wait until its position stops changing */
+  const astroRest = async (ms = 60000) => { const t0 = Date.now(); let a = (await ev(() => LS.__cosmos.debugAstro())).pos; while (Date.now() - t0 < ms) { await p.waitForTimeout(1500); const b = (await ev(() => LS.__cosmos.debugAstro())).pos; if (a.every((x, i) => Math.abs(x - b[i]) < 0.01)) return b; a = b; } throw new Error('astronaut never came to rest: ' + a); };
   const settle = async (to, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = await ev(() => LS.__cosmos.progress()); if (Math.abs(v - to) < 0.002) return v; await p.waitForTimeout(250); } return ev(() => LS.__cosmos.progress()); };
   const check = () => ev(() => { const C = LS.__cosmos, a = C.debugAstro(), s = C.debugAstroState(), T = C.THREE; const ap = new T.Vector3(...a.pos); let minClear = Infinity, who = null;
     C.scene.traverse(o => { if (/^world:/.test(o.name) && o.visible) { const r = o.userData.radius * o.scale.x, d = ap.distanceTo(o.position) - r; if (d < minClear) { minClear = d; who = o.name; } } });
@@ -55,9 +58,14 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   await t('pass C (reverse): from the overview back to the opening — the astronaut returns to the opening state, jets off at rest', async () => {
     await ev(() => LS.__cosmos.setTarget(14)); await settle(14); const seen = { brake: 0, main: 0 };
     for (let k = 14; k >= 0; k -= 1) { await ev(x => LS.__cosmos.setTarget(x), k); await p.waitForTimeout(500); const c = await check(); seen.brake = Math.max(seen.brake, c.th.brake); seen.main = Math.max(seen.main, c.th.main); assert.ok(!c.nanT && !c.guards, 'valid at ' + k); }
-    await settle(0); await p.waitForTimeout(4000); const c = await check();
+    await settle(0); await astroRest(); await p.waitForTimeout(1500); const c = await check();
     assert.ok(c.w.hover + c.w.neutral > 0.9, 'resting at the opening: ' + JSON.stringify(c.w)); assert.ok(c.th.main < 0.02 && c.th.brake < 0.02 && Object.values(c.th.rcs).every(x => x < 0.02), 'no exhaust at rest: ' + JSON.stringify(c.th));
     assert.ok(seen.main > 0.2 || seen.brake > 0.2, 'the jets fired while travelling: ' + JSON.stringify(seen));
+  });
+  await t('at rest beside every world, the whole astronaut (helmet included) stays below the page header and outside the world', async () => {
+    const bad = []; for (let k = 0; k <= 14; k++) { await ev(x => LS.__cosmos.jump(x), k); await astroRest(); await p.waitForTimeout(1500); await astroRest(); const c = await check();
+      if (c.headY > c.hdr) bad.push(`${k}: helmet top ${c.headY.toFixed(2)} above header edge ${c.hdr.toFixed(2)}`); if (c.minClear < 0.15) bad.push(`${k}: ${c.who} clearance ${c.minClear.toFixed(2)}`); if (Math.abs(c.ndc[0]) > 1 || c.ndc[1] < -1) bad.push(`${k}: out of frame ${c.ndc}`); }
+    assert.deepEqual(bad, []);
   });
   await t('thrusters are spatially attached: every plume starts at its own nozzle and points the way its nozzle points', async () => {
     await ev(() => LS.__cosmos.debugThrust({ main: 1, brake: 1, rcs: { yawL: 1, yawR: 1, up: 1, down: 1 } })); await p.waitForTimeout(800);
