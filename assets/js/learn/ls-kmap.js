@@ -134,13 +134,24 @@
     const ancestors = id => { const out = new Set(), walk = x => C0.chapter(x).prereq.forEach(p => { if (!out.has(p)) { out.add(p); walk(p); } }); walk(id); return out; };
     const dependents = id => chs.filter(c => c.prereq.includes(id)).map(c => c.id);
     const linksOf = id => C0.LINKS.filter(([a, b]) => a === id || b === id).map(([a, b, why]) => [a === id ? b : a, why]);
+    /* path drawing (v42): a newly highlighted prerequisite edge draws itself from the prerequisite towards the chapter that
+       needs it, in order — the earliest prerequisite first — so the route through the curriculum reads as a path. Named
+       cross-subject links (associations) stay dashed and fade in instead, so the two kinds of relationship never look alike. */
+    function drawEdge(x, delay) { if (reduced() || x.kind === 'link') return; const e = x.e, L = x.len || (x.len = e.getTotalLength()); clearTimeout(x.tm);
+      e.style.transition = 'none'; e.style.strokeDasharray = `${L} ${L}`; e.style.strokeDashoffset = String(L); e.getBoundingClientRect();
+      e.style.transition = `stroke-dashoffset 640ms cubic-bezier(.65,0,.35,1) ${delay}ms, opacity 200ms ${delay}ms, stroke-width var(--m-base)`; e.style.strokeDashoffset = '0';
+      x.tm = setTimeout(() => { e.style.transition = ''; e.style.strokeDasharray = ''; e.style.strokeDashoffset = ''; }, 700 + delay); }
+    function drawOrder() { if (!sel) return () => 0;
+      if (sel.type === 'subject') { const xs = edgeEls.map(x => P(x.a).x), lo = Math.min(...xs), hi = Math.max(...xs); return x => Math.round((P(x.a).x - lo) / Math.max(1, hi - lo) * 520); }
+      const depth = {}, walk = (id, d) => C0.chapter(id).prereq.forEach(q => { if (depth[q] == null || depth[q] < d) { depth[q] = d; walk(q, d + 1); } }); walk(sel.ch, 1); const mx = Math.max(1, ...Object.values(depth));
+      return x => (depth[x.a] != null ? (mx - depth[x.a]) * 150 : mx * 150); }
     function paint() {
       let on = null, focusEdges = () => false;
       if (sel && sel.type === 'subject') { const mine = new Set(chs.filter(c => c.subject === sel.id).map(c => c.id)); on = new Set(mine); edgeEls.forEach(x => { if (x.kind !== 'pre' && (mine.has(x.a) || mine.has(x.b))) { on.add(x.a); on.add(x.b); } }); focusEdges = x => mine.has(x.a) || mine.has(x.b); }
       if (sel && (sel.type === 'chapter' || sel.type === 'concept')) { const id = sel.ch, anc = ancestors(id); on = new Set([id, ...anc, ...dependents(id), ...linksOf(id).map(x => x[0])]); focusEdges = x => (x.a === id || x.b === id) || (anc.has(x.b) && anc.has(x.a)) || (x.b === id) || (anc.has(x.b) && x.kind !== 'link'); }
       Object.entries(nodeEl).forEach(([id, g]) => { g.classList.toggle('is-dim', !!on && !on.has(id)); g.classList.toggle('is-sel', !!sel && sel.ch === id); g.setAttribute('aria-pressed', String(!!sel && sel.ch === id)); });
       Object.entries(regionEl).forEach(([s, g]) => { g.classList.toggle('is-sel', !!sel && sel.type === 'subject' && sel.id === s); g.classList.toggle('is-dim', !!on && !chs.some(c => c.subject === s && on.has(c.id))); });
-      edgeEls.forEach(x => { const hot = !!sel && focusEdges(x); x.e.classList.toggle('is-hot', hot); x.e.classList.toggle('is-on', x.kind === 'pre' ? true : hot || showAll); x.e.classList.toggle('is-dim', !!sel && !hot); });
+      const order = drawOrder(); edgeEls.forEach(x => { const hot = !!sel && focusEdges(x), was = x.e.classList.contains('is-hot'); if (hot && !was) drawEdge(x, order(x)); x.e.classList.toggle('is-hot', hot); x.e.classList.toggle('is-on', x.kind === 'pre' ? true : hot || showAll); x.e.classList.toggle('is-dim', !!sel && !hot); });
       root.classList.toggle('has-sel', !!sel);
     }
     const chip = (id, extra) => { const c = C0.chapter(id); return `<li><button type="button" class="km-chip" data-pick="${id}" style="--sc:${C0.SUBJ[c.subject][1]}"><i class="km-chip__dot km-chip__dot--${status(id)}"></i><span>${esc(c.title)}${extra ? `<small>${esc(extra)}</small>` : ''}</span></button></li>`; };

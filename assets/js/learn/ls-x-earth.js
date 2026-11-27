@@ -112,7 +112,7 @@
   };
 
   /* ============ 4 · Journey to the core ============ */
-  const LAY = [[0, 35, 'Crust', 'solid rock', 'ranges from about 15 °C at the surface to ~400–1000 °C at its base', '#9b7b55'], [35, 660, 'Upper mantle', 'solid rock that flows very slowly', '~1000–1900 °C', '#c96a3a'], [660, 2890, 'Lower mantle', 'solid rock under enormous pressure', '~1900–3700 °C', '#d9553a'], [2890, 5150, 'Outer core', 'liquid iron and nickel — its flow makes Earth’s magnetic field', '~4000–5000 °C', '#f0a030'], [5150, 6371, 'Inner core', 'solid iron and nickel (pressure keeps it solid)', '~5000–5400 °C', '#fde07a']];
+  const LAY = LS.content.earthLayers;
   D['earth-layers'] = { wide: true,
     intro: 'Drill from the surface to the centre of the Earth, 6,371 km down. Drag the probe or use the slider; the panel tells you which layer you are in, whether it is solid or liquid, and roughly how hot it is.',
     predict: { q: 'The Earth’s inner core is…', options: ['liquid, because it is hottest', 'solid, because the pressure is so great', 'hollow', 'made of rock'] },

@@ -69,7 +69,9 @@
   };
   function hex(c, a) { const n = parseInt(c.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
   const cleanups = []; const clean = () => { while (cleanups.length) { try { cleanups.pop()(); } catch (e) { /* gone */ } } };
-  window.addEventListener('hashchange', clean);
+  // clean up on the router's 'leave' (emitted just before the next page renders). A window 'hashchange' listener ran AFTER
+  // the new page had rendered, destroying the new page's observers, scenes and ambient canvases on in-app navigation.
+  LS.on('leave', clean);
 
   /* ===================== recommendations ===================== */
   function recommend(n) { const C0 = CU(), st = ch => LS.prog.status(ch); const all = Object.values(C0.chapters);
@@ -193,6 +195,7 @@
       <section class="uv-card" id="reflect"><h2 class="uv-h3">${T('Reflect', 'تأمل')}</h2><label class="uv-reflect">${T('In your own words: what is the most important idea in this chapter, and where have you seen it in real life?', 'بكلماتك: ما أهم فكرة، وأين رأيتها؟')}<textarea rows="3" data-reflect aria-label="${T('Your reflection', 'تأملك')}">${esc(st.reflectText || '')}</textarea></label><p class="v26-hint">${T('Saved only on this device, and only if you allowed the Studio to save.', 'يُحفظ على هذا الجهاز فقط وبموافقتك.')}</p></section></section>`;
     const am = LS.ambient(view.querySelector('.uv-wh__bg'), ch.subject); cleanups.push(() => am.destroy());
     if (hub) try { hub.mount(view, ch, cleanups); } catch (e) { console.warn('chapter hub', e); }
+    if (LS.sgRail) try { LS.sgRail(view, cleanups); } catch (e) { console.warn('chapter rail', e); }
     view.querySelector('.uv-steps').addEventListener('click', e => { const s0 = e.target.closest('[data-step]'); if (s0) LS.prog.step(ch.id, s0.dataset.step); });
     const ta = view.querySelector('[data-reflect]'); ta.addEventListener('change', () => { LS.prog.step(ch.id, 'reflect'); LS.prog.step(ch.id, 'reflectText', ta.value.slice(0, 2000)); });
   }
