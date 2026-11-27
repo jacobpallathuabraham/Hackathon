@@ -112,7 +112,7 @@
     const idle = window.requestIdleCallback || (f => setTimeout(f, 60)); const idleBuild = () => { if (!alive || !queue.length) return; buildNext(); idle(idleBuild, { timeout: 400 }); }; let alive = true; idle(idleBuild, { timeout: 400 });
 
     /* astronaut: a world-space flight controller (ls-cosmos-astro.js) sharing the camera's journey parameter */
-    const AST = LS.cosmosAstronaut(THREE, scene, { glow: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), env: SKY.env }); const astro = AST.root;
+    const AST = LS.cosmosAstronaut(THREE, scene, { glow: glowTex(THREE, 'rgba(200,225,255,1)', 'rgba(110,160,255,0.25)'), env: SKY.env, renderer, q }); const astro = AST.root;
     AST.load(null, warm).then(() => { if (!alive) return; astroReady = true; o.onAstronaut && o.onAstronaut(true); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: true }); }).catch(() => { o.onAstronaut && o.onAstronaut(false); o.onLoad && o.onLoad({ worlds: Object.keys(worlds).length, astro: false, failed: true }); });
 
     /* camera choreography */
@@ -201,7 +201,9 @@
       if (lk) lookAtKey(lk, look); else { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes */
       const cs = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (cs - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
       obstacles.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) { const R = G.userData.radius * G.scale.x; obstacles.push({ p: G.position, r: R * (id === 'physics' ? 2.6 : 1.9) + 0.45, rb: R * (id === 'physics' ? 2.35 : 1.14), rv: R * (VIS_R[id] || 1.6) }); } }); obstacles.push({ p: origin.position, r: ORIGIN.r * 1.07 + 0.5, rb: ORIGIN.r * 1.04, rv: ORIGIN.r * 1.06 });
-      AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera, obstacles }); st.astroPos.copy(AST.pos);
+      /* nearness to a world's resting place (for observing and pointing) and the opening scene (for the wave) */
+      const kN = (a.raw == null ? a.f : a.raw) < 0.5 ? k0 : k1, dk = Math.min(a.raw == null ? a.f : a.raw, 1 - (a.raw == null ? a.f : a.raw)), near = PATH[kN.scene] && !lk ? clamp(1 - dk / 0.22, 0, 1) : 0, opening = kN.scene === 'void' && dk < 0.3;
+      AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera, obstacles, near, opening }); st.astroPos.copy(AST.pos);
     }
 
     function frame(now) {
@@ -248,10 +250,10 @@
         occluders.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) occluders.push({ p: G.position, r: G.userData.radius * G.scale.x }); }); occluders.push({ p: origin.position, r: ORIGIN.r });
         /* rocks keep clear of every world (with room for rings and moons), the great planet, the astronaut and the lens */
         fxObs.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G) fxObs.push({ p: G.position, r: G.userData.radius * G.scale.x * (id === 'physics' ? 3.2 : 2.3) + 1.0 }); });
-        fxObs.push({ p: origin.position, r: ORIGIN.r * 1.06 + 2 }); if (AST.ready) fxObs.push({ p: AST.pos, r: 1.5 }); fxObs.push({ p: camera.position, r: 3.2 }); FX.setObstacles(fxObs);
+        fxObs.push({ p: origin.position, r: ORIGIN.r * 1.06 + 2 }); if (AST.ready) fxObs.push({ p: AST.pos, r: 1.5 }); fxObs.push({ p: camera.position, r: 3.2 }); FX.setObstacles(fxObs); if (AST.ready && FX.setSightLine) FX.setSightLine(camera.position, AST.pos, 1.1);
         FX.update(camera, st.t, still ? 0 : dt, camVel, sun, still, occluders); }
       // rim tint follows the world in front of us
-      const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]), 1 - Math.exp(-dt * 2)); else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
+      const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]).lerp(new THREE.Color(0xc8d4ff), 0.7), 1 - Math.exp(-dt * 2)); /* v44: a hint of the world's colour, not a full tint of the suit */ else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
       oCore.rotation.y += (still ? 0 : dt) * 0.006; oCore.material.uniforms.uT.value = st.t;
       dust.material.uniforms.uPx.value = dpr; dust.material.uniforms.uMove.value += (clamp((st.camSpeed || 0) / 25, 0, 1) - dust.material.uniforms.uMove.value) * (1 - Math.exp(-dt * 4));
       astroUpdate(still ? 0.016 : st.rdtA, st.cruise ? at(pv) : a, pv); /* real elapsed time: the astronaut keeps its real-world pace on slow devices */
@@ -309,6 +311,12 @@
       debugWorld(id) { const G = worlds[id]; if (!G) return null; const v = G.position.clone().project(camera); return { ndc: [v.x, v.y, v.z].map(x => +x.toFixed(3)), revealed: +G.userData.rv.toFixed(2), focus: +G.userData.f.toFixed(2), dist: +camera.position.distanceTo(G.position).toFixed(3) }; },
       debugRaf: () => !!raf || !!idleT, scene, debugWords: id => worlds[id] && worlds[id].userData.words, debugCam: () => camera.position.toArray(), debugScale: id => worlds[id] && worlds[id].scale.x, resetStats() { st.frames.length = 0; st.cpu.length = 0; },
       buildAll() { while (queue.length) buildNext(); },
+      /* inspection: render the live scene from any camera (close-ups of the astronaut, a world, the rocks) into an image */
+      debugShot(o = {}) { const cam = camera.clone(); if (o.fov) cam.fov = o.fov; cam.aspect = (o.w || 800) / (o.h || 600); cam.updateProjectionMatrix();
+        const tg = o.target ? new THREE.Vector3(...o.target) : AST.pos.clone(); if (o.pos) cam.position.set(...o.pos); else if (o.orbit) { const [az, el, d] = o.orbit; cam.position.copy(tg).add(new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(d)); } cam.lookAt(tg); cam.updateMatrixWorld();
+        const sz = new THREE.Vector2(); renderer.getSize(sz); const pr = renderer.getPixelRatio(); renderer.setPixelRatio(1); renderer.setSize(o.w || 800, o.h || 600, false); renderer.render(scene, cam); const url = cv.toDataURL('image/jpeg', 0.9); renderer.setPixelRatio(pr); renderer.setSize(sz.x, sz.y, false); renderer.render(scene, camera); return url; },
+      debugAstroState: () => AST.debug ? AST.debug() : null,
+      debugThrust: f => { AST.force = f || null; st.dirty = true; start(); },
       kick: start,
       destroy() { alive = false; cancelAnimationFrame(raf); clearTimeout(idleT); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', onVis); stage.removeEventListener('pointermove', onMove); stage.removeEventListener('click', onClick);
         Object.values(worlds).forEach(G => G.userData.dispose()); scene.traverse(x => { if (x.userData.rt) x.userData.rt.dispose(); if (x.geometry) x.geometry.dispose(); const m = x.material; (Array.isArray(m) ? m : m ? [m] : []).forEach(mm => { if (mm.map) mm.map.dispose(); mm.dispose(); }); });
