@@ -20,6 +20,11 @@
   'use strict';
   var q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
   var inspect = q.get('inspect') === '1';
+  /* 3. Space preview — learn.html?preview=space (short address: space.html). A public, read-only look at the opening
+        universe (astronaut, planets, sky, asteroids) with FULL motion, for people and tools that cannot sign in.
+        Same empty in-memory sandbox as inspection mode; unlike it, motion is not calmed. */
+  var preview = q.get('preview') === 'space';
+  window.LS_PREVIEW = preview; inspect = inspect || preview;
   window.LS_INSPECT = inspect;
   if (inspect) {
     var mem = function () {
@@ -34,8 +39,8 @@
       Object.defineProperty(window, 'indexedDB', { value: undefined, configurable: true });
       sessionStorage.setItem('acubins-role', 'student'); // the demo guard below only checks this flag; it grants nothing else
       sessionStorage.setItem('ls-entered', '1');          // skip the opening animation
-      localStorage.setItem('erly-a11y', JSON.stringify({ still: true }));
-      document.documentElement.classList.add('ls-inspect', 'a11y-still');
+      if (!preview) { localStorage.setItem('erly-a11y', JSON.stringify({ still: true })); document.documentElement.classList.add('ls-inspect', 'a11y-still'); }
+      else document.documentElement.classList.add('ls-inspect', 'ls-preview');
     } catch (e) { window.LS_INSPECT = inspect = false; } // could not sandbox storage: behave exactly like the normal page
   }
   if (location.hash && location.hash.length > 2) return;
@@ -44,7 +49,8 @@
   var SECTIONS = ['home', 'explore', 'discover', 'lessons', 'read', 'video', 'lab', 'practice', 'mistakes', 'revise', 'notebook', 'mylibrary', 'paths', 'progress', 'journey', 'archive', 'profile', 'noor', 'inspect'];
   var id = function (k) { var v = (q.get(k) || '').trim().toLowerCase(); return /^[a-z0-9-]{1,60}$/.test(v) ? v : ''; };
   var route = '';
-  if (id('exp')) route = 'exp/' + id('exp');
+  if (preview) route = 'home';
+  else if (id('exp')) route = 'exp/' + id('exp');
   else if (id('lesson')) route = 'lesson/' + id('lesson');
   else if (id('topic')) route = 'topic/' + id('topic');
   else if (id('subject')) route = 'subject/' + (SUBJ[id('subject')] || id('subject'));

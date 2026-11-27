@@ -27,7 +27,7 @@
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three/build/three.module.min.js", "three/addons/": "./assets/vendor/three/examples/jsm/" } }</script>
   <link rel="stylesheet" href="assets/css/checkins.css?v=19">
   <link rel="stylesheet" href="assets/css/videos.css?v=19">
-  <script src="assets/js/learn/ls-boot.js?v=25"></script>
+  <script src="assets/js/learn/ls-boot.js?v=43"></script>
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
@@ -161,6 +161,7 @@
 <script src="assets/js/a11y.js?v=19"></script>
 <script src="assets/js/companion/holo.js?v=19" defer></script>
 <script src="assets/js/learn/ls-core.js?v=37"></script>
+<script>/* space preview: nothing is ever stored, so answer the storage question for this visit */ if (window.LS_PREVIEW && window.LS && LS.store && !LS.store.consent()) LS.store.setConsent({ store: 'visit', insights: false });</script>
 <script src="assets/js/learn/ls-lazy.js?v=37"></script>
 <script src="assets/js/learn/ls-grade.js?v=19"></script>
 <script src="assets/js/learn/ls-schema.js?v=22"></script>
@@ -207,7 +208,7 @@
 <script src="assets/js/learn/ls-cosmos-fx.js?v=40"></script>
 <script src="assets/js/learn/ls-cosmos-astro.js?v=40"></script>
 <script src="assets/js/learn/ls-cosmos.js?v=40"></script>
-<script src="assets/js/learn/ls-inspect.js?v=26"></script>
+<script src="assets/js/learn/ls-inspect.js?v=43"></script>
 <script src="assets/js/learn/ls-nav.js?v=37"></script>
 <script>
   // main.js switches language and theme; the Studio re-renders so its own text follows the language

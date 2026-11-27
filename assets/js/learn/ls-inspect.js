@@ -297,7 +297,7 @@
   if (window.LS_INSPECT) {
     const bar = document.createElement('div');
     bar.className = 'lsi-bar'; bar.setAttribute('role', 'note');
-    bar.innerHTML = 'Inspection mode — read-only; nothing is saved and no student data is read. <a href="#/inspect">Content directory</a>';
+    bar.innerHTML = window.LS_PREVIEW ? 'Space preview — read-only, nothing is saved. Scroll to fly through the universe; select a world to visit it. <a href="login.html?next=student">Sign in</a> for the full Studio.' : 'Inspection mode — read-only; nothing is saved and no student data is read. <a href="#/inspect">Content directory</a>';
     const go = () => document.body.insertBefore(bar, document.body.firstChild);
     if (document.body) go(); else addEventListener('DOMContentLoaded', go);
   }
