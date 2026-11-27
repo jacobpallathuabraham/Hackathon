@@ -17,6 +17,9 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   const fresh = async (c = ctx) => { if (p) await p.close().catch(() => {}); p = await c.newPage(); p.setDefaultTimeout(120000); p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { const x = m.text(); if (m.type() === 'error' && !/favicon|net::ERR|Failed to load resource/.test(x)) errs.push(x); if (/THREE\.WebGLProgram|Shader Error|shader/i.test(x) && m.type() !== 'log') errs.push(x.slice(0, 300)); }); };
   const open = async (c) => { await fresh(c); await p.goto(BASE + 'learn.html?preview=space&cosmos=gl#/home'); await p.waitForFunction(() => window.LS && LS.__cosmos && LS.__cosmos.stats().astronaut, null, { timeout: 120000 }); await p.evaluate(() => LS.__cosmos.buildAll()); await p.waitForTimeout(1500); };
   const ev = (f, a) => p.evaluate(f, a);
+  /* the camera follows a critically damped spring in real time; on a slow (software-GL) machine a long jump can take several seconds
+     to come to rest, so "the same scene looks the same" is compared once the camera has actually stopped, not after a fixed wait */
+  const camRest = async (ms = 30000) => { const t0 = Date.now(); let a = await ev(() => LS.__cosmos.debugCam()); while (Date.now() - t0 < ms) { await p.waitForTimeout(1000); const b = await ev(() => LS.__cosmos.debugCam()); if (a.every((x, i) => Math.abs(x - b[i]) < 0.002)) return b; a = b; } throw new Error('camera never came to rest: ' + a); };
   const settle = async (to, ms = 30000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = await ev(() => LS.__cosmos.progress()); if (Math.abs(v - to) < 0.002) return v; await p.waitForTimeout(250); } return ev(() => LS.__cosmos.progress()); };
   const check = () => ev(() => { const C = LS.__cosmos, a = C.debugAstro(), s = C.debugAstroState(), T = C.THREE; const ap = new T.Vector3(...a.pos); let minClear = Infinity, who = null;
     C.scene.traverse(o => { if (/^world:/.test(o.name) && o.visible) { const r = o.userData.radius * o.scale.x, d = ap.distanceTo(o.position) - r; if (d < minClear) { minClear = d; who = o.name; } } });
@@ -42,8 +45,8 @@ const ORDER = ['maths', 'physics', 'chemistry', 'biology', 'geography', 'cs', 'e
   });
   await t('pass B (fast): flinging across the whole journey keeps everything valid, and the same scene always looks the same', async () => {
     const bad = []; for (const k of [0, 14, 3, 11, 0.5, 9, 2, 13, 5]) { await ev(x => LS.__cosmos.setTarget(x), k); await p.waitForTimeout(350); const c = await check(); if (c.nanT || c.guards) bad.push(`${k}: NaN`); if (c.minClear < 0.1) bad.push(`${k}: ${c.who} ${c.minClear.toFixed(2)}`); }
-    await settle(5); await p.waitForTimeout(3500); const A1 = await ev(() => ({ cam: LS.__cosmos.debugCam(), s: LS.__cosmos.debugAstroState() }));
-    await ev(() => LS.__cosmos.setTarget(12)); await settle(12); await ev(() => LS.__cosmos.setTarget(5)); await settle(5); await p.waitForTimeout(3500); const A2 = await ev(() => ({ cam: LS.__cosmos.debugCam(), s: LS.__cosmos.debugAstroState() }));
+    await settle(5); await camRest(); const A1 = await ev(() => ({ cam: LS.__cosmos.debugCam(), s: LS.__cosmos.debugAstroState() }));
+    await ev(() => LS.__cosmos.setTarget(12)); await settle(12); await ev(() => LS.__cosmos.setTarget(5)); await settle(5); await camRest(); const A2 = await ev(() => ({ cam: LS.__cosmos.debugCam(), s: LS.__cosmos.debugAstroState() }));
     A1.cam.forEach((x, i) => assert.ok(Math.abs(x - A2.cam[i]) < 0.02, 'camera at scene 5 is the same whichever way it was reached: ' + A1.cam + ' / ' + A2.cam));
     assert.ok(A1.s.weights.observe > 0.9 && A2.s.weights.observe > 0.9, 'observing the world on arrival both times'); assert.deepEqual(bad, []);
   });
