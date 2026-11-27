@@ -134,7 +134,7 @@
     const avoidRock = (p, size, belt) => { if (!belt) for (const c of pathPts) if (c.distanceToSquared(p) < (8 + size * 2) * (8 + size * 2)) return true;
       for (const [a, b] of worldPts) { if (a.distanceToSquared(p) < (6.5 + size) * (6.5 + size) || b.distanceToSquared(p) < (3.4 + size) * (3.4 + size)) return true; }
       return originV.distanceTo(p) < ORIGIN.r + 5; };
-    const buildFX = () => { if (!alive || FX) return; FX = LS.cosmosFX(THREE, scene, q, { avoid: avoidRock, belt: { c: [O[0], O[1] - 2.6, O[2]], r0: 17.5, r1: 26, h: 1.3, squash: 0.62 } }); FX.rocks.forEach(m => warm(m)); };
+    const buildFX = () => { if (!alive || FX) return; FX = LS.cosmosFX(THREE, scene, q, { avoid: avoidRock }); FX.rocks.forEach(m => warm(m)); };
     setTimeout(() => (window.requestIdleCallback || (f => setTimeout(f, 30)))(buildFX, { timeout: 900 }), 250);
     /* the astronaut's world-space path: one anchor per keyframe, where that keyframe's framing places it at rest */
     const rebuildAnchors = () => { const pts = K.map(k => { const pos = V3(k.pos), q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, V3(k.tgt), new THREE.Vector3(0, 1, 0))), off = V3(k.astro);
@@ -149,7 +149,10 @@
     /* a critically damped spring: follows its target with continuous velocity — no jerks, no overshoot, no snapping */
     const spring = (x, v, target, w, dt) => { tmpV2.subVectors(target, x).multiplyScalar(w * w).addScaledVector(v, -2 * w); v.addScaledVector(tmpV2, dt); x.addScaledVector(v, dt); };
     const tmpV2 = new THREE.Vector3(), camS = new THREE.Vector3(), camSV = new THREE.Vector3(), tgtSV = new THREE.Vector3(), camVel = new THREE.Vector3(); let camInit = false;
-    const obstacles = [], occluders = [];
+    const obstacles = [], occluders = [], fxObs = [];
+    /* how far each world's visible silhouette reaches, in body radii (air, rings, moons, the black hole's disk) — the
+       astronaut is kept clear of it on screen */
+    const VIS_R = { maths: 2.25, physics: 2.8, chemistry: 2.3, biology: 2.2, geography: 1.3, cs: 2.1, english: 2.6, history: 2.3, languages: 2.4, social: 1.9, more: 2.2 }; /* including each world's orbiting structures */
     const worldPos = (id, p) => { const G = worlds[id]; if (!G) return V3(PATH[id]); return G.position; };
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
 
@@ -197,7 +200,7 @@
       const lk = (st.flight && st.flight.id) || st.hover || st.sel;
       if (lk) lookAtKey(lk, look); else { lookAtKey(k0.look, look); lookAtKey(k1.look, look2); look.lerp(look2, a.f); } /* the gaze blends between scenes */
       const cs = camera.position.distanceTo(st.lastCam) / Math.max(dt, 1e-3); st.camSpeed = (st.camSpeed || 0) + (cs - (st.camSpeed || 0)) * (1 - Math.exp(-dt * 4));
-      obstacles.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) obstacles.push({ p: G.position, r: G.userData.radius * G.scale.x * (id === 'physics' ? 2.6 : 1.9) + 0.45 }); }); obstacles.push({ p: origin.position, r: ORIGIN.r * 1.07 + 0.5 });
+      obstacles.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) { const R = G.userData.radius * G.scale.x; obstacles.push({ p: G.position, r: R * (id === 'physics' ? 2.6 : 1.9) + 0.45, rb: R * (id === 'physics' ? 2.35 : 1.14), rv: R * (VIS_R[id] || 1.6) }); } }); obstacles.push({ p: origin.position, r: ORIGIN.r * 1.07 + 0.5, rb: ORIGIN.r * 1.04, rv: ORIGIN.r * 1.06 });
       AST.update({ u: a.u, dt, t: st.t, lookAt: look, still: reduced(), camera, obstacles }); st.astroPos.copy(AST.pos);
     }
 
@@ -243,6 +246,9 @@
       placeWorlds(pv, st.t, still ? 0 : dt, gOver);
       if (FX) { camVel.subVectors(camera.position, st.lastCam).divideScalar(Math.max(dt, 1e-3)); if (camVel.length() > 300) camVel.set(0, 0, 0);
         occluders.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G && G.visible) occluders.push({ p: G.position, r: G.userData.radius * G.scale.x }); }); occluders.push({ p: origin.position, r: ORIGIN.r });
+        /* rocks keep clear of every world (with room for rings and moons), the great planet, the astronaut and the lens */
+        fxObs.length = 0; W.ORDER.forEach(id => { const G = worlds[id]; if (G) fxObs.push({ p: G.position, r: G.userData.radius * G.scale.x * (id === 'physics' ? 3.2 : 2.3) + 1.0 }); });
+        fxObs.push({ p: origin.position, r: ORIGIN.r * 1.06 + 2 }); if (AST.ready) fxObs.push({ p: AST.pos, r: 1.5 }); fxObs.push({ p: camera.position, r: 3.2 }); FX.setObstacles(fxObs);
         FX.update(camera, st.t, still ? 0 : dt, camVel, sun, still, occluders); }
       // rim tint follows the world in front of us
       const cur = K[Math.round(clamp(st.p, 0, N - 1))].scene; if (M[cur]) rim.color.lerp(new THREE.Color(M[cur].c[0]), 1 - Math.exp(-dt * 2)); else rim.color.lerp(new THREE.Color(0x9fb4ff), 1 - Math.exp(-dt * 2));
@@ -476,6 +482,11 @@
     if (!W.SUN.v) W.SUN.v = new THREE.Vector3(); W.SUN.v.set(...SUN1).normalize();
     const key = new THREE.DirectionalLight(0xfff1df, 2.4); key.position.copy(W.SUN.v).multiplyScalar(20); scene.add(key, new THREE.HemisphereLight(0x9fb0d8, 0x0b0d14, 0.45));
     W.SUN.renderer = renderer; const G = W.build(THREE, id, q); scene.add(G); const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+    /* v40: this canvas is transparent over the page header. Additive glows (an accretion disk, a lensing halo, jets,
+       atmospheres) must only ADD light: left as they are, they also wrote full opacity into the alpha channel, which showed
+       as black squares and ellipses around the black hole. Their alpha is now left untouched; the browser composites the
+       premultiplied colour as pure added light. */
+    G.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; ms.forEach(m => { if (m.blending === THREE.AdditiveBlending) { m.blending = THREE.CustomBlending; m.blendEquation = THREE.AddEquation; m.blendSrc = THREE.SrcAlphaFactor; m.blendDst = THREE.OneFactor; m.blendSrcAlpha = THREE.ZeroFactor; m.blendDstAlpha = THREE.OneFactor; m.needsUpdate = true; } }); });
     let raf = 0, last = performance.now(), t = 0, vis = true, alive = true, rv = 0;
     const size = () => { const w = host.clientWidth || 300, h = host.clientHeight || 200; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
     const ro = new ResizeObserver(size); ro.observe(host); size();

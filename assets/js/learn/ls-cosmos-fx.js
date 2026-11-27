@@ -16,7 +16,7 @@
   LS.cosmosFX = function (THREE, scene, q, o) {
     const out = { disposables: [] }, clamp = (x, a, b) => Math.max(a, Math.min(b, x));
     let s = 4211; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    const uT = { value: 0 };
+    const uT = { value: 0 }, uObs = { value: Array.from({ length: 16 }, () => new THREE.Vector4(0, 0, 0, 0)) }, uWrap = { value: 9 };
 
     /* ---------- rocks ---------- */
     const vnoise = (() => { const perm = new Uint8Array(512), g = []; for (let i = 0; i < 256; i++) perm[i] = i; for (let i = 255; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; } for (let i = 0; i < 256; i++) perm[256 + i] = perm[i];
@@ -37,15 +37,25 @@
       g.deleteAttribute('normal'); g.deleteAttribute('uv');
       const merged = LS.__bgu ? LS.__bgu.mergeVertices(g, 1e-4) : g; merged.computeVertexNormals(); return merged; }
     const rockMat = () => { const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.96, metalness: 0.0, vertexColors: false });
-      m.onBeforeCompile = sh => { sh.uniforms.uT = uT;
+      m.onBeforeCompile = sh => { sh.uniforms.uT = uT; sh.uniforms.uObs = uObs; sh.uniforms.uWrap = uWrap;
         sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
-          attribute vec4 aSpin; uniform float uT;
+          attribute vec4 aSpin; attribute vec4 aDrift; uniform float uT; uniform vec4 uObs[16]; uniform float uWrap;
           vec3 rotA(vec3 v, vec3 k, float a){ float c=cos(a), s=sin(a); return v*c+cross(k,v)*s+k*dot(k,v)*(1.0-c); }`)
           .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
           float spinA = uT*aSpin.w + aSpin.x*6.2831; vec3 spinK = normalize(aSpin.xyz*2.0-1.0+vec3(0.001));
           objectNormal = rotA(objectNormal, spinK, spinA);`)
           .replace('#include <begin_vertex>', `#include <begin_vertex>
-          transformed = rotA(transformed, spinK, spinA);`); };
+          transformed = rotA(transformed, spinK, spinA);`)
+          /* v40: every rock drifts through space on its own heading (wrapping inside its region, shrinking away near the
+             wrap so it never pops), and is pushed out of the way of every world, the astronaut and the camera */
+          .replace('#include <project_vertex>', `vec4 mvPosition = vec4( transformed, 1.0 );
+          #ifdef USE_INSTANCING
+            mat4 rkM = instanceMatrix; vec3 rkC = rkM[3].xyz; vec3 rkW = mod(aDrift.xyz*uT + uWrap, 2.0*uWrap) - uWrap; rkC += rkW;
+            float rkF = 1.0 - smoothstep(0.8*uWrap, uWrap, max(abs(rkW.x), max(abs(rkW.y), abs(rkW.z))));
+            for (int rkI = 0; rkI < 16; rkI++) { vec4 rkO = uObs[rkI]; if (rkO.w <= 0.0) continue; vec3 rkD = rkC - rkO.xyz; float rkL = length(rkD); if (rkL < rkO.w) { rkC = rkO.xyz + rkD / max(rkL, 1e-3) * rkO.w; } }
+            rkM[0] *= rkF; rkM[1] *= rkF; rkM[2] *= rkF; rkM[3] = vec4(rkC, 1.0); mvPosition = rkM * mvPosition;
+          #endif
+          mvPosition = modelViewMatrix * mvPosition; gl_Position = projectionMatrix * mvPosition;`); };
       return m; };
     const shapes = [rock(1.7, 1, 0.42), rock(5.3, q > 1 ? 2 : 1, 0.3), rock(9.1, 1, 0.55)]; /* rocks are a few pixels across: low detail, smooth normals */
     const avoid = o.avoid || (() => false);
@@ -54,21 +64,22 @@
       const u = R(); return u < 0.72 ? 0.035 + R() * 0.11 : u < 0.96 ? 0.15 + R() * 0.25 : 0.5 + R() * 0.7; };
     const placements = [];
     for (let tries = 0; placements.length < fieldN && tries < fieldN * 30; tries++) {
-      const z = 30 - R() * 320, x = (R() * 2 - 1) * 46, y = (R() * 2 - 1) * 24, p = new THREE.Vector3(x, y, z), size = pick();
+      const z = 30 - R() * 262, x = (R() * 2 - 1) * 46, y = (R() * 2 - 1) * 24, p = new THREE.Vector3(x, y, z), size = pick();
       // drifts: thin out randomly so rocks gather in loose clouds rather than an even spray
       if (Math.sin(z * 0.06 + x * 0.05) * Math.cos(y * 0.09 - z * 0.03) < 0.05 + R() * 0.4) continue;
       if (avoid(p, size)) continue; placements.push([p, size]); }
-    if (o.belt) { const B = o.belt; for (let i = 0, tries = 0; i < beltN && tries < beltN * 10; tries++) { const a = R() * Math.PI * 2, rr = B.r0 + (B.r1 - B.r0) * Math.pow(R(), 0.8), y = (R() + R() - 1) * B.h;
+    if (o.belt && false) { /* v40: no belt — the gathered worlds are shown clean */ const B = o.belt; for (let i = 0, tries = 0; i < beltN && tries < beltN * 10; tries++) { const a = R() * Math.PI * 2, rr = B.r0 + (B.r1 - B.r0) * Math.pow(R(), 0.8), y = (R() + R() - 1) * B.h;
         const p = new THREE.Vector3(B.c[0] + Math.cos(a) * rr, B.c[1] + y, B.c[2] + Math.sin(a) * rr * B.squash), size = R() < 0.93 ? 0.03 + R() * 0.14 : 0.22 + R() * 0.3; if (avoid(p, size, true)) continue; placements.push([p, size, true]); i++; } }
     const groups = shapes.map(() => []); placements.forEach((pl, i) => groups[i % 3].push(pl));
     const dummy = new THREE.Object3D(), col = new THREE.Color();
     out.rocks = groups.map((list, k) => {
-      const geo = shapes[k].clone(); const spin = new Float32Array(list.length * 4);
-      const mesh = new THREE.InstancedMesh(geo, rockMat(), list.length); mesh.frustumCulled = true;
+      const geo = shapes[k].clone(); const spin = new Float32Array(list.length * 4), drift = new Float32Array(list.length * 4);
+      const mesh = new THREE.InstancedMesh(geo, rockMat(), list.length); mesh.frustumCulled = false; /* rocks move on the GPU */
       list.forEach(([p, size, belt], i) => { dummy.position.copy(p); dummy.rotation.set(R() * 6.3, R() * 6.3, R() * 6.3); dummy.scale.setScalar(size); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
         const tone = 0.07 + R() * 0.1; col.setRGB(tone * (1.04 + R() * 0.12), tone * (0.97 + R() * 0.06), tone * (0.88 + R() * 0.08)); if (R() < 0.15) col.multiplyScalar(1.6); /* real asteroids are dark: carbon-rich rock, a few brighter stony ones */ if (belt && R() < 0.3) col.offsetHSL(0.02, 0.05, 0.04); mesh.setColorAt(i, col);
-        spin.set([R(), R(), R(), (0.05 + R() * 0.3) / Math.sqrt(size + 0.2) * (R() < 0.5 ? -1 : 1)], i * 4); });
-      geo.setAttribute('aSpin', new THREE.InstancedBufferAttribute(spin, 4));
+        spin.set([R(), R(), R(), (0.05 + R() * 0.3) / Math.sqrt(size + 0.2) * (R() < 0.5 ? -1 : 1)], i * 4);
+        const sp = (0.12 + R() * 0.45) / Math.sqrt(size + 0.3), a = R() * Math.PI * 2, e = (R() - 0.5) * 0.8; drift.set([Math.cos(a) * Math.cos(e) * sp, Math.sin(e) * sp, Math.sin(a) * Math.cos(e) * sp, 0], i * 4); });
+      geo.setAttribute('aSpin', new THREE.InstancedBufferAttribute(spin, 4)); geo.setAttribute('aDrift', new THREE.InstancedBufferAttribute(drift, 4));
       mesh.computeBoundingSphere(); scene.add(mesh); out.disposables.push(geo, mesh.material); return mesh; });
     shapes.forEach(g => g.dispose());
 
@@ -95,12 +106,12 @@
       const k = m.life / m.ttl; m.m.material.uniforms.uA.value = Math.sin(Math.PI * clamp(1 - k, 0, 1)) * 0.9; }
 
     /* ---------- speed streaks ---------- */
-    const SN = [0, 160, 300][q]; let streaks = null;
+    const SN = [0, 70, 120][q]; let streaks = null;
     if (SN) { const P = new Float32Array(SN * 2 * 3), E = new Float32Array(SN * 2); for (let i = 0; i < SN; i++) { const x = (R() * 2 - 1) * 30, y = (R() * 2 - 1) * 18, z = (R() * 2 - 1) * 40; P.set([x, y, z, x, y, z], i * 6); E[i * 2] = 0; E[i * 2 + 1] = 1; }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('aEnd', new THREE.BufferAttribute(E, 1));
       const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uCam: { value: new THREE.Vector3() }, uVel: { value: new THREE.Vector3() }, uA: { value: 0 } },
         vertexShader: `attribute float aEnd; uniform vec3 uCam; uniform vec3 uVel; varying float vA; varying float vE;
-          void main(){ vec3 box=vec3(60.0,36.0,80.0); vec3 p=mod(position-uCam+box*0.5,box)-box*0.5+uCam; p-=uVel*aEnd*0.09;
+          void main(){ vec3 box=vec3(60.0,36.0,80.0); vec3 p=mod(position-uCam+box*0.5,box)-box*0.5+uCam; p-=uVel*aEnd*0.035;
             vec4 mv=modelViewMatrix*vec4(p,1.0); float d=-mv.z; vA=smoothstep(2.0,8.0,d)*(1.0-smoothstep(26.0,40.0,d)); vE=aEnd; gl_Position=projectionMatrix*mv; }`,
         fragmentShader: 'uniform float uA; varying float vA; varying float vE; void main(){ gl_FragColor=vec4(vec3(0.75,0.85,1.0)*uA*vA*(1.0-vE*0.85),1.0); }' });
       streaks = new THREE.LineSegments(g, m); streaks.frustumCulled = false; scene.add(streaks); out.disposables.push(g, m); }
@@ -113,13 +124,14 @@
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map, color: c, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, transparent: true, opacity: 0 })); sp.renderOrder = 50; scene.add(sp); out.disposables.push(sp.material); return { sp, k, sz }; });
     const sunNdc = new THREE.Vector3();
 
+    out.setObstacles = list => { const O = uObs.value; for (let i = 0; i < 16; i++) { const ob = list[i]; if (ob) O[i].set(ob.p.x, ob.p.y, ob.p.z, ob.r); else O[i].set(0, 0, 0, 0); } };
     out.update = (cam, t, dt, vel, sunDir, still, occluders) => {
       uT.value = still ? uT.value : t;
       // meteors
       if (!still && mets.length) { nextMet -= dt; if (nextMet <= 0) { spawnMeteor(cam); nextMet = 3.5 + R() * 6; } }
       mets.forEach(m => { if (m.life <= 0) return; m.life -= dt; m.p.addScaledVector(m.d, m.sp * dt); if (m.life <= 0) { m.m.visible = false; return; } placeMeteor(m, cam); });
       // streaks: only while the camera really moves
-      if (streaks) { const sp = vel.length(); streaks.material.uniforms.uCam.value.copy(cam.position); streaks.material.uniforms.uVel.value.copy(vel); const a = still ? 0 : clamp((sp - 6) / 30, 0, 1) * 0.55; streaks.material.uniforms.uA.value += (a - streaks.material.uniforms.uA.value) * (1 - Math.exp(-dt * 5)); streaks.visible = streaks.material.uniforms.uA.value > 0.005; }
+      if (streaks) { const sp = vel.length(); streaks.material.uniforms.uCam.value.copy(cam.position); streaks.material.uniforms.uVel.value.copy(vel); const a = still ? 0 : clamp((sp - 10) / 40, 0, 1) * 0.22; streaks.material.uniforms.uA.value += (a - streaks.material.uniforms.uA.value) * (1 - Math.exp(-dt * 5)); streaks.visible = streaks.material.uniforms.uA.value > 0.005; }
       // lens flare: the sun's position on screen; fades as the sun nears the edge or goes behind a world
       sunNdc.copy(cam.position).addScaledVector(sunDir, 1000).project(cam);
       let vis = sunNdc.z < 1 ? clamp(1 - Math.max(Math.abs(sunNdc.x), Math.abs(sunNdc.y)) * 0.9, 0, 1) : 0;
