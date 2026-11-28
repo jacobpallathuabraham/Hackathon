@@ -130,7 +130,7 @@ const IDS = ['cm-ucm', 'cm-bank', 'cm-conical', 'cm-cyclist', 'cm-bowl', 'cm-sph
   });
   await t('v45 experiment centre: family filters, search, "not opened yet", a polite count, empty state, prefetch of the experiments', async () => {
     await go('chapter/p-circular', '.cmx', 1500);
-    await p.click('#lsView [data-cmx-f="4"]'); assert.equal(await p.textContent('#lsView [data-cmx-count]'), '4 experiments shown'); assert.equal(await p.getAttribute('#lsView [data-cmx-f="4"]', 'aria-pressed'), 'true');
+    /* v46: families are ordered for aligned rows; Vehicles, sports and rides is the third (index 2) */ await p.click('#lsView [data-cmx-f="2"]'); assert.equal(await p.textContent('#lsView [data-cmx-count]'), '4 experiments shown'); assert.equal(await p.getAttribute('#lsView [data-cmx-f="2"]', 'aria-pressed'), 'true');
     await p.click('#lsView [data-cmx-f="all"]'); await p.fill('#lsView [data-cmx-q]', 'orbit'); await p.waitForTimeout(300); assert.equal(await p.textContent('#lsView [data-cmx-count]'), '1 experiment shown');
     await p.fill('#lsView [data-cmx-q]', 'qqqq'); await p.waitForTimeout(300); assert.ok(await p.isVisible('#lsView [data-cmx-empty]'));
     await p.fill('#lsView [data-cmx-q]', ''); await p.click('#lsView [data-cmx-todo]'); await p.waitForTimeout(200); assert.equal(await p.getAttribute('#lsView [data-cmx-todo]', 'aria-pressed'), 'true');

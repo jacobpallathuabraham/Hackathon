@@ -154,7 +154,7 @@
     'assets/js/learn/ls-x-v29-counting.js?v=29b',
     'assets/js/learn/ls-x-v29-prob.js?v=29d',
     'assets/js/learn/ls-circ-engine.js?v=42',
-    'assets/js/learn/ls-circ-lab.js?v=46',
+    'assets/js/learn/ls-circ-lab.js?v=47',
     'assets/js/learn/ls-circ-scenery.js?v=45',
     'assets/js/learn/ls-x-circ-a.js?v=46',
     'assets/js/learn/ls-x-circ-b.js?v=42'];

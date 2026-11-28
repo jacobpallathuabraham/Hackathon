@@ -27,7 +27,7 @@
     topicArt(view); if (LS.xreveal) LS.xreveal(view, live); countUp(view, live); }
   const live = []; LS.on('leave', () => { live.splice(0).forEach(f => { try { f(); } catch (e) { /* */ } }); }); /* observers end with their page */
   LS.polish = polish;
-  LS.on('route', ({ area }) => { const view = document.getElementById('lsView'); ambient(area !== 'home' && area !== 'space'); polish(view);
+  LS.on('route', ({ area }) => { const view = document.getElementById('lsView'); ambient(!['home', 'space', 'exp', 'lab', 'lesson', 'video', 'read', 'cards', 'assess', 'workspace'].includes(area)); /* never behind a 3D scene or a reading page */ polish(view);
     // content that arrives a moment later (the dashboard under the universe, lazy panels)
     setTimeout(() => polish(view), 400); setTimeout(() => polish(view), 1500); });
   document.addEventListener('visibilitychange', () => { if (amb) amb.classList.toggle('is-paused', document.hidden); });

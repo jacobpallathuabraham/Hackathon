@@ -109,7 +109,8 @@
         b.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) press(dir); } });
         b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') release(); }); b.addEventListener('blur', release); b.addEventListener('contextmenu', e => e.preventDefault()); });
       return { press, release,
-        frame(dt) { if (st.pedal) { const rate = st.pedal > 0 ? 6 : 9, v = Math.max(q.min, Math.min(q.max, p[D.param] + st.pedal * rate * dt)); if (v !== p[D.param]) { p[D.param] = v; ctl.set(D.param, +v.toFixed(1)); } }
+        frame(dt) { const now = performance.now(), rdt = Math.min(0.25, (now - (st.pedT || now)) / 1000); st.pedT = now; /* pedals use real elapsed time, so a slow device changes speed just as fast */
+          if (st.pedal) { dt = rdt; const rate = st.pedal > 0 ? 6 : 9, v = Math.max(q.min, Math.min(q.max, p[D.param] + st.pedal * rate * dt)); if (v !== p[D.param]) { p[D.param] = v; ctl.set(D.param, +v.toFixed(1)); } }
           const sp = D.speed(st.s, p); ndl.setAttribute('transform', `rotate(${ang(sp).toFixed(2)} 100 100)`); tv.textContent = f(sp, 1); tu.textContent = `m/s · ${f(sp * 3.6, 0)} km/h`; },
         marks() { el.hidden = !!(D.enabled && !D.enabled(p)); const M0 = st.hide ? {} : D.marks(st.s, p), band = $d('.cm-g__band'), id0 = $d('.cm-g__ideal'); $d('.cm-g__tgt').setAttribute('transform', `rotate(${ang(p[D.param]).toFixed(2)} 100 100)`);
           if (M0.lo != null && M0.hi != null) { band.setAttribute('d', arc(Math.max(0, M0.lo), Math.min(D.max, M0.hi), 84)); band.style.display = ''; } else band.style.display = 'none';
