@@ -28,6 +28,9 @@
   <link rel="stylesheet" href="assets/css/checkins.css?v=19">
   <link rel="stylesheet" href="assets/css/videos.css?v=19">
   <script src="assets/js/learn/ls-boot.js?v=43"></script>
+  <script>/* v46: a cross-document View Transition that the browser aborts (e.g. ?lesson=… rewriting itself to #/lesson/… while
+     loading) must not surface as an unhandled rejection */ (function () { var tame = function (v) { if (!v) return; [v.ready, v.finished, v.updateCallbackDone].forEach(function (p) { if (p && p.catch) p.catch(function () {}); }); };
+    addEventListener('pagereveal', function (e) { tame(e.viewTransition); }); addEventListener('pageswap', function (e) { tame(e.viewTransition); }); })();</script>
   <script>
     // Demo portal guard — must have signed in as a student
     try { var r = sessionStorage.getItem('acubins-role'); if (!r) { var s = JSON.parse(localStorage.getItem('acubins-session') || 'null'); if (s && s.exp > Date.now() && s.role) { r = s.role; sessionStorage.setItem('acubins-role', r); } } if (r !== 'student') location.replace('login.html?next=student&back=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + location.hash)); } catch (e) {}
