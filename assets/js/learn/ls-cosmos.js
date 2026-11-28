@@ -302,7 +302,7 @@
     stage.addEventListener('pointermove', onMove, { passive: true }); stage.addEventListener('click', onClick);
     const onVis = () => { if (!document.hidden) start(); }; document.addEventListener('visibilitychange', onVis);
     const io = new IntersectionObserver(es => { st.visible = es[0].isIntersecting; if (st.visible) start(); }, { threshold: 0 }); io.observe(cv);
-    const finish = () => { if (!st.flight) return; const id = st.flight.id; st.flight = null; o.onArrive && o.onArrive(id); };
+    const finish = () => { if (!st.flight) return; const id = st.flight.id; st.flight = null; AST.endFlight(); o.onArrive && o.onArrive(id); }; /* v46: a skipped flight also ends the astronaut's flight — otherwise it stayed parked beside that world and was left off screen after Back */
 
     const api = {
       THREE, stats: () => { const f = st.frames, c = st.cpu.slice().sort((a, b) => a - b); return { fps: f.length > 1 ? 1000 * (f.length - 1) / (f[f.length - 1] - f[0]) : 0, cpuMedian: c[c.length >> 1] || 0, cpuP95: c[Math.floor(c.length * 0.95)] || 0, dpr, tier: q, worlds: Object.keys(worlds).length, astronaut: astroReady, draws: renderer.info.render.calls, tris: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures }; },
