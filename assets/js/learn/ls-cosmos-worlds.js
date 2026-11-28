@@ -285,29 +285,60 @@
 
   /* Physics (v44): a ringed gas giant — zonal bands and jets, three storm systems, darker poles, and a ring system with
      density bands, a Cassini-like division and a wide gap; the planet shadows the rings and the rings shadow the planet. */
+  /* v46 Physics — a showpiece ringed giant: banded clouds with storms (bake mode 10); rings of fine ringlets with a crisp
+     Cassini-like gap, icy colour, forward-scattered glow when backlit and twinkling ice glints, shadowed by the planet;
+     auroras rippling over both poles; three cratered moons on faint orbits; a faint magnetosphere with charged particles
+     streaming along its field lines. Everything is a few draw calls of procedural shaders. */
   B.physics = (THREE, q, G) => {
-    const r = 1.35, tilt = new THREE.Group(); tilt.rotation.set(0.42, 0, 0.18); G.add(tilt);
-    const core = surface(THREE, q, r, 10, ['#e8b27c', '#fbe6c8', '#8d4f2c'], 5.1, [48, 80, 112][q], '#ffcf9e'); tilt.add(core); G.add(atmosphere(THREE, r * 1.04, '#ffd2a8', 0.9));
-    const R0 = r * 1.42, R1 = r * 2.45, rg = new THREE.RingGeometry(R0, R1, [128, 192, 256][q], 3);
-    const ru = { uSun: { value: SUN.v }, uC: { value: new THREE.Vector3() }, uN: { value: new THREE.Vector3(0, 1, 0) }, uR: { value: r }, uIn: { value: R0 }, uOut: { value: R1 }, uO: { value: 1 } };
+    const r = 1.35, tilt = new THREE.Group(); tilt.rotation.set(0.42, 0, 0.18); G.add(tilt); let T = 0;
+    const core = surface(THREE, q, r, 10, ['#e9b57d', '#fff1d8', '#94532e'], 5.1, [48, 80, 112][q], '#ffcf9e'); tilt.add(core); G.add(atmosphere(THREE, r * 1.04, '#ffd8b0', 0.95));
+    const R0 = r * 1.38, R1 = r * 2.45, rg = new THREE.RingGeometry(R0, R1, [160, 224, 288][q], 3);
+    const ru = { uSun: { value: SUN.v }, uC: { value: new THREE.Vector3() }, uN: { value: new THREE.Vector3(0, 1, 0) }, uR: { value: r }, uIn: { value: R0 }, uOut: { value: R1 }, uO: { value: 1 }, uT: { value: 0 } };
     const ring = new THREE.Mesh(rg, new THREE.ShaderMaterial({ uniforms: ru, transparent: true, depthWrite: false, side: THREE.DoubleSide,
       vertexShader: 'varying vec3 vW; varying vec3 vL; void main(){ vL=position; vec4 w=modelMatrix*vec4(position,1.0); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
-      fragmentShader: `uniform vec3 uSun; uniform vec3 uC; uniform vec3 uN; uniform float uR; uniform float uIn; uniform float uOut; uniform float uO; varying vec3 vW; varying vec3 vL;
+      fragmentShader: `uniform vec3 uSun; uniform vec3 uC; uniform vec3 uN; uniform float uR; uniform float uIn; uniform float uOut; uniform float uO; uniform float uT; varying vec3 vW; varying vec3 vL;
         float h1(float x){ return fract(sin(x*127.1)*43758.5453); } float n1(float x){ float i=floor(x), f=fract(x); f=f*f*(3.0-2.0*f); return mix(h1(i),h1(i+1.0),f); }
+        float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
         void main(){ float rr=length(vL.xy); float x=(rr-uIn)/(uOut-uIn); if(x<0.0||x>1.0) discard;
-          float d=0.5*n1(x*38.0)+0.3*n1(x*121.0)+0.2*n1(x*390.0); d=0.3+0.7*d;
-          d*=smoothstep(0.0,0.05,x)*(1.0-smoothstep(0.88,1.0,x)); d*=1.0-0.93*exp(-pow((x-0.62)*30.0,2.0)); d*=1.0-0.55*exp(-pow((x-0.22)*22.0,2.0));
-          vec3 col=mix(vec3(0.78,0.68,0.55),vec3(0.96,0.91,0.83),n1(x*24.0)); col=mix(col,vec3(0.56,0.46,0.38),smoothstep(0.7,1.0,x)*0.5);
-          vec3 oc=vW-uC; float b=dot(oc,uSun); float c=dot(oc,oc)-uR*uR; float sh=(b<0.0 && b*b-c>0.0)?0.1:1.0;   // inside the planet's shadow
-          float lit=0.3+0.7*abs(dot(uN,uSun));
-          gl_FragColor=vec4(col*lit*sh, d*0.88*uO);
+          float d=0.5*n1(x*46.0)+0.32*n1(x*141.0)+0.18*n1(x*430.0); d=0.12+0.88*d*d;                       // ringlets
+          d*=smoothstep(0.0,0.04,x)*(1.0-smoothstep(0.93,1.0,x));
+          d*=mix(0.38,1.0,smoothstep(0.16,0.24,x));                                                       // faint inner ring
+          d*=1.0-0.96*exp(-pow((x-0.63)*34.0,2.0));                                                       // the great gap
+          d*=1.0-0.7*exp(-pow((x-0.885)*110.0,2.0));                                                      // a thin outer gap
+          vec3 col=mix(vec3(0.86,0.74,0.58),vec3(1.0,0.95,0.86),n1(x*19.0));
+          col=mix(col,vec3(0.62,0.66,0.72),(1.0-smoothstep(0.12,0.26,x))*0.7);                           // greyer, bluer inner ring
+          col=mix(col,vec3(0.86,0.8,0.72),smoothstep(0.66,1.0,x)*0.4);
+          vec3 oc=vW-uC; float b=dot(oc,uSun); float c=dot(oc,oc)-uR*uR; float sh=(b<0.0 && b*b-c>0.0)?0.08:1.0; // the planet's shadow
+          vec3 V=normalize(cameraPosition-vW); float lit=0.5+0.75*abs(dot(uN,uSun)); float fwd=pow(max(dot(-V,uSun),0.0),5.0); // ice glows when backlit
+          vec2 cell=floor(vL.xy*95.0); float g=h2(cell); float spark=step(0.9965,g)*(0.5+0.5*sin(uT*(2.0+g*5.0)+g*80.0));
+          vec3 o=col*(lit+fwd*1.1)*sh+vec3(1.0,0.97,0.9)*spark*1.4*sh*d;
+          gl_FragColor=vec4(o, clamp(d*0.82+spark*0.5,0.0,1.0)*uO);
           #include <colorspace_fragment>
         }` }));
     ring.rotation.x = -Math.PI / 2; tilt.add(ring);
+    // auroras: rippling curtains over both magnetic poles (additive)
+    const auU = { uT: { value: 0 }, uO: { value: 1 } }, auM = new THREE.ShaderMaterial({ uniforms: auU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      vertexShader: 'varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: `uniform float uT; uniform float uO; varying vec2 vU; void main(){ float a=vU.x*6.2831; float rays=0.55+0.45*sin(a*23.0+uT*1.7+sin(a*5.0-uT)*2.0); rays*=0.6+0.4*sin(a*9.0-uT*0.8);
+        float h=vU.y; float fade=smoothstep(0.0,0.25,h)*(1.0-smoothstep(0.55,1.0,h)); vec3 c=mix(vec3(0.25,1.0,0.6),vec3(0.75,0.4,1.0),h); gl_FragColor=vec4(c*rays*fade*0.55*uO,1.0); }` });
+    [1, -1].forEach(sg => { const lat = 0.36, rr = Math.sin(lat) * r * 1.01, y0 = Math.cos(lat) * r; const cap = new THREE.Mesh(new THREE.CylinderGeometry(rr * 0.82, rr, r * 0.16, 128, 1, true), auM); cap.position.y = sg * (y0 + r * 0.06); if (sg < 0) cap.rotation.x = Math.PI; tilt.add(cap); });
+    // moons on slightly inclined orbits just outside the rings (rocky, cratered by vertex displacement)
+    const moons = [[0.15, 2.62, 0.21, 0.4, 0x9a948c], [0.1, 2.8, -0.12, 2.6, 0xc9b79a], [0.075, 2.97, 0.32, 4.4, 0x8f9bab]].map(([mr, orb, inc, ph, colr], i) => {
+      const gm = new THREE.IcosahedronGeometry(r * mr, 3), pa = gm.attributes.position, v = new THREE.Vector3(); for (let j = 0; j < pa.count; j++) { v.fromBufferAttribute(pa, j); const n = Math.sin(v.x * 41 + i) * Math.sin(v.y * 37) * Math.sin(v.z * 43 + 2 * i); v.multiplyScalar(1 + 0.06 * n); pa.setXYZ(j, v.x, v.y, v.z); } gm.computeVertexNormals();
+      const m = new THREE.Mesh(gm, new THREE.MeshStandardMaterial({ color: colr, roughness: 0.92, flatShading: true })), pivot = new THREE.Group(); pivot.rotation.set(inc, 0, 0); m.position.x = r * orb; pivot.add(m); tilt.add(pivot);
+      const path = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 128 }, (_, k) => new THREE.Vector3(Math.cos(k / 128 * Math.PI * 2) * r * orb, 0, Math.sin(k / 128 * Math.PI * 2) * r * orb))), new THREE.LineBasicMaterial({ color: 0xffd9b0, transparent: true, opacity: 0.12, depthWrite: false })); pivot.add(path);
+      return { pivot, m, w: 0.22 / Math.pow(orb / 2.6, 1.5), ph }; });
+    // the magnetosphere: faint dipole field lines with charged particles streaming along them
+    const fl = new THREE.Group(); tilt.add(fl); const flU = { uT: { value: 0 }, uO: { value: 0.6 } };
+    const flM = new THREE.ShaderMaterial({ uniforms: flU, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexShader: 'varying float vA; attribute float aS; void main(){ vA=aS; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+      fragmentShader: 'uniform float uT; uniform float uO; varying float vA; void main(){ float p=fract(vA*3.0-uT*0.25); float pulse=pow(p,14.0)*2.2; gl_FragColor=vec4(vec3(0.45,0.7,1.0)*(0.1+pulse)*uO*smoothstep(0.0,0.08,vA)*(1.0-smoothstep(0.92,1.0,vA)),1.0); }' });
+    for (let k = 0; k < 8; k++) { const az = k / 8 * Math.PI * 2 + 0.2, L = r * (k % 2 ? 2.7 : 3.1), pts = [], S = []; for (let j = 0; j <= 96; j++) { const th = 0.42 + (Math.PI - 0.84) * j / 96, rad = L * Math.sin(th) * Math.sin(th); if (rad < r * 1.02) continue; pts.push(new THREE.Vector3(Math.cos(az) * rad * Math.sin(th), rad * Math.cos(th), Math.sin(az) * rad * Math.sin(th))); S.push(j / 96); }
+      const gm = new THREE.BufferGeometry().setFromPoints(pts); gm.setAttribute('aS', new THREE.Float32BufferAttribute(S, 1)); fl.add(new THREE.Line(gm, flM)); }
     const wp = new THREE.Vector3(), wq = new THREE.Quaternion(), ws = new THREE.Vector3(), up = new THREE.Vector3();
-    return { core, r, body: [tilt], update(t, dt, rv, fc) { core.rotation.y += dt * 0.09;
+    return { core, r, body: [tilt], update(t, dt, rv, fc) { T += dt; core.rotation.y += dt * 0.09; ru.uT.value = T; auU.uT.value = T; flU.uT.value = T; flU.uO.value = 0.08 + 0.3 * smooth(rv) + 0.25 * fc; auU.uO.value = 0.7 + 0.3 * smooth(rv);
+      moons.forEach(M0 => { M0.pivot.rotation.y = M0.ph + T * M0.w; M0.m.rotation.y += dt * 0.2; });
       tilt.updateMatrixWorld(); tilt.matrixWorld.decompose(wp, wq, ws); up.set(0, 1, 0).applyQuaternion(wq).normalize(); const k = ws.x;
-      ru.uC.value.copy(wp); ru.uN.value.copy(up); ru.uR.value = r * k; ru.uIn.value = R0; ru.uOut.value = R1; ru.uO.value = 0.75 + 0.25 * smooth(rv) + fc * 0.05;
+      ru.uC.value.copy(wp); ru.uN.value.copy(up); ru.uR.value = r * k; ru.uIn.value = R0; ru.uOut.value = R1; ru.uO.value = 0.8 + 0.2 * smooth(rv) + fc * 0.05;
       const cu = core.material.uniforms; if (cu.uRingR) { cu.uRingC.value.copy(wp); cu.uRingN.value.copy(up); cu.uRingR.value.set(R0 * k, R1 * k); } } };
   };
 

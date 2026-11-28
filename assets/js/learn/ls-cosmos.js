@@ -152,7 +152,7 @@
     const obstacles = [], occluders = [], fxObs = [];
     /* how far each world's visible silhouette reaches, in body radii (air, rings, moons, the black hole's disk) — the
        astronaut is kept clear of it on screen */
-    const VIS_R = { maths: 2.25, physics: 2.8, chemistry: 2.3, biology: 2.2, geography: 1.3, cs: 2.1, english: 2.6, history: 2.3, languages: 2.4, social: 1.9, more: 2.2 }; /* including each world's orbiting structures */
+    const VIS_R = { maths: 2.25, physics: 3.6, chemistry: 2.3, biology: 2.2, geography: 1.3, cs: 2.1, english: 2.6, history: 2.3, languages: 2.4, social: 1.9, more: 2.2 }; /* including each world's orbiting structures */
     const worldPos = (id, p) => { const G = worlds[id]; if (!G) return V3(PATH[id]); return G.position; };
     const gatherK = p => clamp((p - (N - 2)) / 1, 0, 1); // 0 on the last world, 1 at the overview
 
@@ -185,8 +185,20 @@
         else if (G.userData.hide) { G.userData.hide += (0 - G.userData.hide) * (1 - Math.exp(-dt * 6)); G.scale.multiplyScalar(1 - 0.9 * G.userData.hide); }
         const far = dist > 48 + 20 * G.userData.f; G.userData.setFar(far);
         if ((inView && !far) || reduced()) G.userData.update(t, reduced() ? 0 : dt, rv, G.userData.f); else if (inView) G.userData.core.rotation.y += dt * 0.04; G.visible = inView; });
+      separate(gOver == null ? gatherK(p) : gOver, dt);
     }
     const frustum = new THREE.Frustum();
+    /* v46: in the gathered overview, worlds near the front of the turning ring could cover each other in perspective
+       (Chemistry over Biology). A few relaxation passes in aspect-corrected screen space push overlapping discs (plus room
+       for the name under each) apart; the offsets move the worlds in the camera plane and are smoothed, so nothing jumps. */
+    const sepTmp = new THREE.Vector3(), camR = new THREE.Vector3(), camU = new THREE.Vector3();
+    function separate(gk, dt) { const ids = W.ORDER.filter(id => worlds[id] && worlds[id].visible); const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), A = camera.aspect;
+      camR.set(1, 0, 0).applyQuaternion(camera.quaternion); camU.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      const P = ids.map(id => { const G = worlds[id], d = Math.max(1e-3, camera.position.distanceTo(G.position)); sepTmp.copy(G.position).project(camera); return { G, x: sepTmp.x * A, y: sepTmp.y, r: VIS_R[id] * G.scale.x / (d * th) * 0.9, d, ox: 0, oy: 0 }; });
+      if (gk > 0.3) for (let it = 0; it < 6; it++) for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) { const a = P[i], b = P[j]; let dx = (b.x + b.ox) - (a.x + a.ox), dy = (b.y + b.oy) - (a.y + a.oy); const L = Math.hypot(dx, dy) || 1e-4, need = (a.r + b.r) * 1.06 + 0.07;
+        if (L < need) { const push = (need - L) / 2; dx /= L; dy /= L; a.ox -= dx * push; a.oy -= dy * push; b.ox += dx * push; b.oy += dy * push; } }
+      const k = 1 - Math.exp(-(dt || 0.016) * 3.5), w = smooth(clamp((gk - 0.3) / 0.5, 0, 1));
+      P.forEach(q => { const u = q.G.userData, tgt = sepTmp.copy(camR).multiplyScalar(q.ox * q.d * th * w).addScaledVector(camU, q.oy * q.d * th * w); u.sep = u.sep || new THREE.Vector3(); u.sep.lerp(tgt, k); q.G.position.add(u.sep); }); }
 
     function cameraAt(p, out, outT) { const a = at(p); out.copy(posC.getPoint(a.u)); outT.copy(tgtC.getPoint(a.u));
       // a gentle arc: approaches swing out sideways (worlds) or rise (the reveal) and settle exactly on the keyframe (sin π·g = 0 at both ends)
@@ -366,7 +378,7 @@
           <div class="cz-scenes">${K.map((k, i) => `<div class="cz-scene cz-scene--${k.scene === 'void' ? 'hero' : PATH[k.scene] ? (PATH[k.scene][0] > 0 ? 'left' : 'right') : k.scene === 'all' ? 'all' : 'left'}" data-i="${i}" ${i ? 'hidden' : ''}>${!gl && PATH[k.scene] ? orb(k.scene, true) : ''}<div class="cz-copy">${sceneCopy(k, C0)}</div>${k.scene === 'all' ? ring() : ''}</div>`).join('')}</div>
           <p class="cz-load" role="status" aria-live="polite">${T('Preparing the universe', 'نجهّز الكون')}…</p>
           <div class="cz-names" aria-hidden="true">${W.ORDER.map(id => `<span data-n="${id}">${esc(M[id].name)}</span>`).join('')}</div>
-          <div class="cz-label" hidden aria-hidden="true"><b></b><span></span><em>${T('Select to enter', 'اختر للدخول')}</em></div>
+          <div class="cz-label" hidden aria-hidden="true"><div class="cz-label__card"><i class="cz-label__orb"></i><div class="cz-label__t"><b></b><span></span><small></small></div><em><span>${T('Click to enter', 'انقر للدخول')}</span><i aria-hidden="true">→</i></em></div></div>
           <nav class="cz-rail" aria-label="${T('Journey', 'الرحلة')}">${K.map((k, i) => `<button type="button" data-cz-go="${i}" aria-label="${T('Go to', 'اذهب إلى')}: ${esc(M[k.scene] ? M[k.scene].name : { void: T('The beginning', 'البداية'), light: T('First light', 'الضوء الأول'), universe: T('The universe of knowledge', 'كون المعرفة'), all: T('The whole universe', 'الكون كله') }[k.scene])}"><i></i></button>`).join('')}</nav>
           <div class="cz-tools"><button type="button" class="cz-tool" data-cz-map aria-haspopup="dialog">${T('Destinations', 'الوجهات')}</button><button type="button" class="cz-tool" data-cz-end>${T('All worlds', 'كل العوالم')} ↓</button></div>
           <div class="cz-dock"></div>
@@ -415,7 +427,12 @@
       LS.__czArrive = id; setTimeout(() => LS.go('world/' + id), wait); }; /* change page only once the veil is fully opaque, so the swap is never seen */
     const enter = id => { if (U) U.enter(id); else arrive(id); };
     const labelFocus = { id: null };
-    const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { label.hidden = true; return; } if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('span').textContent = M[id].line; } label.hidden = false; label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 8px)`; };
+    /* v46: the world card springs open beside the planet (scale + fade + unblur) and eases away instead of blinking out */
+    let labelT = 0; const labelHide = () => { if (label.hidden) return; label.classList.remove('is-on'); clearTimeout(labelT); labelT = setTimeout(() => { if (!label.classList.contains('is-on')) label.hidden = true; }, 260); };
+    const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { labelHide(); return; } clearTimeout(labelT);
+      if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('.cz-label__t span').textContent = M[id].line; const nC = C0 ? C0.bySubject(id).reduce((a, c) => a + c.chapters.length, 0) : 0, nX = (LS.experiences || []).filter(x => x.subject === id).length; label.querySelector('small').textContent = `${nC} ${T(nC === 1 ? 'chapter' : 'chapters', 'فصول')}${nX ? ` · ${nX} ${T(nX === 1 ? 'experience' : 'experiences', 'تجارب')}` : ''}`; label.style.setProperty('--cz-hue', LS.xHue ? LS.xHue(id) : 220); label.classList.remove('is-pop'); void label.offsetWidth; label.classList.add('is-pop'); }
+      if (label.hidden) { label.hidden = false; requestAnimationFrame(() => label.classList.add('is-on')); } else label.classList.add('is-on');
+      label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 12px)`; };
 
     /* clicks and keys */
     root.addEventListener('click', e => {
@@ -446,7 +463,7 @@
       resume() { /* the router sets the scroll right after this returns; everything that depends on it runs in the next frame */
         document.documentElement.classList.add('cz-on'); addEventListener('resize', fitTop); addEventListener('scroll', onScroll, { passive: true }); addEventListener('keydown', onKey, true); addEventListener('wheel', onWheelSkip, { passive: true }); past.observe(stage.parentElement);
         const old = root.querySelector('.cz-dock .at-choice'); if (old) old.remove(); after.innerHTML = ''; if (LS.__uvHome) LS.__uvHome(after); const ch = after.querySelector('.at-choice'); if (ch) root.querySelector('.cz-dock').appendChild(ch);
-        label.hidden = true; if (U) { LS.__cosmos = U; U.hover(null); }
+        labelHide(); if (U) { LS.__cosmos = U; U.hover(null); }
         requestAnimationFrame(() => { if (current !== ctl) return; fitTop(); const p = progressFromScroll(); if (U) { U.jump(p); U.kick(); let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ } if (ret && M[ret.id] && Date.now() - ret.at < 30 * 60 * 1000) U.returnFrom(ret.id); } else onProgress(p); });
       }
     };
@@ -456,7 +473,7 @@
       root.classList.add('is-loading');
       universe(stage, { onLoad: L => { const el = root.querySelector('.cz-load'); if (!el) return; if (L.failed) el.textContent = T('The astronaut could not load — the universe still works.', 'تعذّر تحميل رائد الفضاء'); else el.textContent = `${T('Preparing the universe', 'نجهّز الكون')} · ${L.worlds}/11 ${T('worlds', 'عوالم')}${L.astro ? '' : ' · ' + T('astronaut', 'رائد الفضاء')}…`; if (L.astro && L.worlds >= 11) { el.textContent = T('The universe is ready.', 'الكون جاهز.'); root.classList.add('is-ready'); } else if (L.astro && L.worlds >= 4) root.classList.add('is-ready'); },
         onNames: list => { const box = root.querySelector('.cz-names'); if (!list) { box.classList.remove('is-on'); return; } box.classList.add('is-on'); list.forEach(n => { if (!n) return; const el = box.querySelector(`[data-n="${n.id}"]`); el.style.transform = `translate3d(${Math.round(n.x)}px, ${Math.round(n.y)}px, 0) translate(-50%, 0)`; el.style.opacity = n.on ? '' : '0'; el.classList.toggle('is-focus', n.id === labelFocus.id); }); },
-        onProgress, onLabel: labelShow, onHover: id => { if (!id) label.hidden = true; }, onArrive: arrive, onFlight, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
+        onProgress, onLabel: labelShow, onHover: id => { if (!id) labelHide(); }, onArrive: arrive, onFlight, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
         if (current !== ctl && !(parked && parked.ctl === ctl)) { u.destroy(); return; } U = u; if (current === ctl) LS.__cosmos = u; root.classList.remove('is-loading'); root.classList.add('is-live'); const p = progressFromScroll(); u.jump(p);
         let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ }
         if (ret && Date.now() - ret.at < 30 * 60 * 1000 && M[ret.id]) { /* Back restores the scroll position; once it has, pull the camera back out of the world we visited */ setTimeout(() => { if (current !== ctl) return; const y = Math.abs(scrollY - ret.y) > 40 && scrollY < 10 ? (scrollTo({ top: ret.y, behavior: 'instant' }), ret.y) : scrollY; u.jump(progressFromScroll()); u.returnFrom(ret.id); }, 120); }

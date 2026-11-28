@@ -95,9 +95,9 @@
       const geo = shapes[k].clone(); const spin = new Float32Array(list.length * 4), drift = new Float32Array(list.length * 4);
       const mesh = new THREE.InstancedMesh(geo, rockMat(), list.length); mesh.frustumCulled = false; /* rocks move on the GPU */
       list.forEach(([p, size, belt], i) => { dummy.position.copy(p); dummy.rotation.set(R() * 6.3, R() * 6.3, R() * 6.3); dummy.scale.setScalar(size); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
-        const tone = 0.07 + R() * 0.1; col.setRGB(tone * (1.04 + R() * 0.12), tone * (0.97 + R() * 0.06), tone * (0.88 + R() * 0.08)); if (R() < 0.15) col.multiplyScalar(1.6); /* real asteroids are dark: carbon-rich rock, a few brighter stony ones */ if (belt && R() < 0.3) col.offsetHSL(0.02, 0.05, 0.04); mesh.setColorAt(i, col);
-        spin.set([R(), R(), R(), (0.05 + R() * 0.3) / Math.sqrt(size + 0.2) * (R() < 0.5 ? -1 : 1)], i * 4);
-        const sp = (0.12 + R() * 0.45) / Math.sqrt(size + 0.3), a = R() * Math.PI * 2, e = (R() - 0.5) * 0.8; drift.set([Math.cos(a) * Math.cos(e) * sp, Math.sin(e) * sp, Math.sin(a) * Math.cos(e) * sp, 0], i * 4); });
+        const tone = 0.11 + R() * 0.13; col.setRGB(tone * (1.06 + R() * 0.14), tone * (0.97 + R() * 0.06), tone * (0.86 + R() * 0.1)); if (R() < 0.18) col.multiplyScalar(1.5); /* v46: a little more albedo so the cratered relief reads */ /* real asteroids are dark: carbon-rich rock, a few brighter stony ones */ if (belt && R() < 0.3) col.offsetHSL(0.02, 0.05, 0.04); mesh.setColorAt(i, col);
+        spin.set([R(), R(), R(), (0.08 + R() * 0.34) / Math.sqrt(size + 0.2) * (R() < 0.5 ? -1 : 1)], i * 4);
+        const sp = (0.2 + R() * 0.65) / Math.sqrt(size + 0.3), /* v46: rocks visibly drift and tumble */ a = R() * Math.PI * 2, e = (R() - 0.5) * 0.8; drift.set([Math.cos(a) * Math.cos(e) * sp, Math.sin(e) * sp, Math.sin(a) * Math.cos(e) * sp, 0], i * 4); });
       geo.setAttribute('aSpin', new THREE.InstancedBufferAttribute(spin, 4)); geo.setAttribute('aDrift', new THREE.InstancedBufferAttribute(drift, 4));
       mesh.computeBoundingSphere(); scene.add(mesh); out.disposables.push(geo, mesh.material); return mesh; });
     shapes.forEach(g => g.dispose());

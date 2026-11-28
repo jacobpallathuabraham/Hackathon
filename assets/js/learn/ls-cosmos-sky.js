@@ -80,9 +80,11 @@
     const starMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uPx: { value: 1 }, uT: { value: 0 }, uFov: { value: 1 } },
       vertexShader: `attribute float aMag; attribute vec3 color; uniform float uPx; uniform float uT; uniform float uFov; varying vec3 vC; varying float vB; varying float vS;
         void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mv;
-          float b=aMag; float tw=1.0+0.1*sin(uT*(1.3+fract(position.x*0.013)*2.7)+position.y*0.07)*(1.0-b*0.6);
-          vS=step(0.9,b); vB=b*tw; vC=color;
-          gl_PointSize=(1.5+3.2*b*b+vS*14.0)*uPx*uFov; }`,
+          float b=aMag; /* v46: scintillation — each star breathes in brightness and size on its own two rhythms */
+          float ph=fract(sin(dot(position.xz,vec2(12.9898,78.233)))*43758.5453)*6.2831, f1=0.9+fract(position.y*0.0137)*2.6;
+          float tw=0.7+0.22*sin(uT*f1+ph)+0.12*sin(uT*f1*2.37+ph*1.7)+0.06*sin(uT*f1*5.1+ph*2.3);
+          vS=step(0.9,b); vB=max(b,0.02)*tw*1.12; vC=mix(color,vec3(1.0),0.15*(tw-0.7));
+          gl_PointSize=(1.6+3.4*b*b+vS*14.0)*(0.86+0.2*tw)*uPx*uFov; }`,
       fragmentShader: `varying vec3 vC; varying float vB; varying float vS;
         void main(){ vec2 c=(gl_PointCoord-0.5)*2.0; float r2=dot(c,c); if(r2>1.0) discard;
           float core=exp(-r2*(vS>0.5?38.0:7.0));

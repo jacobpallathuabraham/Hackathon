@@ -28,6 +28,7 @@
    resetTrail(), update({u, dt, t, lookAt, still, camera, obstacles, near, opening}), debug(), dispose(). */
 (function () {
   'use strict';
+  const PUFF = 1.2; /* v46: limb and joint radii of the pressurised suit */
   const LS = window.LS;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const sstep = t => t * t * t * (t * (t * 6 - 15) + 10);
@@ -64,7 +65,7 @@
       sh.moveTo(x, -h / 2); sh.lineTo(x + ww, -h / 2); sh.quadraticCurveTo(w / 2, -h / 2, w / 2, y); sh.lineTo(w / 2, y + hh); sh.quadraticCurveTo(w / 2, h / 2, x + ww, h / 2); sh.lineTo(x, h / 2); sh.quadraticCurveTo(-w / 2, h / 2, -w / 2, y + hh); sh.lineTo(-w / 2, y); sh.quadraticCurveTo(-w / 2, -h / 2, x, -h / 2);
       const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(0.001, d - 2 * r), bevelEnabled: true, bevelThickness: r, bevelSize: r * 0.98, bevelSegments: seg || 4, curveSegments: 6 }); g.translate(0, 0, -Math.max(0.001, d - 2 * r) / 2); g.computeVertexNormals(); return g; }
     /* a tapered fabric segment along −y from 0 to −len: radii at top/mid/bottom, soft circumferential fold displacement */
-    function limb(rTop, rMid, rBot, len, folds, seed, sz = 1) {
+    function limb(rTop, rMid, rBot, len, folds, seed, sz = 1) { rTop *= PUFF; rMid *= PUFF; rBot *= PUFF; /* v46: a pressurised suit is puffy */
       const pts = []; const n = 14; for (let i = 0; i <= n; i++) { const u = i / n, r = u < 0.5 ? rTop + (rMid - rTop) * (u / 0.5) : rMid + (rBot - rMid) * ((u - 0.5) / 0.5); pts.push(new THREE.Vector2(Math.max(0.001, r), -u * len)); }
       pts.unshift(new THREE.Vector2(0.001, 0.0)); pts.push(new THREE.Vector2(0.001, -len)); pts.reverse(); // closed ends (hidden inside the joints); bottom → top so the normals face outward
       const g = new THREE.LatheGeometry(pts, 28), p = g.attributes.position, v = new THREE.Vector3();
@@ -89,7 +90,7 @@
       const dark = M(THREE.MeshStandardMaterial, { color: 0x272b33, roughness: 0.55, metalness: 0.35 });
       const seam = M(THREE.MeshStandardMaterial, { color: 0xb9b6ae, roughness: 0.9 });
       const shell = M(THREE.MeshPhysicalMaterial, { color: 0xf4f2ee, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.0 });
-      const bubble = M(THREE.MeshPhysicalMaterial, { color: 0xffffff, roughness: 0.02, metalness: 0, transparent: true, opacity: 0.14, envMapIntensity: 2.2, clearcoat: 1, clearcoatRoughness: 0.02, depthWrite: false });
+      const bubble = M(THREE.MeshPhysicalMaterial, { color: 0x04060b, roughness: 0.05, metalness: 0.85, envMapIntensity: 1.8, clearcoat: 1, clearcoatRoughness: 0.02 }); /* v46: opaque black glass — the head is never visible */
       const visor = M(THREE.MeshPhysicalMaterial, { color: 0xffc766, metalness: 1, roughness: 0.04, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 2.0 });
       const cap = M(THREE.MeshStandardMaterial, { color: 0x1c1f26, roughness: 0.85 });
       const lamp = M(THREE.MeshStandardMaterial, { color: 0xffffff, emissive: 0xfff2d8, emissiveIntensity: 2.6, roughness: 0.3 });
@@ -112,10 +113,10 @@
         J('thigh' + s, HP[0] * sx, HP[1], HP[2], B.pelvis); J('shin' + s, KN[0] * sx, KN[1], KN[2], B['thigh' + s]); J('foot' + s, AN[0] * sx, AN[1], AN[2], B['shin' + s]); });
 
       /* lower torso (soft) and waist bearing */
-      add(B.pelvis, lathe([[0.001, 0.82], [0.13, 0.83], [0.165, 0.88], [0.178, 0.95], [0.174, 1.02], [0.168, 1.07], [0.001, 1.075]], 48), suit, 0, 0, 0).scale.set(1, 1, 0.8);
+      add(B.pelvis, lathe([[0.001, 0.82], [0.13, 0.83], [0.165, 0.88], [0.178, 0.95], [0.174, 1.02], [0.168, 1.07], [0.001, 1.075]], 48), suit, 0, 0, 0).scale.set(1.1, 1, 0.92);
       ring(B.pelvis, [0, 1.07, 0], 0.169, 0.011, metal); ring(B.pelvis, [0, 1.055, 0], 0.171, 0.005, anod);
       /* hard upper torso: an elliptical shell, broader at the shoulders, with a yoke over each shoulder */
-      const hutG = lathe([[0.001, 1.065], [0.158, 1.07], [0.188, 1.13], [0.21, 1.24], [0.222, 1.34], [0.214, 1.42], [0.18, 1.48], [0.125, 1.515], [0.001, 1.52]], 64); add(B.chest, hutG, hut, 0, 0, 0).scale.set(1.04, 1, 0.74);
+      const hutG = lathe([[0.001, 1.065], [0.158, 1.07], [0.188, 1.13], [0.21, 1.24], [0.222, 1.34], [0.214, 1.42], [0.18, 1.48], [0.125, 1.515], [0.001, 1.52]], 64); add(B.chest, hutG, hut, 0, 0, 0).scale.set(1.1, 1, 0.8);
       [-1, 1].forEach(sx => { add(B.chest, new THREE.SphereGeometry(0.082, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.62), hut, 0.186 * sx, 1.43, 0.0, 0, 0, -0.5 * sx).scale.set(1, 0.8, 0.95); });
       // panel seams on the torso shell (thin raised lines, as on a real hard upper torso)
       [1.16, 1.3].forEach(y => { const m = ring(B.chest, [0, y, 0], 0.212 + (y - 1.16) * 0.06, 0.0025, seam); m.scale.set(1.04, 0.74, 1); });
@@ -139,10 +140,9 @@
 
       /* helmet on the neck: comm cap, clear bubble, visor-assembly shell, gold visor, rail, lamps, camera */
       const HC = [0, 1.69, 0.035];
-      add(B.head, new THREE.SphereGeometry(0.1, 28, 20), cap, HC[0], HC[1] - 0.02, HC[2] - 0.015);
-      add(B.head, new THREE.SphereGeometry(0.168, 48, 36), bubble, ...HC).renderOrder = 3;
+      add(B.head, new THREE.SphereGeometry(0.17, 48, 36), bubble, ...HC);
       add(B.head, new THREE.SphereGeometry(0.184, 56, 40, Math.PI / 2 + 0.98, 2 * Math.PI - 1.96, 0, Math.PI * 0.8), shell, ...HC);          // back and sides
-      const vis = add(B.head, new THREE.SphereGeometry(0.18, 56, 40, Math.PI / 2 - 1.02, 2.04, 0.3, 1.05), visor, ...HC);                      // gold sun visor (lowered)
+      const vis = add(B.head, new THREE.SphereGeometry(0.179, 64, 48, Math.PI / 2 - 1.42, 2.84, 0.2, 1.55), visor, ...HC);                      // v46: one large gold sun visor over the whole face
       [-1, 1].forEach(sx => { add(B.head, new THREE.CylinderGeometry(0.024, 0.028, 0.055, 20), metal, 0.165 * sx, HC[1] + 0.085, HC[2] + 0.03, Math.PI / 2, 0, 0); add(B.head, new THREE.CircleGeometry(0.02, 20), lamp, 0.165 * sx, HC[1] + 0.085, HC[2] + 0.058); });
       add(B.head, roundedBox(0.032, 0.028, 0.048, 0.007), dark, -0.172, HC[1] + 0.02, HC[2] + 0.04);
       add(B.head, new THREE.CylinderGeometry(0.115, 0.118, 0.03, 40), metal, 0, 1.545, 0.02);                                                    // helmet neck ring
@@ -151,12 +151,12 @@
       const hands = {};
       ['L', 'R'].forEach((s, k) => { const sx = s === 'L' ? 1 : -1, U = B['uArm' + s], F = B['fArm' + s], Hd = B['hand' + s];
         const sh = [SH[0] * sx, SH[1], SH[2]], el = [EL[0] * sx, EL[1], EL[2]], wr = [WR[0] * sx, WR[1], WR[2]];
-        add(U, new THREE.SphereGeometry(0.071, 32, 24), suit, sh[0], sh[1] - 0.01, sh[2]);
-        ring(U, [sh[0] - 0.004 * sx, sh[1] - 0.036, sh[2]], 0.0655, 0.0055, metal, [0.2 * sx, -1, 0]);
+        add(U, new THREE.SphereGeometry(0.071 * PUFF, 32, 24), suit, sh[0], sh[1] - 0.01, sh[2]);
+        ring(U, [sh[0] - 0.004 * sx, sh[1] - 0.036, sh[2]], 0.0655 * PUFF, 0.0055, metal, [0.2 * sx, -1, 0]);
         seg(U, limb(0.067, 0.064, 0.06, dist(sh, el) - 0.02, 2.2, 1.3 + k), suit, [sh[0], sh[1] - 0.035, sh[2]], el);
         if (s === 'L') { const pm = new THREE.Mesh(new THREE.CircleGeometry(0.036, 32), patch); pm.position.set(sh[0] + 0.06 - U.userData.w.x, sh[1] - 0.1 - U.userData.w.y, sh[2] + 0.012 - U.userData.w.z); pm.rotation.set(0, Math.PI / 2 - 0.25, 0); U.add(pm); }
-        add(F, new THREE.SphereGeometry(0.06, 28, 20), fold, el[0], el[1], el[2]);
-        [0.026, -0.026].forEach(dy => ring(F, [el[0], el[1] + dy, el[2]], 0.058, 0.0055, fold, [0, 1, 0.05]));
+        add(F, new THREE.SphereGeometry(0.06 * PUFF, 28, 20), fold, el[0], el[1], el[2]);
+        [0.026, -0.026].forEach(dy => ring(F, [el[0], el[1] + dy, el[2]], 0.058 * PUFF, 0.0055, fold, [0, 1, 0.05]));
         seg(F, limb(0.058, 0.054, 0.049, dist(el, wr) - 0.02, 1.6, 2.1 + k), suit, el, wr);
         ring(F, [wr[0], wr[1] + 0.012, wr[2]], 0.0485, 0.0062, s === 'L' ? anod : anodR, [0, -1, 0.05]);
         // glove: gauntlet cuff, palm, back-of-hand pad, two-jointed fingers and thumb (palm faces the body: −x on the left)
@@ -175,13 +175,13 @@
       /* legs: hip bearing, tapered thigh with a commander stripe, smooth knee with shallow folds, shin, ankle bearing, boot */
       ['L', 'R'].forEach((s, k) => { const sx = s === 'L' ? 1 : -1, Tg = B['thigh' + s], Sn = B['shin' + s], Ft = B['foot' + s];
         const hp = [HP[0] * sx, HP[1], HP[2]], kn = [KN[0] * sx, KN[1], KN[2]], an = [AN[0] * sx, AN[1], AN[2]];
-        add(Tg, new THREE.SphereGeometry(0.086, 28, 20), suit, hp[0], hp[1] - 0.02, hp[2]);
+        add(Tg, new THREE.SphereGeometry(0.086 * PUFF, 28, 20), suit, hp[0], hp[1] - 0.02, hp[2]);
         seg(Tg, limb(0.088, 0.082, 0.071, dist(hp, kn) - 0.02, 2.4, 3.7 + k, 1.04), suit, [hp[0], hp[1] - 0.04, hp[2]], kn);
-        [0.0, 0.035].forEach(d => { const f = 0.52 + d; const m = ring(Tg, [hp[0] + (kn[0] - hp[0]) * f, hp[1] - 0.04 + (kn[1] - hp[1] + 0.04) * f, hp[2] + (kn[2] - hp[2]) * f], 0.0805, 0.0032, red, [kn[0] - hp[0], kn[1] - hp[1], kn[2] - hp[2]]); m.scale.set(1, 1.04, 1); });
-        add(Sn, new THREE.SphereGeometry(0.071, 28, 20), fold, kn[0], kn[1], kn[2]);
-        [0.03, -0.03].forEach(dy => ring(Sn, [kn[0], kn[1] + dy, kn[2]], 0.069, 0.006, fold, [0, 1, 0.08]));
+        [0.0, 0.035].forEach(d => { const f = 0.52 + d; const m = ring(Tg, [hp[0] + (kn[0] - hp[0]) * f, hp[1] - 0.04 + (kn[1] - hp[1] + 0.04) * f, hp[2] + (kn[2] - hp[2]) * f], 0.0805 * PUFF, 0.0032, red, [kn[0] - hp[0], kn[1] - hp[1], kn[2] - hp[2]]); m.scale.set(1, 1.04, 1); });
+        add(Sn, new THREE.SphereGeometry(0.071 * PUFF, 28, 20), fold, kn[0], kn[1], kn[2]);
+        [0.03, -0.03].forEach(dy => ring(Sn, [kn[0], kn[1] + dy, kn[2]], 0.069 * PUFF, 0.006, fold, [0, 1, 0.08]));
         seg(Sn, limb(0.069, 0.064, 0.056, dist(kn, an) - 0.05, 2.0, 4.9 + k), suit, kn, [an[0], an[1] + 0.05, an[2]]);
-        ring(Sn, [an[0], an[1] + 0.07, an[2]], 0.0575, 0.006, metal);
+        ring(Sn, [an[0], an[1] + 0.07, an[2]], 0.0575 * 1.12, 0.006, metal);
         add(Ft, lathe([[0.063, 0.1], [0.068, 0.06], [0.07, 0.03], [0.001, 0.028]], 28), boot, an[0], -0.0 + 0.0, an[2]).position.y = -AN[1] + 0.0 + 0.0;
         const foot = add(Ft, roundedBox(0.104, 0.07, 0.2, 0.032), boot, an[0], 0.045, an[2] + 0.055);
         const toe = add(Ft, new THREE.SphereGeometry(1, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), boot, an[0], 0.03, an[2] + 0.14); toe.scale.set(0.052, 0.045, 0.045); toe.rotation.x = Math.PI / 2;
@@ -218,15 +218,15 @@
         const outer = new THREE.Mesh(plumeG, plumeMat(kind === 'rcs' ? 0xeaf2ff : 0xf4f6ff, kind === 'rcs' ? 0x9fb8ff : 0x6f8cff, kind === 'main' ? 0.35 : 0)); outer.position.y = -0.05; outer.scale.set(1, 0.001, 1); g.add(outer);
         const core = new THREE.Mesh(plumeG, plumeMat(0xffffff, 0xc8d6ff, kind === 'main' ? 0.5 : 0)); core.position.y = -0.05; core.scale.set(0.45, 0.001, 0.45); g.add(core);
         [bo, bi, co, outer, core].forEach(m => { m.frustumCulled = false; });
-        const n = { g, outer, core, scale, kind, base: kind === 'main' ? 0.75 : kind === 'brake' ? 0.45 : 0.34 }; list && list.push(n); return n; };
+        const n = { g, outer, core, scale, kind, base: kind === 'main' ? 0.5 : kind === 'brake' ? 0.32 : 0.24 }; list && list.push(n); return n; };
       const C = rg.B.chest, pw = [0, 1.25, -0.27]; // plss origin in model space (chest-relative positions below are absolute model space)
       // main propulsion: two nozzles at the back of the jet unit, exhausting backwards and slightly down/out
-      [-1, 1].forEach(sx => nozzle(C, [0.13 * sx, 0.875, -0.392], [0.08 * sx, -0.18, -1], 1.25, 'main', out.main));
+      [-1, 1].forEach(sx => nozzle(C, [0.13 * sx, 0.875, -0.392], [0.08 * sx, -0.18, -1], 0.85, 'main', out.main));
       // braking: two nozzles at the front of the jet-unit towers, exhausting forwards
-      [-1, 1].forEach(sx => nozzle(C, [0.25 * sx, 0.93, -0.215], [0.18 * sx, -0.08, 1], 0.8, 'brake', out.brake));
+      [-1, 1].forEach(sx => nozzle(C, [0.25 * sx, 0.93, -0.215], [0.18 * sx, -0.08, 1], 0.6, 'brake', out.brake));
       // attitude control: a cluster at each corner of the backpack — lateral (±x) everywhere, up at the top, down at the bottom
       [['TL', 1, 1.53], ['TR', -1, 1.53], ['BL', 1, 0.96], ['BR', -1, 0.96]].forEach(([k, sx, y]) => { const side = y > 1.2 ? 1 : -1;
-        out.rcs[k] = { lat: nozzle(C, [0.234 * sx, y, -0.33], [sx, 0, 0], 0.62, 'rcs'), vert: nozzle(C, [0.17 * sx, y + 0.03 * side, -0.36], [0, side, 0], 0.62, 'rcs') }; });
+        out.rcs[k] = { lat: nozzle(C, [0.234 * sx, y, -0.33], [sx, 0, 0], 0.46, 'rcs'), vert: nozzle(C, [0.17 * sx, y + 0.03 * side, -0.36], [0, side, 0], 0.46, 'rcs') }; });
       void pw;
       // exhaust particles (main and braking jets only): a fixed ring buffer of GPU points in world space
       const NP = q === 0 ? 120 : 240, P = new Float32Array(NP * 3), A = new Float32Array(NP * 2), V = new Float32Array(NP * 3);
@@ -275,8 +275,8 @@
           if (obstacles && obstacles.length) keepClear(tmp, camera, obstacles, frame);
           if (!st.off || st.fresh) { st.off = tmp.clone(); st.offV.set(0, 0, 0); st.fresh = false; }
           let urgent = false; const C = st.clear; if (C && st.off.z < -0.5) { const k = C.d / -st.off.z, x = st.off.x * k, y = st.off.y * k; for (let i = 0; i < C.list.length; i += 4) if (Math.hypot(x - C.list[i], y - C.list[i + 1]) < C.list[i + 2]) { urgent = true; break; } }
-          const w = urgent ? 7 : 2.6; tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
-          const vmax = urgent ? 7 : 2.6; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
+          const w = urgent ? 7 : 1.9; /* v46: a slower, steadier glide (urgent clearance stays quick) */ tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
+          const vmax = urgent ? 7 : 1.9; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
           st.pos.copy(st.off); camera.localToWorld(st.pos);
           if (obstacles) for (const ob of obstacles) { tmp2.subVectors(st.pos, ob.p); const L = tmp2.length(); if (L < ob.r) { st.pos.copy(ob.p).addScaledVector(tmp2.divideScalar(Math.max(L, 1e-4)), ob.r); st.off.copy(st.pos); camera.worldToLocal(st.off); } }
         }
@@ -288,12 +288,12 @@
         const moving = st.flight ? 1 : travel;
         /* orientation: along the travel direction while moving, toward the world at rest; banks into lateral motion */
         const look = st.flight ? st.flight.look : lookAt; camera.getWorldDirection(tmp2);
-        if (moving > 0.05 && sp > 0.3) { tmp.copy(st.vel).normalize().lerp(tmp2, 0.35).normalize(); tmp.multiplyScalar(10).add(root.position); if (look) tmp.lerp(look, 1 - moving); } else if (look) tmp.copy(look); else tmp.copy(root.position).add(tmp2);
+        if (moving > 0.05 && sp > 0.3) { tmp.copy(st.vel).normalize().lerp(tmp2, 0.7).normalize(); /* v46: mostly faces along the view; never spins round to its velocity */ tmp.multiplyScalar(10).add(root.position); if (look) tmp.lerp(look, 1 - moving); } else if (look) tmp.copy(look); else tmp.copy(root.position).add(tmp2);
         m4.lookAt(tmp, root.position, up); qa.setFromRotationMatrix(m4);
-        const latIn = st.off ? clamp(-st.offV.x * 0.55, -1, 1) : 0; st.bank += (clamp(latIn * 0.35, -0.35, 0.35) - st.bank) * damp(2, dt);
+        const latIn = st.off ? clamp(-st.offV.x * 0.55, -1, 1) : 0; st.bank += (clamp(latIn * 0.2, -0.2, 0.2) - st.bank) * damp(1.2, dt);
         const W = st.out ? st.out.weights : null, flyW = W ? W.cruise + W.accel : moving, brkW = W ? W.brake : 0;
-        qr.setFromEuler(e3.set(0.9 * flyW - 0.32 * brkW, 0, st.bank)); qa.multiply(qr); // lean into the flight; sit back to brake
-        st.qPrev.copy(root.quaternion); root.quaternion.slerp(qa, damp(st.flight ? 2.4 : 1.6, dt));
+        qr.setFromEuler(e3.set(0.42 * flyW - 0.2 * brkW, 0, st.bank)); qa.multiply(qr); // lean into the flight; sit back to brake
+        st.qPrev.copy(root.quaternion); root.quaternion.slerp(qa, damp(st.flight ? 1.3 : 0.75, dt)); /* v46: slow, steady turning */
         /* angular velocity in the body frame → yaw / pitch inputs for the attitude jets and the turn layer */
         qr.copy(st.qPrev).invert().multiply(root.quaternion); const ang = 2 * Math.acos(clamp(qr.w, -1, 1)), sn = Math.sqrt(Math.max(1e-9, 1 - qr.w * qr.w)); const wy = qr.y / sn * ang / dt, wx = qr.x / sn * ang / dt;
         st.yawRate += ((ang > 1e-6 ? wy : 0) - st.yawRate) * damp(6, dt); st.pitchRate += ((ang > 1e-6 ? wx : 0) - st.pitchRate) * damp(6, dt);
@@ -348,7 +348,7 @@
     function exhaust(dt, still, TH, t) {
       if (!thr) return; const calm = still ? 0 : 1, Tm = TH ? TH.main * calm : 0, Tb = TH ? TH.brake * calm : 0, R = TH ? TH.rcs : {};
       const set = (n, I, k) => { const fl = 0.93 + 0.07 * Math.sin(t * 47 + k * 1.7) * Math.sin(t * 31 + k); const len = Math.max(0.001, (0.15 + 0.85 * I) * n.base * fl);
-        n.outer.material.uniforms.uI.value = I * 0.9; n.outer.material.uniforms.uT.value = t + k; n.outer.scale.set(1 + 0.25 * I, len / 1, 1 + 0.25 * I); n.outer.visible = I > 0.015;
+        n.outer.material.uniforms.uI.value = I * 0.9; n.outer.material.uniforms.uT.value = t + k; n.outer.scale.set(0.8 + 0.12 * I, len / 1, 0.8 + 0.12 * I); n.outer.visible = I > 0.015;
         n.core.material.uniforms.uI.value = I * 1.5; n.core.material.uniforms.uT.value = t * 1.3 + k; n.core.scale.set(0.45, len * 0.38, 0.45); n.core.visible = I > 0.015; };
       thr.main.forEach((n, k) => set(n, Tm, k)); thr.brake.forEach((n, k) => set(n, Tb, k + 7));
       const rc = { TL: { lat: R.yawL || 0, vert: R.down || 0 }, BL: { lat: R.yawL || 0, vert: R.up || 0 }, TR: { lat: Math.max(R.yawR || 0, R.latL || 0), vert: R.down || 0 }, BR: { lat: Math.max(R.yawR || 0, R.latL || 0), vert: R.up || 0 } };
@@ -356,7 +356,7 @@
       Object.entries(thr.rcs).forEach(([k, c], i) => { set(c.lat, clamp(rc[k].lat, 0, 1) * calm, 20 + i); set(c.vert, clamp(rc[k].vert, 0, 1) * calm, 30 + i); });
       thr.heat.main.emissiveIntensity = 2.2 * Tm; thr.heat.brake.emissiveIntensity = 2.0 * Tb; thr.heat.rcs.emissiveIntensity = 1.5 * Math.max(0, ...Object.values(R).map(Number)); // cold at rest; heat only while firing
       // particles stream from the main and braking jets (world space), inherit the astronaut's velocity, and fade
-      const P = thr.parts, rate = (Tm * 80 + Tb * 40) * calm; P.acc += dt * rate;
+      const P = thr.parts, rate = (Tm * 42 + Tb * 22) * calm; P.acc += dt * rate;
       while (P.acc >= 1) { P.acc -= 1; const useB = Tb > 0 && P.i % 3 === 0 ? true : Tm < 0.02; const L = useB ? thr.brake : thr.main; if (!L.length) break; const n = L[P.i % L.length]; const j = P.i++ % P.NP;
         n.core.getWorldPosition(tmp); n.g.getWorldQuaternion(qa); const h = (P.i * 0.618034) % 1, h2 = (P.i * 0.381966) % 1; tmp2.set((h - 0.5) * 0.22, -1, (h2 - 0.5) * 0.22).applyQuaternion(qa).multiplyScalar(0.9 + h * 0.7);
         P.P[j * 3] = tmp.x; P.P[j * 3 + 1] = tmp.y; P.P[j * 3 + 2] = tmp.z; P.V[j * 3] = tmp2.x + st.vel.x * 0.5; P.V[j * 3 + 1] = tmp2.y + st.vel.y * 0.5; P.V[j * 3 + 2] = tmp2.z + st.vel.z * 0.5; P.A[j * 2] = 1; P.A[j * 2 + 1] = useB ? 0.55 : 1; }
