@@ -32,7 +32,8 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
   });
 
   await t('Back restores the scroll position and the keyboard focus of the page it returns to (All experiences)', async () => {
-    await p.goto(BASE + 'learn.html#/discover'); await p.waitForTimeout(1500);
+    /* arrive from another page, as a student would (re-loading the address the page is already on resets the history position) */
+    await p.evaluate(() => { location.hash = '#/explore'; }); await p.waitForTimeout(900); await p.evaluate(() => { location.hash = '#/discover'; }); await p.waitForTimeout(1500);
     const card = p.locator('#lsView .at-xlist a[href^="#/exp/"]').nth(12); await card.scrollIntoViewIfNeeded(); const y0 = await p.evaluate(() => Math.round(scrollY)); const href = await card.getAttribute('href');
     await card.click(); await p.waitForTimeout(1200); await p.click('[data-ls-back]'); await p.waitForTimeout(1400);
     const s = await state(); near(s.y, y0, 4, 'scroll'); assert.equal(s.focus, href, 'focus returns to the card used');
