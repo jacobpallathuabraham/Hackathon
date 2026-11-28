@@ -31,13 +31,12 @@ const near = (a, b, tol, m) => assert.ok(Math.abs(a - b) <= tol, `${m}: ${a} vs 
     assert.deepEqual(bad, []); console.log('     (' + xs.length + ' experiences)');
   });
 
-  await t('Back restores the scroll position, the filters and the keyboard focus of the page it returns to', async () => {
-    await p.goto(BASE + 'learn.html#/finder'); await p.waitForTimeout(1500);
-    await p.click('.dx-filter [data-fk="construction"]'); await p.click('.dx-filter [data-fs="maths"]'); await p.waitForTimeout(200);
-    const card = p.locator('.dx-grid a[href^="#/exp/"], a.dx-card, .dx-card a').first(); await card.scrollIntoViewIfNeeded(); const y0 = await p.evaluate(() => Math.round(scrollY)); const href = await card.getAttribute('href');
+  await t('Back restores the scroll position and the keyboard focus of the page it returns to (All experiences)', async () => {
+    await p.goto(BASE + 'learn.html#/discover'); await p.waitForTimeout(1500);
+    const card = p.locator('#lsView .at-xlist a[href^="#/exp/"]').nth(12); await card.scrollIntoViewIfNeeded(); const y0 = await p.evaluate(() => Math.round(scrollY)); const href = await card.getAttribute('href');
     await card.click(); await p.waitForTimeout(1200); await p.click('[data-ls-back]'); await p.waitForTimeout(1400);
     const s = await state(); near(s.y, y0, 4, 'scroll'); assert.equal(s.focus, href, 'focus returns to the card used');
-    assert.equal(await p.evaluate(() => [...document.querySelectorAll('.dx-filter [aria-pressed="true"][data-fk], .dx-filter [aria-pressed="true"][data-fs]')].map(b => b.dataset.fk ?? b.dataset.fs).join(',')), 'construction,maths');
+    /* (the Experience finder and its filters were removed in v46) */
   });
 
   await t('lab models, lessons and topic pages have Back with a breadcrumb; nested navigation unwinds step by step', async () => {

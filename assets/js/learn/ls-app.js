@@ -11,9 +11,15 @@
     if (e.target.closest('[data-demo]')) { st.demo(true); LS.render(); }
   });
 
-  function lessonCard(L) {
-    const p = st.data().lessons[L.id], n = p ? L.sections.filter(s => (p.done || {})[s.id]).length : 0;
-    return `<a class="ls-card" href="#/lesson/${L.id}"><span class="ls-card__k">${esc(L.subject)} · ${esc(L.level)}</span><b>${esc(L.title)}</b><small>${L.mins} min · ${L.sections.length} ${T('sections', 'أقسام')} · ${(L.formats || []).map(f => ({ text: 'read', visual: 'model', video: 'video', practice: 'practice', audio: 'audio' })[f]).join(' · ')}</small>${p ? `<span class="ls-meter ls-meter--sm" role="progressbar" aria-label="${T('Progress', 'التقدم')}" aria-valuemin="0" aria-valuemax="${L.sections.length}" aria-valuenow="${n}"><i style="width:${100 * n / L.sections.length}%"></i></span><small>${p.completed ? '✓ ' + T('Finished', 'مكتمل') : n + '/' + L.sections.length + ' ' + T('done', 'منجز')}</small>` : ''}${LS.provBadge(L.provenance.kind)}</a>`;
+  /* v46: a lesson card with its own animated drawing, subject colour, format chips and a progress ring */
+  const SUBJ_KEY = n => ({ biology: 'biology', chemistry: 'chemistry', mathematics: 'maths', maths: 'maths', physics: 'physics', geography: 'geography', history: 'history', english: 'english', languages: 'languages' })[String(n).toLowerCase()] || 'more';
+  const FMT = { text: ['read', '📖'], visual: ['model', '🧊'], video: ['video', '▶'], practice: ['practice', '✎'], audio: ['audio', '🎧'] };
+  function lessonCard(L, i) {
+    const p = st.data().lessons[L.id], n = p ? L.sections.filter(s => (p.done || {})[s.id]).length : 0, k = SUBJ_KEY(L.subject), pct = Math.round(100 * n / L.sections.length), hue = LS.xHue ? LS.xHue(k) : 220;
+    return `<a class="ls-card ls-lcard xc-reveal" style="--hue:${hue};--i:${i || 0}" href="#/lesson/${L.id}"><span class="ls-lcard__art xc-art">${LS.xart ? LS.xart(L.id, L.title + ' ' + (L.topic || ''), k) : ''}</span>
+      <span class="ls-lcard__b"><span class="ls-card__k">${esc(L.subject)} · ${esc(L.level)}</span><b>${esc(L.title)}</b>
+      <span class="ls-lcard__chips"><span>⏱ ${L.mins} min</span><span>${L.sections.length} ${T('sections', 'أقسام')}</span>${(L.formats || []).map(f => FMT[f] ? `<span>${FMT[f][1]} ${T(FMT[f][0], FMT[f][0])}</span>` : '').join('')}</span>
+      ${p ? `<span class="ls-meter ls-meter--sm" role="progressbar" aria-label="${T('Progress', 'التقدم')}" aria-valuemin="0" aria-valuemax="${L.sections.length}" aria-valuenow="${n}"><i style="width:${pct}%"></i></span><small>${p.completed ? '✓ ' + T('Finished', 'مكتمل') : pct + '% · ' + T('continue', 'تابع')}</small>` : `<small class="ls-lcard__go">${T('Start the lesson', 'ابدأ الدرس')} →</small>`}</span></a>`;
   }
   /* ---------------- Library ---------------- */
   function resources() {
@@ -30,7 +36,7 @@
   function lessons(view) {
     const by = {}; LS.lessons.forEach(L => (by[L.subject] = by[L.subject] || []).push(L));
     view.innerHTML = `<header class="ls-pagehead"><p class="ls-kicker">${T('Interactive Lessons', 'الدروس التفاعلية')}</p><h1>${T('Structured lessons you can touch', 'دروس منظمة تفاعلية')}</h1><p class="ls-lead">${T('Each lesson mixes explanation, diagrams, live models, worked examples and activities, and ends with a summary, revision questions and flashcards. Your place is saved.', 'كل درس يمزج الشرح والنماذج والأنشطة.')}</p></header>
-      ${Object.entries(by).map(([s, ls]) => `<section class="ls-panel"><h2 class="ls-h2">${esc(s)}</h2><div class="ls-grid">${ls.map(lessonCard).join('')}</div></section>`).join('')}
+      ${Object.entries(by).map(([s, ls]) => `<section class="ls-panel ls-lpanel" style="--hue:${LS.xHue ? LS.xHue(SUBJ_KEY(s)) : 220}"><h2 class="ls-h2"><i class="ls-lpanel__dot" aria-hidden="true"></i>${esc(s)} <small>${ls.length} ${T(ls.length === 1 ? 'lesson' : 'lessons', 'دروس')}</small></h2><div class="ls-grid ls-lgrid">${ls.map(lessonCard).join('')}</div></section>`).join('')}
       <p class="ls-muted ls-small">${LS.lessons.length} ${T('lessons. Lessons are data in a validated registry (assets/js/learn/ls-lessons-*.js); adding one needs no new code.', 'دروس في سجل موثّق.')}</p>`;
   }
 

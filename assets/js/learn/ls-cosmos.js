@@ -392,7 +392,7 @@
       </div></div>
     </section>
     <section class="cz-index" aria-labelledby="czIdxH"><h2 id="czIdxH" class="cz-index__h">${T('Every world', 'كل العوالم')}</h2>
-      <ol class="cz-index__list">${W.ORDER.map(id => { const n = C0 ? C0.bySubject(id).reduce((a, c) => a + c.chapters.length, 0) : 0; return `<li><a href="#/world/${id}" data-cz-idx="${id}">${orb(id)}<span><b>${esc(M[id].name)}</b><small>${esc(M[id].line)}</small></span><em>${n} ${T('chapters', 'فصول')}</em></a></li>`; }).join('')}</ol></section>
+      <ol class="cz-index__list">${W.ORDER.map(id => { const n = C0 ? C0.bySubject(id).reduce((a, c) => a + c.chapters.length, 0) : 0; return `<li><a href="#/world/${id}" data-cz-idx="${id}">${orb(id)}<span><b>${esc(M[id].name)}</b><small>${esc(M[id].line)}</small></span><em>${n} ${T(n === 1 ? 'chapter' : 'chapters', 'فصول')}</em></a></li>`; }).join('')}</ol></section>
     <div id="czAfter" class="cz-after" data-embed="1" tabindex="-1"></div>`;
     /* the universe starts at the very top of the document, under the transparent header; measured after layout settles
        (the router resets the previous page's scroll after rendering) and again on resize */
@@ -472,7 +472,7 @@
     if (!flat) {
       root.classList.add('is-loading');
       universe(stage, { onLoad: L => { const el = root.querySelector('.cz-load'); if (!el) return; if (L.failed) el.textContent = T('The astronaut could not load — the universe still works.', 'تعذّر تحميل رائد الفضاء'); else el.textContent = `${T('Preparing the universe', 'نجهّز الكون')} · ${L.worlds}/11 ${T('worlds', 'عوالم')}${L.astro ? '' : ' · ' + T('astronaut', 'رائد الفضاء')}…`; if (L.astro && L.worlds >= 11) { el.textContent = T('The universe is ready.', 'الكون جاهز.'); root.classList.add('is-ready'); } else if (L.astro && L.worlds >= 4) root.classList.add('is-ready'); },
-        onNames: list => { const box = root.querySelector('.cz-names'); if (!list) { box.classList.remove('is-on'); return; } box.classList.add('is-on'); list.forEach(n => { if (!n) return; const el = box.querySelector(`[data-n="${n.id}"]`); el.style.transform = `translate3d(${Math.round(n.x)}px, ${Math.round(n.y)}px, 0) translate(-50%, 0)`; el.style.opacity = n.on ? '' : '0'; el.classList.toggle('is-focus', n.id === labelFocus.id); }); },
+        onNames: list => { const box = root.querySelector('.cz-names'); if (!list) { box.classList.remove('is-on'); return; } box.classList.add('is-on'); const hb = document.querySelector('header.at-spine'), topMin = (hb ? hb.getBoundingClientRect().bottom : 64) - box.getBoundingClientRect().top + 6; /* v46: never over the page header */ list.forEach(n => { if (!n) return; const el = box.querySelector(`[data-n="${n.id}"]`); el.style.transform = `translate3d(${Math.round(n.x)}px, ${Math.round(n.y)}px, 0) translate(-50%, 0)`; el.style.opacity = n.on && n.y > topMin ? '' : '0'; el.classList.toggle('is-focus', n.id === labelFocus.id); }); },
         onProgress, onLabel: labelShow, onHover: id => { if (!id) labelHide(); }, onArrive: arrive, onFlight, onAstronaut: ok => root.classList.toggle('has-astro', ok) }).then(u => {
         if (current !== ctl && !(parked && parked.ctl === ctl)) { u.destroy(); return; } U = u; if (current === ctl) LS.__cosmos = u; root.classList.remove('is-loading'); root.classList.add('is-live'); const p = progressFromScroll(); u.jump(p);
         let ret = null; try { ret = JSON.parse(sessionStorage.getItem('cz-return') || 'null'); sessionStorage.removeItem('cz-return'); } catch (e) { /* */ }
