@@ -431,7 +431,7 @@
     let labelT = 0; const labelHide = () => { if (label.hidden) return; label.classList.remove('is-on'); clearTimeout(labelT); labelT = setTimeout(() => { if (!label.classList.contains('is-on')) label.hidden = true; }, 260); };
     const labelShow = (id, pos) => { labelFocus.id = id; if (!id || !pos || pos.behind) { labelHide(); return; } clearTimeout(labelT);
       if (label.dataset.id !== id) { label.dataset.id = id; label.querySelector('b').textContent = M[id].name; label.querySelector('.cz-label__t span').textContent = M[id].line; const nC = C0 ? C0.bySubject(id).reduce((a, c) => a + c.chapters.length, 0) : 0, nX = (LS.experiences || []).filter(x => x.subject === id).length; label.querySelector('small').textContent = `${nC} ${T(nC === 1 ? 'chapter' : 'chapters', 'فصول')}${nX ? ` · ${nX} ${T(nX === 1 ? 'experience' : 'experiences', 'تجارب')}` : ''}`; label.style.setProperty('--cz-hue', LS.xHue ? LS.xHue(id) : 220); label.classList.remove('is-pop'); void label.offsetWidth; label.classList.add('is-pop'); }
-      if (label.hidden) { label.hidden = false; requestAnimationFrame(() => label.classList.add('is-on')); } else label.classList.add('is-on');
+      if (label.hidden) { label.hidden = false; void label.offsetWidth; } if (!label.classList.contains('is-on')) label.classList.add('is-on'); /* shown at once (no extra frame) */
       label.style.transform = `translate3d(${Math.round(pos.x)}px, ${Math.round(pos.y)}px, 0) translate(-50%, 12px)`; };
 
     /* clicks and keys */

@@ -22,7 +22,7 @@
     els.forEach(b => { b.dataset.cu = '1'; io.observe(b); }); if (cleanups) cleanups.push(() => io.disconnect()); }
   function topicArt(root) { root.querySelectorAll('.at-topic > h3').forEach(h => { if (h.querySelector('.xc-art') || !LS.xart) return; const a = h.querySelector('a'); const txt = a ? a.textContent : h.textContent, sec = h.closest('.at-sec'), sub = sec && sec.querySelector('.at-h2') ? sec.querySelector('.at-h2').textContent.toLowerCase() : '';
       const key = { biology: 'biology', chemistry: 'chemistry', mathematics: 'maths', physics: 'physics' }[sub] || 'more', t = h.closest('.at-topic'); t.style.setProperty('--hue', LS.xHue ? LS.xHue(key) : 220); h.insertAdjacentHTML('afterbegin', `<span class="xc-art at-topic__art">${LS.xart('', txt, key)}</span>`); }); }
-  function polish(view) { if (!view || !view.isConnected) return; SEL.forEach(s => view.querySelectorAll(s).forEach((e, i) => { if (!e.classList.contains('xc-reveal')) { e.classList.add('xc-reveal'); e.style.setProperty('--i', i % 12); } }));
+  function polish(view) { if (!view || !view.isConnected) return; SEL.forEach(s => view.querySelectorAll(s).forEach((e, i) => { if (!e.dataset.xr) { e.dataset.xr = '1'; e.classList.add('xc-reveal'); } /* each element flows in once */ }));
     view.querySelectorAll('.cz-index__list a').forEach(a => { const o = a.querySelector('.cz-orb'); if (o && !a.style.getPropertyValue('--a')) a.style.setProperty('--a', o.style.getPropertyValue('--a')); }); /* the card glows in its world's colour */
     topicArt(view); if (LS.xreveal) LS.xreveal(view, live); countUp(view, live); }
   const live = []; LS.on('leave', () => { live.splice(0).forEach(f => { try { f(); } catch (e) { /* */ } }); }); /* observers end with their page */

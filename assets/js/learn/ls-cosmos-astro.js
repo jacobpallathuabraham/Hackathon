@@ -275,8 +275,8 @@
           if (obstacles && obstacles.length) keepClear(tmp, camera, obstacles, frame);
           if (!st.off || st.fresh) { st.off = tmp.clone(); st.offV.set(0, 0, 0); st.fresh = false; }
           let urgent = false; const C = st.clear; if (C && st.off.z < -0.5) { const k = C.d / -st.off.z, x = st.off.x * k, y = st.off.y * k; for (let i = 0; i < C.list.length; i += 4) if (Math.hypot(x - C.list[i], y - C.list[i + 1]) < C.list[i + 2]) { urgent = true; break; } }
-          const w = urgent ? 7 : 1.9; /* v46: a slower, steadier glide (urgent clearance stays quick) */ tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
-          const vmax = urgent ? 7 : 1.9; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
+          const w = urgent ? 7 : 2.6; tmp2.subVectors(tmp, st.off).multiplyScalar(w * w).addScaledVector(st.offV, -2 * w); st.offV.addScaledVector(tmp2, dt);
+          const vmax = urgent ? 7 : 2.6; if (st.offV.length() > vmax) st.offV.setLength(vmax); st.off.addScaledVector(st.offV, dt);
           st.pos.copy(st.off); camera.localToWorld(st.pos);
           if (obstacles) for (const ob of obstacles) { tmp2.subVectors(st.pos, ob.p); const L = tmp2.length(); if (L < ob.r) { st.pos.copy(ob.p).addScaledVector(tmp2.divideScalar(Math.max(L, 1e-4)), ob.r); st.off.copy(st.pos); camera.worldToLocal(st.off); } }
         }

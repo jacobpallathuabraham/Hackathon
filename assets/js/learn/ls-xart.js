@@ -70,7 +70,7 @@
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
     if (still || !('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('is-in')); return; }
     root.classList.add('xc-flow'); let batch = 0, bt = 0;
-    const io = new IntersectionObserver(es => { es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); e.target.style.setProperty('--d', Math.min(batch++, 8) * 60 + 'ms'); e.target.classList.add('is-in'); }); clearTimeout(bt); bt = setTimeout(() => { batch = 0; }, 140); }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
+    const io = new IntersectionObserver(es => { es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); const el = e.target, d = Math.min(batch++, 8) * 60; el.style.setProperty('--d', d + 'ms'); el.classList.add('is-in'); setTimeout(() => { el.classList.remove('xc-reveal', 'is-in'); el.style.removeProperty('--d'); }, 700 + d); /* revealed: hand the element back to its own styles (hover lifts react at once) */ }); clearTimeout(bt); bt = setTimeout(() => { batch = 0; }, 140); }, { rootMargin: '0px 0px -6% 0px', threshold: 0.08 });
     els.forEach(e => io.observe(e)); const stop = () => { io.disconnect(); clearTimeout(bt); };
     if (cleanups) cleanups.push(stop); else { const w = setInterval(() => { if (!root.isConnected) { stop(); clearInterval(w); } }, 2000); } };
 

@@ -47,9 +47,9 @@ html.cz-on, html.cz-on body { overscroll-behavior-y: none; background-color: #01
 .cz-label__card { position: relative; display: grid; grid-template-columns: 46px minmax(0, 1fr); grid-template-areas: "orb t" "orb go"; column-gap: 14px; row-gap: 8px; align-items: center; padding: 14px 18px 14px 14px; border-radius: 20px; text-align: start;
   background: radial-gradient(120% 140% at 0% 0%, hsl(var(--cz-hue) 70% 45% / .28), transparent 60%), linear-gradient(160deg, rgba(22, 28, 56, .94), rgba(7, 9, 22, .94));
   border: 1px solid hsl(var(--cz-hue) 80% 70% / .32); box-shadow: 0 24px 60px -18px rgba(0, 0, 0, .8), 0 0 46px -14px hsl(var(--cz-hue) 90% 60% / .65), inset 0 1px 0 rgba(255, 255, 255, .08);
-  transform-origin: 50% -12px; opacity: 0; transform: translateY(10px) scale(.86); filter: blur(6px); transition: opacity .26s ease, transform .5s cubic-bezier(.18, 1.35, .32, 1), filter .3s ease; }
+  transform-origin: 50% -12px; opacity: 0; transform: translateY(10px) scale(.9); transition: opacity .22s ease, transform .45s cubic-bezier(.18, 1.35, .32, 1); }
 .cz-label__card::before { content: ''; position: absolute; left: 50%; top: -12px; width: 1px; height: 12px; background: linear-gradient(hsl(var(--cz-hue) 90% 75% / 0), hsl(var(--cz-hue) 90% 75% / .9)); }
-.cz-label.is-on .cz-label__card { opacity: 1; transform: none; filter: none; }
+.cz-label.is-on .cz-label__card { opacity: 1; transform: none; }
 .cz-label.is-pop.is-on .cz-label__card { animation: cz-pop .5s cubic-bezier(.18, 1.35, .32, 1); }
 .cz-label__orb { grid-area: orb; width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff 0, hsl(var(--cz-hue) 90% 78%) 14%, hsl(var(--cz-hue) 75% 52%) 46%, hsl(var(--cz-hue) 70% 18%) 100%); box-shadow: 0 0 24px hsl(var(--cz-hue) 90% 60% / .7), inset -6px -8px 14px rgba(0, 0, 0, .45); position: relative; }
 .cz-label__orb::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 1px solid hsl(var(--cz-hue) 90% 75% / .5); transform: rotateX(70deg); animation: cz-orbit 6s linear infinite; }

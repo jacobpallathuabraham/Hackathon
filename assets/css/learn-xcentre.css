@@ -62,9 +62,8 @@
 @keyframes xa-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
 
 /* ---------- the scroll flow: cards rise into place as they enter the view ---------- */
-.xc-flow .xc-reveal { opacity: 0; transform: translateY(26px) scale(.985); transition: opacity .55s ease var(--d, 0ms), transform .75s cubic-bezier(.16,.84,.24,1) var(--d, 0ms); will-change: opacity, transform; }
-.xc-flow .xc-reveal.is-in { opacity: 1; transform: none; will-change: auto; }
-.xc-flow .xc-reveal.is-in > a { transition-delay: 0s; }
+.xc-flow .xc-reveal { opacity: 0; transform: translateY(22px); transition: opacity .5s ease var(--d, 0ms), transform .6s cubic-bezier(.16,.84,.24,1) var(--d, 0ms); } /* no will-change: hundreds of pending layers hurt iPad Safari */
+.xc-flow .xc-reveal.is-in { opacity: 1; transform: none; }
 
 /* ---------- a chapter's experiment centre ---------- */
 .xc { margin-top: 26px; }
