@@ -105,6 +105,45 @@ const IDS = ['cm-ucm', 'cm-bank', 'cm-conical', 'cm-cyclist', 'cm-bowl', 'cm-sph
     await go('exp/cm-vertical', '.cm-stage canvas', 1500); await live(() => LS.exp.live.pause()); const t0 = (await live(() => LS.exp.live._state())).t; await p.focus('#lsView .cm-stage canvas'); await p.keyboard.press('s'); await p.waitForTimeout(150);
     const s = await live(() => LS.exp.live._state()); near(s.t - t0, 1 / 30, 2e-3, 'S = one step of 1/30 s'); await p.keyboard.press('3'); await p.waitForTimeout(100); assert.equal((await live(() => LS.exp.live._state())).cam, 'top');
   });
+  await t('v45 banking: sliders change the run live (no restart) and the car eases to the new speed, radius and bank', async () => {
+    await go('exp/cm-bank', '.cm-stage canvas', 1500); await lab({ p: { mode: 'fric', r: 60, deg: 18, mu: 0.6, v: 18 } }); await live(() => LS.exp.live.play());
+    const set = (k, v) => live(([k2, v2]) => { const r = document.querySelector(`#lsView [data-k="${k2}"]`); r.value = v2; r.dispatchEvent(new Event('input', { bubbles: true })); }, [k, v]);
+    await p.waitForTimeout(600); const a0 = await live(() => ({ t: LS.exp.live._state().t, a: LS.exp.live._sim().a }));
+    await set('v', 24); await set('deg', 24); await set('r', 70); await p.waitForTimeout(300); const a1 = await live(() => ({ t: LS.exp.live._state().t, a: LS.exp.live._sim().a, ev: LS.exp.live._sim().ev }));
+    assert.ok(a1.t > a0.t && a1.a > a0.a, 'the clock and the car carried on: ' + JSON.stringify([a0, a1])); assert.ok(a1.ev.v < 24 && a1.ev.v >= 18, 'speed eases (≤ 4.5 m/s²), it does not jump: ' + a1.ev.v);
+    await live(() => LS.exp.live._set({ keep: true, run: 6 })); const e = await live(() => LS.exp.live._sim().ev); near(e.v, 24, 1e-9, 'reaches the new speed'); near(e.deg, 24, 1e-9, 'reaches the new bank'); near(e.r, 70, 1e-9, 'reaches the new radius');
+  });
+  await t('v45 banking: speedometer and pedals — holding the accelerator raises the target, the brake lowers it, ↑/↓ on the 3D view work too', async () => {
+    await go('exp/cm-bank', '.cm-drive', 1500); await lab({ p: { mode: 'fric', r: 60, deg: 18, mu: 0.9, v: 15 } }); await live(() => LS.exp.live.play());
+    const g0 = await live(() => document.querySelector('#lsView .cm-g__v').textContent); assert.ok(/^\d+(\.\d)?$/.test(g0), 'speed readout ' + g0);
+    const gas = p.locator('#lsView .cm-pedal--gas'); await gas.hover(); await p.mouse.down(); await p.waitForTimeout(800); await p.mouse.up(); const v1 = await live(() => LS.exp.live._state().p.v); assert.ok(v1 > 16, 'accelerator raised the target: ' + v1);
+    const br = p.locator('#lsView .cm-pedal--brake'); await br.hover(); await p.mouse.down(); await p.waitForTimeout(600); await p.mouse.up(); const v2 = await live(() => LS.exp.live._state().p.v); assert.ok(v2 < v1, 'brake lowered it: ' + v2);
+    await p.focus('#lsView .cm-stage canvas'); await p.keyboard.down('ArrowUp'); await p.waitForTimeout(500); await p.keyboard.up('ArrowUp'); const v3 = await live(() => LS.exp.live._state().p.v); assert.ok(v3 > v2, '↑ accelerates: ' + v3);
+    const lbl = await live(() => [...document.querySelectorAll('#lsView .cm-pedal')].map(b => b.getAttribute('aria-label'))); assert.ok(lbl.every(Boolean), 'pedals are labelled');
+  });
+  await t('v45 banking: the follow camera stays above the ground and the car stays in view, even sliding down a 45° bank', async () => {
+    await go('exp/cm-bank', '.cm-stage canvas', 1500); await lab({ p: { mode: 'fric', r: 60, deg: 45, mu: 0, v: 14 }, cam: 'follow' }); await live(() => LS.exp.live.play());
+    for (let i = 0; i < 6; i++) { await p.waitForTimeout(700); const r = await live(() => { const L = LS.exp.live, sp = L._lab.spec, s = L._sim(), q = L._state().p, F = sp.follow(s, q), car = sp.focus(s, q); const th = q.deg * Math.PI / 180, x = Math.hypot(F.pos[0], F.pos[2]);
+        const w = 9, y0 = w / 2 * Math.sin(th) + 0.06, ri = q.r - w / 2 * Math.cos(th), ro = q.r + w / 2 * Math.cos(th), yo = y0 + w / 2 * Math.sin(th), ext = Math.max(1.5, yo * 2.2);
+        const ground = x < ri ? 0.06 : x <= ro ? y0 + (x - q.r) / Math.cos(th) * Math.sin(th) : x < ro + ext ? yo * (1 - (x - ro) / ext) : 0; return { camY: F.pos[1], ground, carY: car[1], off: s.off }; });
+      assert.ok(r.camY > r.ground + 1.5, 'camera above the ground: ' + JSON.stringify(r)); assert.ok(r.camY > r.carY + 1, 'camera above the car: ' + JSON.stringify(r)); }
+  });
+  await t('v45 experiment centre: family filters, search, "not opened yet", a polite count, empty state, prefetch of the experiments', async () => {
+    await go('chapter/p-circular', '.cmx', 1500);
+    await p.click('#lsView [data-cmx-f="4"]'); assert.equal(await p.textContent('#lsView [data-cmx-count]'), '4 experiments shown'); assert.equal(await p.getAttribute('#lsView [data-cmx-f="4"]', 'aria-pressed'), 'true');
+    await p.click('#lsView [data-cmx-f="all"]'); await p.fill('#lsView [data-cmx-q]', 'orbit'); await p.waitForTimeout(300); assert.equal(await p.textContent('#lsView [data-cmx-count]'), '1 experiment shown');
+    await p.fill('#lsView [data-cmx-q]', 'qqqq'); await p.waitForTimeout(300); assert.ok(await p.isVisible('#lsView [data-cmx-empty]'));
+    await p.fill('#lsView [data-cmx-q]', ''); await p.click('#lsView [data-cmx-todo]'); await p.waitForTimeout(200); assert.equal(await p.getAttribute('#lsView [data-cmx-todo]', 'aria-pressed'), 'true');
+    assert.equal(await live(() => document.querySelector('#lsView [data-cmx-count]').getAttribute('aria-live')), 'polite');
+    await p.waitForFunction(() => !!(window.LS && LS.circLab && LS.exp), null, { timeout: 20000 }); // the centre warms every experiment in idle time
+  });
+  await t('v45 loading: an experience opens on a skeleton and the experience scripts load in one parallel round, in order', async () => {
+    await fresh(); await p.goto(BASE + 'learn.html#/practice'); await p.waitForFunction(() => window.LS && LS.needExp, null, { timeout: 40000 }); await p.waitForTimeout(800);
+    await live(() => { location.hash = '#/exp/cm-flat'; }); await p.waitForSelector('#lsView .xp-skel, #lsView .cm-stage canvas', { timeout: 10000 });
+    await p.waitForSelector('#lsView .cm-stage canvas', { timeout: 40000 });
+    const r = await live(() => { const s = [...document.querySelectorAll('script[src*="assets/js/learn/"]')].filter(x => !x.async && x.src.includes('ls-')); return { n: s.length, order: s.map(x => x.src.split('/').pop().split('?')[0]) }; });
+    assert.ok(r.order.indexOf('ls-circ-engine.js') < r.order.indexOf('ls-circ-lab.js') && r.order.indexOf('ls-circ-lab.js') < r.order.indexOf('ls-x-circ-a.js'), 'dependency order kept: ' + r.order.join(','));
+  });
   await t('no page errors', async () => { assert.deepEqual(errs, []); });
   await b.close(); console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
 })();

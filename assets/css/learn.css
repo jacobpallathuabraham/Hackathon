@@ -284,3 +284,13 @@ html.a11y-reduce-motion .ls-page *, html.reduce-motion .ls-page * { transition: 
   .ls-page .ls-ask { display: none; } /* Noor's own launcher stays one tap away on phones */
   .ls-page .ls-brand span { display: inline; font-size: 1rem; } .ls-page .ls-top__tools { margin-inline-start: auto; }
 }
+
+/* v45: an experience opens on a skeleton of its page (title, hook, stage), never a blank view */
+.xp-skel { max-width: 1180px; margin: 0 auto; padding: 18px 0 40px; }
+.xp-skel__h { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: .2rem 0 .3rem; }
+.xp-skel__q { color: var(--muted); max-width: 60ch; margin: 0 0 18px; }
+.xp-skel__stage { position: relative; aspect-ratio: 16 / 8; border-radius: 18px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(110deg, rgba(120,140,200,.08) 30%, rgba(150,170,230,.18) 50%, rgba(120,140,200,.08) 70%) 0 0 / 300% 100%, #0b1020; animation: xp-shimmer 1.4s linear infinite; }
+.xp-skel__stage .ls-loading { color: #c9d4f2; }
+.xp-skel__bar { display: flex; gap: 10px; margin-top: 14px; } .xp-skel__bar i { height: 34px; flex: 1; border-radius: 999px; background: var(--line); opacity: .6; }
+@keyframes xp-shimmer { to { background-position: -300% 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) { .xp-skel__stage { animation: none; } }

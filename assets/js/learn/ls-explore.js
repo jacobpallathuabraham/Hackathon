@@ -122,7 +122,48 @@
   /* ---------- lazy loading of the heavy parts ---------- */
   const once = {};
   const script = src => once[src] || (once[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
-  LS.needExp = () => script('assets/js/learn/ls-exp.js?v=29').then(() => script('assets/js/learn/ls-kit.js?v=26')).then(() => script('assets/js/learn/ls-guide.js?v=29b')).then(() => Promise.all([script('assets/js/learn/ls-x-phys.js?v=24'), script('assets/js/learn/ls-x-math.js?v=26'), script('assets/js/learn/ls-x-chem.js?v=28'), script('assets/js/learn/ls-x-bio.js?v=24'), script('assets/js/learn/ls-x-earth.js?v=42'), script('assets/js/learn/ls-x-mind.js?v=28'), script('assets/js/learn/ls-exp2.js?v=42'), script('assets/js/learn/ls-exp-newton.js?v=26c'), script('assets/js/learn/ls-x-v26-math.js?v=26a'), script('assets/js/learn/ls-x-v26-solids.js?v=26b'), script('assets/js/learn/ls-x-v26-phys.js?v=26d'), script('assets/js/learn/ls-exp-bio.js?v=23d')]).then(() => script('assets/js/learn/ls-x-v27.js?v=28')).then(() => script('assets/js/learn/ls-x-v27-bio.js?v=27')).then(() => Promise.all([script('assets/js/learn/ls-x-v28-earth.js?v=28d'), script('assets/js/learn/ls-x-v28-calc.js?v=28d'), script('assets/js/learn/ls-x-v28-cs.js?v=28'), script('assets/js/learn/ls-x-v28-phys.js?v=28c'), script('assets/js/learn/ls-x-v28-words.js?v=28'), script('assets/js/learn/ls-x-v28-bio.js?v=28a')])).then(() => script('assets/js/learn/ls-3d.js?v=29c')).then(() => Promise.all([script('assets/js/learn/ls-x-v29-rotation.js?v=29e'), script('assets/js/learn/ls-x-v29-counting.js?v=29b'), script('assets/js/learn/ls-x-v29-prob.js?v=29d')]))).then(() => script('assets/js/learn/ls-circ-engine.js?v=42')).then(() => script('assets/js/learn/ls-circ-lab.js?v=42')).then(() => script('assets/js/learn/ls-x-circ-a.js?v=42')).then(() => script('assets/js/learn/ls-x-circ-b.js?v=42'));
+  /* v45: every experience script is fetched IN PARALLEL and executed in this order (dynamic scripts with async = false
+     keep insertion order) — one network round instead of eight waves one after another. Scripts already on the page
+     (e.g. ls-3d.js, loaded by learn.html) are skipped. */
+  const EXP_SRC = [
+    'assets/js/learn/ls-exp.js?v=29',
+    'assets/js/learn/ls-kit.js?v=26',
+    'assets/js/learn/ls-guide.js?v=29b',
+    'assets/js/learn/ls-x-phys.js?v=24',
+    'assets/js/learn/ls-x-math.js?v=26',
+    'assets/js/learn/ls-x-chem.js?v=28',
+    'assets/js/learn/ls-x-bio.js?v=24',
+    'assets/js/learn/ls-x-earth.js?v=42',
+    'assets/js/learn/ls-x-mind.js?v=28',
+    'assets/js/learn/ls-exp2.js?v=42',
+    'assets/js/learn/ls-exp-newton.js?v=26c',
+    'assets/js/learn/ls-x-v26-math.js?v=26a',
+    'assets/js/learn/ls-x-v26-solids.js?v=26b',
+    'assets/js/learn/ls-x-v26-phys.js?v=26d',
+    'assets/js/learn/ls-exp-bio.js?v=23d',
+    'assets/js/learn/ls-x-v27.js?v=28',
+    'assets/js/learn/ls-x-v27-bio.js?v=27',
+    'assets/js/learn/ls-x-v28-earth.js?v=28d',
+    'assets/js/learn/ls-x-v28-calc.js?v=28d',
+    'assets/js/learn/ls-x-v28-cs.js?v=28',
+    'assets/js/learn/ls-x-v28-phys.js?v=28c',
+    'assets/js/learn/ls-x-v28-words.js?v=28',
+    'assets/js/learn/ls-x-v28-bio.js?v=28a',
+    'assets/js/learn/ls-3d.js?v=29c',
+    'assets/js/learn/ls-x-v29-rotation.js?v=29e',
+    'assets/js/learn/ls-x-v29-counting.js?v=29b',
+    'assets/js/learn/ls-x-v29-prob.js?v=29d',
+    'assets/js/learn/ls-circ-engine.js?v=42',
+    'assets/js/learn/ls-circ-lab.js?v=45',
+    'assets/js/learn/ls-x-circ-a.js?v=45',
+    'assets/js/learn/ls-x-circ-b.js?v=42'];
+  const ordered = srcs => Promise.all(srcs.map(src => once[src] || (once[src] = document.querySelector(`script[src="${src}"]`) ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }))));
+  let expP = null; LS.needExp = () => expP || (expP = ordered(EXP_SRC).catch(e => { expP = null; throw e; }));
+  /* warm everything an experience needs (scripts, three.js and its environment map) before it is opened: on hover, focus
+     or touch of any experience link, and in idle time on pages that list experiences */
+  LS.warmExp = () => { LS.needExp().catch(() => {}); if (LS.three) LS.three().then(() => import('three/addons/environments/RoomEnvironment.js')).catch(() => {}); };
+  const warmOn = e => { const a = e.target && e.target.closest && e.target.closest('a[href^="#/exp/"], [data-cm-exp]'); if (a) LS.warmExp(); };
+  ['pointerover', 'focusin', 'touchstart'].forEach(ev => document.addEventListener(ev, warmOn, { passive: true }));
   LS.needWorlds = () => script('assets/js/learn/ls-worlds.js?v=24');
 
   /* ---------- the subject worlds (Explore → Subjects) ---------- */
@@ -181,7 +222,7 @@
   function exp(view, parts) {
     const x = X.find(e => e.id === parts[0]);
     if (!x) { view.innerHTML = `<section class="ls-empty"><h1>${T('Experience not found', 'التجربة غير موجودة')}</h1><a class="ls-btn" href="#/discover">${T('All experiences', 'كل التجارب')}</a></section>`; return; }
-    view.innerHTML = `<p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Opening the experience…', 'أفتح التجربة…')}</p>`;
+    view.innerHTML = `<section class="xp-skel" aria-busy="true"><p class="at-k">${esc(x.mins + ' min')}</p><h1 class="xp-skel__h">${esc(x.title)}</h1><p class="xp-skel__q">${esc(x.hook || '')}</p><div class="xp-skel__stage"><p class="ls-loading" role="status"><span class="ls-spin" aria-hidden="true"></span>${T('Opening the experience…', 'أفتح التجربة…')}</p></div><div class="xp-skel__bar"><i></i><i></i><i></i><i></i></div></section>`;
     LS.needExp().then(() => { if (view.isConnected && LS.current()[0] === 'exp' && LS.current()[1] === x.id) LS.exp.mount(view, x); })
       .catch(e => { view.innerHTML = `<section class="ls-empty"><h1>${T('This experience could not load', 'تعذر تحميل التجربة')}</h1><p>${esc(e.message)}</p><button type="button" class="ls-btn" onclick="LS.render()">${T('Try again', 'حاول مجدداً')}</button></section>`; });
   }
