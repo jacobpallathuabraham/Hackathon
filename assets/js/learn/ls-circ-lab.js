@@ -101,7 +101,7 @@
         <div class="cm-pedals"><button type="button" class="cm-pedal cm-pedal--brake" data-pedal="-1" aria-label="${T('Brake — hold to slow down (↓)', 'المكابح — اضغط مطولاً للإبطاء')}"><span aria-hidden="true">${T('Brake', 'فرامل')}</span></button><button type="button" class="cm-pedal cm-pedal--gas" data-pedal="1" aria-label="${T('Accelerator — hold to speed up (↑)', 'الوقود — اضغط مطولاً للتسريع')}"><span aria-hidden="true">${T('Gas', 'وقود')}</span></button></div><span class="sr-only" aria-live="polite"></span>`;
       stageHost.appendChild(el); const $d = x => el.querySelector(x), ndl = $d('.cm-g__ndl'), tv = $d('.cm-g__v'), tu = $d('.cm-g__u'), say = $d('[aria-live]');
       const locked = () => st.chal && !st.chal.done;
-      const press = dir => { if (locked()) return; st.pedal = dir; el.querySelector(`[data-pedal="${dir}"]`).classList.add('is-on'); if (!st.running) play(); };
+      const press = dir => { if (locked() || el.hidden) return; st.pedal = dir; el.querySelector(`[data-pedal="${dir}"]`).classList.add('is-on'); if (!st.running) play(); };
       const release = () => { if (!st.pedal) return; el.querySelectorAll('.cm-pedal').forEach(b => b.classList.remove('is-on')); st.pedal = 0; say.textContent = T('Target speed', 'السرعة المطلوبة') + ' ' + f(p[D.param], 1) + ' m/s'; sync(); };
       el.querySelectorAll('.cm-pedal').forEach(b => { const dir = +b.dataset.pedal;
         b.addEventListener('pointerdown', e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (x) { /* */ } press(dir); });
@@ -111,7 +111,7 @@
       return { press, release,
         frame(dt) { if (st.pedal) { const rate = st.pedal > 0 ? 6 : 9, v = Math.max(q.min, Math.min(q.max, p[D.param] + st.pedal * rate * dt)); if (v !== p[D.param]) { p[D.param] = v; ctl.set(D.param, +v.toFixed(1)); } }
           const sp = D.speed(st.s, p); ndl.setAttribute('transform', `rotate(${ang(sp).toFixed(2)} 100 100)`); tv.textContent = f(sp, 1); tu.textContent = `m/s · ${f(sp * 3.6, 0)} km/h`; },
-        marks() { const M0 = st.hide ? {} : D.marks(st.s, p), band = $d('.cm-g__band'), id0 = $d('.cm-g__ideal'); $d('.cm-g__tgt').setAttribute('transform', `rotate(${ang(p[D.param]).toFixed(2)} 100 100)`);
+        marks() { el.hidden = !!(D.enabled && !D.enabled(p)); const M0 = st.hide ? {} : D.marks(st.s, p), band = $d('.cm-g__band'), id0 = $d('.cm-g__ideal'); $d('.cm-g__tgt').setAttribute('transform', `rotate(${ang(p[D.param]).toFixed(2)} 100 100)`);
           if (M0.lo != null && M0.hi != null) { band.setAttribute('d', arc(Math.max(0, M0.lo), Math.min(D.max, M0.hi), 84)); band.style.display = ''; } else band.style.display = 'none';
           if (M0.ideal != null && M0.ideal <= D.max) { const a = P(ang(M0.ideal), 90), b2 = P(ang(M0.ideal), 68); id0.setAttribute('x1', a[0]); id0.setAttribute('y1', a[1]); id0.setAttribute('x2', b2[0]); id0.setAttribute('y2', b2[1]); id0.style.display = ''; } else id0.style.display = 'none';
           el.querySelector('svg').setAttribute('aria-label', T('Speedometer: ', 'عداد السرعة: ') + f(D.speed(st.s, p), 1) + ' m/s, ' + T('target', 'المطلوب') + ' ' + f(p[D.param], 1) + (M0.ideal != null ? ', ' + T('ideal', 'المثالية') + ' ' + f(M0.ideal, 1) : '') + (M0.lo != null ? ', ' + T('safe', 'الآمن') + ' ' + f(M0.lo, 1) + '–' + f(Math.min(M0.hi, 999), 1) : '') + ' m/s'); } }; })();
@@ -252,12 +252,12 @@
     reinit(); visParams(); chalUI(); ui(); if (!ok3d && !c.reduced && spec.autoplay !== false) play();
 
     const api = { play, pause, running: () => st.running, reset() { pause(); reinit(); sync(); },
-      destroy() { if (S) { if (env) env.dispose(); S.destroy(); } if (L2) L2.destroy(); FB.destroy(); GR.destroy(); },
+      destroy() { if (W && W.dispose) try { W.dispose(); } catch (e) { /* */ } if (S) { if (env) env.dispose(); S.destroy(); } if (L2) L2.destroy(); FB.destroy(); GR.destroy(); },
       observe() { const o = spec.observe ? spec.observe(st.s, p, st) : null; return o || { text: spec.title + ': ' + spec.read(st.s, p, st.t).map(r => r[0] + ' ' + r[1]).join(', ').replace(/<[^>]+>/g, '') }; },
       preset() { if (spec.preset) { Object.entries(spec.preset).forEach(([k, v]) => { p[k] = v; ctl.set(k, v); }); visParams(); reinit(); if (S && W.rebuild) W.rebuild(p); sync(); } },
       _state: () => Object.assign({ t: st.t, running: st.running, phase: st.phase, has3d: !!S, p: Object.assign({}, p), inv: Object.keys(st.inv).length, cam: st.cam, chal: st.chal && { done: st.chal.done, ans: st.chal.ans, pred: st.chal.pred }, hide: st.hide }, spec.state ? spec.state(st.s, p) : {}),
       _set(o) { if (o.p) { Object.entries(o.p).forEach(([k, v]) => { p[k] = v; ctl.set(k, v); }); visParams(); if (!o.keep) reinit(); if (S && W.rebuild) W.rebuild(p); } if (o.run != null) { pause(); for (let left = o.run; left > 1e-12; left -= 0.5) advance(Math.min(0.5, left)); } if (o.speed) st.speed = o.speed; if (o.show) Object.assign(st.show, o.show); if (o.cam) { bar.set('cam', o.cam); setCam(o.cam, true); } sync(); return api._state(); },
-      _sim: () => st.s, _snap: () => { if (!S) return null; pose(); if (st.cam === 'follow') follow(0); S.renderer.render(S.scene, S.camera); return S.cv.toDataURL('image/jpeg', 0.85); }, _fps: () => (S ? S.fps() : null), _bench: ms => (S ? S.bench(ms) : null), _lab: lab };
+      _sim: () => st.s, _snap: () => { if (!S) return null; pose(); if (st.cam === 'follow') follow(0); S.renderer.render(S.scene, S.camera); return S.cv.toDataURL('image/jpeg', 0.85); }, _fps: () => (S ? S.fps() : null), _view(pos, target) { if (!S) return; st.cam = 'free'; S.controls.enabled = true; S.fly(pos, target, 0); sync(); }, _info: () => (S ? { calls: S.renderer.info.render.calls, tris: S.renderer.info.render.triangles, geos: S.renderer.info.memory.geometries, tex: S.renderer.info.memory.textures } : null), _bench: ms => (S ? S.bench(ms) : null), _lab: lab };
     lab.api = api; return api;
   };
 })();

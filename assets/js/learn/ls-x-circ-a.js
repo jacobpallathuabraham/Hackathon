@@ -117,7 +117,7 @@
     connect: [{ label: 'Car on a flat curve', href: '#/exp/cm-flat' }, { label: 'Cyclist leaning on a turn', href: '#/exp/cm-cyclist' }],
     preset: true
   }, () => ({ id: 'cm-bank', title: T('Banking of roads', 'ميل الطرق'), cam0: 'follow', h: 1 / 240,
-    scene: Object.assign({ cam: [0, 60, 120], target: [0, 0, 0], maxDist: 400, minDist: 3, aspect: 0.52, exposure: 1.0 }, OUT), floorR: 400, floorRep: 80, gridSize: 300, gridN: 60, arrowR: 0.11, labelH: 0.75, fmax: 9, flen: 3.2, trailStep: 0.8, trailCol: 0xffd76a,
+    scene: Object.assign({ cam: [0, 60, 120], target: [0, 0, 0], maxDist: 400, minDist: 3, aspect: 0.52, exposure: 1.0 }, OUT, { lights: false, far: 900, fog: [0xc9dcef, 140, 440] }), floorR: 400, floorRep: 80, gridSize: 300, gridN: 60, arrowR: 0.11, labelH: 0.75, fmax: 9, flen: 3.2, trailStep: 0.8, trailCol: 0xffd76a,
     modes: [{ id: 'mode', label: T('Road', 'الطريق'), opts: [['ideal', T('Frictionless (ideal)', 'بلا احتكاك')], ['fric', T('With friction', 'مع احتكاك')]], val: 'fric' }, { id: 'cmp', label: T('Compare', 'قارن'), opts: [['off', T('Off', 'إيقاف')], ['on', T('Unbanked beside it', 'طريق مستوٍ بجانبه')]], val: 'off' }],
     params: [{ id: 'v', label: T('Speed v', 'السرعة v'), min: 5, max: 45, step: 0.5, val: 18, d: 1, unit: ' m/s' }, { id: 'r', label: T('Radius r', 'نصف القطر r'), min: 25, max: 150, step: 1, val: 60, unit: ' m' }, { id: 'deg', label: T('Bank angle θ', 'زاوية الميل θ'), min: 0, max: 45, step: 0.5, val: 18, d: 1, unit: '°' }, { id: 'mu', label: T('Static friction μ', 'الاحتكاك السكوني μ'), min: 0, max: 1, step: 0.01, val: 0.3, d: 2, show: p => p.mode === 'fric' }, { id: 'm', label: T('Mass m', 'الكتلة m'), min: 600, max: 2500, step: 50, val: 1200, unit: ' kg' }],
     extraCtl: [{ k: 'row' }, { k: 'btn', id: 'toIdeal', label: T('Set the ideal speed', 'اضبط السرعة المثالية') }, { k: 'end' }], live: true, rebuildOn: ['cmp'], preset: { mode: 'fric', v: 30, r: 60, deg: 18, mu: 0.3 },
@@ -137,24 +137,23 @@
        least 2 m above the ground under it and above the car — never inside the banked road or its embankment */
     follow(s, p) { p = ef(s, p); const P = this.pos(s, p), fp = this.focus(s, p), tg = [-Math.sin(P.a), 0, -Math.cos(P.a)], ac = P.a - 12 / Math.max(10, P.rr), rc = P.rr - 5.5, y = Math.max(fp[1] + 3.2, bankGround(rc, p) + 2.2);
       return { pos: [rc * Math.cos(ac), y, -rc * Math.sin(ac)], target: [fp[0] + tg[0] * 4, fp[1] + 0.3, fp[2] + tg[2] * 4] }; },
-    cams: p => ({ side: { pos: [p.r + 24, 6, 0.01], target: [p.r, 1.5, 0] }, top: { pos: [0, p.r * 2.4 + 40, 0.01], target: [0, 0, 0] }, free: { pos: [p.r * 0.9, p.r * 0.55 + 10, p.r * 1.1], target: [0, 0, 0] } }),
+    cams: p => { const th = p.deg * D2R, y0 = 4.5 * Math.sin(th) + 0.06, ro = p.r + 4.5 * Math.cos(th), yo = y0 + 4.5 * Math.sin(th), ext = Math.max(1.5, yo * 2.2); return { side: { pos: [ro + ext + 2, yo + 11, 14], target: [p.r, y0 + 0.4, -2] }, top: { pos: [0, p.r * 2.4 + 40, 0.01], target: [0, 0, 0] }, free: { pos: [p.r * 0.9, p.r * 0.55 + 10, p.r * 1.1], target: [0, 0, 0] } }; },
     /* v45: a speedometer (actual speed, the target, the ideal speed and the safe band) and accelerator / brake pedals */
     drive: { param: 'v', max: 45, speed: s => (s.ev ? s.ev.v : 0), marks(s, p) { const q = Object.assign({}, p, { v: 1 }), b = E.bank(1, p.r, p.deg, p.mode === 'ideal' ? 0 : p.mu, p.m); return { ideal: b.vIdeal, lo: p.mode === 'ideal' ? null : b.vMin, hi: p.mode === 'ideal' ? null : b.vMax }; } },
     fscale: p => 1 / (p.m * g),
     forces(s, p) { p = ef(s, p); const P = this.pos(s, p), { b } = bankDyn(s, p), fr = s.stuck ? b.f : s.f; return [{ k: 'N', v: sc(P.n, b.N), label: 'N' }, { k: 'mg', v: [0, -p.m * g, 0], label: 'mg' }, Math.abs(fr) > 1e-6 * p.m * g ? { k: 'f', v: sc(P.dn, fr), label: fr > 0 ? T('friction (down slope)', 'احتكاك (لأسفل)') : T('friction (up slope)', 'احتكاك (لأعلى)') } : null]; },
     basis(s, p) { return { x: [-Math.cos(s.a), 0, Math.sin(s.a)], y: [0, 1, 0] }; },
-    build({ THREE, S, M, p, floor }) { const W = {}; art.sky(S); art.lights(S); S.scene.background = null;
-      const asp = art.asphalt(THREE), roadM = new THREE.MeshStandardMaterial({ map: asp, roughness: 0.82, metalness: 0.02 }), grassT = art.grass(THREE, 60), bermM = new THREE.MeshStandardMaterial({ map: grassT, roughness: 0.95, color: 0xb8c9a0 });
-      W.road = null; if (floor) { floor.material.map = grassT; floor.material.color.set(0xffffff); floor.material.needsUpdate = true; }
-      W.car = M.car(0xd8332f); W.carYaw = new THREE.Group(); W.carRoll = new THREE.Group(); W.carYaw.add(W.carRoll); W.carRoll.add(W.car); W.car.position.y = 0; S.scene.add(W.carYaw);
-      W.car2 = M.car(0x2f6fd8); W.car2Yaw = new THREE.Group(); W.car2Yaw.add(W.car2); S.scene.add(W.car2Yaw);
-      const flags = []; for (let i = 0; i < 24; i++) { const pole = M.cyl(0.08, 0.08, 4, M.mat(0xe8e8e8, { metalness: 0.6 }), 8), fl = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.8), M.mat(i % 2 ? 0xffc247 : 0xe0453a, { side: THREE.DoubleSide })); fl.position.set(0.7, 1.6, 0); pole.add(fl); S.scene.add(pole); flags.push(pole); }
-      W.rebuild = q0 => { const P = q0 || p; W.bR = P.r; W.bD = P.deg; [W.road, W.berm, W.road2, W.berm2].forEach(m => { if (m) { S.scene.remove(m); m.geometry.dispose(); } }); W.road = art.road(THREE, P.r, 9, P.deg, roadM); W.berm = art.berm(THREE, P.r, 9, P.deg, bermM); S.scene.add(W.berm, W.road);
-        const cmp = P.cmp === 'on'; W.road2 = cmp ? art.road(THREE, P.r, 9, 0, roadM) : null; W.berm2 = null; if (W.road2) { W.road2.position.x = 2 * P.r + 30; S.scene.add(W.road2); } W.car2Yaw.visible = cmp;
-        flags.forEach((fg, i) => { const a = i / flags.length * TAU, rr = P.r + 4.5 * Math.cos(P.deg * D2R) + 2.5; fg.position.set(rr * Math.cos(a), 2 + 9 * Math.sin(P.deg * D2R) * 0.5 + 0.1, -rr * Math.sin(a)); }); };
+    /* v45 graphics: a full circuit (LS.circScenery) — banked asphalt with kerbs, grass embankment, barrier and boards,
+       trees, hills, sky — and a detailed coupé (LS.circCar); the compare road sits beside it in a cleared space */
+    build({ THREE, S, M, p, floor }) { const W = {}; W.sc = LS.circScenery(THREE, S, { w: 9, kerb: 0.8, dash: true, floor }); W.dispose = () => W.sc.dispose();
+      const roadM2 = new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: 0.9 });
+      W.car = LS.circCar(THREE, M, 0xd8332f); W.carYaw = new THREE.Group(); W.carRoll = new THREE.Group(); W.carYaw.add(W.carRoll); W.carRoll.add(W.car); S.scene.add(W.carYaw);
+      W.car2 = LS.circCar(THREE, M, 0x2f6fd8); W.car2Yaw = new THREE.Group(); W.car2Yaw.add(W.car2); S.scene.add(W.car2Yaw);
+      W.rebuild = q0 => { const P = q0 || p; W.bR = P.r; W.bD = P.deg; const cmp = P.cmp === 'on', cx = 2 * P.r + 60; W.sc.rebuild(P.r, P.deg, cmp ? [[cx, 0, P.r + 12]] : []);
+        if (W.road2) { S.scene.remove(W.road2); W.road2.geometry.dispose(); W.road2 = null; } if (cmp) { W.road2 = art.road(THREE, P.r, 9, 0, roadM2); W.road2.position.x = cx; S.scene.add(W.road2); } W.car2Yaw.visible = cmp; W.cx = cx; };
       W.rebuild(p); return W; },
-    pose(W, s, p) { p = ef(s, p); if (W.rebuild && (Math.abs((W.bR || 0) - p.r) > 0.02 || Math.abs((W.bD == null ? -1 : W.bD) - p.deg) > 0.02)) W.rebuild(p); const P = this.pos(s, p); W.carYaw.position.set(P.rr * Math.cos(P.a), P.y, -P.rr * Math.sin(P.a)); W.carYaw.rotation.y = P.a; W.carRoll.rotation.z = P.th; const spin = -(s.spin || 0); W.car.wheels.forEach(w => { w.spin.rotation.x = spin; });
-      if (W.car2Yaw.visible) { W.car2Yaw.position.set(2 * p.r + 30 + p.r * Math.cos(s.a), 0.06, -p.r * Math.sin(s.a)); W.car2Yaw.rotation.y = s.a; W.car2.wheels.forEach(w => { w.spin.rotation.x = spin; }); } },
+    pose(W, s, p) { p = ef(s, p); if (W.rebuild && (Math.abs((W.bR || 0) - p.r) > 0.02 || Math.abs((W.bD == null ? -1 : W.bD) - p.deg) > 0.02)) W.rebuild(p); const P = this.pos(s, p); W.carYaw.position.set(P.rr * Math.cos(P.a), P.y, -P.rr * Math.sin(P.a)); W.carYaw.rotation.y = P.a; W.carRoll.rotation.z = P.th; const spin = -(s.spin || 0); W.car.wheels.forEach(w => { w.spin.rotation.x = spin; }); W.sc.update(W.carYaw.position.toArray());
+      if (W.car2Yaw.visible) { W.car2Yaw.position.set((W.cx || 2 * p.r + 60) + p.r * Math.cos(s.a), 0.06, -p.r * Math.sin(s.a)); W.car2Yaw.rotation.y = s.a; W.car2.wheels.forEach(w => { w.spin.rotation.x = spin; }); } },
     read(s, p) { p = ef(s, p); const { mu, b } = bankDyn(s, p), fl = E.flat(p.v, p.r, p.mode === 'ideal' ? 0 : p.mu, p.m);
       const r = [[T('ideal speed', 'السرعة المثالية'), f(b.vIdeal, 1) + ' m/s (' + f(b.vIdeal * 3.6, 0) + ' km/h)'], [T('your speed', 'سرعتك'), f(p.v, 1) + ' m/s (' + f(p.v * 3.6, 0) + ' km/h)'], [T('ideal angle for this v', 'الزاوية المثالية لهذه السرعة'), f(b.thIdealDeg, 1) + '°'], ['N', f(b.N, 0) + ' N'], [T('friction needed', 'الاحتكاك المطلوب'), f(Math.abs(b.f), 0) + ' N ' + (b.fdir === 'none' ? '' : b.fdir === 'down' ? T('down the slope', 'لأسفل المنحدر') : T('up the slope', 'لأعلى المنحدر'))], [T('friction available μN', 'الاحتكاك المتاح'), f(mu * b.N, 0) + ' N']];
       if (p.mode === 'fric') r.push([T('safe range', 'المدى الآمن'), f(b.vMin, 1) + ' – ' + f(b.vMax, 1) + ' m/s']); if (p.cmp === 'on') r.push([T('unbanked road needs μ ≥', 'الطريق المستوي يحتاج μ ≥'), f(fl.need, 2) + (p.mode === 'fric' ? (fl.grips ? ' ✓' : ' ✗ ' + T('slides', 'ينزلق')) : '')]); return r; },
@@ -225,6 +224,7 @@
   /* =====================================================================================================
      4 · CYCLIST LEANING ON A LEVEL CURVE
      ===================================================================================================== */
+  const cycS = (s, p) => (s && s.ev ? cyc(Object.assign({}, p, { mode: 'speed', v: s.ev.v })) : cyc(p)); /* what the rider is doing now (speed eases to the setting) */
   const cyc = p => { const v = p.mode === 'lean' ? E.cyclistV(p.deg, p.r) : p.v; return Object.assign(E.cyclist(v, p.r, p.m, p.mu), { v }); };
   reg('cm-cyclist', {
     intro: 'A cyclist rounds a level curve. Two forces act at the tyres — the **normal force** N (up) and **static friction** f (sideways, towards the centre) — and gravity acts at the centre of mass. Friction is what turns the cyclist. The **lean** is what stops them toppling: leaning puts the resultant road force through the centre of mass.\n\nThe lean angle **θ is measured from the vertical**.',
@@ -236,29 +236,31 @@
     connect: [{ label: 'Car on a flat curve', href: '#/exp/cm-flat' }, { label: 'Banking of roads', href: '#/exp/cm-bank' }],
     preset: true
   }, () => ({ id: 'cm-cyclist', title: T('Cyclist leaning on a curve', 'ميل راكب الدراجة'), cam0: 'follow', h: 1 / 240, arrowR: 0.04, labelH: 0.3, flen: 1.4, fmax: 3.5, trailStep: 0.25, trailCol: 0xffd76a,
-    scene: Object.assign({ cam: [0, 30, 40], target: [0, 0, 0], maxDist: 200, minDist: 1.5, exposure: 1.0 }, OUT), floorR: 300, floorRep: 70, gridSize: 120, gridN: 60,
+    scene: Object.assign({ cam: [0, 30, 40], target: [0, 0, 0], maxDist: 200, minDist: 1.5, exposure: 1.0 }, OUT, { lights: false, far: 900, fog: [0xc9dcef, 140, 440] }), floorR: 300, floorRep: 70, gridSize: 120, gridN: 60,
     modes: [{ id: 'mode', label: T('You set', 'أنت تحدد'), opts: [['speed', T('speed', 'السرعة')], ['lean', T('lean angle', 'زاوية الميل')]], val: 'speed' }],
     params: [{ id: 'v', label: T('Speed v', 'السرعة v'), min: 2, max: 16, step: 0.1, val: 8, d: 1, unit: ' m/s', show: p => p.mode === 'speed' }, { id: 'deg', label: T('Lean from vertical θ', 'الميل عن الرأسي θ'), min: 3, max: 50, step: 0.5, val: 25, d: 1, unit: '°', show: p => p.mode === 'lean' }, { id: 'r', label: T('Radius r', 'نصف القطر r'), min: 5, max: 40, step: 0.5, val: 16, d: 1, unit: ' m' }, { id: 'mu', label: T('Tyre grip μ', 'تماسك الإطار μ'), min: 0.1, max: 1.2, step: 0.01, val: 0.8, d: 2 }, { id: 'm', label: T('Rider + bike m', 'الكتلة m'), min: 50, max: 140, step: 1, val: 85, unit: ' kg' }],
-    rebuildOn: ['r'], preset: { mode: 'speed', v: 8, r: 16, mu: 0.8 },
-    init: (p) => Object.assign(E.flatInit(p.r), { dist: 0 }),
-    step(s, p, h) { const c = cyc(p); E.flatStep(s, { v: c.v, r: p.r, mu: p.mu, w: 4 }, h); s.dist += c.v * h; if (s.off) return false; },
+    rebuildOn: ['r'], live: ['v', 'deg', 'mu', 'm'], /* v45: speed, lean, grip and mass change while riding; a new radius starts a new lap */
+    drive: { param: 'v', max: 16, enabled: p => p.mode === 'speed', speed: (s, p) => (s.ev ? s.ev.v : p.v), marks: (s, p) => ({ ideal: null, lo: 0, hi: Math.sqrt(p.mu * g * p.r) }) }, preset: { mode: 'speed', v: 8, r: 16, mu: 0.8 },
+    init: (p) => Object.assign(E.flatInit(p.r), { dist: 0, ev: { v: cyc(p).v } }),
+    step(s, p, h) { const tv = cyc(p).v, e = s.ev || (s.ev = { v: tv }); e.v += Math.max(-5 * h, Math.min(3 * h, tv - e.v)); const c = cycS(s, p); E.flatStep(s, { v: c.v, r: p.r, mu: p.mu, w: 4 }, h); s.dist += c.v * h; if (s.off) return false; },
     done: s => s.off, phase: s => (s.off ? 'off' : s.slid ? 'skid' : 'grip'), fx: { skid: 0xffb648 },
-    lean: (s, p) => (s.slid ? Math.atan(p.mu) : cyc(p).th),
+    lean: (s, p) => (s.slid ? Math.atan(p.mu) : cycS(s, p).th),
     contact: s => [s.x, 0.07, s.z],
     focus(s, p) { const th = this.lean(s, p), u = inw(s.x, s.z); return [s.x + u[0] * Math.sin(th) * 1.0, 0.07 + Math.cos(th) * 1.0, s.z + u[2] * Math.sin(th) * 1.0]; },
-    vel(s, p) { const c = cyc(p); return [c.v * Math.cos(s.hd), 0, c.v * Math.sin(s.hd)]; }, vscale: () => 0.18,
-    follow(s, p) { const fp = this.focus(s, p), d = [Math.cos(s.hd), 0, Math.sin(s.hd)]; return { pos: [fp[0] - d[0] * 5.2, fp[1] + 1.4, fp[2] - d[2] * 5.2], target: [fp[0] + d[0] * 1.5, fp[1] - 0.2, fp[2] + d[2] * 1.5] }; },
+    vel(s, p) { const c = cycS(s, p); return [c.v * Math.cos(s.hd), 0, c.v * Math.sin(s.hd)]; }, vscale: () => 0.18,
+    follow(s, p) { const fp = this.focus(s, p), d = [Math.cos(s.hd), 0, Math.sin(s.hd)], u = inw(s.x, s.z); return { pos: [fp[0] - d[0] * 4.4 - u[0] * 1.8, fp[1] + 1.25, fp[2] - d[2] * 4.4 - u[2] * 1.8], target: [fp[0] + d[0] * 1.2, fp[1] - 0.15, fp[2] + d[2] * 1.2] }; },
     cams: p => ({ side: { pos: [p.r + 9, 2.2, 0.01], target: [p.r, 0.9, 0] }, top: { pos: [0, p.r * 2.6 + 6, 0.01], target: [0, 0, 0] }, free: { pos: [p.r * 0.8, p.r * 0.6 + 4, p.r * 1.1], target: [0, 0, 0] } }),
     fscale: p => 1 / (p.m * g),
-    forces(s, p) { const c = cyc(p), u = inw(s.x, s.z), ct = this.contact(s), fr = s.slid ? p.mu * p.m * g : c.f; return [{ k: 'N', v: [0, p.m * g, 0], at: ct, label: 'N' }, { k: 'f', v: sc(u, fr), at: ct, label: T('friction f', 'الاحتكاك f') }, { k: 'mg', v: [0, -p.m * g, 0], label: 'mg' }, { k: 'R', v: [u[0] * fr, p.m * g, u[2] * fr], at: ct, label: 'N + f', col: 0xa0b4d0, comp: true, pseudo: false }].map(F => F); },
+    forces(s, p) { const c = cycS(s, p), u = inw(s.x, s.z), ct = this.contact(s), fr = s.slid ? p.mu * p.m * g : c.f; return [{ k: 'N', v: [0, p.m * g, 0], at: ct, label: 'N' }, { k: 'f', v: sc(u, fr), at: ct, label: T('friction f', 'الاحتكاك f') }, { k: 'mg', v: [0, -p.m * g, 0], label: 'mg' }, { k: 'R', v: [u[0] * fr, p.m * g, u[2] * fr], at: ct, label: 'N + f', col: 0xa0b4d0, comp: true, pseudo: false }].map(F => F); },
     netAt(s, p) { return this.focus(s, p); },
     basis(s) { return { x: inw(s.x, s.z), y: [0, 1, 0] }; },
-    build({ THREE, S, M, p, floor }) { const W = {}; art.sky(S); art.lights(S); S.scene.background = null; const roadM = new THREE.MeshStandardMaterial({ map: art.asphalt(THREE, { base: '#4a4d52' }), roughness: 0.85 }); const grassT = art.grass(THREE, 50); if (floor) { floor.material.map = grassT; floor.material.color.set(0xffffff); floor.material.needsUpdate = true; }
-      W.bike = M.cyclist(0x2f7de1); W.yaw = new THREE.Group(); W.roll = new THREE.Group(); W.yaw.add(W.roll); W.roll.add(W.bike); S.scene.add(W.yaw);
-      W.cones = []; for (let i = 0; i < 18; i++) { const cn = M.cyl(0.01, 0.16, 0.42, M.mat(0xff6a1a, { roughness: 0.5 }), 16); S.scene.add(cn); W.cones.push(cn); }
-      W.rebuild = q0 => { const P = q0 || p; if (W.road) { S.scene.remove(W.road); W.road.geometry.dispose(); } W.road = art.road(THREE, P.r, 4, 0, roadM); S.scene.add(W.road); W.cones.forEach((cn, i) => { const a = i / W.cones.length * TAU, rr = P.r - 2.6; cn.position.set(rr * Math.cos(a), 0.21, -rr * Math.sin(a)); }); };
+    build({ THREE, S, M, p, floor }) { const W = {}; W.sc = LS.circScenery(THREE, S, { w: 4, kerb: 0.45, dash: false, floor, trees: 130 }); W.dispose = () => W.sc.dispose();
+      W.bike = LS.circRider(THREE, M, 0x2f7de1); W.yaw = new THREE.Group(); W.roll = new THREE.Group(); W.yaw.add(W.roll); W.roll.add(W.bike); S.scene.add(W.yaw);
+      const coneM = new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.45 }), bandM = new THREE.MeshStandardMaterial({ color: 0xf4f4f0, roughness: 0.4 });
+      W.cones = []; for (let i = 0; i < 18; i++) { const cn = new THREE.Group(), b0 = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.03, 0.34), coneM), c0 = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.44, 20, 1, true), coneM), s0 = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.098, 0.08, 20, 1, true), bandM); c0.position.y = 0.24; s0.position.y = 0.25; cn.add(b0, c0, s0); cn.traverse(m => { if (m.isMesh) m.castShadow = true; }); S.scene.add(cn); W.cones.push(cn); }
+      W.rebuild = q0 => { const P = q0 || p; W.sc.rebuild(P.r, 0); W.cones.forEach((cn, i) => { const a = i / W.cones.length * TAU, rr = P.r - 2.6; cn.position.set(rr * Math.cos(a), 0.0, -rr * Math.sin(a)); }); };
       W.rebuild(p); return W; },
-    pose(W, s, p) { const th = this.lean(s, p); W.yaw.position.set(s.x, 0.06, s.z); W.yaw.rotation.y = -s.hd - PI / 2; W.roll.rotation.z = th; W.bike.pose(s.dist / (0.34 * 2.6)); },
+    pose(W, s, p) { const th = this.lean(s, p); W.yaw.position.set(s.x, 0.06, s.z); W.yaw.rotation.y = -s.hd - PI / 2; W.roll.rotation.z = th; W.bike.pose(s.dist / (0.34 * 2.6)); W.sc.update([s.x, 0.8, s.z]); },
     read(s, p) { const c = cyc(p); return [[T('speed v', 'السرعة'), (p.mode === 'speed' ? set : calc)(f(c.v, 2) + ' m/s')], [T('lean θ (from vertical)', 'الميل عن الرأسي'), (p.mode === 'lean' ? set : calc)(f(c.deg, 1) + '°')], [T('friction needed f = mv²/r', 'الاحتكاك المطلوب'), f(c.f, 0) + ' N'], [T('friction available μN', 'المتاح'), f(p.mu * c.N, 0) + ' N'], ['N = mg', f(c.N, 0) + ' N'], [T('μ needed = tan θ', 'μ المطلوب'), f(c.muNeed, 3)], [T('top speed for this μ', 'السرعة القصوى'), f(c.vMax, 2) + ' m/s']]; },
     formulas(s, p) { const c = cyc(p); return [p.mode === 'lean' ? `v = √(r g tan θ) = √(${f(p.r, 1)} × 9.81 × ${f(Math.tan(c.th), 3)}) = ${B(f(c.v, 2) + ' m/s')}` : `tan θ = v²/(rg) = ${f(c.v, 2)}²/(${f(p.r, 1)} × 9.81) = ${f(Math.tan(c.th), 3)} → θ = ${B(f(c.deg, 1) + '°')}`, `f = m v²/r = ${f(p.m, 0)} × ${f(c.v, 2)}² / ${f(p.r, 1)} = ${B(f(c.f, 0) + ' N')} (${T('the centripetal force', 'القوة المركزية')})`, `N = mg = ${B(f(c.N, 0) + ' N')}`, `${T('grip', 'تماسك')}: f ≤ μN ⇔ ${f(c.muNeed, 3)} ≤ ${f(p.mu, 2)} → ${B(c.grips ? T('grips', 'يتماسك') : T('skids', 'ينزلق'))}`]; },
     why: (s, p) => (s.slid ? T('**Skidding**: v²/(rg) is more than μ, so friction cannot supply m v²/r; the tyres slide and the bike runs wide.', 'انزلاق: الاحتكاك غير كافٍ.') : T('Friction at the tyres is the **only horizontal force** — it turns the rider. The lean makes the road force N + f point through the centre of mass, so nothing twists the rider over. The lean does not create the centripetal force.', 'الاحتكاك هو القوة المركزية؛ الميل للتوازن.')),

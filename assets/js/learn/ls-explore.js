@@ -154,8 +154,9 @@
     'assets/js/learn/ls-x-v29-counting.js?v=29b',
     'assets/js/learn/ls-x-v29-prob.js?v=29d',
     'assets/js/learn/ls-circ-engine.js?v=42',
-    'assets/js/learn/ls-circ-lab.js?v=45',
-    'assets/js/learn/ls-x-circ-a.js?v=45',
+    'assets/js/learn/ls-circ-lab.js?v=46',
+    'assets/js/learn/ls-circ-scenery.js?v=45',
+    'assets/js/learn/ls-x-circ-a.js?v=46',
     'assets/js/learn/ls-x-circ-b.js?v=42'];
   const ordered = srcs => Promise.all(srcs.map(src => once[src] || (once[src] = document.querySelector(`script[src="${src}"]`) ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = () => { delete once[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }))));
   let expP = null; LS.needExp = () => expP || (expP = ordered(EXP_SRC).catch(e => { expP = null; throw e; }));
