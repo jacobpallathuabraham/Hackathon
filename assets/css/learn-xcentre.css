@@ -1,0 +1,89 @@
+/* ERLY Learning Studio — experiment cards, animated experiment art and the scroll flow (v45). Shared by every chapter
+   page, every subject's Experiences tab, All experiences and the Circular Motion experiment centre. */
+
+/* ---------- the card ---------- */
+.xc-card { --hue: 220; list-style: none; }
+.xc-card > a { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 14px; align-items: center; height: 100%; min-height: 100px; box-sizing: border-box; padding: 12px 14px 12px 12px; border-radius: 16px; border: 1px solid var(--line, rgba(0,0,0,.12)); background: var(--surface, #fff); color: var(--ink, #1b1915); text-decoration: none; transition: border-color .2s, background .2s, transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; }
+.xc-card > a:hover, .xc-card > a:focus-visible { border-color: hsl(var(--hue) 70% 55%); background: color-mix(in srgb, hsl(var(--hue) 70% 50%) 7%, var(--surface, #fff)); transform: translateY(-3px); box-shadow: 0 14px 28px -16px hsl(var(--hue) 70% 30% / .65); }
+.xc-card > a:focus-visible { outline: 3px solid hsl(var(--hue) 70% 55% / .6); outline-offset: 2px; }
+.xc-card.is-next > a { border-color: hsl(var(--hue) 70% 55% / .6); box-shadow: inset 0 0 0 1px hsl(var(--hue) 70% 55% / .35); }
+.xc-body { display: grid; gap: 3px; min-width: 0; }
+.xc-body b { font-size: .97rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.xc-body > span { font-size: .83rem; line-height: 1.42; color: var(--muted, #5b574f); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.xc-body small { font: 600 .7rem var(--f-mono, ui-monospace, monospace); color: var(--muted, #5b574f); }
+.xc-body small em { font-style: normal; color: #1f9e6a; } .xc-body small strong { color: hsl(var(--hue) 70% 45%); }
+.xc-go { font-size: 1.15rem; color: hsl(var(--hue) 70% 55%); opacity: .45; transition: transform .2s, opacity .2s; }
+.xc-card > a:hover .xc-go, .xc-card > a:focus-visible .xc-go { opacity: 1; transform: translateX(3px); }
+.xc-card[hidden] { display: none; }
+
+/* ---------- the animated drawing ---------- */
+.xc-art { width: 72px; height: 72px; border-radius: 14px; display: block; flex: none; background: radial-gradient(120% 120% at 30% 20%, hsl(var(--hue) 45% 22%), #0a0e1c); box-shadow: inset 0 0 0 1px hsl(var(--hue) 60% 60% / .25); overflow: hidden; }
+.xc-art svg { width: 100%; height: 100%; display: block; }
+.xc-art .ln { fill: none; stroke: hsl(var(--hue) 70% 76% / .9); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .xc-art .thin { stroke-width: 1.2; } .xc-art .dash { stroke-dasharray: 3 3; }
+.xc-art .ar { stroke: #fff; stroke-width: 2.2; stroke-linecap: round; } .xc-art .c2 { stroke: #6ff3ff; } .xc-art .c3 { stroke: #ffc247; } .xc-art .c2f { fill: #6ff3ff; } .xc-art .c3f { fill: #ffc247; }
+.xc-art .hl, .xc-art .dot { fill: hsl(var(--hue) 90% 68%); } .xc-art .hl { filter: drop-shadow(0 0 3px hsl(var(--hue) 90% 60% / .8)); } .xc-art .dot { fill: #fff; }
+.xc-art .dim { fill: hsl(var(--hue) 30% 72% / .6); }
+.xc-art .fill { fill: hsl(var(--hue) 60% 60% / .18); stroke: hsl(var(--hue) 70% 76% / .5); stroke-width: 1; } .xc-art .road { fill: none; stroke: hsl(var(--hue) 20% 55% / .45); stroke-width: 9; }
+/* every moving part is paused until the card is hovered / focused (or is the highlighted next card) */
+.xc-art * { animation-play-state: paused; }
+.xc-card > a:hover .xc-art *, .xc-card > a:focus-visible .xc-art *, .xc-card.is-next .xc-art *, .xc-art.is-live * { animation-play-state: running; }
+.xc-art .mv { offset-rotate: auto; animation: xa-move 3s linear infinite; animation-play-state: paused; }
+.xc-art .sp, .xc-art .sp2, .xc-art .sp3, .xc-art .swing, .xc-art .lean, .xc-art .pulse, .xc-art .pulse2, .xc-art .beat, .xc-art .globe, .xc-art .fan, .xc-art .sway, .xc-art .boing { transform-box: view-box; transform-origin: 40px 40px; }
+.xc-art .sp { animation: xa-spin 3s linear infinite; } .xc-art .sp2 { animation: xa-spin 4.4s linear infinite reverse; } .xc-art .sp3 { transform-origin: 14px 64px; animation: xa-sweep 2.6s ease-in-out infinite alternate; }
+.xc-art .swing { transform-origin: 40px 10px; animation: xa-swing 1.8s ease-in-out infinite alternate; }
+.xc-art .lean { transform-origin: 40px 70px; animation: xa-lean 2.4s ease-in-out infinite alternate; }
+.xc-art .boing { transform-origin: 40px 12px; animation: xa-boing 1.2s ease-in-out infinite alternate; }
+.xc-art .pulse { animation: xa-pulse 1.6s ease-in-out infinite alternate; } .xc-art .pulse2 { animation: xa-pulse 1.6s ease-in-out -.8s infinite alternate; }
+.xc-art .beat { animation: xa-beat 1.1s ease-in-out infinite; }
+.xc-art .globe { animation: xa-globe 3s linear infinite; }
+.xc-art .fan { transform-origin: 50px 40px; animation: xa-fan 2s ease-in-out infinite alternate; }
+.xc-art .sway { transform-origin: 40px 60px; animation: xa-lean 2.6s ease-in-out infinite alternate; }
+.xc-art .flow { stroke-dasharray: 8 5; animation: xa-flow 1.2s linear infinite; } .xc-art .flow2 { stroke-dasharray: 4 6; animation: xa-flow 1.8s linear infinite reverse; }
+.xc-art .draw { stroke-dasharray: 160; animation: xa-draw 2.6s ease-in-out infinite; }
+.xc-art .rise > * { animation: xa-rise 1.6s ease-in infinite; } .xc-art .rise > :nth-child(2) { animation-delay: -.6s; } .xc-art .rise > :nth-child(3) { animation-delay: -1.1s; }
+.xc-art .blink { animation: xa-blink 1.4s ease-in-out infinite alternate; }
+.xc-art .bars rect { transform-box: fill-box; transform-origin: 50% 100%; animation: xa-bar 1.6s ease-in-out infinite alternate; }
+.xc-art .bob { animation: xa-bob 1.4s ease-in-out infinite alternate; } .xc-art .bob2 { animation: xa-bob 1.4s ease-in-out -.7s infinite alternate; }
+@keyframes xa-move { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes xa-spin { to { transform: rotate(-360deg); } }
+@keyframes xa-sweep { from { transform: rotate(0); } to { transform: rotate(-38deg); } }
+@keyframes xa-swing { from { transform: rotate(-26deg); } to { transform: rotate(26deg); } }
+@keyframes xa-lean { from { transform: rotate(-14deg); } to { transform: rotate(10deg); } }
+@keyframes xa-boing { from { transform: scaleY(.82); } to { transform: scaleY(1.06); } }
+@keyframes xa-pulse { from { transform: scale(.9); } to { transform: scale(1.06); } }
+@keyframes xa-beat { 0%, 100% { transform: scale(1); } 20% { transform: scale(1.1); } 40% { transform: scale(.97); } }
+@keyframes xa-globe { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
+@keyframes xa-fan { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes xa-flow { to { stroke-dashoffset: -26; } }
+@keyframes xa-draw { 0% { stroke-dashoffset: 160; } 60%, 100% { stroke-dashoffset: 0; } }
+@keyframes xa-rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-34px); opacity: 0; } }
+@keyframes xa-blink { from { opacity: .35; } to { opacity: 1; } }
+@keyframes xa-bar { from { transform: scaleY(.45); } to { transform: scaleY(1); } }
+@keyframes xa-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+/* ---------- the scroll flow: cards rise into place as they enter the view ---------- */
+.xc-flow .xc-reveal { opacity: 0; transform: translateY(26px) scale(.985); transition: opacity .55s ease var(--d, 0ms), transform .75s cubic-bezier(.16,.84,.24,1) var(--d, 0ms); will-change: opacity, transform; }
+.xc-flow .xc-reveal.is-in { opacity: 1; transform: none; will-change: auto; }
+.xc-flow .xc-reveal.is-in > a { transition-delay: 0s; }
+
+/* ---------- a chapter's experiment centre ---------- */
+.xc { margin-top: 26px; }
+.xc__head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; margin-bottom: 14px; }
+.xc__head .at-k { margin: 0; } .xc__head .uv-h2 { margin: .15rem 0 .2rem; } .xc__lead { margin: 0; color: var(--muted, #5b574f); }
+.xc__search { position: relative; flex: 0 1 320px; }
+.xc__search svg { position: absolute; inset-inline-start: 13px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); fill: none; stroke: var(--muted, #6b6760); stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.xc .xc__search > input[type="search"] { width: 100%; min-height: 42px; padding-inline-start: 42px !important; padding-inline-end: 14px; border-radius: 999px; border: 1px solid var(--line, rgba(0,0,0,.14)); background: var(--surface, #fff); color: var(--ink, #1b1915); font: 500 .92rem var(--f-sans, system-ui); -webkit-appearance: none; appearance: none; }
+.xc-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; align-items: stretch; }
+.xc__count { margin: 8px 0 0; font: 600 .76rem var(--f-mono, ui-monospace); color: var(--muted, #5b574f); }
+
+/* ---------- subject Experiences tab and All experiences reuse the card ---------- */
+ul.s34-grid.xc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+ul.s34-grid.xc-grid > li { list-style: none; padding: 0; border: 0; background: none; }
+.at-xlist .xc-art { width: 56px; height: 56px; border-radius: 12px; }
+.at-xlist > li > a.xc-row { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 14px; align-items: center; }
+.at-xlist > li > a.xc-row > .xc-art { grid-row: 1 / span 4; }
+.at-xlist > li > a.xc-row:hover .xc-art *, .at-xlist > li > a.xc-row:focus-visible .xc-art * { animation-play-state: running; }
+
+@media (max-width: 560px) { .xc-card > a { grid-template-columns: 60px minmax(0, 1fr); gap: 12px; } .xc-art { width: 60px; height: 60px; } .xc-go { display: none; } }
+@media (prefers-reduced-motion: reduce) { .xc-art *, .xc-flow .xc-reveal { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; } .xc-card > a { transition: none; } .xc-card > a:hover { transform: none; } }
+html.a11y-still .xc-art *, html.a11y-still .xc-flow .xc-reveal { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }

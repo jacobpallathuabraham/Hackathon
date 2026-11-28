@@ -3,21 +3,24 @@
 (function () {
   'use strict';
   const LS = window.LS, T = LS.T, esc = LS.esc;
+  /* v45: families are ordered so that the experiment centre lines up in rows — Fundamentals (1, full width), then
+     Horizontal | Vehicles (4 | 4: every vehicle here moves on a horizontal circle), Vertical | Curved surfaces (2 | 2),
+     and Advanced (2, full width) */
   const GROUPS = [
     [T('Fundamentals', 'الأساسيات'), ['cm-ucm']],
     [T('Horizontal circular motion', 'الحركة الدائرية الأفقية'), ['cm-conical', 'cm-string', 'cm-table', 'cm-multi']],
+    [T('Vehicles, sports and rides', 'المركبات والرياضة والألعاب'), ['cm-bank', 'cm-flat', 'cm-cyclist', 'cm-chair']],
     [T('Vertical circular motion', 'الحركة الدائرية الرأسية'), ['cm-vertical', 'cm-loop']],
     [T('Curved surfaces', 'الأسطح المنحنية'), ['cm-bowl', 'cm-sphere']],
-    [T('Vehicles, sports and rides', 'المركبات والرياضة والألعاب'), ['cm-bank', 'cm-flat', 'cm-cyclist', 'cm-chair']],
     [T('Advanced', 'متقدم'), ['cm-orbit', 'cm-challenge']]
   ];
   LS.circGroups = GROUPS;
   /* v45 experiment centre: each family has a colour and a one-line idea; each experiment a small animated drawing */
   const GINFO = [[205, T('Speed, angular speed, period — and why going round at steady speed means accelerating.', 'السرعة والزمن الدوري — ولماذا الحركة الدائرية تسارع.')],
     [165, T('In a level circle something must pull inwards: a string, a tilted string, friction.', 'في دائرة أفقية لا بد من قوة نحو المركز.')],
+    [352, T('Roads, bikes and fairground rides: the same physics, engineered.', 'طرق ودراجات وألعاب: الفيزياء نفسها.')],
     [265, T('Gravity joins in: speed and tension change all the way round the loop.', 'الجاذبية تتدخل: تتغير السرعة والشد.')],
     [35, T('Normal forces on bowls and spheres — and the moment contact is lost.', 'قوى التلامس على الأوعية والكرات.')],
-    [352, T('Roads, bikes and fairground rides: the same physics, engineered.', 'طرق ودراجات وألعاب: الفيزياء نفسها.')],
     [295, T('Orbits, and a challenge lab that mixes everything.', 'المدارات ومختبر التحدي.')]];
   const el = (cx, cy, rx, ry) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0`;
   const mv = (path, body, d = 0, dur = 3) => `<g class="mv" style="offset-path:path('${path}');animation-duration:${dur}s;animation-delay:${-d * dur}s">${body}</g>`;
@@ -39,21 +42,22 @@
     'cm-orbit': `<path d="${el(40, 40, 30, 17)}" class="ln dash"/><circle cx="40" cy="40" r="9" class="c2f"/>${mv(el(40, 40, 30, 17), ball(3.5), 0, 5)}`,
     'cm-challenge': `<g class="pulse"><circle cx="40" cy="40" r="26" class="ln"/><circle cx="40" cy="40" r="17" class="ln"/><circle cx="40" cy="40" r="8" class="hl"/></g><path d="M64 14L44 36" class="ar c2"/>`
   };
-  const art = id => `<svg viewBox="0 0 80 80" aria-hidden="true" focusable="false">${ART[id] || ART['cm-ucm']}</svg>`;
+  LS.xartById = Object.assign(LS.xartById || {}, ART); /* the shared experiment cards (ls-xart.js) draw these */
   const FORM = ['v = ωr · T = 2π/ω · f = 1/T', 'a = v²/r = ω²r (towards the centre)', 'F<sub>net</sub> = m v²/r — the resultant of real forces', 'banked: tan θ = v²/(rg) · flat: v<sub>max</sub> = √(μgr)', 'conical: ω² = g/(L cos θ)', 'vertical: T = m(v²/R + g cos φ); v₀ ≥ √(5gR)', 'sphere: leaves at cos θ = 2/3', 'orbit: v = √(GM/r), T² ∝ r³'];
   const xs = () => LS.experiences || [];
   /* filters: one family (or all), free-text search, and "not opened yet"; the count is announced politely */
   function centre(view, cleanups) { const box = view.querySelector('.cmx'); if (!box) return; let fam = 'all', q = '', todo = false;
     const chips = [...box.querySelectorAll('[data-cmx-f]')], inp = box.querySelector('[data-cmx-q]'), td = box.querySelector('[data-cmx-todo]'), cnt = box.querySelector('[data-cmx-count]'), empty = box.querySelector('[data-cmx-empty]');
     const apply = () => { let shown = 0; box.querySelectorAll('.cmh-group').forEach(g => { const famOk = fam === 'all' || g.dataset.cmxG === fam; let n = 0;
-        g.querySelectorAll('.cmx-card').forEach(c => { const ok = famOk && (!q || c.dataset.cmxT.includes(q)) && (!todo || !c.classList.contains('is-seen')); c.hidden = !ok; if (ok) n++; }); g.hidden = !n; shown += n; });
-      cnt.textContent = shown + ' ' + T(shown === 1 ? 'experiment shown' : 'experiments shown', 'تجارب معروضة'); empty.hidden = shown > 0; box.classList.add('is-filtered'); };
+        g.querySelectorAll('.xc-card').forEach(c => { const ok = famOk && (!q || c.dataset.xcT.includes(q)) && (!todo || !c.classList.contains('is-seen')); c.hidden = !ok; if (ok) n++; }); g.hidden = !n; shown += n; });
+      cnt.textContent = shown + ' ' + T(shown === 1 ? 'experiment shown' : 'experiments shown', 'تجارب معروضة'); empty.hidden = shown > 0; box.querySelectorAll('.xc-reveal').forEach(e => e.classList.add('is-in')); };
     chips.forEach(b => b.addEventListener('click', () => { fam = b.dataset.cmxF; chips.forEach(c => c.setAttribute('aria-pressed', String(c === b))); apply(); }));
     let tq = 0; inp.addEventListener('input', () => { clearTimeout(tq); tq = setTimeout(() => { q = inp.value.trim().toLowerCase(); apply(); }, 120); }); cleanups.push(() => clearTimeout(tq));
     td.addEventListener('click', () => { todo = !todo; td.setAttribute('aria-pressed', String(todo)); apply(); });
-    cnt.textContent = box.querySelectorAll('.cmx-card').length + ' ' + T('experiments', 'تجارب'); }
+    cnt.textContent = box.querySelectorAll('.xc-card').length + ' ' + T('experiments', 'تجارب'); }
   LS.chapterHub = LS.chapterHub || {};
   LS.chapterHub['p-circular'] = {
+    lists: true, /* this hub lists the chapter's experiments itself (the experiment centre) */
     html(ch) { const seen = LS.prog.d().seen, n = ch.items.filter(i => seen[i]).length, a = LS.prog.d().assess[ch.id];
       return `<div class="cmh"><div class="cmh__scene" data-cmh-scene role="img" aria-label="${T('A ball moving in a circle: its velocity is along the tangent and the net force points to the centre.', 'كرة تتحرك في دائرة: السرعة مماسية والمحصلة نحو المركز.')}"><p class="cmh__cap">${T('Velocity (cyan) is always along the tangent; the net force (white) always points to the centre.', 'السرعة (سماوي) على المماس؛ المحصلة (أبيض) نحو المركز.')}</p></div>
         <section class="uv-card"><h2 class="uv-h3">${T('Key formulas', 'المعادلات الأساسية')}</h2><div class="cmh__formulas">${FORM.map(x => `<span>${x}</span>`).join('')}</div>
@@ -63,10 +67,10 @@
         <div class="cmx__tools"><div class="cmx__chips" role="group" aria-label="${T('Show experiments from', 'اعرض تجارب')}"><button type="button" class="cmx-chip" data-cmx-f="all" aria-pressed="true">${T('All', 'الكل')} <span>${GROUPS.reduce((a, g) => a + g[1].length, 0)}</span></button>${GROUPS.map(([g, ids], k) => `<button type="button" class="cmx-chip" data-cmx-f="${k}" aria-pressed="false" style="--hue:${GINFO[k][0]}"><i aria-hidden="true"></i>${g} <span>${ids.length}</span></button>`).join('')}</div>
           <div class="cmx__row"><label class="cmx__search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" data-cmx-q placeholder="${T('Search experiments…', 'ابحث في التجارب…')}" aria-label="${T('Search experiments', 'ابحث في التجارب')}" autocomplete="off"></label><button type="button" class="cmx-chip cmx-chip--todo" data-cmx-todo aria-pressed="false">${T('Not opened yet', 'لم تُفتح بعد')}</button></div></div>
         <p class="cmx__count" data-cmx-count aria-live="polite"></p>
-        <div class="cmh-groups cmx__groups">${(() => { let n = 0; const next = GROUPS.flatMap(g => g[1]).find(id => !seen['x:' + id]); return GROUPS.map(([g, ids], k) => { const done = ids.filter(id => seen['x:' + id]).length; return `<section class="cmh-group" data-cmx-g="${k}" style="--hue:${GINFO[k][0]};--gi:${k}" aria-labelledby="cmxG${k}"><header class="cmh-group__h"><span class="cmh-group__n" aria-hidden="true">${String(k + 1).padStart(2, '0')}</span><div><h3 id="cmxG${k}">${g}</h3><p>${GINFO[k][1]}</p></div><span class="cmh-group__c" title="${T('opened', 'فُتحت')}"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15"/><circle cx="18" cy="18" r="15" class="on" style="stroke-dasharray:${(94.25 * done / ids.length).toFixed(1)} 94.25"/></svg><b>${done}/${ids.length}</b><span class="sr-only"> ${T('opened', 'فُتحت')}</span></span></header>
-          <ul class="cmh-exps">${ids.map(id => { const x = xs().find(e => e.id === id) || { title: id, hook: '', mins: 0 }, sn = !!seen['x:' + id], nx = id === next; n++; return `<li class="cmx-card${sn ? ' is-seen' : ''}${nx ? ' is-next' : ''}" data-cmx-id="${id}" data-cmx-t="${esc((x.title + ' ' + x.hook).toLowerCase())}" style="--i:${n}"><a href="#/exp/${id}" data-cm-exp="${id}"><span class="cmx-art">${art(id)}</span><span class="cmx-body"><b>${esc(x.title)}</b><span>${esc(x.hook)}</span><small>${x.mins} min · ${T('3D experiment', 'تجربة ثلاثية الأبعاد')}${sn ? ` · <em>${T('opened', 'فُتحت')} ✓</em>` : ''}${nx ? ` · <strong>${T('next up', 'التالي')}</strong>` : ''}</small></span><span class="cmx-go" aria-hidden="true">→</span></a></li>`; }).join('')}</ul></section>`; }).join(''); })()}</div>
+        <div class="cmh-groups cmx__groups">${(() => { let n = 0; const next = GROUPS.flatMap(g => g[1]).find(id => !seen['x:' + id]); return GROUPS.map(([g, ids], k) => { const done = ids.filter(id => seen['x:' + id]).length; return `<section class="cmh-group xc-reveal${ids.length === 1 || k === GROUPS.length - 1 ? ' cmh-group--wide' : ''}" data-cmx-g="${k}" style="--hue:${GINFO[k][0]};--gi:${k}" aria-labelledby="cmxG${k}"><header class="cmh-group__h"><span class="cmh-group__n" aria-hidden="true">${String(k + 1).padStart(2, '0')}</span><div><h3 id="cmxG${k}">${g}</h3><p>${GINFO[k][1]}</p></div><span class="cmh-group__c" title="${T('opened', 'فُتحت')}"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15"/><circle cx="18" cy="18" r="15" class="on" style="stroke-dasharray:${(94.25 * done / ids.length).toFixed(1)} 94.25"/></svg><b>${done}/${ids.length}</b><span class="sr-only"> ${T('opened', 'فُتحت')}</span></span></header>
+          <ul class="cmh-exps">${ids.map(id => { const x = xs().find(e => e.id === id) || { title: id, hook: '', mins: 0 }; n++; return LS.xcard({ id, href: '#/exp/' + id, attr: ` data-cm-exp="${id}"`, title: x.title, hook: x.hook, subject: 'physics', seen: !!seen['x:' + id], next: id === next, meta: x.mins + ' min · ' + T('3D experiment', 'تجربة ثلاثية الأبعاد') }, n).replace('style="--hue:212;', `style="--hue:${GINFO[k][0]};`); }).join('')}</ul></section>`; }).join(''); })()}</div>
         <p class="cmx__empty" data-cmx-empty hidden>${T('No experiment matches — clear the search or pick another family.', 'لا توجد تجربة مطابقة.')}</p></section>`; },
-    mount(view, ch, cleanups) { centre(view, cleanups); if (LS.warmExp) { const ric = window.requestIdleCallback || (f => setTimeout(f, 300)); ric(() => { if (view.isConnected) LS.warmExp(); }, { timeout: 1500 }); }
+    mount(view, ch, cleanups) { centre(view, cleanups); if (LS.xreveal) LS.xreveal(view.querySelector('.cmx'), cleanups); if (LS.warmExp) { const ric = window.requestIdleCallback || (f => setTimeout(f, 300)); ric(() => { if (view.isConnected) LS.warmExp(); }, { timeout: 1500 }); }
       const host = view.querySelector('[data-cmh-scene]'); if (!host || !LS.has3d || !LS.has3d()) return; let S = null, dead = false; cleanups.push(() => { dead = true; if (S) S.destroy(); });
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('a11y-still');
       LS.scene3d(host, { cls: 'cmh-3d', bg: 0x070a16, cam: [0, 3.4, 5.2], target: [0, 0.2, 0], aspect: 0.62, shadows: false, label: T('Circular motion', 'الحركة الدائرية'), maxPolar: Math.PI * 0.49, minDist: 3, maxDist: 12, pan: false }).then(s => { if (dead || !host.isConnected) { s.destroy(); return; } S = s; const THREE = S.THREE, R = 1.6;

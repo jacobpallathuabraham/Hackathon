@@ -207,10 +207,11 @@
       ${portal(p, true)}
       <section class="at-sec"><div class="at-sec__head"><h2 class="at-h2">${T('All experiences', 'كل التجارب')}</h2><a href="#/mylibrary/archive">${T('Discovery archive', 'أرشيف الاكتشافات')} →</a></div>
         <ul class="at-xlist">${X.map(x => xItem(x, seen.has(x.id))).join('')}</ul></section></div>`;
+    if (LS.xreveal) LS.xreveal(view);
   }
   function xItem(x, seen) {
     const S = subj().find(s => s.id === x.subject) || {};
-    return `<li class="at-subj-${x.subject}"><a href="#/exp/${x.id}"><span class="at-xlist__k">${T(KINDS[x.kind], KINDS[x.kind])} · ${T(S.name || '', S.ar || '')}</span><b>${esc(x.title)}</b><span class="at-xlist__h">${esc(x.hook)}</span><small class="at-muted">${x.mins} min${seen ? ' · ' + T('explored', 'استُكشف') : ''}</small></a></li>`;
+    return `<li class="at-subj-${x.subject} xc-reveal" style="--hue:${LS.xHue ? LS.xHue(x.subject) : 220}"><a class="xc-row" href="#/exp/${x.id}">${LS.xart ? `<span class="xc-art">${LS.xart(x.id, x.title, x.subject)}</span>` : ''}<span class="at-xlist__k">${T(KINDS[x.kind], KINDS[x.kind])} · ${T(S.name || '', S.ar || '')}</span><b>${esc(x.title)}</b><span class="at-xlist__h">${esc(x.hook)}</span><small class="at-muted">${x.mins} min${seen ? ' · ' + T('explored', 'استُكشف') : ''}</small></a></li>`;
   }
   LS.xItem = xItem;
   function portal(x, big) {

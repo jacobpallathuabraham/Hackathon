@@ -78,19 +78,21 @@
 .cmx__search input { width: 100%; min-height: 42px; padding: 0 14px 0 40px; border-radius: 999px; border: 1px solid var(--line, rgba(0,0,0,.14)); background: var(--surface, #fff); color: var(--ink, #1b1915); font: 500 .92rem var(--f-sans, system-ui); }
 .cmx__count { margin: 4px 0 10px; font: 600 .76rem var(--f-mono, ui-monospace); color: var(--muted, #5b574f); }
 .cmx__empty { padding: 26px; text-align: center; border: 1px dashed var(--line, rgba(0,0,0,.2)); border-radius: 16px; color: var(--muted, #5b574f); }
-.cmx__groups { display: block; columns: 2 460px; column-gap: 16px; }
-.cmh-group { --hue: 220; break-inside: avoid; display: block; margin: 0 0 16px; padding: 16px; border-radius: 20px; border: 1px solid var(--line, rgba(0,0,0,.12)); background: linear-gradient(180deg, hsl(var(--hue) 70% 50% / .07), transparent 140px), var(--surface, #fff); position: relative; overflow: hidden;
-  animation: cmx-rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--gi, 0) * 70ms); }
+.cmx__groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; } /* v45: rows line up — equal-size families share a row */
+.cmh-group--wide { grid-column: 1 / -1; } .cmh-group--wide .cmh-exps { grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); }
+@media (max-width: 900px) { .cmx__groups { grid-template-columns: 1fr; } }
+.cmh-group { --hue: 220; margin: 0; padding: 16px; border-radius: 20px; border: 1px solid var(--line, rgba(0,0,0,.12)); background: linear-gradient(180deg, hsl(var(--hue) 70% 50% / .07), transparent 140px), var(--surface, #fff); position: relative; overflow: hidden;
+  display: flex; flex-direction: column; }
 .cmh-group::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, hsl(var(--hue) 75% 55%), hsl(calc(var(--hue) + 40) 75% 60%)); }
 .cmh-group__h { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-bottom: 12px; }
 .cmh-group__n { font: 700 1.25rem var(--f-mono, ui-monospace); color: hsl(var(--hue) 70% 50%); }
 .cmh-group h3 { margin: 0; font: 700 1rem var(--f-sans, system-ui); letter-spacing: 0; text-transform: none; color: var(--ink, #1b1915); }
-.cmh-group__h p { margin: 2px 0 0; font-size: .82rem; line-height: 1.4; color: var(--muted, #5b574f); }
+.cmh-group__h p { margin: 2px 0 0; font-size: .82rem; line-height: 1.4; color: var(--muted, #5b574f); min-height: 2.8em; } .cmh-group--wide .cmh-group__h p { min-height: 0; }
 .cmh-group__c { position: relative; width: 44px; height: 44px; display: grid; place-items: center; }
 .cmh-group__c svg { position: absolute; inset: 0; transform: rotate(-90deg); } .cmh-group__c circle { fill: none; stroke: var(--line, rgba(0,0,0,.14)); stroke-width: 3.5; } .cmh-group__c circle.on { stroke: hsl(var(--hue) 70% 50%); stroke-linecap: round; transition: stroke-dasharray .6s; }
 .cmh-group__c b { font: 700 .66rem var(--f-mono, ui-monospace); }
-.cmh-exps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.cmx-card { animation: cmx-rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(120ms + var(--i, 0) * 35ms); }
+.cmh-exps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; flex: 1; align-content: start; grid-auto-rows: 1fr; }
+
 .cmx-card a { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 10px 12px 10px 10px; border-radius: 16px; border: 1px solid transparent; background: color-mix(in srgb, var(--ink, #1b1915) 3%, transparent); color: var(--ink, #1b1915); text-decoration: none; transition: border-color .18s, background .18s, transform .18s, box-shadow .18s; }
 .cmx-card a:hover, .cmx-card a:focus-visible { border-color: hsl(var(--hue) 70% 55%); background: hsl(var(--hue) 70% 50% / .08); transform: translateY(-2px); box-shadow: 0 10px 24px -14px hsl(var(--hue) 70% 30% / .6); }
 .cmx-card a:focus-visible { outline: 3px solid hsl(var(--hue) 70% 55% / .6); outline-offset: 2px; }
@@ -117,7 +119,6 @@
 @keyframes cmx-spin { to { transform: rotate(-360deg); } }
 @keyframes cmx-lean { from { transform: rotate(-14deg); } to { transform: rotate(10deg); } }
 @keyframes cmx-pulse { from { transform: scale(.9); } to { transform: scale(1.06); } }
-.is-filtered .cmh-group, .is-filtered .cmx-card { animation: none; }
 @media (max-width: 560px) { .cmx-card a { grid-template-columns: 60px 1fr; } .cmx-art { width: 60px; height: 60px; } .cmx-go { display: none; } .cmh-group { padding: 14px 12px; } }
 @media (prefers-reduced-motion: reduce) { .cmh-group, .cmx-card, .cmx-art * { animation: none !important; } .cmx-card a, .cmx-chip, .cmx-go { transition: none; } .cmx-card a:hover, .cmx-chip:hover { transform: none; } }
 html.a11y-still .cmh-group, html.a11y-still .cmx-card, html.a11y-still .cmx-art * { animation: none !important; }
